@@ -93,7 +93,7 @@ SELECT
     datum_date,
 
     confirmed_and_probable_cases,
-    sum(confirmed_and_probable_cases) OVER bu
+    sum(confirmed_and_probable_cases) OVER bulletin
         AS cumulative_confirmed_and_probable_cases,
     confirmed_and_probable_cases - coalesce(lag(confirmed_and_probable_cases) OVER datum, 0)
         AS delta_confirmed_and_probable_cases,
@@ -101,7 +101,7 @@ SELECT
         * (bulletin_date - datum_date) AS lateness_confirmed_and_probable_cases,
 
     confirmed_cases,
-    sum(confirmed_cases) OVER bu
+    sum(confirmed_cases) OVER bulletin
         AS cumulative_confirmed_cases,
     confirmed_cases - coalesce(lag(confirmed_cases) OVER datum, 0)
         AS delta_confirmed_cases,
@@ -109,7 +109,7 @@ SELECT
         * (bulletin_date - datum_date) AS lateness_confirmed_cases,
 
     probable_cases,
-    sum(probable_cases) OVER bu
+    sum(probable_cases) OVER bulletin
         AS cumulative_probable_cases,
     probable_cases - coalesce(lag(probable_cases) OVER datum, 0)
         AS delta_probable_cases,
@@ -117,7 +117,7 @@ SELECT
         * (bulletin_date - datum_date) AS lateness_probable_cases,
 
     deaths,
-    sum(deaths) OVER bu
+    sum(deaths) OVER bulletin
         AS cumulative_deaths,
     deaths - coalesce(lag(deaths) OVER datum, 0)
         AS delta_deaths,
@@ -125,7 +125,7 @@ SELECT
         * (bulletin_date - datum_date) AS lateness_deaths
 FROM bitemporal
 WINDOW
-    bu AS (PARTITION BY bulletin_date ORDER BY datum_date),
+    bulletin AS (PARTITION BY bulletin_date ORDER BY datum_date),
     datum AS (PARTITION BY datum_date ORDER BY bulletin_date);
 
 COMMENT ON VIEW bitemporal_analysis IS
