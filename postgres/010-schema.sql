@@ -143,6 +143,22 @@ COMMENT ON VIEW bitemporal_analysis IS
 - Lateness score: Delta * (bulletin_date - datum_date).';
 
 
+CREATE VIEW main_graph AS
+SELECT
+	ba.bulletin_date,
+	ba.datum_date,
+	ba.cumulative_confirmed_and_probable_cases AS confirmed_and_probable_cases,
+	ba.cumulative_confirmed_cases AS confirmed_cases,
+	ba.cumulative_probable_cases AS probable_cases,
+	announcement.cumulative_positive_results AS positive_results,
+	ba.cumulative_deaths AS deaths,
+	announcement.cumulative_cases AS announced_cases,
+	announcement.cumulative_deaths AS announced_deaths
+FROM bitemporal_analysis ba
+FULL OUTER JOIN announcement
+	ON announcement.bulletin_date = ba.datum_date;
+
+
 CREATE VIEW lateness_analysis AS
 SELECT
     bulletin_date,
