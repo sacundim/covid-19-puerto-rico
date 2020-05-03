@@ -34,11 +34,15 @@ CREATE TABLE announcement (
     cumulative_negative_results INTEGER,
     cumulative_pending_results INTEGER,
     cumulative_inconclusive_results INTEGER,
-    cumulative_confirmed_deaths INTEGER,
-    cumulative_certified_deaths INTEGER,
+    new_cases INTEGER,
+    new_confirmed_cases INTEGER,
+    new_probable_cases INTEGER,
     cumulative_cases INTEGER,
     cumulative_confirmed_cases INTEGER,
     cumulative_probable_cases INTEGER,
+    cumulative_deaths INTEGER,
+    cumulative_certified_deaths INTEGER,
+    cumulative_confirmed_deaths INTEGER,
     PRIMARY KEY (bulletin_date)
 );
 
@@ -59,6 +63,18 @@ Publication stopped on April 22.';
 COMMENT ON COLUMN announcement.cumulative_pending_results IS
 'Pending test results.  No deduplication done by person.
 Publication stopped on April 22.';
+
+COMMENT ON COLUMN announcement.new_cases IS
+'Unique confirmed or probable cases (deduplicated by person),
+by date that they were announced (not date of test sample).';
+
+COMMENT ON COLUMN announcement.new_confirmed_cases IS
+'Unique confirmed cases (molecular test, deduplicated by person),
+by date that they were announced (not date of test sample).';
+
+COMMENT ON COLUMN announcement.new_probable_cases IS
+'Unique probable cases (antibody test, deduplicated by person),
+by date that they were announced (not date of test sample).';
 
 COMMENT ON COLUMN announcement.cumulative_confirmed_deaths IS
 'Deaths confirmed by a positive lab test, by date that they
