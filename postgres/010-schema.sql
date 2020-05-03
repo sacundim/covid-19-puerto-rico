@@ -128,6 +128,15 @@ WINDOW
     bu AS (PARTITION BY bulletin_date ORDER BY datum_date),
     datum AS (PARTITION BY datum_date ORDER BY bulletin_date);
 
+COMMENT ON VIEW bitemporal_analysis IS
+'Useful aggregations/windows over the bitemporal table:
+
+- Cumulative: Cumulative sums, partitioned by bulletin date;
+- Delta: Current bulletin_date''s value for current datum_date
+  minus previous bulletin_date''s value for previous datum_date;
+- Lateness score: Delta * (bulletin_date - datum_date).';
+
+
 CREATE VIEW lateness_analysis AS
 SELECT
     bulletin_date,
@@ -145,3 +154,7 @@ SELECT
         AS lateness_deaths
 FROM bitemporal_analysis
 GROUP BY bulletin_date;
+
+COMMENT ON VIEW lateness_analysis IS
+'An estimate of how late on average new data for each bulletin
+is, based on the `bitemporal_analysis` view.';
