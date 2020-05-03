@@ -1,3 +1,9 @@
+CREATE FUNCTION log2(x NUMERIC)
+RETURNS NUMERIC AS $$
+    SELECT log(2.0, x);
+$$ LANGUAGE SQL
+;
+
 CREATE TABLE bitemporal (
     bulletin_date DATE NOT NULL,
     datum_date DATE NOT NULL,
@@ -158,3 +164,32 @@ GROUP BY bulletin_date;
 COMMENT ON VIEW lateness_analysis IS
 'An estimate of how late on average new data for each bulletin
 is, based on the `bitemporal_analysis` view.';
+
+
+CREATE VIEW doubling_time AS
+SELECT
+    bulletin_date,
+    datum_date,
+    window_size.days window_size_days,
+    CAST(window_size.days AS NUMERIC)
+    	/ NULLIF(log2(cumulative_confirmed_and_probable_cases)
+    				- log2(LAG(cumulative_confirmed_and_probable_cases, window_size.days) OVER datum), 0)
+    	AS cumulative_confirmed_and_probable_cases,
+    CAST(window_size.days AS NUMERIC)
+    	/ NULLIF(log2(cumulative_confirmed_cases) - log2(LAG(cumulative_confirmed_cases, window_size.days) OVER datum), 0)
+    	AS cumulative_confirmed_cases,
+    CAST(window_size.days AS NUMERIC)
+    	/ NULLIF(log2(cumulative_probable_cases) - log2(LAG(cumulative_probable_cases, window_size.days) OVER datum), 0)
+    	AS cumulative_probable_cases,
+    CAST(window_size.days AS NUMERIC)
+    	/ NULLIF(log2(cumulative_deaths) - log2(LAG(cumulative_deaths, window_size.days) OVER datum), 0)
+    	AS cumulative_deaths
+FROM bitemporal_analysis
+CROSS JOIN (VALUES (7), (14), (21)) AS window_size (days)
+WINDOW datum AS (
+	PARTITION BY bulletin_date, window_size.days
+	ORDER BY datum_date);
+
+COMMENT ON VIEW doubling_time IS
+'How long it took values to double, expressed in fractional days.
+Computed over windows of 7, 14 and 21 days.';
