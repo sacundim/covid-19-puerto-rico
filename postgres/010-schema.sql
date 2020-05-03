@@ -8,7 +8,27 @@ CREATE TABLE bitemporal (
     PRIMARY KEY (bulletin_date, datum_date)
 );
 
-CREATE TABLE bulletin (
+COMMENT ON TABLE bitemporal IS
+'Data from graphs in Department of Health bulletins since April 25,
+organized in a bitemporal schema that records datums by both the date
+as of which each bulletin reports data for and the dates that each
+bulletin attributes values to.  Read this as: "As of [bulletin_date],
+the Department of Health had attributed [metric] incidences to
+[datum_date]."  Data points are counts for the datum day (not
+cumulative sums).';
+
+COMMENT ON COLUMN bitemporal.bulletin_date IS
+'Date that the bulletin has data up to.  Note that bulletins are
+published on the next day, and many collections use that publication
+date instead of this date.';
+
+COMMENT ON COLUMN bitemporal.datum_date IS
+'Date that the data items are attributed to.  For cases this
+is the data that the test sample was taken.  For deaths this is
+the date of the actual death.';
+
+
+CREATE TABLE announcement (
     bulletin_date DATE NOT NULL,
     cumulative_positive_results INTEGER,
     cumulative_negative_results INTEGER,
@@ -21,6 +41,35 @@ CREATE TABLE bulletin (
     cumulative_probable_cases INTEGER,
     PRIMARY KEY (bulletin_date)
 );
+
+COMMENT ON TABLE announcement IS
+'Daily "headline" values announced in the bulletins, the ones that
+normally make the news.  These are generally attributed to the date
+that the Department of Health recorded them and not the date each
+death happened, test administered, etc.';
+
+COMMENT ON COLUMN announcement.cumulative_positive_results IS
+'Positive test results.  No deduplication done by person.
+Publication stopped on April 25.';
+
+COMMENT ON COLUMN announcement.cumulative_negative_results IS
+'Negative test results.  No deduplication done by person.
+Publication stopped on April 22.';
+
+COMMENT ON COLUMN announcement.cumulative_pending_results IS
+'Pending test results.  No deduplication done by person.
+Publication stopped on April 22.';
+
+COMMENT ON COLUMN announcement.cumulative_confirmed_deaths IS
+'Deaths confirmed by a positive lab test, by date that they
+were announced (not date of actual death).';
+
+COMMENT ON COLUMN announcement.cumulative_certified_deaths IS
+'Deaths not confirmed by a positive lab test, but for which a
+doctor or coroner indicated COVID-19 as cause of death in the
+death certificate.  Given by date that they were announced (not
+date of actual death).  First reported April 8';
+
 
 CREATE VIEW bitemporal_analysis AS
 SELECT
