@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "covid-19-puerto-rico"
+version = "0.1.0"
+description = "Collection of COVID-19 data and analyses for Puerto Rico"
+authors = ["sacundim <anybody@sacundim.org>"]
+packages = [{ include = "covid_19_puerto_rico", from = "src"}]
+
+[tool.poetry.scripts]
+covid19pr = 'covid_19_puerto_rico.main:main'
+
+[tool.poetry.dependencies]
+python = "^3.7"
+numpy = "^1.18.4"
+pandas = "^1.0.3"
+sqlalchemy = "^1.3.16"
+psycopg2-binary = "^2.8.5"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
