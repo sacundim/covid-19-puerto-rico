@@ -223,7 +223,9 @@ SELECT
 	delta_confirmed_cases,
 	delta_probable_cases,
 	delta_deaths
-FROM bitemporal_agg;
+FROM bitemporal_agg
+-- We exclude the earliest bulletin date because it's artificially big
+WHERE bulletin_date > (SELECT min(bulletin_date) FROM bitemporal_agg);
 
 
 CREATE VIEW products.lateness AS
