@@ -231,17 +231,19 @@ SELECT
     bulletin_date,
     cast(sum(lateness_confirmed_and_probable_cases) AS DOUBLE PRECISION)
         / nullif(sum(delta_confirmed_and_probable_cases), 0)
-        AS lateness_confirmed_and_probable_cases,
+        AS confirmed_and_probable_cases,
     cast(sum(lateness_confirmed_cases) AS DOUBLE PRECISION)
         / nullif(sum(delta_confirmed_cases), 0)
-        AS lateness_confirmed_cases,
+        AS confirmed_cases,
     cast(sum(lateness_probable_cases) AS DOUBLE PRECISION)
         / nullif(sum(delta_probable_cases), 0)
-        AS lateness_probable_cases,
+        AS probable_cases,
     cast(sum(lateness_deaths) AS DOUBLE PRECISION)
         / nullif(sum(delta_deaths), 0)
-        AS lateness_deaths
+        AS deaths
 FROM bitemporal_agg
+-- We exclude the earliest bulletin date because it's artificially late
+WHERE bulletin_date > (SELECT min(bulletin_date) FROM bitemporal_agg)
 GROUP BY bulletin_date;
 
 COMMENT ON VIEW products.lateness IS
