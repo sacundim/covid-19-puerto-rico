@@ -253,7 +253,7 @@ COMMENT ON VIEW products.lateness IS
 is, based on the `bitemporal_agg` view.';
 
 
-CREATE VIEW doubling_times AS
+CREATE VIEW products.doubling_times AS
 SELECT
     bulletin_date,
     datum_date,
@@ -277,6 +277,6 @@ WINDOW datum AS (
 	PARTITION BY bulletin_date, window_size.days
 	ORDER BY datum_date);
 
-COMMENT ON VIEW doubling_times IS
+COMMENT ON VIEW products.doubling_times IS
 'How long it took values to double, expressed in fractional days.
 Computed over windows of 7, 14 and 21 days.';
