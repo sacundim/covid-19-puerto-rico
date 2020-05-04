@@ -6,7 +6,7 @@ import datetime
 import logging
 import pandas as pd
 import sqlalchemy
-from sqlalchemy.sql import select
+from sqlalchemy.sql import select, and_
 
 def process_arguments():
     parser = argparse.ArgumentParser(description='Generate Puerto Rico COVID-19 graphs')
@@ -28,6 +28,7 @@ def main():
         main_graph(connection, args)
         lateness_graph(connection, args)
         doubling_graph(connection, args)
+        daily_deltas_graph(connection, args)
 
 def main_graph(connection, args):
     df = main_graph_data(connection, args)
@@ -88,6 +89,10 @@ def lateness_data(connection, args):
     df = pd.read_sql_query(query, connection)
     return adjust_frame(df, "bulletin_date")
 
+def adjust_frame(df, date_column):
+    df[date_column] = pd.to_datetime(df[date_column])
+    return pd.melt(df, date_column)
+
 
 def doubling_graph(connection, args):
     df = doubling_data(connection, args)
@@ -124,9 +129,43 @@ def doubling_data(connection, args):
     return pd.melt(df, ["datum_date", "window_size_days"])
 
 
-def adjust_frame(df, date_column):
-    df[date_column] = pd.to_datetime(df[date_column])
-    return pd.melt(df, date_column)
+def daily_deltas_graph(connection, args):
+    df = daily_deltas_data(connection, args)
+    logging.info("deltas = %s", df.info())
+    bars = alt.Chart(df).mark_bar().encode(
+        x='value',
+        y='datum_date',
+        tooltip = ['variable', 'datum_date', 'value']
+    ).properties(
+        width=250,
+        height=250
+    ).facet(
+        row='bulletin_date:O',
+        column='variable'
+    )
+    filename = f"{args.output_dir}/daily_deltas_{args.bulletin_date}.html"
+    logging.info("Writing graph to %s", filename)
+    bars.save(filename)
+
+def daily_deltas_data(connection, args):
+    meta = sqlalchemy.MetaData()
+    table = sqlalchemy.Table('daily_deltas', meta, schema='products',
+                             autoload_with=connection)
+    query = select([table.c.bulletin_date,
+                    table.c.datum_date,
+                    table.c.delta_confirmed_and_probable_cases,
+                    table.c.delta_confirmed_cases,
+                    table.c.delta_probable_cases,
+                    table.c.delta_deaths]
+    ).where(
+        and_(args.bulletin_date - datetime.timedelta(days=3) < table.c.bulletin_date,
+             table.c.bulletin_date <= args.bulletin_date)
+    )
+    df = pd.read_sql_query(query, connection)
+    df["bulletin_date"] = pd.to_datetime(df["bulletin_date"])
+    df["datum_date"] = pd.to_datetime(df["datum_date"])
+    return pd.melt(df, ["bulletin_date", "datum_date"])
+
 
 def create_db():
     url = sqlalchemy.engine.url.URL(
