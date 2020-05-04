@@ -84,6 +84,31 @@ este en la base de datos.  El código está aquí:
 * [`postgres/010-schema.sql`](postgres/010-schema.sql)
 
 
+## Análisis y gráficas
+
+Hay además aquí código Python para generar una serie de análisis
+gráficas que aun no he documentado.  Para los doctos que quieran
+jugar con esto:
+
+* Hay que tener Python 3.7+, Docker y Docker Compose;
+* Hay que tener la herramienta [`Poetry`](https://python-poetry.org/docs/)
+  instalada;
+* `poetry install` desde este directorio;
+* `docker-compose up` desde este directorio;
+* `./generate-reports.sh` desde este directorio;
+* `docker-compose down`
+
+...y las gráficas aparecen dentro del directorio [`output/`](output/):
+
+* Casos cumulativos por fecha anuncio y fecha evento;
+* Tiempo de duplicación de casos por ventanas de 7,
+  14 y 21 días (por fecha de evento);
+* Cambios de boletín a boletín ("deltas") para misma 
+  fecha de evento;
+* Estimado de rezago promedio en reporte de casos 
+  (comparando boletines consecutivos).
+
+
 ## Agradecimientos
 
 A Robby Cortés (@RobbyCortes en Twitter) y Angélica Serrano-Román
