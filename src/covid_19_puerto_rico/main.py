@@ -27,6 +27,7 @@ def main():
     with engine.connect() as connection:
         main_graph(connection, args)
         lateness_graph(connection, args)
+        doubling_graph(connection, args)
 
 def main_graph(connection, args):
     df = main_graph_data(connection, args)
@@ -86,6 +87,41 @@ def lateness_data(connection, args):
     )
     df = pd.read_sql_query(query, connection)
     return adjust_frame(df, "bulletin_date")
+
+
+def doubling_graph(connection, args):
+    df = doubling_data(connection, args)
+    logging.info("doubling = %s", df.info())
+    lines = alt.Chart(df).mark_line().encode(
+        x='datum_date',
+        y=alt.X('value', scale=alt.Scale(type='log')),
+    ).properties(
+        width=256,
+        height=256
+    ).facet(
+        column='variable',
+        row='window_size_days:O'
+    )
+    filename = f"{args.output_dir}/doubling_{args.bulletin_date}.html"
+    logging.info("Writing graph to %s", filename)
+    lines.save(filename)
+
+def doubling_data(connection, args):
+    meta = sqlalchemy.MetaData()
+    table = sqlalchemy.Table('doubling_times', meta, schema='products',
+                             autoload_with=connection)
+    query = select([table.c.datum_date,
+                    table.c.window_size_days,
+                    table.c.cumulative_confirmed_and_probable_cases,
+                    table.c.cumulative_confirmed_cases,
+                    table.c.cumulative_probable_cases,
+                    table.c.cumulative_deaths]
+    ).where(
+        table.c.bulletin_date == args.bulletin_date
+    )
+    df = pd.read_sql_query(query, connection)
+    df["datum_date"] = pd.to_datetime(df["datum_date"])
+    return pd.melt(df, ["datum_date", "window_size_days"])
 
 
 def adjust_frame(df, date_column):
