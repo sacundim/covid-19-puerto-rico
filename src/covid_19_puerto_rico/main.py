@@ -3,6 +3,7 @@
 import altair as alt
 import argparse
 import datetime
+import io
 import logging
 import pandas as pd
 import sqlalchemy
@@ -32,6 +33,7 @@ def main():
 
 def main_graph(connection, args):
     df = main_graph_data(connection, args)
+    logging.info("main_graph frame: %s", describe_frame(df))
     lines = alt.Chart(df).mark_line(point=True).encode(
         x='datum_date:T',
         y=alt.X('value', scale=alt.Scale(type='log')),
@@ -61,6 +63,7 @@ def main_graph_data(connection, args):
 
 def lateness_graph(connection, args):
     df = lateness_data(connection, args)
+    logging.info("lateness frame: %s", describe_frame(df))
     bars = alt.Chart(df).mark_bar().encode(
         x='value',
         y='variable',
@@ -93,10 +96,15 @@ def adjust_frame(df, date_column):
     df[date_column] = pd.to_datetime(df[date_column])
     return pd.melt(df, date_column)
 
+def describe_frame(df):
+    """Because df.info() prints instead of returning a string."""
+    buf = io.StringIO()
+    df.info(buf=buf)
+    return buf.getvalue()
 
 def doubling_graph(connection, args):
     df = doubling_data(connection, args)
-    logging.info("doubling = %s", df.info())
+    logging.info("doubling frame: %s", describe_frame(df))
     lines = alt.Chart(df).mark_line().encode(
         x='datum_date',
         y=alt.X('value', scale=alt.Scale(type='log')),
@@ -131,7 +139,7 @@ def doubling_data(connection, args):
 
 def daily_deltas_graph(connection, args):
     df = daily_deltas_data(connection, args)
-    logging.info("deltas = %s", df.info())
+    logging.info("deltas frame: %s", describe_frame(df))
     bars = alt.Chart(df).mark_bar().encode(
         x='value',
         y='datum_date',
