@@ -200,9 +200,27 @@ COMMENT ON SCHEMA products IS
 'Views with queries that are intended to be presentations of the data';
 
 CREATE VIEW products.main_graph AS
+-- This is harder to write than it looks. You can't FULL OUTER JOIN
+-- the whole bitemporal table with just the announcements because
+-- you need to union a copy of the latter to each bulletin_date.
+-- So you end up building a grid of all the date combinations
+-- and outer joining with that as its base.
+WITH dates AS (
+	SELECT DISTINCT bulletin_date date
+	FROM announcement
+	UNION
+	SELECT DISTINCT bulletin_date date
+	FROM bitemporal
+	UNION
+	SELECT DISTINCT datum_date date
+	FROM bitemporal
+), bulletin_dates AS (
+	SELECT DISTINCT bulletin_date
+	FROM bitemporal
+)
 SELECT
-	ba.bulletin_date,
-	ba.datum_date,
+	bulletin_dates.bulletin_date,
+	dates.date datum_date,
 	ba.cumulative_confirmed_and_probable_cases AS confirmed_and_probable_cases,
 	ba.cumulative_confirmed_cases AS confirmed_cases,
 	ba.cumulative_probable_cases AS probable_cases,
@@ -210,9 +228,16 @@ SELECT
 	ba.cumulative_deaths AS deaths,
 	announcement.cumulative_cases AS announced_cases,
 	announcement.cumulative_deaths AS announced_deaths
-FROM bitemporal_agg ba
-FULL OUTER JOIN announcement
-	ON announcement.bulletin_date = ba.datum_date;
+FROM bulletin_dates
+INNER JOIN dates
+	ON dates.date <= bulletin_dates.bulletin_date
+LEFT OUTER JOIN bitemporal_agg ba
+	ON ba.bulletin_date = bulletin_dates.bulletin_date
+	AND ba.datum_date = dates.date
+LEFT OUTER JOIN announcement
+	ON announcement.bulletin_date = dates.date
+ORDER BY bulletin_dates.bulletin_date, dates.date;
+
 
 
 CREATE VIEW products.daily_deltas AS
