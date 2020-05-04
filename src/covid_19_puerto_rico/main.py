@@ -6,7 +6,6 @@ import datetime
 import logging
 import pandas as pd
 import sqlalchemy
-from psycopg2._psycopg import connection
 from sqlalchemy.sql import select
 
 def process_arguments():
