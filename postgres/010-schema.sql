@@ -188,7 +188,7 @@ WHERE new_cases != computed_new_cases
 OR new_confirmed_cases != computed_new_confirmed_cases
 OR new_probable_cases != computed_new_probable_cases;
 
-COMMENT ON TABLE quality.mismatched_announcement_aggregates IS
+COMMENT ON VIEW quality.mismatched_announcement_aggregates IS
 'Check whether the daily new cases and the cumulative figures
 in the bulletins match. Which they don''t always do...';
 
