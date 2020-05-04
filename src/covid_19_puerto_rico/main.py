@@ -67,7 +67,8 @@ def lateness_graph(connection, args):
     bars = alt.Chart(df).mark_bar().encode(
         x='value',
         y='variable',
-        color='variable'
+        color='variable',
+        tooltip=['variable', 'bulletin_date', 'value']
     ).properties(
         width=640,
     ).facet(
@@ -108,9 +109,10 @@ def doubling_graph(connection, args):
     lines = alt.Chart(df).mark_line().encode(
         x='datum_date',
         y=alt.X('value', scale=alt.Scale(type='log')),
+        color='variable'
     ).properties(
-        width=256,
-        height=256
+        width=220,
+        height=220
     ).facet(
         column='variable',
         row='window_size_days:O'
@@ -143,6 +145,7 @@ def daily_deltas_graph(connection, args):
     bars = alt.Chart(df).mark_bar().encode(
         x='value',
         y='datum_date',
+        color='variable',
         tooltip = ['variable', 'datum_date', 'value']
     ).properties(
         width=250,
