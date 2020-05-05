@@ -7,14 +7,17 @@ import io
 import logging
 import pandas as pd
 import sqlalchemy
+import toml
 from sqlalchemy.sql import select, and_
 
 def process_arguments():
     parser = argparse.ArgumentParser(description='Generate Puerto Rico COVID-19 graphs')
-    parser.add_argument('--output-dir', type=str,
+    parser.add_argument('--output-dir', type=str, required=True,
                         help='Directory into which to place output')
-    parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat,
+    parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat, required=True,
                         help='Bulletin date to generate graphs for')
+    parser.add_argument('--config-file', type=str, required=True,
+                        help='TOML config file (for DB credentials and such')
     return parser.parse_args()
 
 def main():
@@ -24,7 +27,7 @@ def main():
     logging.info("bulletin-date is %s; output-dir is %s",
                  args.bulletin_date, args.output_dir)
 
-    engine = create_db()
+    engine = create_db(args)
     with engine.connect() as connection:
         cumulative(connection, args)
         lateness(connection, args)
@@ -173,12 +176,14 @@ def daily_deltas_data(connection, args):
     return fix_and_melt(df, "bulletin_date", "datum_date")
 
 
-def create_db():
-    url = sqlalchemy.engine.url.URL(
-        drivername = 'postgres',
-        username = 'postgres',
-        password = 'password',
-        host = 'localhost')
+def create_db(args):
+    config = {
+        'drivername': 'postgres',
+        'port': 5432
+    }
+    toml_dict = toml.load(args.config_file)
+    config.update(toml_dict['database'])
+    url = sqlalchemy.engine.url.URL(**config)
     return sqlalchemy.create_engine(url)
 
 def save_graph(graph, basename):
