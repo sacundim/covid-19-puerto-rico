@@ -170,13 +170,54 @@ def doubling_data(connection, args):
 def daily_deltas(connection, args):
     df = daily_deltas_data(connection, args)
     logging.info("deltas frame: %s", describe_frame(df))
-    basename = f"{args.output_dir}/daily_deltas_{args.bulletin_date}"
+
+    # This one is just here to illustrate a bug for now
+    basename = f"{args.output_dir}/buggy_daily_deltas_{args.bulletin_date}"
     save_graph(daily_deltas_graph(df), basename)
 
+    basename = f"{args.output_dir}/daily_deltas_{args.bulletin_date}"
+    save_graph(workaround_daily_deltas_graph(df), basename)
+
 def daily_deltas_graph(df):
-    return alt.Chart(df).mark_bar().encode(
+    return alt.Chart(df).transform_filter(
+        alt.datum.value != 0
+    ).mark_bar().encode(
         x=alt.X('value', title="Cases added/subtracted"),
         y=alt.Y('datum_date:T', title="Event date"),
+        color=alt.Color('variable', legend=None),
+        tooltip = ['variable', 'datum_date:T', 'value']
+    ).properties(
+        width=250,
+        height=250
+    ).facet(
+        row=alt.Y('bulletin_date:T', sort="descending",
+                  title="Bulletin date"),
+        column=alt.X('variable', title=None,
+                     sort=['Confirmed and probable',
+                           'Confirmed',
+                           'Probable',
+                           'Deaths'])
+    )
+
+def workaround_daily_deltas_graph(df):
+    def bug_workaround(df):
+        """If both of these conditions hold:
+
+         1. One of the subgraphs in this faceted graph has
+            no data points;
+         2. I custom sort the faceting grid column;
+
+         ...then I get an empty subgraph (no gridlines even)
+         and the sorting of the columns for that row breaks."""
+        filtered = df\
+            .replace(0, np.nan)\
+            .dropna()
+        return (min(filtered['datum_date']), max(filtered['datum_date']))
+
+    return alt.Chart(df).mark_bar(clip=True).encode(
+        x=alt.X('value', title="Cases added/subtracted"),
+        y=alt.Y('datum_date:T', title="Event date",
+                scale=alt.Scale(domain=bug_workaround(df))),
         color=alt.Color('variable', legend=None),
         tooltip = ['variable', 'datum_date:T', 'value']
     ).properties(
