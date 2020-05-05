@@ -20,21 +20,26 @@ def process_arguments():
 def main():
     logging.basicConfig(format='%(asctime)s %(message)s',
                         level=logging.INFO)
-    args = process_arguments();
+    args = process_arguments()
     logging.info("bulletin-date is %s; output-dir is %s",
                  args.bulletin_date, args.output_dir)
 
     engine = create_db()
     with engine.connect() as connection:
-        main_graph(connection, args)
-        lateness_graph(connection, args)
-        doubling_graph(connection, args)
-        daily_deltas_graph(connection, args)
+        cumulative(connection, args)
+        lateness(connection, args)
+        doubling(connection, args)
+        daily_deltas(connection, args)
 
-def main_graph(connection, args):
-    df = main_graph_data(connection, args)
-    logging.info("main_graph frame: %s", describe_frame(df))
-    lines = alt.Chart(df).mark_line(point=True).encode(
+
+def cumulative(connection, args):
+    df = cumulative_data(connection, args)
+    logging.info("cumulative frame: %s", describe_frame(df))
+    basename = f"{args.output_dir}/cumulative_{args.bulletin_date}"
+    save_graph(cumulative_graph(df), basename)
+
+def cumulative_graph(df):
+    return alt.Chart(df).mark_line(point=True).encode(
         x='datum_date:T',
         y=alt.X('value', scale=alt.Scale(type='log')),
         color='variable',
@@ -43,11 +48,8 @@ def main_graph(connection, args):
         width=1024,
         height=768
     )
-    filename = f"{args.output_dir}/main_{args.bulletin_date}.html"
-    logging.info("Writing graph to %s", filename)
-    lines.save(filename)
 
-def main_graph_data(connection, args):
+def cumulative_data(connection, args):
     meta = sqlalchemy.MetaData()
     table = sqlalchemy.Table('main_graph', meta, schema='products',
                              autoload_with=connection)
@@ -59,12 +61,17 @@ def main_graph_data(connection, args):
                     table.c.deaths,
                     table.c.announced_deaths]).where(table.c.bulletin_date == args.bulletin_date)
     df = pd.read_sql_query(query, connection)
-    return adjust_frame(df, "datum_date")
+    return fix_and_melt(df, "datum_date")
 
-def lateness_graph(connection, args):
+
+def lateness(connection, args):
     df = lateness_data(connection, args)
     logging.info("lateness frame: %s", describe_frame(df))
-    bars = alt.Chart(df).mark_bar().encode(
+    basename = f"{args.output_dir}/lateness_{args.bulletin_date}"
+    save_graph(lateness_graph(df), basename)
+
+def lateness_graph(df):
+    return alt.Chart(df).mark_bar().encode(
         x='value',
         y='variable',
         color='variable',
@@ -74,9 +81,6 @@ def lateness_graph(connection, args):
     ).facet(
         row="bulletin_date"
     )
-    filename = f"{args.output_dir}/lateness_{args.bulletin_date}.html"
-    logging.info("Writing graph to %s", filename)
-    bars.save(filename)
 
 def lateness_data(connection, args):
     meta = sqlalchemy.MetaData()
@@ -91,22 +95,17 @@ def lateness_data(connection, args):
         table.c.bulletin_date <= args.bulletin_date
     )
     df = pd.read_sql_query(query, connection)
-    return adjust_frame(df, "bulletin_date")
+    return fix_and_melt(df, "bulletin_date")
 
-def adjust_frame(df, date_column):
-    df[date_column] = pd.to_datetime(df[date_column])
-    return pd.melt(df, date_column)
 
-def describe_frame(df):
-    """Because df.info() prints instead of returning a string."""
-    buf = io.StringIO()
-    df.info(buf=buf)
-    return buf.getvalue()
-
-def doubling_graph(connection, args):
+def doubling(connection, args):
     df = doubling_data(connection, args)
     logging.info("doubling frame: %s", describe_frame(df))
-    lines = alt.Chart(df).mark_line().encode(
+    basename = f"{args.output_dir}/doubling_{args.bulletin_date}"
+    save_graph(doubling_graph(df), basename)
+
+def doubling_graph(df):
+    return alt.Chart(df).mark_line().encode(
         x='datum_date',
         y=alt.X('value', scale=alt.Scale(type='log')),
         color='variable'
@@ -117,9 +116,6 @@ def doubling_graph(connection, args):
         column='variable',
         row='window_size_days:O'
     )
-    filename = f"{args.output_dir}/doubling_{args.bulletin_date}.html"
-    logging.info("Writing graph to %s", filename)
-    lines.save(filename)
 
 def doubling_data(connection, args):
     meta = sqlalchemy.MetaData()
@@ -135,14 +131,18 @@ def doubling_data(connection, args):
         table.c.bulletin_date == args.bulletin_date
     )
     df = pd.read_sql_query(query, connection)
-    df["datum_date"] = pd.to_datetime(df["datum_date"])
-    return pd.melt(df, ["datum_date", "window_size_days"])
+    return pd.melt(fix_date_columns(df, "datum_date"),
+                   ["datum_date", "window_size_days"])
 
 
-def daily_deltas_graph(connection, args):
+def daily_deltas(connection, args):
     df = daily_deltas_data(connection, args)
     logging.info("deltas frame: %s", describe_frame(df))
-    bars = alt.Chart(df).mark_bar().encode(
+    basename = f"{args.output_dir}/daily_deltas_{args.bulletin_date}"
+    save_graph(daily_deltas_graph(df), basename)
+
+def daily_deltas_graph(df):
+    return alt.Chart(df).mark_bar().encode(
         x='value',
         y='datum_date',
         color='variable',
@@ -154,9 +154,6 @@ def daily_deltas_graph(connection, args):
         row='bulletin_date:O',
         column='variable'
     )
-    filename = f"{args.output_dir}/daily_deltas_{args.bulletin_date}.html"
-    logging.info("Writing graph to %s", filename)
-    bars.save(filename)
 
 def daily_deltas_data(connection, args):
     meta = sqlalchemy.MetaData()
@@ -173,9 +170,7 @@ def daily_deltas_data(connection, args):
              table.c.bulletin_date <= args.bulletin_date)
     )
     df = pd.read_sql_query(query, connection)
-    df["bulletin_date"] = pd.to_datetime(df["bulletin_date"])
-    df["datum_date"] = pd.to_datetime(df["datum_date"])
-    return pd.melt(df, ["bulletin_date", "datum_date"])
+    return fix_and_melt(df, "bulletin_date", "datum_date")
 
 
 def create_db():
@@ -185,6 +180,28 @@ def create_db():
         password = 'password',
         host = 'localhost')
     return sqlalchemy.create_engine(url)
+
+def save_graph(graph, basename):
+    filename = f"{basename}.html"
+    logging.info("Writing graph to %s", filename)
+    graph.save(filename)
+
+def fix_date_columns(df, *date_columns):
+    """Pandas is making us frames with object type for date columns,
+    which some libraries hate."""
+    for col in date_columns:
+        df[col] = pd.to_datetime(df[col])
+    return df
+
+def fix_and_melt(df, *date_columns):
+    return pd.melt(fix_date_columns(df, *date_columns), date_columns)
+
+def describe_frame(df):
+    """Because df.info() prints instead of returning a string."""
+    buf = io.StringIO()
+    df.info(buf=buf)
+    return buf.getvalue()
+
 
 if __name__ == '__main__':
     main()
