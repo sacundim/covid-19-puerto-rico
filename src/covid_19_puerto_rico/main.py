@@ -5,6 +5,7 @@ import argparse
 import datetime
 import io
 import logging
+import numpy as np
 import pandas as pd
 import sqlalchemy
 import toml
@@ -43,9 +44,10 @@ def cumulative(connection, args):
 
 def cumulative_graph(df):
     return alt.Chart(df).mark_line(point=True).encode(
-        x='datum_date:T',
-        y=alt.X('value', scale=alt.Scale(type='log')),
-        color='variable',
+        x=alt.X('datum_date:T', title="Date of test sample or death"),
+        y=alt.Y('value', title="Cumulative cases or deaths",
+                scale=alt.Scale(type='log')),
+        color=alt.Color('variable', title=None),
         tooltip=['datum_date', 'variable', 'value']
     ).properties(
         width=1024,
@@ -75,14 +77,12 @@ def lateness(connection, args):
 
 def lateness_graph(df):
     return alt.Chart(df).mark_bar().encode(
-        x='value',
-        y='variable',
-        color='variable',
+        x=alt.X('value', title="Estimated lag (days)"),
+        y=alt.Y('variable', title=None),
+        color=alt.Color('variable', legend=None),
         tooltip=['variable', 'bulletin_date', 'value']
-    ).properties(
-        width=640,
     ).facet(
-        row="bulletin_date"
+        row=alt.Y("bulletin_date", title="Bulletin date")
     )
 
 def lateness_data(connection, args):
@@ -108,16 +108,17 @@ def doubling(connection, args):
     save_graph(doubling_graph(df), basename)
 
 def doubling_graph(df):
-    return alt.Chart(df).mark_line().encode(
-        x='datum_date',
-        y=alt.X('value', scale=alt.Scale(type='log')),
-        color='variable'
+    return alt.Chart(df.dropna()).mark_line(clip=True).encode(
+        x=alt.X('datum_date:T', title='Event date'),
+        y=alt.Y('value', title="Doubling time (days)",
+                scale=alt.Scale(type='log', domain=(1, 100))),
+        color=alt.Color('variable', legend=None)
     ).properties(
-        width=220,
-        height=220
+        width=256,
+        height=256
     ).facet(
-        column='variable',
-        row='window_size_days:O'
+        column=alt.X('variable', title=None),
+        row=alt.Y('window_size_days:O', title='Window size (days)')
     )
 
 def doubling_data(connection, args):
@@ -146,16 +147,17 @@ def daily_deltas(connection, args):
 
 def daily_deltas_graph(df):
     return alt.Chart(df).mark_bar().encode(
-        x='value',
-        y='datum_date',
-        color='variable',
-        tooltip = ['variable', 'datum_date', 'value']
+        x=alt.X('value', title="Cases added/subtracted"),
+        y=alt.Y('datum_date:T', title="Event date"),
+        color=alt.Color('variable', legend=None),
+        tooltip = ['variable', 'datum_date:T', 'value']
     ).properties(
         width=250,
         height=250
     ).facet(
-        row='bulletin_date:O',
-        column='variable'
+        row=alt.Y('bulletin_date:T', sort="descending",
+                  title="Bulletin date"),
+        column=alt.X('variable', title=None)
     )
 
 def daily_deltas_data(connection, args):
@@ -173,7 +175,9 @@ def daily_deltas_data(connection, args):
              table.c.bulletin_date <= args.bulletin_date)
     )
     df = pd.read_sql_query(query, connection)
-    return fix_and_melt(df, "bulletin_date", "datum_date")
+    return fix_and_melt(df, "bulletin_date", "datum_date")\
+        .replace(0, np.nan)\
+        .dropna()
 
 
 def create_db(args):
