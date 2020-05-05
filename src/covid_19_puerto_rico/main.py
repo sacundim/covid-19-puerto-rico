@@ -85,8 +85,8 @@ def lateness(connection, args):
 
 def lateness_graph(df):
     return alt.Chart(df).mark_bar().encode(
-        x=alt.X('value', title="Estimated lag (days)"),
-        y=alt.Y('variable', title=None,
+        y=alt.Y('value', title="Estimated lag (days)"),
+        x=alt.X('variable', title=None,
                 sort=['Confirmed and probable',
                       'Confirmed',
                       'Probable',
@@ -96,9 +96,10 @@ def lateness_graph(df):
                  alt.Tooltip(field='value',
                              type='quantitative',
                              format=".1f")]
+    ).properties(
+      width=150
     ).facet(
-        row=alt.Y("bulletin_date", title="Bulletin date",
-                  sort="descending")
+        column=alt.X("bulletin_date", title="Bulletin date")
     )
 
 def lateness_data(connection, args):
@@ -111,7 +112,8 @@ def lateness_data(connection, args):
                     table.c.probable_cases,
                     table.c.deaths]
     ).where(
-        table.c.bulletin_date <= args.bulletin_date
+        and_(args.bulletin_date - datetime.timedelta(days=7) < table.c.bulletin_date,
+             table.c.bulletin_date <= args.bulletin_date)
     )
     df = pd.read_sql_query(query, connection)
     df = df.rename(columns={
@@ -222,16 +224,16 @@ def workaround_daily_deltas_graph(df):
         color=alt.Color('variable', legend=None),
         tooltip = ['variable', 'datum_date:T', 'value']
     ).properties(
-        width=250,
+        width=150,
         height=250
     ).facet(
-        row=alt.Y('bulletin_date:T', sort="descending",
-                  title="Bulletin date"),
-        column=alt.X('variable', title=None,
-                     sort=['Confirmed and probable',
-                           'Confirmed',
-                           'Probable',
-                           'Deaths'])
+        column=alt.X('bulletin_date:T', sort="descending",
+                     title="Bulletin date"),
+        row=alt.Y('variable', title=None,
+                  sort=['Confirmed and probable',
+                        'Confirmed',
+                        'Probable',
+                        'Deaths'])
     )
 
 def daily_deltas_data(connection, args):
@@ -240,17 +242,15 @@ def daily_deltas_data(connection, args):
                              autoload_with=connection)
     query = select([table.c.bulletin_date,
                     table.c.datum_date,
-                    table.c.delta_confirmed_and_probable_cases,
                     table.c.delta_confirmed_cases,
                     table.c.delta_probable_cases,
                     table.c.delta_deaths]
     ).where(
-        and_(args.bulletin_date - datetime.timedelta(days=3) < table.c.bulletin_date,
+        and_(args.bulletin_date - datetime.timedelta(days=7) < table.c.bulletin_date,
              table.c.bulletin_date <= args.bulletin_date)
     )
     df = pd.read_sql_query(query, connection)
     df = df.rename(columns={
-        'delta_confirmed_and_probable_cases': 'Confirmed and probable',
         'delta_confirmed_cases': 'Confirmed',
         'delta_probable_cases': 'Probable',
         'delta_deaths': 'Deaths'
