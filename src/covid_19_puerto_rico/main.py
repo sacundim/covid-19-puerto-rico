@@ -75,6 +75,7 @@ def cumulative_graph(df):
                         legend=alt.Legend(orient="top", labelLimit=250)),
         tooltip=['datum_date', 'variable', 'value']
     ).properties(
+        title="Daily announced cumulative counts evidently lag actual values",
         width=1200,
         height=800
     )
@@ -126,6 +127,8 @@ def lateness_graph(df):
         height=600
     ).facet(
         column=alt.X("bulletin_date", title="Bulletin date")
+    ).properties(
+        title="It routinely takes over a week for a positive test result"
     )
 
 def lateness_data(connection, args):
@@ -173,6 +176,8 @@ def doubling_graph(df):
                            'Probable',
                            'Deaths']),
         row=alt.Y('window_size_days:O', title='Window size (days)')
+    ).properties(
+        title="Time to double in days has steadily slowed down"
     )
 
 def doubling_data(connection, args):
@@ -207,27 +212,6 @@ def daily_deltas(connection, args):
 #    save_graph(daily_deltas_graph(df), basename)
     save_graph(workaround_daily_deltas_graph(df), basename)
 
-def daily_deltas_graph(df):
-    return alt.Chart(df).transform_filter(
-        alt.datum.value != 0
-    ).mark_bar().encode(
-        x=alt.X('value', title="Cases added/subtracted"),
-        y=alt.Y('datum_date:T', title="Event date"),
-        color=alt.Color('variable', legend=None),
-        tooltip = ['variable', 'datum_date:T', 'value']
-    ).properties(
-        width=250,
-        height=250
-    ).facet(
-        row=alt.Y('bulletin_date:T', sort="descending",
-                  title="Bulletin date"),
-        column=alt.X('variable', title=None,
-                     sort=['Confirmed and probable',
-                           'Confirmed',
-                           'Probable',
-                           'Deaths'])
-    )
-
 def workaround_daily_deltas_graph(df):
     def bug_workaround(df):
         """If both of these conditions hold:
@@ -250,7 +234,7 @@ def workaround_daily_deltas_graph(df):
         color=alt.Color('variable', legend=None),
         tooltip = ['variable', 'datum_date:T', 'value']
     ).properties(
-        width=150,
+        width=140,
         height=250
     ).facet(
         column=alt.X('bulletin_date:T', sort="descending",
@@ -260,6 +244,8 @@ def workaround_daily_deltas_graph(df):
                         'Confirmed',
                         'Probable',
                         'Deaths'])
+    ).properties(
+        title="Cases are often added (or subtracted!) far back"
     )
 
 def daily_deltas_data(connection, args):
