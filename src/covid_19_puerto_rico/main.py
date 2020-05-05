@@ -86,7 +86,11 @@ def lateness(connection, args):
 def lateness_graph(df):
     return alt.Chart(df).mark_bar().encode(
         x=alt.X('value', title="Estimated lag (days)"),
-        y=alt.Y('variable', title=None),
+        y=alt.Y('variable', title=None,
+                sort=['Confirmed and probable',
+                      'Confirmed',
+                      'Probable',
+                      'Deaths']),
         color=alt.Color('variable', legend=None),
         tooltip=['variable', 'bulletin_date', 'value']
     ).facet(
@@ -131,7 +135,11 @@ def doubling_graph(df):
         width=256,
         height=256
     ).facet(
-        column=alt.X('variable', title=None),
+        column=alt.X('variable', title=None,
+                     sort=['Confirmed and probable',
+                           'Confirmed',
+                           'Probable',
+                           'Deaths']),
         row=alt.Y('window_size_days:O', title='Window size (days)')
     )
 
@@ -177,7 +185,11 @@ def daily_deltas_graph(df):
     ).facet(
         row=alt.Y('bulletin_date:T', sort="descending",
                   title="Bulletin date"),
-        column=alt.X('variable', title=None)
+        column=alt.X('variable', title=None,
+                     sort=['Confirmed and probable',
+                           'Confirmed',
+                           'Probable',
+                           'Deaths'])
     )
 
 def daily_deltas_data(connection, args):
@@ -201,9 +213,7 @@ def daily_deltas_data(connection, args):
         'delta_probable_cases': 'Probable',
         'delta_deaths': 'Deaths'
     })
-    return fix_and_melt(df, "bulletin_date", "datum_date")\
-        .replace(0, np.nan)\
-        .dropna()
+    return fix_and_melt(df, "bulletin_date", "datum_date")
 
 
 def create_db(args):
