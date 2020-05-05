@@ -66,6 +66,14 @@ def cumulative_data(connection, args):
                     table.c.deaths,
                     table.c.announced_deaths]).where(table.c.bulletin_date == args.bulletin_date)
     df = pd.read_sql_query(query, connection)
+    df = df.rename(columns={
+        'confirmed_cases': 'Confirmed cases  (by test date)',
+        'probable_cases': 'Probable cases (by test date)',
+        'positive_results': 'Positive results (by bulletin date)',
+        'announced_cases': 'Cases (by bulletin date)',
+        'deaths': 'Deaths (by actual date)',
+        'announced_deaths': 'Deaths (by bulletin date)'
+    })
     return fix_and_melt(df, "datum_date")
 
 
@@ -98,6 +106,12 @@ def lateness_data(connection, args):
         table.c.bulletin_date <= args.bulletin_date
     )
     df = pd.read_sql_query(query, connection)
+    df = df.rename(columns={
+        'confirmed_and_probable_cases': 'Confirmed and probable',
+        'confirmed_cases': 'Confirmed',
+        'probable_cases': 'Probable',
+        'deaths': 'Deaths'
+    })
     return fix_and_melt(df, "bulletin_date")
 
 
@@ -135,6 +149,12 @@ def doubling_data(connection, args):
         table.c.bulletin_date == args.bulletin_date
     )
     df = pd.read_sql_query(query, connection)
+    df = df.rename(columns={
+        'cumulative_confirmed_and_probable_cases': 'Confirmed and probable',
+        'cumulative_confirmed_cases': 'Confirmed',
+        'cumulative_probable_cases': 'Probable',
+        'cumulative_deaths': 'Deaths'
+    })
     return pd.melt(fix_date_columns(df, "datum_date"),
                    ["datum_date", "window_size_days"])
 
@@ -175,6 +195,12 @@ def daily_deltas_data(connection, args):
              table.c.bulletin_date <= args.bulletin_date)
     )
     df = pd.read_sql_query(query, connection)
+    df = df.rename(columns={
+        'delta_confirmed_and_probable_cases': 'Confirmed and probable',
+        'delta_confirmed_cases': 'Confirmed',
+        'delta_probable_cases': 'Probable',
+        'delta_deaths': 'Deaths'
+    })
     return fix_and_melt(df, "bulletin_date", "datum_date")\
         .replace(0, np.nan)\
         .dropna()
