@@ -47,11 +47,11 @@ def cumulative_graph(df):
         x=alt.X('datum_date:T', title="Date of test sample or death"),
         y=alt.Y('value', title="Cumulative cases or deaths",
                 scale=alt.Scale(type='log')),
-        color=alt.Color('variable', title=None),
+        color=alt.Color('variable', title=None, legend=alt.Legend(orient="top")),
         tooltip=['datum_date', 'variable', 'value']
     ).properties(
-        width=1024,
-        height=768
+        width=1200,
+        height=800
     )
 
 def cumulative_data(connection, args):
