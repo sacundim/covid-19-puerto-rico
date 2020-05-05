@@ -92,9 +92,13 @@ def lateness_graph(df):
                       'Probable',
                       'Deaths']),
         color=alt.Color('variable', legend=None),
-        tooltip=['variable', 'bulletin_date', 'value']
+        tooltip=['variable', 'bulletin_date',
+                 alt.Tooltip(field='value',
+                             type='quantitative',
+                             format=".1f")]
     ).facet(
-        row=alt.Y("bulletin_date", title="Bulletin date")
+        row=alt.Y("bulletin_date", title="Bulletin date",
+                  sort="descending")
     )
 
 def lateness_data(connection, args):
@@ -171,11 +175,8 @@ def daily_deltas(connection, args):
     df = daily_deltas_data(connection, args)
     logging.info("deltas frame: %s", describe_frame(df))
 
-    # This one is just here to illustrate a bug for now
-    basename = f"{args.output_dir}/buggy_daily_deltas_{args.bulletin_date}"
-    save_graph(daily_deltas_graph(df), basename)
-
     basename = f"{args.output_dir}/daily_deltas_{args.bulletin_date}"
+#    save_graph(daily_deltas_graph(df), basename)
     save_graph(workaround_daily_deltas_graph(df), basename)
 
 def daily_deltas_graph(df):
