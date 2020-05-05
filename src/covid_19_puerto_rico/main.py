@@ -28,12 +28,36 @@ def main():
     logging.info("bulletin-date is %s; output-dir is %s",
                  args.bulletin_date, args.output_dir)
 
+    alt.themes.register("custom_theme", custom_theme)
+    alt.themes.enable("custom_theme")
+
     engine = create_db(args)
     with engine.connect() as connection:
         cumulative(connection, args)
         lateness(connection, args)
         doubling(connection, args)
         daily_deltas(connection, args)
+
+def custom_theme():
+    return {
+        "config": {
+            "title": {
+                "fontSize": 20,
+            },
+            "axis": {
+                "labelFontSize": 14,
+                "titleFontSize": 14
+            },
+            "legend": {
+                "labelFontSize": 14,
+                "titleFontSize": 14
+            },
+            "header": {
+                "labelFontSize": 14,
+                "titleFontSize": 14
+            }
+        }
+    }
 
 
 def cumulative(connection, args):
@@ -47,7 +71,8 @@ def cumulative_graph(df):
         x=alt.X('datum_date:T', title="Date of test sample or death"),
         y=alt.Y('value', title="Cumulative cases or deaths",
                 scale=alt.Scale(type='log')),
-        color=alt.Color('variable', title=None, legend=alt.Legend(orient="top")),
+        color=alt.Color('variable', title=None,
+                        legend=alt.Legend(orient="top", labelLimit=250)),
         tooltip=['datum_date', 'variable', 'value']
     ).properties(
         width=1200,
@@ -67,12 +92,12 @@ def cumulative_data(connection, args):
                     table.c.announced_deaths]).where(table.c.bulletin_date == args.bulletin_date)
     df = pd.read_sql_query(query, connection)
     df = df.rename(columns={
-        'confirmed_cases': 'Confirmed cases  (by test date)',
-        'probable_cases': 'Probable cases (by test date)',
-        'positive_results': 'Positive results (by bulletin date)',
-        'announced_cases': 'Cases (by bulletin date)',
-        'deaths': 'Deaths (by actual date)',
-        'announced_deaths': 'Deaths (by bulletin date)'
+        'confirmed_cases': 'Confirmed cases (test date)',
+        'probable_cases': 'Probable cases (test date)',
+        'positive_results': 'Positive results (bulletin date)',
+        'announced_cases': 'Cases (bulletin date)',
+        'deaths': 'Deaths (actual date)',
+        'announced_deaths': 'Deaths (bulletin date)'
     })
     return fix_and_melt(df, "datum_date")
 
@@ -97,7 +122,8 @@ def lateness_graph(df):
                              type='quantitative',
                              format=".1f")]
     ).properties(
-      width=150
+        width=150,
+        height=600
     ).facet(
         column=alt.X("bulletin_date", title="Bulletin date")
     )
@@ -218,7 +244,7 @@ def workaround_daily_deltas_graph(df):
         return (min(filtered['datum_date']), max(filtered['datum_date']))
 
     return alt.Chart(df).mark_bar(clip=True).encode(
-        x=alt.X('value', title="Cases added/subtracted"),
+        x=alt.X('value', title="Cases +/-"),
         y=alt.Y('datum_date:T', title="Event date",
                 scale=alt.Scale(domain=bug_workaround(df))),
         color=alt.Color('variable', legend=None),
