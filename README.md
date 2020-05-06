@@ -95,7 +95,7 @@ jugar con esto:
   instalada;
 * `poetry install` desde este directorio;
 * `docker-compose up` desde este directorio;
-* `./generate-reports.sh` desde este directorio;
+* `./scripts/generate-reports.sh` desde este directorio;
 * `docker-compose down`
 
 ...y las gráficas aparecen dentro del directorio [`output/`](output/):
