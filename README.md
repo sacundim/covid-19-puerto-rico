@@ -87,18 +87,17 @@ este en la base de datos.  El código está aquí:
 ## Análisis y gráficas
 
 Hay además aquí código Python para generar una serie de análisis
-gráficas que aun no he documentado.  Para los doctos que quieran
-jugar con esto:
+gráficas que aun no he documentado.  La forma más sencilla de
+lanzarlo requiere Docker y Docker Compose. Desde este directorio:
 
-* Hay que tener Python 3.7+, Docker y Docker Compose;
-* Hay que tener la herramienta [`Poetry`](https://python-poetry.org/docs/)
-  instalada;
-* `poetry install` desde este directorio;
-* `docker-compose up` desde este directorio;
-* `./scripts/generate-reports.sh` desde este directorio;
-* `docker-compose down`
-
-...y las gráficas aparecen dentro del directorio [`output/`](output/):
+1. `docker-compose up`
+2. `./scripts/build-docker-image.sh` (**ADVERTENCIA:** Descarga más 
+   de 1 gigabyte de datos)
+3. `./scripts/run-in-docker.sh --bulletin-date 2020-05-05` (u otra 
+   fecha más reciente que hayan datos aquí);
+   
+...y las gráficas aparecen dentro del directorio [`output/`](output/),
+en formatos HTML, PNG y Vega (JSON):
 
 * Casos cumulativos por fecha anuncio y fecha evento;
 * Tiempo de duplicación de casos por ventanas de 7,
@@ -107,6 +106,15 @@ jugar con esto:
   fecha de evento;
 * Estimado de rezago promedio en reporte de casos 
   (comparando boletines consecutivos).
+
+Para los que prefieran usar menos Docker, hay que tener Python 3.7+,
+Docker, Docker Compose y la la herramienta [`Poetry`](https://python-poetry.org/docs/).
+Entonces desde este directorio:
+
+* `poetry install` (descarga dependencias Python);
+* `docker-compose up` desde este directorio (**ADVERTENCIA:** 
+   descarga como 300 MiB);
+* `./scripts/generate-reports.sh --bulletin-date 2020-05-05`;
 
 
 ## Agradecimientos
