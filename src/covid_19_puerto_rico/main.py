@@ -23,16 +23,11 @@ def process_arguments():
     return parser.parse_args()
 
 def main():
-    logging.basicConfig(format='%(asctime)s %(message)s',
-                        level=logging.INFO)
+    global_configuration()
     args = process_arguments()
     args.output_formats = set(args.output_formats)
     logging.info("bulletin-date is %s; output-dir is %s; output-formats is %s",
                  args.bulletin_date, args.output_dir, args.output_formats)
-
-    alt.themes.register("custom_theme", custom_theme)
-    alt.themes.enable("custom_theme")
-    alt.renderers.enable('altair_saver', fmts=['png'])
 
     engine = create_db(args)
     with engine.connect() as connection:
@@ -40,6 +35,27 @@ def main():
         lateness(connection, args)
         doubling(connection, args)
         daily_deltas(connection, args)
+
+def global_configuration():
+    logging.basicConfig(format='%(asctime)s %(message)s',
+                        level=logging.INFO)
+
+    alt.themes.register("custom_theme", custom_theme)
+    alt.themes.enable("custom_theme")
+    alt.renderers.enable('altair_saver', fmts=['png'])
+
+    alt.renderers.set_embed_options(
+        timeFormatLocale={
+            "dateTime": "%x, %X",
+            "date": "%d/%m/%Y",
+            "time": "%-I:%M:%S %p",
+            "periods": ["AM", "PM"],
+            "days": ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"],
+            "shortDays": ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"],
+            "months": ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
+            "shortMonths": ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
+        }
+    )
 
 def custom_theme():
     return {
@@ -71,14 +87,14 @@ def cumulative(connection, args):
 
 def cumulative_graph(df):
     return alt.Chart(df).mark_line(point=True).encode(
-        x=alt.X('datum_date:T', title="Date of test sample or death"),
-        y=alt.Y('value', title="Cumulative cases or deaths",
+        x=alt.X('datum_date:T', title="Fecha de la muestra o muerte"),
+        y=alt.Y('value', title="Casos únicos o muertes (cumulativo)",
                 scale=alt.Scale(type='log')),
         color=alt.Color('variable', title=None,
                         legend=alt.Legend(orient="top", labelLimit=250)),
         tooltip=['datum_date', 'variable', 'value']
     ).properties(
-        title="Daily announced cumulative counts evidently lag actual values",
+        title="Los conteos cumulativos que se anuncian cada día vs. revisiones posteriores",
         width=1200,
         height=800
     )
@@ -96,12 +112,12 @@ def cumulative_data(connection, args):
                     table.c.announced_deaths]).where(table.c.bulletin_date == args.bulletin_date)
     df = pd.read_sql_query(query, connection)
     df = df.rename(columns={
-        'confirmed_cases': 'Confirmed cases (test date)',
-        'probable_cases': 'Probable cases (test date)',
-        'positive_results': 'Positive results (bulletin date)',
-        'announced_cases': 'Cases (bulletin date)',
-        'deaths': 'Deaths (actual date)',
-        'announced_deaths': 'Deaths (bulletin date)'
+        'confirmed_cases': 'Casos confirmados (fecha muestra)',
+        'probable_cases': 'Casos probables (fecha muestra)',
+        'positive_results': 'Pruebas positivas (fecha boletín)',
+        'announced_cases': 'Casos (fecha boletín)',
+        'deaths': 'Muertes (fecha actual)',
+        'announced_deaths': 'Muertes (fecha boletín)'
     })
     return fix_and_melt(df, "datum_date")
 
@@ -114,12 +130,12 @@ def lateness(connection, args):
 
 def lateness_graph(df):
     return alt.Chart(df).mark_bar().encode(
-        y=alt.Y('value', title="Estimated lag (days)"),
+        y=alt.Y('value', title="Rezado estimado (días)"),
         x=alt.X('variable', title=None,
-                sort=['Confirmed and probable',
-                      'Confirmed',
-                      'Probable',
-                      'Deaths']),
+                sort=['Confirmados y probables',
+                      'Confirmados',
+                      'Probables',
+                      'Muertes']),
         color=alt.Color('variable', legend=None),
         tooltip=['variable', 'bulletin_date',
                  alt.Tooltip(field='value',
@@ -129,9 +145,9 @@ def lateness_graph(df):
         width=150,
         height=600
     ).facet(
-        column=alt.X("bulletin_date", title="Bulletin date")
+        column=alt.X("bulletin_date", title="Fecha del boletín")
     ).properties(
-        title="It routinely takes over a week for a positive test result"
+        title="Es común que tome una semana entre toma de muestra y aviso en boletín"
     )
 
 def lateness_data(connection, args):
@@ -149,10 +165,10 @@ def lateness_data(connection, args):
     )
     df = pd.read_sql_query(query, connection)
     df = df.rename(columns={
-        'confirmed_and_probable_cases': 'Confirmed and probable',
-        'confirmed_cases': 'Confirmed',
-        'probable_cases': 'Probable',
-        'deaths': 'Deaths'
+        'confirmed_and_probable_cases': 'Confirmados y probables',
+        'confirmed_cases': 'Confirmados',
+        'probable_cases': 'Probables',
+        'deaths': 'Muertes'
     })
     return fix_and_melt(df, "bulletin_date")
 
@@ -165,8 +181,8 @@ def doubling(connection, args):
 
 def doubling_graph(df):
     return alt.Chart(df.dropna()).mark_line(clip=True).encode(
-        x=alt.X('datum_date:T', title='Event date'),
-        y=alt.Y('value', title="Doubling time (days)",
+        x=alt.X('datum_date:T', title='Fecha del evento'),
+        y=alt.Y('value', title="Tiempo de duplicación (días)",
                 scale=alt.Scale(type='log', domain=(1, 100))),
         color=alt.Color('variable', legend=None)
     ).properties(
@@ -174,13 +190,13 @@ def doubling_graph(df):
         height=256
     ).facet(
         column=alt.X('variable', title=None,
-                     sort=['Confirmed and probable',
-                           'Confirmed',
-                           'Probable',
-                           'Deaths']),
+                     sort=['Confirmados y probables',
+                           'Confirmados',
+                           'Probables',
+                           'Muertes']),
         row=alt.Y('window_size_days:O', title='Window size (days)')
     ).properties(
-        title="Time to double in days has steadily slowed down"
+        title="El tiempo de duplicación de positivos y muertes ha bajado consistentemente"
     )
 
 def doubling_data(connection, args):
@@ -198,10 +214,10 @@ def doubling_data(connection, args):
     )
     df = pd.read_sql_query(query, connection)
     df = df.rename(columns={
-        'cumulative_confirmed_and_probable_cases': 'Confirmed and probable',
-        'cumulative_confirmed_cases': 'Confirmed',
-        'cumulative_probable_cases': 'Probable',
-        'cumulative_deaths': 'Deaths'
+        'cumulative_confirmed_and_probable_cases': 'Confirmados y probables',
+        'cumulative_confirmed_cases': 'Confirmados',
+        'cumulative_probable_cases': 'Probables',
+        'cumulative_deaths': 'Muertes'
     })
     return pd.melt(fix_date_columns(df, "datum_date"),
                    ["datum_date", "window_size_days"])
@@ -231,8 +247,8 @@ def workaround_daily_deltas_graph(df):
         return (min(filtered['datum_date']), max(filtered['datum_date']))
 
     return alt.Chart(df).mark_bar(clip=True).encode(
-        x=alt.X('value', title="Cases +/-"),
-        y=alt.Y('datum_date:T', title="Event date",
+        x=alt.X('value', title="Casos +/-"),
+        y=alt.Y('datum_date:T', title="Fecha del evento",
                 scale=alt.Scale(domain=bug_workaround(df))),
         color=alt.Color('variable', legend=None),
         tooltip = ['variable', 'datum_date:T', 'value']
@@ -243,12 +259,12 @@ def workaround_daily_deltas_graph(df):
         column=alt.X('bulletin_date:T', sort="descending",
                      title="Bulletin date"),
         row=alt.Y('variable', title=None,
-                  sort=['Confirmed and probable',
-                        'Confirmed',
-                        'Probable',
-                        'Deaths'])
+                  sort=['Confirmados y probables',
+                        'Confirmados',
+                        'Probables',
+                        'Muertes'])
     ).properties(
-        title="Cases are often added (or subtracted!) far back"
+        title="Muchas veces los casos que se añaden (¡o quitan!) son viejitos"
     )
 
 def daily_deltas_data(connection, args):
@@ -266,9 +282,9 @@ def daily_deltas_data(connection, args):
     )
     df = pd.read_sql_query(query, connection)
     df = df.rename(columns={
-        'delta_confirmed_cases': 'Confirmed',
-        'delta_probable_cases': 'Probable',
-        'delta_deaths': 'Deaths'
+        'delta_confirmed_cases': 'Confirmados',
+        'delta_probable_cases': 'Probables',
+        'delta_deaths': 'Muertes'
     })
     return fix_and_melt(df, "bulletin_date", "datum_date")
 
