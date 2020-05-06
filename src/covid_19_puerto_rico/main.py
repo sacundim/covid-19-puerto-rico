@@ -258,7 +258,7 @@ def workaround_daily_deltas_chart(df):
         height=250
     ).facet(
         column=alt.X('bulletin_date:T', sort="descending",
-                     title="Bulletin date"),
+                     title="Fecha del boletín"),
         row=alt.Y('variable', title=None,
                   sort=['Confirmados y probables',
                         'Confirmados',
