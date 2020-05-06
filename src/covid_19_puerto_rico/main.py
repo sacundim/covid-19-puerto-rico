@@ -12,12 +12,12 @@ import toml
 from sqlalchemy.sql import select, and_
 
 def process_arguments():
-    parser = argparse.ArgumentParser(description='Generate Puerto Rico COVID-19 graphs')
+    parser = argparse.ArgumentParser(description='Generate Puerto Rico COVID-19 charts')
     parser.add_argument('--output-dir', type=str, required=True,
                         help='Directory into which to place output')
     parser.add_argument('--output-formats', action='append', default=['json'])
     parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat, required=True,
-                        help='Bulletin date to generate graphs for')
+                        help='Bulletin date to generate charts for')
     parser.add_argument('--config-file', type=str, required=True,
                         help='TOML config file (for DB credentials and such')
     return parser.parse_args()
@@ -83,9 +83,9 @@ def cumulative(connection, args):
     df = cumulative_data(connection, args)
     logging.info("cumulative frame: %s", describe_frame(df))
     basename = f"{args.output_dir}/cumulative_{args.bulletin_date}"
-    save_chart(cumulative_graph(df), basename, args.output_formats)
+    save_chart(cumulative_chart(df), basename, args.output_formats)
 
-def cumulative_graph(df):
+def cumulative_chart(df):
     return alt.Chart(df).mark_line(point=True).encode(
         x=alt.X('datum_date:T', title="Fecha de la muestra o muerte"),
         y=alt.Y('value', title="Casos únicos o muertes (cumulativo)",
@@ -101,7 +101,7 @@ def cumulative_graph(df):
 
 def cumulative_data(connection, args):
     meta = sqlalchemy.MetaData()
-    table = sqlalchemy.Table('main_graph', meta, schema='products',
+    table = sqlalchemy.Table('cumulative_data', meta, schema='products',
                              autoload_with=connection)
     query = select([table.c.datum_date,
                     table.c.confirmed_cases,
@@ -126,9 +126,9 @@ def lateness(connection, args):
     df = lateness_data(connection, args)
     logging.info("lateness frame: %s", describe_frame(df))
     basename = f"{args.output_dir}/lateness_{args.bulletin_date}"
-    save_chart(lateness_graph(df), basename, args.output_formats)
+    save_chart(lateness_chart(df), basename, args.output_formats)
 
-def lateness_graph(df):
+def lateness_chart(df):
     return alt.Chart(df).mark_bar().encode(
         y=alt.Y('value', title="Rezado estimado (días)"),
         x=alt.X('variable', title=None,
@@ -178,9 +178,9 @@ def doubling(connection, args):
     df = doubling_data(connection, args)
     logging.info("doubling frame: %s", describe_frame(df))
     basename = f"{args.output_dir}/doubling_{args.bulletin_date}"
-    save_chart(doubling_graph(df), basename, args.output_formats)
+    save_chart(doubling_chart(df), basename, args.output_formats)
 
-def doubling_graph(df):
+def doubling_chart(df):
     return alt.Chart(df.dropna()).mark_line(clip=True).encode(
         x=alt.X('datum_date:T', title='Fecha del evento'),
         y=alt.Y('value', title="Tiempo de duplicación (días)",
@@ -229,18 +229,18 @@ def daily_deltas(connection, args):
     logging.info("deltas frame: %s", describe_frame(df))
 
     basename = f"{args.output_dir}/daily_deltas_{args.bulletin_date}"
-#    save_graph(daily_deltas_graph(df), basename)
-    save_chart(workaround_daily_deltas_graph(df), basename, args.output_formats)
+#    save_chart(daily_deltas_chart(df), basename)
+    save_chart(workaround_daily_deltas_chart(df), basename, args.output_formats)
 
-def workaround_daily_deltas_graph(df):
+def workaround_daily_deltas_chart(df):
     def bug_workaround(df):
         """If both of these conditions hold:
 
-         1. One of the subgraphs in this faceted graph has
+         1. One of the subcharts in this faceted chart has
             no data points;
          2. I custom sort the faceting grid column;
 
-         ...then I get an empty subgraph (no gridlines even)
+         ...then I get an empty subchart (no gridlines even)
          and the sorting of the columns for that row breaks."""
         filtered = df\
             .replace(0, np.nan)\
@@ -303,7 +303,7 @@ def create_db(args):
 def save_chart(chart, basename, formats):
     for format in formats:
         filename = f"{basename}.{format}"
-        logging.info("Writing graph to %s", filename)
+        logging.info("Writing chart to %s", filename)
         chart.save(filename)
 
 def fix_date_columns(df, *date_columns):
