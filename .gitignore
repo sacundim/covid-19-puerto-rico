@@ -2,5 +2,5 @@
 .venv/
 *.egg-info
 *.pyc
-*.log
 dist/
+geckodriver.log
