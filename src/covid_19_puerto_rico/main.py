@@ -15,6 +15,7 @@ def process_arguments():
     parser = argparse.ArgumentParser(description='Generate Puerto Rico COVID-19 graphs')
     parser.add_argument('--output-dir', type=str, required=True,
                         help='Directory into which to place output')
+    parser.add_argument('--output-formats', action='append', default=['json'])
     parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat, required=True,
                         help='Bulletin date to generate graphs for')
     parser.add_argument('--config-file', type=str, required=True,
@@ -25,11 +26,13 @@ def main():
     logging.basicConfig(format='%(asctime)s %(message)s',
                         level=logging.INFO)
     args = process_arguments()
-    logging.info("bulletin-date is %s; output-dir is %s",
-                 args.bulletin_date, args.output_dir)
+    args.output_formats = set(args.output_formats)
+    logging.info("bulletin-date is %s; output-dir is %s; output-formats is %s",
+                 args.bulletin_date, args.output_dir, args.output_formats)
 
     alt.themes.register("custom_theme", custom_theme)
     alt.themes.enable("custom_theme")
+    alt.renderers.enable('altair_saver', fmts=['png'])
 
     engine = create_db(args)
     with engine.connect() as connection:
@@ -64,7 +67,7 @@ def cumulative(connection, args):
     df = cumulative_data(connection, args)
     logging.info("cumulative frame: %s", describe_frame(df))
     basename = f"{args.output_dir}/cumulative_{args.bulletin_date}"
-    save_graph(cumulative_graph(df), basename)
+    save_chart(cumulative_graph(df), basename, args.output_formats)
 
 def cumulative_graph(df):
     return alt.Chart(df).mark_line(point=True).encode(
@@ -107,7 +110,7 @@ def lateness(connection, args):
     df = lateness_data(connection, args)
     logging.info("lateness frame: %s", describe_frame(df))
     basename = f"{args.output_dir}/lateness_{args.bulletin_date}"
-    save_graph(lateness_graph(df), basename)
+    save_chart(lateness_graph(df), basename, args.output_formats)
 
 def lateness_graph(df):
     return alt.Chart(df).mark_bar().encode(
@@ -158,7 +161,7 @@ def doubling(connection, args):
     df = doubling_data(connection, args)
     logging.info("doubling frame: %s", describe_frame(df))
     basename = f"{args.output_dir}/doubling_{args.bulletin_date}"
-    save_graph(doubling_graph(df), basename)
+    save_chart(doubling_graph(df), basename, args.output_formats)
 
 def doubling_graph(df):
     return alt.Chart(df.dropna()).mark_line(clip=True).encode(
@@ -210,7 +213,7 @@ def daily_deltas(connection, args):
 
     basename = f"{args.output_dir}/daily_deltas_{args.bulletin_date}"
 #    save_graph(daily_deltas_graph(df), basename)
-    save_graph(workaround_daily_deltas_graph(df), basename)
+    save_chart(workaround_daily_deltas_graph(df), basename, args.output_formats)
 
 def workaround_daily_deltas_graph(df):
     def bug_workaround(df):
@@ -280,10 +283,11 @@ def create_db(args):
     url = sqlalchemy.engine.url.URL(**config)
     return sqlalchemy.create_engine(url)
 
-def save_graph(graph, basename):
-    filename = f"{basename}.html"
-    logging.info("Writing graph to %s", filename)
-    graph.save(filename)
+def save_chart(chart, basename, formats):
+    for format in formats:
+        filename = f"{basename}.{format}"
+        logging.info("Writing graph to %s", filename)
+        chart.save(filename)
 
 def fix_date_columns(df, *date_columns):
     """Pandas is making us frames with object type for date columns,

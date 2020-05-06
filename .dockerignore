@@ -1,0 +1,9 @@
+.git/
+.idea/
+.venv/
+config/
+data/
+dist/
+output/
+postgres/
+source_material/
