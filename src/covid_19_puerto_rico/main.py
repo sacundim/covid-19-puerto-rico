@@ -145,7 +145,8 @@ def lateness_graph(df):
         width=150,
         height=600
     ).facet(
-        column=alt.X("bulletin_date", title="Fecha del boletín")
+        column=alt.X("bulletin_date", sort="descending",
+                     title="Fecha del boletín")
     ).properties(
         title="Es común que tome una semana entre toma de muestra y aviso en boletín"
     )
