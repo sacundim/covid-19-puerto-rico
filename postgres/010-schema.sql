@@ -221,13 +221,15 @@ WITH dates AS (
 SELECT
 	bulletin_dates.bulletin_date,
 	dates.date datum_date,
+	announcement.cumulative_positive_results AS positive_results,
+	announcement.cumulative_negative_results AS negative_results,
+	announcement.cumulative_pending_results AS pending_results,
+	announcement.cumulative_cases AS announced_cases,
+	announcement.cumulative_deaths AS announced_deaths,
 	ba.cumulative_confirmed_and_probable_cases AS confirmed_and_probable_cases,
 	ba.cumulative_confirmed_cases AS confirmed_cases,
 	ba.cumulative_probable_cases AS probable_cases,
-	announcement.cumulative_positive_results AS positive_results,
-	ba.cumulative_deaths AS deaths,
-	announcement.cumulative_cases AS announced_cases,
-	announcement.cumulative_deaths AS announced_deaths
+	ba.cumulative_deaths AS deaths
 FROM bulletin_dates
 INNER JOIN dates
 	ON dates.date <= bulletin_dates.bulletin_date
