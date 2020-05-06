@@ -199,7 +199,7 @@ CREATE SCHEMA products;
 COMMENT ON SCHEMA products IS
 'Views with queries that are intended to be presentations of the data';
 
-CREATE VIEW products.main_graph AS
+CREATE VIEW products.cumulative_data AS
 -- This is harder to write than it looks. You can't FULL OUTER JOIN
 -- the whole bitemporal table with just the announcements because
 -- you need to union a copy of the latter to each bulletin_date.
