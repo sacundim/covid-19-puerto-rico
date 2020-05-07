@@ -43,12 +43,12 @@ La intención de esto es posibilitar análisis de, por ejemplo:
 Por ejemplo, esta gráfica de casos positivos probables hasta el 
 2 de mayo del 2020 da 9 casos probables para el 1ero de abril:
 
-![Casos probables hasta 2 de mayo](source_material/2020-05-02_probable.png)
+![Casos probables hasta 2 de mayo](source_material/2020-05-02/2020-05-02_probable.png)
 
 Pero la gráfica del boletín del próximo día (datos hasta 3 de mayo 
 del 2020) da 8 casos probablespara la misma fecha de 1ero de abril:
 
-![Casos probables hasta 3 de mayo](source_material/2020-05-03_probable.jpeg)
+![Casos probables hasta 3 de mayo](source_material/2020-05-03/2020-05-03_probable.jpeg)
 
 Así que el archivo bitemporal reporta:
 
