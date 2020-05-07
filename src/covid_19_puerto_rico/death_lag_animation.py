@@ -29,15 +29,27 @@ def death_lag_animation(connection, args):
 
 
 def death_lag_animation_chart(df, args):
-    return alt.Chart(df).mark_line(point=True).encode(
+    lines =  alt.Chart(df).mark_line(point=True).encode(
         x=alt.X('datum_date', title='Fecha',
                 scale=alt.Scale(domain=(pd.to_datetime(args.earliest_bulletin_date),
                                         pd.to_datetime(args.bulletin_date)))),
         y=alt.Y('value', title=None, scale=alt.Scale(domain=(80, 110))),
         color=alt.Color('variable', title=None,
-                        legend=alt.Legend(orient="top", labelLimit=250)),
-    ).properties(
-        width=600
+                        legend=alt.Legend(orient='top', labelLimit=250)),
+    )
+
+    text = lines.mark_text(
+        align='center',
+        baseline='line-bottom',
+        dy=-3
+    ).encode(
+        text='value:Q'
+    )
+
+    return (lines + text).properties(
+        width=600, height=200
+    ).configure(
+        padding=15
     )
 
 def death_lag_animation_data(connection, earliest_bulletin_date, bulletin_date):
