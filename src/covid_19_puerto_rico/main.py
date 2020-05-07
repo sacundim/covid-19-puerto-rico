@@ -3,13 +3,10 @@
 import altair as alt
 import argparse
 import datetime
-import io
-import logging
 import numpy as np
-import pandas as pd
-import sqlalchemy
-import toml
 from sqlalchemy.sql import select, and_
+
+from .util import *
 
 def process_arguments():
     parser = argparse.ArgumentParser(description='Generate Puerto Rico COVID-19 charts')
@@ -20,6 +17,10 @@ def process_arguments():
                         help='Bulletin date to generate charts for')
     parser.add_argument('--config-file', type=str, required=True,
                         help='TOML config file (for DB credentials and such')
+    parser.add_argument('--earliest-bulletin-date',
+                        type=datetime.date.fromisoformat,
+                        default=datetime.date(2020, 4, 25),
+                        help="Earliest bitemporal bulletin date (you probably don't need to touch this)")
     return parser.parse_args()
 
 def main():
@@ -35,6 +36,7 @@ def main():
         lateness(connection, args)
         doubling(connection, args)
         daily_deltas(connection, args)
+#        death_lag_animation(connection, args)
 
 def global_configuration():
     logging.basicConfig(format='%(asctime)s %(message)s',
@@ -288,39 +290,6 @@ def daily_deltas_data(connection, args):
         'delta_deaths': 'Muertes'
     })
     return fix_and_melt(df, "bulletin_date", "datum_date")
-
-
-def create_db(args):
-    config = {
-        'drivername': 'postgres',
-        'port': 5432
-    }
-    toml_dict = toml.load(args.config_file)
-    config.update(toml_dict['database'])
-    url = sqlalchemy.engine.url.URL(**config)
-    return sqlalchemy.create_engine(url)
-
-def save_chart(chart, basename, formats):
-    for format in formats:
-        filename = f"{basename}.{format}"
-        logging.info("Writing chart to %s", filename)
-        chart.save(filename)
-
-def fix_date_columns(df, *date_columns):
-    """Pandas is making us frames with object type for date columns,
-    which some libraries hate."""
-    for col in date_columns:
-        df[col] = pd.to_datetime(df[col])
-    return df
-
-def fix_and_melt(df, *date_columns):
-    return pd.melt(fix_date_columns(df, *date_columns), date_columns)
-
-def describe_frame(df):
-    """Because df.info() prints instead of returning a string."""
-    buf = io.StringIO()
-    df.info(buf=buf)
-    return buf.getvalue()
 
 
 if __name__ == '__main__':
