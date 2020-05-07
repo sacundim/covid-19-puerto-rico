@@ -68,9 +68,8 @@ def cumulative(connection, args):
 
 def cumulative_chart(df):
     return alt.Chart(df).mark_line(point=True).encode(
-        x=alt.X('datum_date:T', title="Fecha de la muestra o muerte"),
-        y=alt.Y('value', title="Casos únicos o muertes (acumulados)",
-                scale=alt.Scale(type='log')),
+        x=alt.X('datum_date:T', title=None),
+        y=alt.Y('value', title=None, scale=alt.Scale(type='log')),
         color=alt.Color('variable', title=None,
                         legend=alt.Legend(orient="top", labelLimit=250)),
         tooltip=['datum_date', 'variable', 'value']
@@ -129,7 +128,7 @@ def lateness_chart(df):
         column=alt.X("bulletin_date", sort="descending",
                      title="Fecha del boletín")
     ).properties(
-        title="Es común que tome una semana entre toma de muestra y aviso en boletín"
+        title="Es común que tome una semana entre que se tome la muestra y se anuncie nuevo caso"
     )
 
 def lateness_data(connection, args):
@@ -176,9 +175,9 @@ def doubling_chart(df):
                            'Confirmados',
                            'Probables',
                            'Muertes']),
-        row=alt.Y('window_size_days:O', title='Window size (days)')
+        row=alt.Y('window_size_days:O', title='Ancho de ventana (días)')
     ).properties(
-        title="El tiempo de duplicación de positivos y muertes ha bajado consistentemente"
+        title="Los tiempos de duplicación de casos confirmados han bajado consistentemente"
     )
 
 def doubling_data(connection, args):
