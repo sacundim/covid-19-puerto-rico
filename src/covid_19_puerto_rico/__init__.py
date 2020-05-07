@@ -1,9 +1,12 @@
 import altair as alt
 import argparse
 import datetime
+import importlib.resources
+import json
 import numpy as np
 from sqlalchemy.sql import select, and_
 
+from . import resources
 from .death_lag_animation import death_lag_animation
 from .util import *
 
@@ -44,43 +47,17 @@ def global_configuration():
     logging.basicConfig(format='%(asctime)s %(message)s',
                         level=logging.INFO)
 
-    alt.themes.register("custom_theme", custom_theme)
+    alt.themes.register("custom_theme", lambda: get_json_resource('theme.json'))
     alt.themes.enable("custom_theme")
     alt.renderers.enable('altair_saver', fmts=['png'])
-
     alt.renderers.set_embed_options(
-        timeFormatLocale={
-            "dateTime": "%x, %X",
-            "date": "%d/%m/%Y",
-            "time": "%-I:%M:%S %p",
-            "periods": ["AM", "PM"],
-            "days": ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"],
-            "shortDays": ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"],
-            "months": ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
-            "shortMonths": ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
-        }
+        timeFormatLocale=get_json_resource('es-PR.json')
     )
 
-def custom_theme():
-    return {
-        "config": {
-            "title": {
-                "fontSize": 20,
-            },
-            "axis": {
-                "labelFontSize": 14,
-                "titleFontSize": 14
-            },
-            "legend": {
-                "labelFontSize": 14,
-                "titleFontSize": 14
-            },
-            "header": {
-                "labelFontSize": 14,
-                "titleFontSize": 14
-            }
-        }
-    }
+def get_json_resource(filename):
+    text = importlib.resources.read_text(resources, filename)
+    return json.loads(text)
+
 
 
 def cumulative(connection, args):
