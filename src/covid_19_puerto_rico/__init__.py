@@ -37,6 +37,7 @@ def main():
     engine = create_db(args)
     with engine.connect() as connection:
         cumulative(connection, args)
+        confirmed_vs_probable(connection, args)
         lateness(connection, args)
         doubling(connection, args)
         daily_deltas(connection, args)
@@ -57,7 +58,6 @@ def global_configuration():
 def get_json_resource(filename):
     text = importlib.resources.read_text(resources, filename)
     return json.loads(text)
-
 
 
 def cumulative(connection, args):
@@ -102,6 +102,42 @@ def cumulative_data(connection, args):
     return fix_and_melt(df, "datum_date")
 
 
+def confirmed_vs_probable(connection, args):
+    df = confirmed_vs_probable_data(connection, args)
+    logging.info("confirmed_vs_probable frame: %s", describe_frame(df))
+    basename = f"{args.output_dir}/confirmed_vs_probable_{args.bulletin_date}"
+    save_chart(confirmed_vs_probable_chart(df), basename, args.output_formats)
+
+def confirmed_vs_probable_chart(df):
+    return alt.Chart(df).mark_line(point=True).encode(
+        x=alt.X('datum_date:T', title=None),
+        y=alt.Y('value', title=None),
+        color=alt.Color('variable', title=None,
+                        legend=alt.Legend(orient="top", labelLimit=250)),
+        tooltip=['datum_date', 'variable', 'value']
+    ).properties(
+        title="Los casos probables por prueba serológica sobrepasaron los confirmados por molecular",
+        width=1200,
+        height=800
+    )
+
+def confirmed_vs_probable_data(connection, args):
+    meta = sqlalchemy.MetaData()
+    table = sqlalchemy.Table('cumulative_data', meta, schema='products',
+                             autoload_with=connection)
+    query = select([table.c.datum_date,
+                    table.c.confirmed_cases,
+                    table.c.probable_cases,])\
+        .where(and_(datetime.date(2020, 3, 27) <= table.c.datum_date,
+                    table.c.bulletin_date == args.bulletin_date))
+    df = pd.read_sql_query(query, connection)
+    df = df.rename(columns={
+        'confirmed_cases': 'Casos confirmados (fecha muestra)',
+        'probable_cases': 'Casos probables (fecha muestra)'
+    })
+    return fix_and_melt(df, "datum_date")
+
+
 def lateness(connection, args):
     df = lateness_data(connection, args)
     logging.info("lateness frame: %s", describe_frame(df))
@@ -109,26 +145,36 @@ def lateness(connection, args):
     save_chart(lateness_chart(df), basename, args.output_formats)
 
 def lateness_chart(df):
-    return alt.Chart(df).mark_bar().encode(
+    sort_order = ['Confirmados y probables',
+                  'Confirmados',
+                  'Probables',
+                  'Muertes']
+    bars = alt.Chart(df).mark_bar().encode(
         y=alt.Y('value', title="Rezago estimado (días)"),
-        x=alt.X('variable', title=None,
-                sort=['Confirmados y probables',
-                      'Confirmados',
-                      'Probables',
-                      'Muertes']),
-        color=alt.Color('variable', legend=None),
+        x=alt.X('variable', title=None, sort=sort_order, axis=alt.Axis(labels=False)),
+        color=alt.Color('variable', sort=sort_order,
+                        legend=alt.Legend(orient='bottom', title=None)),
         tooltip=['variable', 'bulletin_date',
                  alt.Tooltip(field='value',
                              type='quantitative',
                              format=".1f")]
-    ).properties(
+    )
+
+    text = bars.mark_text(
+        align='center',
+        baseline='middle',
+        dy=-10
+    ).encode(
+        text=alt.Text('value:Q', format='.1f')
+    )
+
+    return (bars + text).properties(
         width=150,
         height=600
     ).facet(
-        column=alt.X("bulletin_date", sort="descending",
-                     title="Fecha del boletín")
+        column=alt.X("bulletin_date", sort="descending", title="Fecha del boletín")
     ).properties(
-        title="Es común que tome una semana entre que se tome la muestra y se anuncie nuevo caso"
+        title="Es común que tarde una semana entre que se tome la muestra y se anuncie nuevo caso"
     )
 
 def lateness_data(connection, args):
