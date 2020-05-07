@@ -6,6 +6,7 @@ import datetime
 import numpy as np
 from sqlalchemy.sql import select, and_
 
+from .death_lag_animation import death_lag_animation
 from .util import *
 
 def process_arguments():
@@ -17,6 +18,8 @@ def process_arguments():
                         help='Bulletin date to generate charts for')
     parser.add_argument('--config-file', type=str, required=True,
                         help='TOML config file (for DB credentials and such')
+    parser.add_argument('--death-lag-animation', action='store_true',
+                        help="Switch to run the death lag animation frame generation")
     parser.add_argument('--earliest-bulletin-date',
                         type=datetime.date.fromisoformat,
                         default=datetime.date(2020, 4, 25),
@@ -36,7 +39,8 @@ def main():
         lateness(connection, args)
         doubling(connection, args)
         daily_deltas(connection, args)
-#        death_lag_animation(connection, args)
+        if args.death_lag_animation:
+            death_lag_animation(connection, args)
 
 def global_configuration():
     logging.basicConfig(format='%(asctime)s %(message)s',

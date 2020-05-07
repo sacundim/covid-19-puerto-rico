@@ -20,6 +20,7 @@ RUN poetry build
 FROM base AS chromium
 RUN apt-get update
 RUN apt-get install -y chromium-driver
+RUN apt-get install -y libmagickwand-dev
 
 
 FROM chromium AS app
