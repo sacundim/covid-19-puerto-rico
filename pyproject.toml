@@ -6,7 +6,7 @@ authors = ["sacundim <anybody@sacundim.org>"]
 packages = [{ include = "covid_19_puerto_rico", from = "src"}]
 
 [tool.poetry.scripts]
-covid19pr = 'covid_19_puerto_rico.main:main'
+covid19pr = 'covid_19_puerto_rico:main'
 
 [tool.poetry.dependencies]
 python = "^3.7"
