@@ -69,13 +69,13 @@ def cumulative(connection, args):
 def cumulative_chart(df):
     return alt.Chart(df).mark_line(point=True).encode(
         x=alt.X('datum_date:T', title="Fecha de la muestra o muerte"),
-        y=alt.Y('value', title="Casos únicos o muertes (cumulativo)",
+        y=alt.Y('value', title="Casos únicos o muertes (acumulados)",
                 scale=alt.Scale(type='log')),
         color=alt.Color('variable', title=None,
                         legend=alt.Legend(orient="top", labelLimit=250)),
         tooltip=['datum_date', 'variable', 'value']
     ).properties(
-        title="Los conteos cumulativos que se anuncian cada día vs. revisiones posteriores",
+        title="Los conteos acumulados que se anuncian cada día vs. revisiones posteriores",
         width=1200,
         height=800
     )
