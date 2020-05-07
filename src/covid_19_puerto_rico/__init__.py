@@ -111,7 +111,7 @@ def lateness(connection, args):
 
 def lateness_chart(df):
     return alt.Chart(df).mark_bar().encode(
-        y=alt.Y('value', title="Rezado estimado (días)"),
+        y=alt.Y('value', title="Rezago estimado (días)"),
         x=alt.X('variable', title=None,
                 sort=['Confirmados y probables',
                       'Confirmados',
