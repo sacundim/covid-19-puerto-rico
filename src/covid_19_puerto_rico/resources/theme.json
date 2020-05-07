@@ -1,0 +1,19 @@
+{
+  "config": {
+    "title": {
+      "fontSize": 20
+    },
+    "axis": {
+      "labelFontSize": 14,
+      "titleFontSize": 14
+    },
+    "legend": {
+      "labelFontSize": 14,
+      "titleFontSize": 14
+    },
+    "header": {
+      "labelFontSize": 14,
+      "titleFontSize": 14
+    }
+  }
+}
