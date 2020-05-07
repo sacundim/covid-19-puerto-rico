@@ -1,5 +1,3 @@
-#/usr/bin/env/python3
-
 import altair as alt
 import argparse
 import datetime
@@ -294,7 +292,3 @@ def daily_deltas_data(connection, args):
         'delta_deaths': 'Muertes'
     })
     return fix_and_melt(df, "bulletin_date", "datum_date")
-
-
-if __name__ == '__main__':
-    main()
