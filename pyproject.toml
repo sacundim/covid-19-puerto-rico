@@ -17,6 +17,7 @@ psycopg2-binary = "^2.8.5"
 altair = "^4.1.0"
 toml = "^0.10.0"
 altair-saver = "^0.5.0"
+wand = "^0.5.9"
 
 [tool.poetry.dev-dependencies]
 
