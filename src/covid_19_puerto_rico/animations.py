@@ -88,16 +88,29 @@ def case_lag(connection, args):
         gif.type = 'optimize'
         gif.save(filename=f"{args.output_dir}/case_lag_animation_{args.bulletin_date}.gif")
 
-
 def case_lag_chart(df, args, current_date):
+    return alt.vconcat(
+        *list(map(lambda variable: case_lag_chart_one_variable(df, args, current_date, variable),
+                  ['Total', 'Confirmados', 'Probables'])),
+        spacing=20
+    ).configure(
+        padding=15
+    )
+
+def case_lag_chart_one_variable(df, args, current_date, variable):
+    x_domain = (pd.to_datetime(args.earliest_bulletin_date),
+                pd.to_datetime(args.bulletin_date))
+    y_domain = compute_domain(df, variable)
     base = alt.Chart(df).encode(
-        x=alt.X('datum_date', title='Fecha',
-                scale=alt.Scale(domain=(pd.to_datetime(args.earliest_bulletin_date),
-                                        pd.to_datetime(args.bulletin_date)))),
-        y=alt.Y('value', title=None, scale=alt.Scale(zero=False, domain=[400, 2200]))
+        x=alt.X('datum_date', title=None, scale=alt.Scale(domain=x_domain)),
+        y=alt.Y('value', title=variable, scale=alt.Scale(zero=False, domain=y_domain))
     ).transform_filter(
-        alt.FieldEqualPredicate(field='bulletin_date',
-                                equal=current_date)
+        {
+            "and": [
+                alt.FieldEqualPredicate(field='bulletin_date', equal=current_date),
+                alt.FieldEqualPredicate(field='variable', equal=variable)
+            ]
+        }
     )
 
     lines = base.mark_line(point=True).encode(
@@ -132,11 +145,13 @@ def case_lag_chart(df, args, current_date):
     )
     return (lines + revised + announced).properties(
         width=900, height=150
-    ).facet(
-        row=alt.Row('variable', title=None)
-    ).configure(
-        padding=15
-    ) # .resolve_scale(y='independent')
+    )
+
+def compute_domain(df, variable):
+    filtered = df.loc[df['variable'] == variable]
+    min = filtered['value'].min()
+    max = filtered['value'].max()
+    return ((min // 10) * 10, (max // 10) * 10 + 10)
 
 def case_lag_data(connection, bulletin_date):
     meta = sqlalchemy.MetaData()
