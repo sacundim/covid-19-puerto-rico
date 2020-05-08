@@ -70,7 +70,7 @@ class CaseLag(AbstractAnimation):
             filtered = df.loc[df['variable'] == variable]
             min = filtered['value'].min()
             max = filtered['value'].max()
-            return (min * 0.95, max * 1.05)
+            return (min * 0.90, max * 1.10)
 
         base = alt.Chart(df).encode(
             x=alt.X('datum_date', title=None, scale=alt.Scale(domain=compute_date_domain(df))),
@@ -95,7 +95,7 @@ class CaseLag(AbstractAnimation):
         ).mark_text(
             align='right',
             baseline='line-bottom',
-            dy=-3
+            dx=-3, dy=-3
         ).transform_filter(
             alt.FieldOneOfPredicate(
                 field='temporality',
@@ -108,7 +108,7 @@ class CaseLag(AbstractAnimation):
         ).mark_text(
             align='right',
             baseline='line-top',
-            dy=3
+            dx=-3, dy=3
         ).transform_filter(
             alt.FieldOneOfPredicate(
                 field='temporality',
