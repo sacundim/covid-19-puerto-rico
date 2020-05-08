@@ -43,7 +43,6 @@ def main():
         daily_deltas(connection, args)
         if args.animations:
             animations.case_lag(connection, args)
-            animations.death_lag(connection, args)
 
 def global_configuration():
     logging.basicConfig(format='%(asctime)s %(message)s',
