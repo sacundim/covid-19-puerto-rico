@@ -27,6 +27,8 @@ def case_lag_chart(df, args, current_date):
     return alt.vconcat(
         *list(map(lambda variable: case_lag_chart_one_variable(df, args, current_date, variable),
                   ['Total', 'Confirmados', 'Probables', 'Muertes'])),
+    ).properties(
+        title="Los números que anuncian en una fecha no son los finales para esa fecha"
     )
 
 def case_lag_chart_one_variable(df, args, current_date, variable):
