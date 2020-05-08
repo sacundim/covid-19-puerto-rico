@@ -89,7 +89,7 @@ def case_lag(connection, args):
             with Image(filename=f'{basename}.png') as frame:
                 gif.sequence.append(frame)
         for frame in gif.sequence:
-            frame.delay = 120
+            frame.delay = 180
         gif.type = 'optimize'
         gif.save(filename=f"{args.output_dir}/case_lag_animation_{args.bulletin_date}.gif")
 
@@ -107,29 +107,32 @@ def case_lag_chart(df, args):
                         legend=alt.Legend(orient='top', labelLimit=250)),
     )
 
-    text = base.mark_text(
+    revised = base.encode(
+        text='value:Q'
+    ).mark_text(
         align='center',
         baseline='line-bottom',
         dy=-3
-    ).encode(
-        text='value:Q'
     ).transform_filter(
-        {
-            'and': [
-                alt.FieldOneOfPredicate(
-                    field='variable',
-                    oneOf=['Confirmados',
-                           'Probables',
-                           'Total']
-                ),
-                alt.FieldOneOfPredicate(
-                    field='temporality',
-                    oneOf=['Revisados']
-                )]
-        }
+        alt.FieldOneOfPredicate(
+            field='temporality',
+            oneOf=['Revisados']
+        )
     )
 
-    return (lines + text).properties(
+    announced = base.encode(
+        text='value:Q'
+    ).mark_text(
+        align='center',
+        baseline='line-top',
+        dy=3
+    ).transform_filter(
+        alt.FieldOneOfPredicate(
+            field='temporality',
+            oneOf=['Anunciados']
+        )
+    )
+    return (lines + revised + announced).properties(
         width=900, height=150
     ).facet(
         row=alt.Row('variable', title=None)
