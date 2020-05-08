@@ -311,3 +311,22 @@ WINDOW datum AS (
 COMMENT ON VIEW products.doubling_times IS
 'How long it took values to double, expressed in fractional days.
 Computed over windows of 7, 14 and 21 days.';
+
+
+CREATE VIEW products.animations AS
+SELECT
+    bulletin_date,
+    datum_date,
+    COALESCE(confirmed_cases, MAX(confirmed_cases) OVER bulletin) confirmed_cases,
+    COALESCE(probable_cases, MAX(probable_cases) OVER bulletin) probable_cases,
+    COALESCE(confirmed_and_probable_cases,
+             MAX(confirmed_and_probable_cases) OVER bulletin) cases,
+	COALESCE(deaths, MAX(deaths) OVER bulletin) deaths,
+    announced_confirmed_cases,
+    announced_probable_cases,
+    announced_cases,
+	announced_deaths
+FROM products.cumulative_data
+WHERE (SELECT min(bulletin_date) FROM bitemporal_agg) <= datum_date
+AND datum_date <= bulletin_date
+WINDOW bulletin AS (PARTITION BY bulletin_date ROWS UNBOUNDED PRECEDING);
