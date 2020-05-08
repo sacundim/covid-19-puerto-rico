@@ -4,7 +4,6 @@ import logging
 import pandas as pd
 from pathlib import Path
 from sqlalchemy import select
-from sqlalchemy.sql.functions import min
 from wand.image import Image
 from .util import *
 
