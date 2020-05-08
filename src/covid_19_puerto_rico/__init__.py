@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import altair as alt
 import argparse
 import datetime
@@ -35,14 +36,12 @@ def main():
                  args.bulletin_date, args.output_dir, args.output_formats)
 
     engine = create_db(args)
-    with engine.connect() as connection:
-        cumulative(connection, args)
-        confirmed_vs_probable(connection, args)
-        lateness(connection, args)
-        doubling(connection, args)
-        daily_deltas(connection, args)
-        if args.animations:
-            animations.case_lag(connection, args)
+    Cumulative(engine, args).execute()
+    Lateness(engine, args).execute()
+    Doubling(engine, args).execute()
+    DailyDeltas(engine, args).execute()
+    if args.animations:
+        animations.CaseLag(engine, args).execute()
 
 def global_configuration():
     logging.basicConfig(format='%(asctime)s %(message)s',
@@ -60,257 +59,219 @@ def get_json_resource(filename):
     return json.loads(text)
 
 
-def cumulative(connection, args):
-    df = cumulative_data(connection, args)
-    logging.info("cumulative frame: %s", describe_frame(df))
-    basename = f"{args.output_dir}/cumulative_{args.bulletin_date}"
-    save_chart(cumulative_chart(df), basename, args.output_formats)
+class AbstractChart(ABC):
+    def __init__(self, engine, args):
+        self.engine = engine
+        self.metadata = sqlalchemy.MetaData(engine)
+        self.args = args
+        self.name = type(self).__name__
 
-def cumulative_chart(df):
-    return alt.Chart(df).mark_line(point=True).encode(
-        x=alt.X('datum_date:T', title=None),
-        y=alt.Y('value', title=None, scale=alt.Scale(type='log')),
-        color=alt.Color('variable', title=None,
-                        legend=alt.Legend(orient="top", labelLimit=250)),
-        tooltip=['datum_date', 'variable', 'value']
-    ).properties(
-        title="Los conteos acumulados que se anuncian cada día vs. revisiones posteriores",
-        width=1200,
-        height=800
-    )
+    def execute(self):
+        with self.engine.connect() as connection:
+            df = self.fetch_data(connection)
+        logging.info("%s dataframe: %s", self.name, describe_frame(df))
+        basename = f"{self.args.output_dir}/{self.name}_{self.args.bulletin_date}"
+        save_chart(self.make_chart(df), basename, self.args.output_formats)
 
-def cumulative_data(connection, args):
-    meta = sqlalchemy.MetaData()
-    table = sqlalchemy.Table('cumulative_data', meta, schema='products',
-                             autoload_with=connection)
-    query = select([table.c.datum_date,
-                    table.c.confirmed_cases,
-                    table.c.probable_cases,
-                    table.c.positive_results,
-                    table.c.announced_cases,
-                    table.c.deaths,
-                    table.c.announced_deaths]).where(table.c.bulletin_date == args.bulletin_date)
-    df = pd.read_sql_query(query, connection)
-    df = df.rename(columns={
-        'confirmed_cases': 'Casos confirmados (fecha muestra)',
-        'probable_cases': 'Casos probables (fecha muestra)',
-        'positive_results': 'Pruebas positivas (fecha boletín)',
-        'announced_cases': 'Casos (fecha boletín)',
-        'deaths': 'Muertes (fecha actual)',
-        'announced_deaths': 'Muertes (fecha boletín)'
-    })
-    return fix_and_melt(df, "datum_date")
+    @abstractmethod
+    def make_chart(self, df):
+        pass
+
+    @abstractmethod
+    def fetch_data(self, connection):
+        pass
 
 
-def confirmed_vs_probable(connection, args):
-    df = confirmed_vs_probable_data(connection, args)
-    logging.info("confirmed_vs_probable frame: %s", describe_frame(df))
-    basename = f"{args.output_dir}/confirmed_vs_probable_{args.bulletin_date}"
-    save_chart(confirmed_vs_probable_chart(df), basename, args.output_formats)
+class Cumulative(AbstractChart):
+    def make_chart(self, df):
+        return alt.Chart(df).mark_line(point=True).encode(
+            x=alt.X('datum_date:T', title=None),
+            y=alt.Y('value', title=None, scale=alt.Scale(type='log')),
+            color=alt.Color('variable', title=None,
+                            legend=alt.Legend(orient="top", labelLimit=250)),
+            tooltip=['datum_date', 'variable', 'value']
+        ).properties(
+            title="Los conteos acumulados que se anuncian cada día vs. revisiones posteriores",
+            width=1200,
+            height=800
+        )
 
-def confirmed_vs_probable_chart(df):
-    return alt.Chart(df).mark_line(point=True).encode(
-        x=alt.X('datum_date:T', title=None),
-        y=alt.Y('value', title=None),
-        color=alt.Color('variable', title=None,
-                        legend=alt.Legend(orient="top", labelLimit=250)),
-        tooltip=['datum_date', 'variable', 'value']
-    ).properties(
-        title="Los casos probables por prueba serológica sobrepasaron los confirmados por molecular",
-        width=1200,
-        height=800
-    )
-
-def confirmed_vs_probable_data(connection, args):
-    meta = sqlalchemy.MetaData()
-    table = sqlalchemy.Table('cumulative_data', meta, schema='products',
-                             autoload_with=connection)
-    query = select([table.c.datum_date,
-                    table.c.confirmed_cases,
-                    table.c.probable_cases,])\
-        .where(and_(datetime.date(2020, 3, 27) <= table.c.datum_date,
-                    table.c.bulletin_date == args.bulletin_date))
-    df = pd.read_sql_query(query, connection)
-    df = df.rename(columns={
-        'confirmed_cases': 'Casos confirmados (fecha muestra)',
-        'probable_cases': 'Casos probables (fecha muestra)'
-    })
-    return fix_and_melt(df, "datum_date")
-
-
-def lateness(connection, args):
-    df = lateness_data(connection, args)
-    logging.info("lateness frame: %s", describe_frame(df))
-    basename = f"{args.output_dir}/lateness_{args.bulletin_date}"
-    save_chart(lateness_chart(df), basename, args.output_formats)
-
-def lateness_chart(df):
-    sort_order = ['Confirmados y probables',
-                  'Confirmados',
-                  'Probables',
-                  'Muertes']
-    bars = alt.Chart(df).mark_bar().encode(
-        y=alt.Y('value', title="Rezago estimado (días)"),
-        x=alt.X('variable', title=None, sort=sort_order, axis=alt.Axis(labels=False)),
-        color=alt.Color('variable', sort=sort_order,
-                        legend=alt.Legend(orient='bottom', title=None)),
-        tooltip=['variable', 'bulletin_date',
-                 alt.Tooltip(field='value',
-                             type='quantitative',
-                             format=".1f")]
-    )
-
-    text = bars.mark_text(
-        align='center',
-        baseline='middle',
-        dy=-10
-    ).encode(
-        text=alt.Text('value:Q', format='.1f')
-    )
-
-    return (bars + text).properties(
-        width=150,
-        height=600
-    ).facet(
-        column=alt.X("bulletin_date", sort="descending", title="Fecha del boletín")
-    ).properties(
-        title="Es común que tarde una semana entre que se tome la muestra y se anuncie nuevo caso"
-    )
-
-def lateness_data(connection, args):
-    meta = sqlalchemy.MetaData()
-    table = sqlalchemy.Table('lateness', meta, schema='products',
-                             autoload_with=connection)
-    query = select([table.c.bulletin_date,
-                    table.c.confirmed_and_probable_cases,
-                    table.c.confirmed_cases,
-                    table.c.probable_cases,
-                    table.c.deaths]
-    ).where(
-        and_(args.bulletin_date - datetime.timedelta(days=7) < table.c.bulletin_date,
-             table.c.bulletin_date <= args.bulletin_date)
-    )
-    df = pd.read_sql_query(query, connection)
-    df = df.rename(columns={
-        'confirmed_and_probable_cases': 'Confirmados y probables',
-        'confirmed_cases': 'Confirmados',
-        'probable_cases': 'Probables',
-        'deaths': 'Muertes'
-    })
-    return fix_and_melt(df, "bulletin_date")
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('cumulative_data', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([table.c.datum_date,
+                        table.c.confirmed_cases,
+                        table.c.probable_cases,
+                        table.c.positive_results,
+                        table.c.announced_cases,
+                        table.c.deaths,
+                        table.c.announced_deaths])\
+            .where(table.c.bulletin_date == self.args.bulletin_date)
+        df = pd.read_sql_query(query, connection)
+        df = df.rename(columns={
+            'confirmed_cases': 'Casos confirmados (fecha muestra)',
+            'probable_cases': 'Casos probables (fecha muestra)',
+            'positive_results': 'Pruebas positivas (fecha boletín)',
+            'announced_cases': 'Casos (fecha boletín)',
+            'deaths': 'Muertes (fecha actual)',
+            'announced_deaths': 'Muertes (fecha boletín)'
+        })
+        return fix_and_melt(df, "datum_date")
 
 
-def doubling(connection, args):
-    df = doubling_data(connection, args)
-    logging.info("doubling frame: %s", describe_frame(df))
-    basename = f"{args.output_dir}/doubling_{args.bulletin_date}"
-    save_chart(doubling_chart(df), basename, args.output_formats)
+class Lateness(AbstractChart):
+    def make_chart(self, df):
+        sort_order = ['Confirmados y probables',
+                      'Confirmados',
+                      'Probables',
+                      'Muertes']
+        bars = alt.Chart(df).mark_bar().encode(
+            y=alt.Y('value', title="Rezago estimado (días)"),
+            x=alt.X('variable', title=None, sort=sort_order, axis=alt.Axis(labels=False)),
+            color=alt.Color('variable', sort=sort_order,
+                            legend=alt.Legend(orient='bottom', title=None)),
+            tooltip=['variable', 'bulletin_date',
+                     alt.Tooltip(field='value',
+                                 type='quantitative',
+                                 format=".1f")]
+        )
 
-def doubling_chart(df):
-    return alt.Chart(df.dropna()).mark_line(clip=True).encode(
-        x=alt.X('datum_date:T', title='Fecha del evento'),
-        y=alt.Y('value', title="Tiempo de duplicación (días)",
-                scale=alt.Scale(type='log', domain=(1, 100))),
-        color=alt.Color('variable', legend=None)
-    ).properties(
-        width=256,
-        height=256
-    ).facet(
-        column=alt.X('variable', title=None,
-                     sort=['Confirmados y probables',
-                           'Confirmados',
-                           'Probables',
-                           'Muertes']),
-        row=alt.Y('window_size_days:O', title='Ancho de ventana (días)')
-    ).properties(
-        title="Los tiempos de duplicación de casos confirmados han bajado consistentemente"
-    )
+        text = bars.mark_text(
+            align='center',
+            baseline='middle',
+            dy=-10
+        ).encode(
+            text=alt.Text('value:Q', format='.1f')
+        )
 
-def doubling_data(connection, args):
-    meta = sqlalchemy.MetaData()
-    table = sqlalchemy.Table('doubling_times', meta, schema='products',
-                             autoload_with=connection)
-    query = select([table.c.datum_date,
-                    table.c.window_size_days,
-                    table.c.cumulative_confirmed_and_probable_cases,
-                    table.c.cumulative_confirmed_cases,
-                    table.c.cumulative_probable_cases,
-                    table.c.cumulative_deaths]
-    ).where(
-        table.c.bulletin_date == args.bulletin_date
-    )
-    df = pd.read_sql_query(query, connection)
-    df = df.rename(columns={
-        'cumulative_confirmed_and_probable_cases': 'Confirmados y probables',
-        'cumulative_confirmed_cases': 'Confirmados',
-        'cumulative_probable_cases': 'Probables',
-        'cumulative_deaths': 'Muertes'
-    })
-    return pd.melt(fix_date_columns(df, "datum_date"),
-                   ["datum_date", "window_size_days"])
+        return (bars + text).properties(
+            width=150,
+            height=600
+        ).facet(
+            column=alt.X("bulletin_date", sort="descending", title="Fecha del boletín")
+        ).properties(
+            title="Es común que tarde una semana entre que se tome la muestra y se anuncie nuevo caso"
+        )
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('lateness', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.confirmed_and_probable_cases,
+                        table.c.confirmed_cases,
+                        table.c.probable_cases,
+                        table.c.deaths]
+        ).where(
+            and_(self.args.bulletin_date - datetime.timedelta(days=7) < table.c.bulletin_date,
+                 table.c.bulletin_date <= self.args.bulletin_date)
+        )
+        df = pd.read_sql_query(query, connection)
+        df = df.rename(columns={
+            'confirmed_and_probable_cases': 'Confirmados y probables',
+            'confirmed_cases': 'Confirmados',
+            'probable_cases': 'Probables',
+            'deaths': 'Muertes'
+        })
+        return fix_and_melt(df, "bulletin_date")
 
 
-def daily_deltas(connection, args):
-    df = daily_deltas_data(connection, args)
-    logging.info("deltas frame: %s", describe_frame(df))
+class Doubling(AbstractChart):
+    def make_chart(self, df):
+        return alt.Chart(df.dropna()).mark_line(clip=True).encode(
+            x=alt.X('datum_date:T', title='Fecha del evento'),
+            y=alt.Y('value', title="Tiempo de duplicación (días)",
+                    scale=alt.Scale(type='log', domain=(1, 100))),
+            color=alt.Color('variable', legend=None)
+        ).properties(
+            width=256,
+            height=256
+        ).facet(
+            column=alt.X('variable', title=None,
+                         sort=['Confirmados y probables',
+                               'Confirmados',
+                               'Probables',
+                               'Muertes']),
+            row=alt.Y('window_size_days:O', title='Ancho de ventana (días)')
+        ).properties(
+            title="Los tiempos de duplicación de casos confirmados han bajado consistentemente"
+        )
 
-    basename = f"{args.output_dir}/daily_deltas_{args.bulletin_date}"
-#    save_chart(daily_deltas_chart(df), basename)
-    save_chart(workaround_daily_deltas_chart(df), basename, args.output_formats)
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('doubling_times', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([table.c.datum_date,
+                        table.c.window_size_days,
+                        table.c.cumulative_confirmed_and_probable_cases,
+                        table.c.cumulative_confirmed_cases,
+                        table.c.cumulative_probable_cases,
+                        table.c.cumulative_deaths]
+        ).where(
+            table.c.bulletin_date == self.args.bulletin_date
+        )
+        df = pd.read_sql_query(query, connection)
+        df = df.rename(columns={
+            'cumulative_confirmed_and_probable_cases': 'Confirmados y probables',
+            'cumulative_confirmed_cases': 'Confirmados',
+            'cumulative_probable_cases': 'Probables',
+            'cumulative_deaths': 'Muertes'
+        })
+        return pd.melt(fix_date_columns(df, "datum_date"),
+                       ["datum_date", "window_size_days"])
 
-def workaround_daily_deltas_chart(df):
-    def bug_workaround(df):
-        """If both of these conditions hold:
 
-         1. One of the subcharts in this faceted chart has
-            no data points;
-         2. I custom sort the faceting grid column;
+class DailyDeltas(AbstractChart):
+    def make_chart(self, df):
+        def bug_workaround(df):
+            """If both of these conditions hold:
 
-         ...then I get an empty subchart (no gridlines even)
-         and the sorting of the columns for that row breaks."""
-        filtered = df\
-            .replace(0, np.nan)\
-            .dropna()
-        return (min(filtered['datum_date']), max(filtered['datum_date']))
+             1. One of the subcharts in this faceted chart has
+                no data points;
+             2. I custom sort the faceting grid column;
 
-    return alt.Chart(df).mark_bar(clip=True).encode(
-        x=alt.X('value', title="Casos +/-"),
-        y=alt.Y('datum_date:T', title="Fecha del evento",
-                scale=alt.Scale(domain=bug_workaround(df))),
-        color=alt.Color('variable', legend=None),
-        tooltip = ['variable', 'datum_date:T', 'value']
-    ).properties(
-        width=140,
-        height=250
-    ).facet(
-        column=alt.X('bulletin_date:T', sort="descending",
-                     title="Fecha del boletín"),
-        row=alt.Y('variable', title=None,
-                  sort=['Confirmados y probables',
-                        'Confirmados',
-                        'Probables',
-                        'Muertes'])
-    ).properties(
-        title="Muchas veces los casos que se añaden (¡o quitan!) son viejitos"
-    )
+             ...then I get an empty subchart (no gridlines even)
+             and the sorting of the columns for that row breaks."""
+            filtered = df\
+                .replace(0, np.nan)\
+                .dropna()
+            return (min(filtered['datum_date']), max(filtered['datum_date']))
 
-def daily_deltas_data(connection, args):
-    meta = sqlalchemy.MetaData()
-    table = sqlalchemy.Table('daily_deltas', meta, schema='products',
-                             autoload_with=connection)
-    query = select([table.c.bulletin_date,
-                    table.c.datum_date,
-                    table.c.delta_confirmed_cases,
-                    table.c.delta_probable_cases,
-                    table.c.delta_deaths]
-    ).where(
-        and_(args.bulletin_date - datetime.timedelta(days=7) < table.c.bulletin_date,
-             table.c.bulletin_date <= args.bulletin_date)
-    )
-    df = pd.read_sql_query(query, connection)
-    df = df.rename(columns={
-        'delta_confirmed_cases': 'Confirmados',
-        'delta_probable_cases': 'Probables',
-        'delta_deaths': 'Muertes'
-    })
-    return fix_and_melt(df, "bulletin_date", "datum_date")
+        return alt.Chart(df).mark_bar(clip=True).encode(
+            x=alt.X('value', title="Casos +/-"),
+            y=alt.Y('datum_date:T', title="Fecha del evento",
+                    scale=alt.Scale(domain=bug_workaround(df))),
+            color=alt.Color('variable', legend=None),
+            tooltip = ['variable', 'datum_date:T', 'value']
+        ).properties(
+            width=140,
+            height=250
+        ).facet(
+            column=alt.X('bulletin_date:T', sort="descending",
+                         title="Fecha del boletín"),
+            row=alt.Y('variable', title=None,
+                      sort=['Confirmados y probables',
+                            'Confirmados',
+                            'Probables',
+                            'Muertes'])
+        ).properties(
+            title="Muchas veces los casos que se añaden (¡o quitan!) son viejitos"
+        )
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('daily_deltas', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.datum_date,
+                        table.c.delta_confirmed_cases,
+                        table.c.delta_probable_cases,
+                        table.c.delta_deaths]
+        ).where(
+            and_(self.args.bulletin_date - datetime.timedelta(days=7) < table.c.bulletin_date,
+                 table.c.bulletin_date <= self.args.bulletin_date)
+        )
+        df = pd.read_sql_query(query, connection)
+        df = df.rename(columns={
+            'delta_confirmed_cases': 'Confirmados',
+            'delta_probable_cases': 'Probables',
+            'delta_deaths': 'Muertes'
+        })
+        return fix_and_melt(df, "bulletin_date", "datum_date")
