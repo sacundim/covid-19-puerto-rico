@@ -116,7 +116,7 @@ class CaseLag(AbstractAnimation):
             )
         )
         return alt.layer(lines, revised, announced).properties(
-            width=900, height=150
+            width=1000, height=100
         )
 
     def fetch_data(self, connection, bulletin_date):
