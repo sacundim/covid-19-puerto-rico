@@ -66,13 +66,33 @@ class Cumulative(AbstractChart):
         return fix_and_melt(df, "datum_date")
 
 class AbstractLateness(AbstractChart):
-    def make_chart_with_titles(self, df, chart_title, y_title):
+    def fetch_data_for_table(self, connection, bulletin_date, table):
+        query = select([table.c.bulletin_date,
+                        table.c.confirmed_and_probable_cases,
+                        table.c.confirmed_cases,
+                        table.c.probable_cases,
+                        table.c.deaths]
+        ).where(
+            and_(bulletin_date - datetime.timedelta(days=7) < table.c.bulletin_date,
+                 table.c.bulletin_date <= bulletin_date)
+        )
+        df = pd.read_sql_query(query, connection)
+        df = df.rename(columns={
+            'confirmed_and_probable_cases': 'Confirmados y probables',
+            'confirmed_cases': 'Confirmados',
+            'probable_cases': 'Probables',
+            'deaths': 'Muertes'
+        })
+        return fix_and_melt(df, "bulletin_date")
+
+class LatenessDaily(AbstractLateness):
+    def make_chart(self, df):
         sort_order = ['Confirmados y probables',
                       'Confirmados',
                       'Probables',
                       'Muertes']
         bars = alt.Chart(df).mark_bar().encode(
-            y=alt.Y('value', title=y_title),
+            y=alt.Y('value', title="Rezago estimado (días)"),
             x=alt.X('variable', title=None, sort=sort_order, axis=alt.Axis(labels=False)),
             color=alt.Color('variable', sort=sort_order,
                             legend=alt.Legend(orient='bottom', title=None)),
@@ -96,47 +116,47 @@ class AbstractLateness(AbstractChart):
         ).facet(
             column=alt.X("bulletin_date", sort="descending", title="Fecha del boletín")
         ).properties(
-            title=chart_title
+            title="Estimado de rezagos (día a día)"
         )
 
-    def fetch_data_for_table(self, connection, bulletin_date, table):
-        query = select([table.c.bulletin_date,
-                        table.c.confirmed_and_probable_cases,
-                        table.c.confirmed_cases,
-                        table.c.probable_cases,
-                        table.c.deaths]
-        ).where(
-            and_(bulletin_date - datetime.timedelta(days=7) < table.c.bulletin_date,
-                 table.c.bulletin_date <= bulletin_date)
-        )
-        df = pd.read_sql_query(query, connection)
-        df = df.rename(columns={
-            'confirmed_and_probable_cases': 'Confirmados y probables',
-            'confirmed_cases': 'Confirmados',
-            'probable_cases': 'Probables',
-            'deaths': 'Muertes'
-        })
-        return fix_and_melt(df, "bulletin_date")
-
-class LatenessDaily(AbstractLateness):
-    def make_chart(self, df):
-        return self.make_chart_with_titles(
-            df,
-            chart_title="Estimado de rezagos (día a día)",
-            y_title="Rezago estimado (días)"
-        )
 
     def fetch_data(self, connection, bulletin_date):
         table = sqlalchemy.Table('lateness_daily', self.metadata,
                                  schema='products', autoload=True)
         return self.fetch_data_for_table(connection, bulletin_date, table)
 
+
 class Lateness7Day(AbstractLateness):
     def make_chart(self, df):
-        return self.make_chart_with_titles(
-            df,
-            chart_title="Estimado de rezagos (ventanas de 7 días)",
-            y_title="Rezago estimado (días)"
+        sort_order = ['Confirmados y probables',
+                      'Confirmados',
+                      'Probables',
+                      'Muertes']
+        lines = alt.Chart(df).mark_line(point=True).encode(
+            x=alt.X('bulletin_date:T', title="Fecha boletín"),
+            y=alt.Y('value:Q', title="Rezago estimado (días)"),
+            color = alt.Color('variable', sort=sort_order, legend=None),
+            tooltip=['variable', 'bulletin_date',
+                     alt.Tooltip(field='value',
+                                 type='quantitative',
+                                 format=".1f")]
+        )
+
+        text = lines.mark_text(
+            align='center',
+            baseline='line-top',
+            dy=5
+        ).encode(
+            text=alt.Text('value:Q', format='.1f')
+        )
+
+        return (lines + text).properties(
+            width=500, height=375
+        ).facet(
+            columns=2, spacing = 40,
+            facet=alt.Facet('variable', title=None, sort=sort_order)
+        ).properties(
+            title="Tendencia de los rezagos (ventanas de 7 días)"
         )
 
     def fetch_data(self, connection, bulletin_date):
