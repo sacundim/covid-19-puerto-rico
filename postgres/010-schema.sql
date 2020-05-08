@@ -259,7 +259,7 @@ FROM bitemporal_agg
 WHERE bulletin_date > (SELECT min(bulletin_date) FROM bitemporal_agg);
 
 
-CREATE VIEW products.lateness AS
+CREATE VIEW products.lateness_daily AS
 SELECT
     bulletin_date,
     cast(sum(lateness_confirmed_and_probable_cases) AS DOUBLE PRECISION)
@@ -279,9 +279,63 @@ FROM bitemporal_agg
 WHERE bulletin_date > (SELECT min(bulletin_date) FROM bitemporal_agg)
 GROUP BY bulletin_date;
 
-COMMENT ON VIEW products.lateness IS
+COMMENT ON VIEW products.lateness_daily IS
 'An estimate of how late on average new data for each bulletin
 is, based on the `bitemporal_agg` view.';
+
+
+CREATE VIEW products.lateness_7day AS
+WITH min_date AS (
+	SELECT min(bulletin_date) bulletin_date
+	FROM bitemporal
+	WHERE confirmed_and_probable_cases IS NOT NULL
+	AND confirmed_cases IS NOT NULL
+	AND probable_cases IS NOT NULL
+	AND deaths IS NOT NULL
+), bulletin_sums AS (
+	SELECT
+		ba.bulletin_date,
+		sum(lateness_confirmed_and_probable_cases) lateness_confirmed_and_probable_cases,
+		sum(delta_confirmed_and_probable_cases) delta_confirmed_and_probable_cases,
+		sum(lateness_confirmed_cases) lateness_confirmed_cases,
+		sum(delta_confirmed_cases) delta_confirmed_cases,
+		sum(lateness_probable_cases) lateness_probable_cases,
+		sum(delta_probable_cases) delta_probable_cases,
+		sum(lateness_deaths) lateness_deaths,
+		sum(delta_deaths) delta_deaths
+	FROM bitemporal_agg ba, min_date md
+	WHERE ba.bulletin_date > md.bulletin_date
+	GROUP BY ba.bulletin_date
+), windowed_sums AS (
+	SELECT
+		bulletin_date,
+		CAST(SUM(lateness_confirmed_and_probable_cases) OVER bulletin AS DOUBLE PRECISION)
+	        / NULLIF(SUM(delta_confirmed_and_probable_cases) OVER bulletin, 0)
+	        AS confirmed_and_probable_cases,
+		CAST(SUM(lateness_confirmed_cases) OVER bulletin AS DOUBLE PRECISION)
+	        / NULLIF(SUM(delta_confirmed_cases) OVER bulletin, 0)
+	        AS confirmed_cases,
+		CAST(SUM(lateness_probable_cases) OVER bulletin AS DOUBLE PRECISION)
+	        / NULLIF(SUM(delta_probable_cases) OVER bulletin, 0)
+	        AS probable_cases,
+		CAST(SUM(lateness_deaths) OVER bulletin AS DOUBLE PRECISION)
+	        / NULLIF(SUM(delta_deaths) OVER bulletin, 0)
+	        AS deaths
+	FROM bulletin_sums bs
+	WINDOW bulletin AS (ORDER BY bulletin_date ROWS 6 PRECEDING)
+)
+SELECT
+	ws.bulletin_date,
+	confirmed_and_probable_cases,
+	confirmed_cases,
+	probable_cases,
+	deaths
+FROM windowed_sums ws, min_date m
+WHERE ws.bulletin_date >= m.bulletin_date + INTERVAL '7' DAY;
+
+COMMENT ON VIEW products.lateness_7day IS
+'An estimate of how late on average new data is, based on the
+`bitemporal_agg` view.  Averages over 7-day windows';
 
 
 CREATE VIEW products.doubling_times AS

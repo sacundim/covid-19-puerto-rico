@@ -33,7 +33,8 @@ def main():
     bulletin_date = args.bulletin_date
 
     charts.Cumulative(engine, args).execute(bulletin_date)
-    charts.Lateness(engine, args).execute(bulletin_date)
+    charts.LatenessDaily(engine, args).execute(bulletin_date)
+    charts.Lateness7Day(engine, args).execute(bulletin_date)
     charts.Doubling(engine, args).execute(bulletin_date)
     charts.DailyDeltas(engine, args).execute(bulletin_date)
 

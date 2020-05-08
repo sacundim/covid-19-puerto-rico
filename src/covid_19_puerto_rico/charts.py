@@ -65,15 +65,14 @@ class Cumulative(AbstractChart):
         })
         return fix_and_melt(df, "datum_date")
 
-
-class Lateness(AbstractChart):
-    def make_chart(self, df):
+class AbstractLateness(AbstractChart):
+    def make_chart_with_titles(self, df, chart_title, y_title):
         sort_order = ['Confirmados y probables',
                       'Confirmados',
                       'Probables',
                       'Muertes']
         bars = alt.Chart(df).mark_bar().encode(
-            y=alt.Y('value', title="Rezago estimado (días)"),
+            y=alt.Y('value', title=y_title),
             x=alt.X('variable', title=None, sort=sort_order, axis=alt.Axis(labels=False)),
             color=alt.Color('variable', sort=sort_order,
                             legend=alt.Legend(orient='bottom', title=None)),
@@ -97,12 +96,10 @@ class Lateness(AbstractChart):
         ).facet(
             column=alt.X("bulletin_date", sort="descending", title="Fecha del boletín")
         ).properties(
-            title="Es común que tarde una semana entre que se tome la muestra y se anuncie nuevo caso"
+            title=chart_title
         )
 
-    def fetch_data(self, connection, bulletin_date):
-        table = sqlalchemy.Table('lateness', self.metadata,
-                                 schema='products', autoload=True)
+    def fetch_data_for_table(self, connection, bulletin_date, table):
         query = select([table.c.bulletin_date,
                         table.c.confirmed_and_probable_cases,
                         table.c.confirmed_cases,
@@ -120,6 +117,32 @@ class Lateness(AbstractChart):
             'deaths': 'Muertes'
         })
         return fix_and_melt(df, "bulletin_date")
+
+class LatenessDaily(AbstractLateness):
+    def make_chart(self, df):
+        return self.make_chart_with_titles(
+            df,
+            chart_title="Estimado de rezagos (día a día)",
+            y_title="Rezago estimado (días)"
+        )
+
+    def fetch_data(self, connection, bulletin_date):
+        table = sqlalchemy.Table('lateness_daily', self.metadata,
+                                 schema='products', autoload=True)
+        return self.fetch_data_for_table(connection, bulletin_date, table)
+
+class Lateness7Day(AbstractLateness):
+    def make_chart(self, df):
+        return self.make_chart_with_titles(
+            df,
+            chart_title="Estimado de rezagos (ventanas de 7 días)",
+            y_title="Rezago estimado (días)"
+        )
+
+    def fetch_data(self, connection, bulletin_date):
+        table = sqlalchemy.Table('lateness_7day', self.metadata,
+                                 schema='products', autoload=True)
+        return self.fetch_data_for_table(connection, bulletin_date, table)
 
 
 class Doubling(AbstractChart):
