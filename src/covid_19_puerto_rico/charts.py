@@ -9,22 +9,23 @@ class AbstractChart(ABC):
     def __init__(self, engine, args):
         self.engine = engine
         self.metadata = sqlalchemy.MetaData(engine)
-        self.args = args
+        self.output_dir = args.output_dir
+        self.output_formats = args.output_formats
         self.name = type(self).__name__
 
-    def execute(self):
+    def execute(self, bulletin_date):
         with self.engine.connect() as connection:
-            df = self.fetch_data(connection)
+            df = self.fetch_data(connection, bulletin_date)
         logging.info("%s dataframe: %s", self.name, describe_frame(df))
-        basename = f"{self.args.output_dir}/{self.name}_{self.args.bulletin_date}"
-        save_chart(self.make_chart(df), basename, self.args.output_formats)
+        basename = f"{self.output_dir}/{self.name}_{bulletin_date}"
+        save_chart(self.make_chart(df), basename, self.output_formats)
 
     @abstractmethod
     def make_chart(self, df):
         pass
 
     @abstractmethod
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_date):
         pass
 
 
@@ -42,7 +43,7 @@ class Cumulative(AbstractChart):
             height=800
         )
 
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_date):
         table = sqlalchemy.Table('cumulative_data', self.metadata,
                                  schema='products', autoload=True)
         query = select([table.c.datum_date,
@@ -52,7 +53,7 @@ class Cumulative(AbstractChart):
                         table.c.announced_cases,
                         table.c.deaths,
                         table.c.announced_deaths])\
-            .where(table.c.bulletin_date == self.args.bulletin_date)
+            .where(table.c.bulletin_date == bulletin_date)
         df = pd.read_sql_query(query, connection)
         df = df.rename(columns={
             'confirmed_cases': 'Casos confirmados (fecha muestra)',
@@ -99,7 +100,7 @@ class Lateness(AbstractChart):
             title="Es común que tarde una semana entre que se tome la muestra y se anuncie nuevo caso"
         )
 
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_date):
         table = sqlalchemy.Table('lateness', self.metadata,
                                  schema='products', autoload=True)
         query = select([table.c.bulletin_date,
@@ -108,8 +109,8 @@ class Lateness(AbstractChart):
                         table.c.probable_cases,
                         table.c.deaths]
         ).where(
-            and_(self.args.bulletin_date - datetime.timedelta(days=7) < table.c.bulletin_date,
-                 table.c.bulletin_date <= self.args.bulletin_date)
+            and_(bulletin_date - datetime.timedelta(days=7) < table.c.bulletin_date,
+                 table.c.bulletin_date <= bulletin_date)
         )
         df = pd.read_sql_query(query, connection)
         df = df.rename(columns={
@@ -142,7 +143,7 @@ class Doubling(AbstractChart):
             title="Los tiempos de duplicación de casos confirmados han bajado consistentemente"
         )
 
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_date):
         table = sqlalchemy.Table('doubling_times', self.metadata,
                                  schema='products', autoload=True)
         query = select([table.c.datum_date,
@@ -152,7 +153,7 @@ class Doubling(AbstractChart):
                         table.c.cumulative_probable_cases,
                         table.c.cumulative_deaths]
         ).where(
-            table.c.bulletin_date == self.args.bulletin_date
+            table.c.bulletin_date == bulletin_date
         )
         df = pd.read_sql_query(query, connection)
         df = df.rename(columns={
@@ -202,7 +203,7 @@ class DailyDeltas(AbstractChart):
             title="Muchas veces los casos que se añaden (¡o quitan!) son viejitos"
         )
 
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_date):
         table = sqlalchemy.Table('daily_deltas', self.metadata,
                                  schema='products', autoload=True)
         query = select([table.c.bulletin_date,
@@ -211,8 +212,8 @@ class DailyDeltas(AbstractChart):
                         table.c.delta_probable_cases,
                         table.c.delta_deaths]
         ).where(
-            and_(self.args.bulletin_date - datetime.timedelta(days=7) < table.c.bulletin_date,
-                 table.c.bulletin_date <= self.args.bulletin_date)
+            and_(bulletin_date - datetime.timedelta(days=7) < table.c.bulletin_date,
+                 table.c.bulletin_date <= bulletin_date)
         )
         df = pd.read_sql_query(query, connection)
         df = df.rename(columns={

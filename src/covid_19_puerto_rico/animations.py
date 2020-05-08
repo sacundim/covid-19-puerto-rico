@@ -4,6 +4,7 @@ import logging
 import pandas as pd
 from pathlib import Path
 from sqlalchemy import select
+from sqlalchemy.sql.functions import min
 from wand.image import Image
 from .util import *
 
@@ -11,32 +12,44 @@ class AbstractAnimation(ABC):
     def __init__(self, engine, args, delay=180):
         self.engine = engine
         self.metadata = sqlalchemy.MetaData(engine)
-        self.args = args
         self.name = type(self).__name__
+        self.output_dir = args.output_dir
         self.delay = delay
 
-    def execute(self):
+    def execute(self, bulletin_date):
         with self.engine.connect() as connection:
-            df = self.fetch_data(connection)
+            df = self.fetch_data(connection, bulletin_date)
+            all_bulletin_dates = self.get_bulletin_dates(connection, bulletin_date)
 
-        Path(f"{self.args.output_dir}/{self.name}").mkdir(parents=True, exist_ok=True)
+        Path(f"{self.output_dir}/{self.name}").mkdir(parents=True, exist_ok=True)
         with Image() as gif:
-            for current_date in pd.date_range(self.args.earliest_bulletin_date, self.args.bulletin_date):
-                basename = f"{self.args.output_dir}/{self.name}/{self.name}_frame_{current_date.date()}"
+            for current_date in all_bulletin_dates['bulletin_date']:
+                basename = f"{self.output_dir}/{self.name}/{self.name}_frame_{current_date.date()}"
                 save_chart(self.make_frame(df, current_date), basename, ['png'])
                 with Image(filename=f'{basename}.png') as frame:
                     gif.sequence.append(frame)
             for frame in gif.sequence:
                 frame.delay = self.delay
             gif.type = 'optimize'
-            gif.save(filename=f"{self.args.output_dir}/{self.name}_{self.args.bulletin_date}.gif")
+            gif.save(filename=f"{self.output_dir}/{self.name}_{bulletin_date}.gif")
+
+    def get_bulletin_dates(self, connection, bulletin_date):
+        table = sqlalchemy.Table('bitemporal', self.metadata, autoload=True)
+        query = select([table.c.bulletin_date.label('bulletin_date')])\
+            .where(table.c.bulletin_date <= bulletin_date)\
+            .distinct()\
+            .order_by(table.c.bulletin_date)
+        df = pd.read_sql_query(query, connection)
+        df['bulletin_date'] = pd.to_datetime(df['bulletin_date'])
+        return df
+
 
     @abstractmethod
     def make_frame(self, df, current_date):
         pass
 
     @abstractmethod
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_date):
         pass
 
 
@@ -50,13 +63,20 @@ class CaseLag(AbstractAnimation):
         )
 
     def one_variable(self, df, current_date, variable):
-        x_domain = (pd.to_datetime(self.args.earliest_bulletin_date),
-                    pd.to_datetime(self.args.bulletin_date))
-        y_domain = self.compute_domain(df, variable)
+        def compute_date_domain(df):
+            return (pd.to_datetime(df['bulletin_date'].min()),
+                    pd.to_datetime(df['bulletin_date'].max()))
+
+        def compute_value_domain(df, variable):
+            filtered = df.loc[df['variable'] == variable]
+            min = filtered['value'].min()
+            max = filtered['value'].max()
+            return (min * 0.95, max * 1.05)
+
         base = alt.Chart(df).encode(
-            x=alt.X('datum_date', title=None, scale=alt.Scale(domain=x_domain)),
+            x=alt.X('datum_date', title=None, scale=alt.Scale(domain=compute_date_domain(df))),
             y=alt.Y('value', title=variable, axis=alt.Axis(labels=False, titlePadding=25),
-                    scale=alt.Scale(zero=False, domain=y_domain))
+                    scale=alt.Scale(zero=False, domain=compute_value_domain(df, variable)))
         ).transform_filter(
             {
                 "and": [
@@ -100,14 +120,7 @@ class CaseLag(AbstractAnimation):
             width=900, height=150
         )
 
-    @staticmethod
-    def compute_domain(df, variable):
-        filtered = df.loc[df['variable'] == variable]
-        min = filtered['value'].min()
-        max = filtered['value'].max()
-        return (min * 0.95, max * 1.05)
-
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_date):
         meta = sqlalchemy.MetaData()
         table = sqlalchemy.Table('animations', meta, schema='products',
                                  autoload_with=connection)
@@ -121,7 +134,7 @@ class CaseLag(AbstractAnimation):
                         table.c.announced_probable_cases,
                         table.c.announced_cases,
                         table.c.announced_deaths])\
-                .where(table.c.bulletin_date <= self.args.bulletin_date)
+                .where(table.c.bulletin_date <= bulletin_date)
         df = pd.read_sql_query(query, connection)
         df = df.rename(columns={
             'confirmed_cases': 'Confirmados Revisados',
