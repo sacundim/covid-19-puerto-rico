@@ -231,7 +231,7 @@ class DailyDeltas(AbstractChart):
 
         heatmap = base.mark_rect(cornerRadius=12).encode(
             color=alt.Color('value:Q', title=None,
-                            scale=alt.Scale(scheme="redblue", domainMid=0))
+                            scale=alt.Scale(scheme="redgrey", domainMid=0))
         )
 
         text = base.mark_text(color='white', size=15).encode(
