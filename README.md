@@ -93,8 +93,7 @@ lanzarlo requiere Docker y Docker Compose. Desde este directorio:
 1. `docker-compose up`
 2. `./scripts/build-docker-image.sh` (**ADVERTENCIA:** Descarga más 
    de 1 gigabyte de datos)
-3. `./scripts/run-in-docker.sh --bulletin-date 2020-05-05` (u otra 
-   fecha más reciente que hayan datos aquí);
+3. `./scripts/run-in-docker.sh`;
    
 ...y las gráficas aparecen dentro del directorio [`output/`](output/),
 en formatos HTML, PNG y Vega (JSON):
@@ -111,10 +110,10 @@ Para los que prefieran usar menos Docker, hay que tener Python 3.7+,
 Docker, Docker Compose y la la herramienta [`Poetry`](https://python-poetry.org/docs/).
 Entonces desde este directorio:
 
-* `poetry install` (descarga dependencias Python);
-* `docker-compose up` desde este directorio (**ADVERTENCIA:** 
+1. `poetry install` (descarga dependencias Python);
+2. `docker-compose up` desde este directorio (**ADVERTENCIA:** 
    descarga como 300 MiB);
-* `./scripts/generate-reports.sh --bulletin-date 2020-05-05`;
+3. `./scripts/generate-reports.sh`;
 
 
 ## Agradecimientos

@@ -3,6 +3,8 @@ import argparse
 import datetime
 import importlib.resources
 import json
+from sqlalchemy.sql import select
+from sqlalchemy.sql.functions import max
 
 from . import animations
 from . import charts
@@ -14,8 +16,8 @@ def process_arguments():
     parser.add_argument('--output-dir', type=str, required=True,
                         help='Directory into which to place output')
     parser.add_argument('--output-formats', action='append', default=['json'])
-    parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat, required=True,
-                        help='Bulletin date to generate charts for')
+    parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat,
+                        help='Bulletin date to generate charts for. Default: most recent in DB.')
     parser.add_argument('--config-file', type=str, required=True,
                         help='TOML config file (for DB credentials and such')
     parser.add_argument('--animations', action='store_true',
@@ -26,11 +28,12 @@ def main():
     global_configuration()
     args = process_arguments()
     args.output_formats = set(args.output_formats)
-    logging.info("bulletin-date is %s; output-dir is %s; output-formats is %s",
-                 args.bulletin_date, args.output_dir, args.output_formats)
+    logging.info("output-dir is %s; output-formats is %s",
+                 args.output_dir, args.output_formats)
 
     engine = create_db(args)
-    bulletin_date = args.bulletin_date
+    bulletin_date = compute_bulletin_date(args, engine)
+    logging.info('Using bulletin date of %s', bulletin_date)
 
     charts.Cumulative(engine, args).execute(bulletin_date)
     charts.LatenessDaily(engine, args).execute(bulletin_date)
@@ -58,3 +61,16 @@ def get_json_resource(filename):
     return json.loads(text)
 
 
+def compute_bulletin_date(args, engine):
+    if args.bulletin_date != None:
+        return args.bulletin_date
+    else:
+        return query_for_bulletin_date(engine)
+
+def query_for_bulletin_date(engine):
+    metadata = sqlalchemy.MetaData(engine)
+    with engine.connect() as connection:
+        table = sqlalchemy.Table('bitemporal', metadata, autoload=True)
+        query = select([max(table.c.bulletin_date)])
+        result = connection.execute(query)
+        return result.fetchone()[0]
