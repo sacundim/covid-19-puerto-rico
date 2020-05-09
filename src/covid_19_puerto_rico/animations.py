@@ -20,10 +20,11 @@ class AbstractAnimation(ABC):
             df = self.fetch_data(connection, bulletin_date)
             all_bulletin_dates = self.get_bulletin_dates(connection, bulletin_date)
 
-        Path(f"{self.output_dir}/{self.name}").mkdir(parents=True, exist_ok=True)
+        frames_dir = Path(f"{self.output_dir}/{self.name}_{bulletin_date}")
+        frames_dir.mkdir(parents=True, exist_ok=True)
         with Image() as gif:
             for current_date in all_bulletin_dates['bulletin_date']:
-                basename = f"{self.output_dir}/{self.name}/{self.name}_frame_{current_date.date()}"
+                basename = f"{frames_dir}/{self.name}_frame_{current_date.date()}"
                 save_chart(self.make_frame(df, current_date), basename, ['png'])
                 with Image(filename=f'{basename}.png') as frame:
                     gif.sequence.append(frame)
