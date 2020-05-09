@@ -32,7 +32,7 @@ class AbstractChart(ABC):
 class Cumulative(AbstractChart):
     def make_chart(self, df):
         return alt.Chart(df).mark_line(point=True).encode(
-            x=alt.X('datum_date:T', title=None),
+            x=alt.X('yearmonthdate(datum_date):T', title=None),
             y=alt.Y('value', title=None, scale=alt.Scale(type='log')),
             color=alt.Color('variable', title=None,
                             legend=alt.Legend(orient="top", labelLimit=250)),
@@ -104,10 +104,12 @@ class LatenessDaily(AbstractLateness):
 
         text = bars.mark_text(
             align='center',
-            baseline='middle',
-            dy=-10
+            baseline='top',
+            size=12,
+            dy=5
         ).encode(
-            text=alt.Text('value:Q', format='.1f')
+            text=alt.Text('value:Q', format='.1f'),
+            color = alt.value('white')
         )
 
         return (bars + text).properties(
@@ -132,11 +134,9 @@ class Lateness7Day(AbstractLateness):
                       'Confirmados',
                       'Probables',
                       'Muertes']
-        lines = alt.Chart(df).mark_line(
-            strokeWidth=3,
-            point=alt.OverlayMarkDef(size=50)
-        ).encode(
-            x=alt.X('bulletin_date:T', title="Fecha boletín"),
+        bars = alt.Chart(df).mark_bar().encode(
+            x=alt.X('yearmonthdate(bulletin_date):O',
+                    title="Fecha boletín", axis=alt.Axis(titlePadding=10)),
             y=alt.Y('value:Q', title="Rezago estimado (días)"),
             color = alt.Color('variable', sort=sort_order, legend=None),
             tooltip=['variable', 'bulletin_date',
@@ -145,17 +145,18 @@ class Lateness7Day(AbstractLateness):
                                  format=".1f")]
         )
 
-        text = lines.mark_text(
+        text = bars.mark_text(
             align='center',
-            baseline='line-top',
+            baseline='top',
             size=15,
             dy=10
         ).encode(
-            text=alt.Text('value:Q', format='.1f')
+            text=alt.Text('value:Q', format='.1f'),
+            color = alt.value('white')
         )
 
-        return (lines + text).properties(
-            width=500, height=375
+        return (bars + text).properties(
+            width=500, height=300
         ).facet(
             columns=2, spacing = 40,
             facet=alt.Facet('variable', title=None, sort=sort_order)
