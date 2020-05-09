@@ -134,7 +134,10 @@ class Lateness7Day(AbstractLateness):
                       'Confirmados',
                       'Probables',
                       'Muertes']
-        bars = alt.Chart(df).mark_bar().encode(
+        lines = alt.Chart(df).mark_line(
+            strokeWidth=3,
+            point=alt.OverlayMarkDef(size=50)
+        ).encode(
             x=alt.X('yearmonthdate(bulletin_date):O',
                     title="Fecha boletín", axis=alt.Axis(titlePadding=10)),
             y=alt.Y('value:Q', title="Rezago estimado (días)"),
@@ -145,17 +148,16 @@ class Lateness7Day(AbstractLateness):
                                  format=".1f")]
         )
 
-        text = bars.mark_text(
+        text = lines.mark_text(
             align='center',
-            baseline='top',
+            baseline='line-top',
             size=15,
             dy=10
         ).encode(
-            text=alt.Text('value:Q', format='.1f'),
-            color = alt.value('white')
+            text=alt.Text('value:Q', format='.1f')
         )
 
-        return (bars + text).properties(
+        return (lines + text).properties(
             width=500, height=300
         ).facet(
             columns=2, spacing = 40,
