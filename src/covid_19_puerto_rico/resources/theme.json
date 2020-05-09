@@ -1,9 +1,10 @@
 {
   "config": {
-    "title": {
-      "fontSize": 20
-    },
     "axis": {
+      "labelFontSize": 14,
+      "titleFontSize": 14
+    },
+    "header": {
       "labelFontSize": 14,
       "titleFontSize": 14
     },
@@ -11,9 +12,10 @@
       "labelFontSize": 14,
       "titleFontSize": 14
     },
-    "header": {
-      "labelFontSize": 14,
-      "titleFontSize": 14
+    "title": {
+      "align": "center",
+      "fontSize": 20,
+      "offset": 15
     }
   }
 }
