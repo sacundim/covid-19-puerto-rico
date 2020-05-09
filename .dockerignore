@@ -7,3 +7,4 @@ dist/
 output/
 postgres/
 source_material/
+tmp/
