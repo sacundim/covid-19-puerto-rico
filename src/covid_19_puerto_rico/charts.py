@@ -215,39 +215,41 @@ class Doubling(AbstractChart):
 
 class DailyDeltas(AbstractChart):
     def make_chart(self, df):
-        def bug_workaround(df):
-            """If both of these conditions hold:
+        filtered = df \
+            .replace(0, np.nan) \
+            .dropna()
+        logging.info("df info: %s", describe_frame(filtered))
 
-             1. One of the subcharts in this faceted chart has
-                no data points;
-             2. I custom sort the faceting grid column;
+        base = alt.Chart(filtered).encode(
+            x=alt.X('yearmonthdate(datum_date):O',
+                    title="Fecha evento", sort="descending"),
+            y=alt.Y('yearmonthdate(bulletin_date):O',
+                    title="Fecha boletín", sort="descending"),
+            tooltip=['bulletin_date:T', 'datum_date:T', 'value']
+        )
 
-             ...then I get an empty subchart (no gridlines even)
-             and the sorting of the columns for that row breaks."""
-            filtered = df\
-                .replace(0, np.nan)\
-                .dropna()
-            return (min(filtered['datum_date']), max(filtered['datum_date']))
+        heatmap = base.mark_rect(cornerRadius=12).encode(
+            color=alt.Color('value:Q', title=None,
+                            scale=alt.Scale(scheme="redblue", domainMid=0))
+        )
 
-        return alt.Chart(df).mark_bar(clip=True).encode(
-            x=alt.X('value', title="Casos +/-"),
-            y=alt.Y('datum_date:T', title="Fecha del evento",
-                    scale=alt.Scale(domain=bug_workaround(df))),
-            color=alt.Color('variable', legend=None),
-            tooltip = ['variable', 'datum_date:T', 'value']
-        ).properties(
-            width=140,
-            height=250
+        text = base.mark_text(color='white', size=15).encode(
+            text=alt.Text('value:Q'),
+            color=alt.condition(
+                alt.FieldRangePredicate(field='value', range=[0, 15]),
+                alt.value('black'),
+                alt.value('white')
+            )
+        )
+
+        return (heatmap + text).properties(
+            width=900, height=225
         ).facet(
-            column=alt.X('bulletin_date:T', sort="descending",
-                         title="Fecha del boletín"),
-            row=alt.Y('variable', title=None,
-                      sort=['Confirmados y probables',
-                            'Confirmados',
-                            'Probables',
-                            'Muertes'])
-        ).properties(
-            title="Muchas veces los casos que se añaden (¡o quitan!) son viejitos"
+            title="Muchas veces los casos que se añaden (¡o quitan!) son viejitos",
+            row=alt.Row('variable', title=None,
+                        sort=['Confirmados',
+                              'Probables',
+                              'Muertes'])
         )
 
     def fetch_data(self, connection, bulletin_date):
