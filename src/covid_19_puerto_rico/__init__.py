@@ -12,7 +12,7 @@ from . import animations
 from . import charts
 from . import resources
 from . import util
-from . import webpage
+from . import website
 
 
 def process_arguments():
@@ -53,7 +53,7 @@ def main():
         animations.CaseLag(engine, args).execute(bulletin_date)
 
     if args.website:
-        webpage.Website(args).generate(bulletin_date)
+        website.Website(args).generate(bulletin_date)
 
 
 
