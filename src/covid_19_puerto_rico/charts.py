@@ -17,7 +17,7 @@ class AbstractChart(ABC):
         self.output_formats = args.output_formats
         self.name = type(self).__name__
 
-    def execute(self, bulletin_date):
+    def render(self, bulletin_date):
         with self.engine.connect() as connection:
             df = self.fetch_data(connection, bulletin_date)
         logging.info("%s dataframe: %s", self.name, util.describe_frame(df))

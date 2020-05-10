@@ -15,7 +15,7 @@ class AbstractAnimation(ABC):
         self.output_dir = args.output_dir
         self.delay = delay
 
-    def execute(self, bulletin_date):
+    def render(self, bulletin_date):
         with self.engine.connect() as connection:
             df = self.fetch_data(connection, bulletin_date)
             all_bulletin_dates = self.get_bulletin_dates(connection, bulletin_date)
