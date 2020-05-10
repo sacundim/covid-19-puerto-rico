@@ -21,7 +21,9 @@ class AbstractChart(ABC):
 
         bulletin_dir = Path(f'{self.output_dir}/{bulletin_date}')
         bulletin_dir.mkdir(exist_ok=True)
-        save_chart(self.make_chart(df), f"{bulletin_dir}/{self.name}", self.output_formats)
+        save_chart(self.make_chart(df),
+                   f"{bulletin_dir}/{bulletin_date}_{self.name}",
+                   self.output_formats)
 
     @abstractmethod
     def make_chart(self, df):
