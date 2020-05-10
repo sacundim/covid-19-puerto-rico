@@ -29,11 +29,12 @@ cd "$(dirname $0)"/..
 docker run --rm \
   --network="${DOCKER_NETWORK}" \
   -v "$(pwd)"/config:/config:ro \
+  -v "$(pwd)"/webpage:/webpage:ro \
+  -v "$(pwd)"/source_material:/source_material:ro \
   -v "$(pwd)"/output:/output:rw \
   "${DOCKER_IMAGE}" \
     --config-file /config/docker.toml \
+    --source-material-dir /source_material \
+    --template-dir /webpage \
     --output-dir /output \
-    --output-format json \
-    --output-format html \
-    --output-format png \
     $*

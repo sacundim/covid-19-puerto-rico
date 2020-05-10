@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+</head>
+<body>
+
+<h1>COVID-19 en Puerto Rico</h1>
+
+<h2>Boletín</h2>
+
+<p><img class="chart" src="2020-05-08_announcement.png"></p>
+
+<p><img class="chart" src="2020-05-08_confirmed_and_probable.png"></p>
+
+<p><img class="chart" src="2020-05-08_confirmed.png"></p>
+
+<p><img class="chart" src="2020-05-08_probable.png"></p>
+
+<p><img class="chart" src="2020-05-08_deaths.png"></p>
+
+
+<h2>Análisis</h2>
+
+<div id="DailyDeltas" class="chart"></div>
+
+<script type="text/javascript" class="chart">
+  var spec = "DailyDeltas.json";
+  vegaEmbed('#DailyDeltas', spec).then(function(result) {
+  }).catch(console.error);
+</script>
+
+
+<div id="LatenessDaily" class="chart"></div>
+
+<script type="text/javascript">
+  var spec = "LatenessDaily.json";
+  vegaEmbed('#LatenessDaily', spec).then(function(result) {
+  }).catch(console.error);
+</script>
+
+
+<div id="Lateness7Day" class="chart"></div>
+
+<script type="text/javascript">
+  var spec = "Lateness7Day.json";
+  vegaEmbed('#Lateness7Day', spec).then(function(result) {
+  }).catch(console.error);
+</script>
+
+
+<div id="Cumulative"></div>
+
+<script type="text/javascript">
+  var spec = "Cumulative.json";
+  vegaEmbed('#Cumulative', spec).then(function(result) {
+  }).catch(console.error);
+</script>
+
+<div id="Doubling" class="chart"></div>
+
+<script type="text/javascript">
+  var spec = "Doubling.json";
+  vegaEmbed('#Doubling', spec).then(function(result) {
+  }).catch(console.error);
+</script>
+
+
+</body>
+</html>

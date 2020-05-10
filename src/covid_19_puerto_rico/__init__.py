@@ -10,11 +10,17 @@ from . import animations
 from . import charts
 from . import resources
 from .util import *
+from . import webpage
+
 
 def process_arguments():
     parser = argparse.ArgumentParser(description='Generate Puerto Rico COVID-19 charts')
     parser.add_argument('--output-dir', type=str, required=True,
                         help='Directory into which to place output')
+    parser.add_argument('--source-material-dir', type=str, required=True,
+                        help="Directory with source material files")
+    parser.add_argument('--template-dir', type=str, required=True,
+                        help="Directory to process for web page templates")
     parser.add_argument('--output-formats', action='append', default=['json'])
     parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat,
                         help='Bulletin date to generate charts for. Default: most recent in DB.')
@@ -43,6 +49,12 @@ def main():
 
     if args.animations:
         animations.CaseLag(engine, args).execute(bulletin_date)
+
+    webpage.generate_webpage(args.template_dir,
+                             args.source_material_dir,
+                             args.output_dir,
+                             bulletin_date)
+
 
 
 def global_configuration():
