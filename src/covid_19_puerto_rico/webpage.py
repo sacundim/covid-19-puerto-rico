@@ -6,6 +6,12 @@ from pathlib import Path
 import shutil
 from wand.image import Image
 
+class Website:
+    def __init__(self, args):
+        self.template_dir = args.template_dir
+        self.source_material_dir = args.source_material_dir
+        self.output_dir = args.output_dir
+
 
 def generate_webpage(template_dir, source_material_dir, output_dir, bulletin_date):
     destination = Path(f'{output_dir}/{bulletin_date}')
@@ -31,7 +37,6 @@ def generate_webpage(template_dir, source_material_dir, output_dir, bulletin_dat
             logging.info("Copying file: dirpath = %s, filename = %s", dirpath, filename)
             shutil.copyfile(f'{dirpath}/{filename}',
                             f'{destination}/{filename}')
-
 
 
 def copy_to_png(origin, destination):
