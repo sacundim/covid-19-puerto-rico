@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 import altair as alt
-import logging
 import pandas as pd
 from pathlib import Path
+import sqlalchemy
 from sqlalchemy import select
 from wand.image import Image
-from .util import *
+from . import util
 
 class AbstractAnimation(ABC):
     def __init__(self, engine, args, delay=180):
@@ -29,7 +29,7 @@ class AbstractAnimation(ABC):
         with Image() as gif:
             for current_date in all_bulletin_dates['bulletin_date']:
                 basename = f"{frames_dir}/{bulletin_date}_{self.name}_frame_{current_date.date()}"
-                save_chart(self.make_frame(df, current_date), basename, ['png'])
+                util.save_chart(self.make_frame(df, current_date), basename, ['png'])
                 with Image(filename=f'{basename}.png') as frame:
                     gif.sequence.append(frame)
             for frame in gif.sequence:
@@ -150,7 +150,7 @@ class CaseLag(AbstractAnimation):
             'announced_cases': 'Total Anunciados',
             'announced_deaths': 'Muertes Anunciados',
         })
-        melted = fix_and_melt(df, "bulletin_date", "datum_date")
+        melted = util.fix_and_melt(df, "bulletin_date", "datum_date")
         melted['temporality'] = melted['variable'].map(lambda var: var.split()[1])
         melted['variable'] = melted['variable'].map(lambda var: var.split()[0])
         return melted
