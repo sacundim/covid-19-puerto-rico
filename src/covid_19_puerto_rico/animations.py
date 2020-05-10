@@ -20,8 +20,12 @@ class AbstractAnimation(ABC):
             df = self.fetch_data(connection, bulletin_date)
             all_bulletin_dates = self.get_bulletin_dates(connection, bulletin_date)
 
-        frames_dir = Path(f"{self.output_dir}/{self.name}_{bulletin_date}")
-        frames_dir.mkdir(parents=True, exist_ok=True)
+        bulletin_dir = Path(f"{self.output_dir}/{bulletin_date}")
+        bulletin_dir.mkdir(exist_ok=True)
+
+        frames_dir = Path(f"{bulletin_dir}/{self.name}")
+        frames_dir.mkdir(exist_ok=True)
+
         with Image() as gif:
             for current_date in all_bulletin_dates['bulletin_date']:
                 basename = f"{frames_dir}/{self.name}_frame_{current_date.date()}"

@@ -10,3 +10,10 @@ services:
     - ./data:/data:ro
     ports:
     - 5432:5432
+
+  web:
+    image: nginx:alpine
+    volumes:
+    - ./output:/usr/share/nginx/html:ro
+    ports:
+    - 8080:80

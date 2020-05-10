@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import altair as alt
 import datetime
 import numpy as np
+from pathlib import Path
 from sqlalchemy.sql import select, and_
 from .util import *
 
@@ -17,8 +18,10 @@ class AbstractChart(ABC):
         with self.engine.connect() as connection:
             df = self.fetch_data(connection, bulletin_date)
         logging.info("%s dataframe: %s", self.name, describe_frame(df))
-        basename = f"{self.output_dir}/{self.name}_{bulletin_date}"
-        save_chart(self.make_chart(df), basename, self.output_formats)
+
+        bulletin_dir = Path(f'{self.output_dir}/{bulletin_date}')
+        bulletin_dir.mkdir(exist_ok=True)
+        save_chart(self.make_chart(df), f"{bulletin_dir}/{self.name}", self.output_formats)
 
     @abstractmethod
     def make_chart(self, df):
