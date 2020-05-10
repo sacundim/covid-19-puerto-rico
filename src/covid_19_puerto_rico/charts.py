@@ -1,10 +1,13 @@
 from abc import ABC, abstractmethod
 import altair as alt
 import datetime
+import logging
 import numpy as np
+import pandas as pd
 from pathlib import Path
+import sqlalchemy
 from sqlalchemy.sql import select, and_
-from .util import *
+from . import util
 
 class AbstractChart(ABC):
     def __init__(self, engine, args):
@@ -17,13 +20,13 @@ class AbstractChart(ABC):
     def execute(self, bulletin_date):
         with self.engine.connect() as connection:
             df = self.fetch_data(connection, bulletin_date)
-        logging.info("%s dataframe: %s", self.name, describe_frame(df))
+        logging.info("%s dataframe: %s", self.name, util.describe_frame(df))
 
         bulletin_dir = Path(f'{self.output_dir}/{bulletin_date}')
         bulletin_dir.mkdir(exist_ok=True)
-        save_chart(self.make_chart(df),
-                   f"{bulletin_dir}/{bulletin_date}_{self.name}",
-                   self.output_formats)
+        util.save_chart(self.make_chart(df),
+                        f"{bulletin_dir}/{bulletin_date}_{self.name}",
+                        self.output_formats)
 
     @abstractmethod
     def make_chart(self, df):
@@ -68,7 +71,7 @@ class Cumulative(AbstractChart):
             'deaths': 'Muertes (fecha actual)',
             'announced_deaths': 'Muertes (fecha boletín)'
         })
-        return fix_and_melt(df, "datum_date")
+        return util.fix_and_melt(df, "datum_date")
 
 class AbstractLateness(AbstractChart):
     def fetch_data_for_table(self, connection, bulletin_date, table):
@@ -88,7 +91,7 @@ class AbstractLateness(AbstractChart):
             'probable_cases': 'Probables',
             'deaths': 'Muertes'
         })
-        return fix_and_melt(df, "bulletin_date")
+        return util.fix_and_melt(df, "bulletin_date")
 
 class LatenessDaily(AbstractLateness):
     def make_chart(self, df):
@@ -217,7 +220,7 @@ class Doubling(AbstractChart):
             'cumulative_probable_cases': 'Probables',
             'cumulative_deaths': 'Muertes'
         })
-        return pd.melt(fix_date_columns(df, "datum_date"),
+        return pd.melt(util.fix_date_columns(df, "datum_date"),
                        ["datum_date", "window_size_days"])
 
 
@@ -226,7 +229,7 @@ class DailyDeltas(AbstractChart):
         filtered = df \
             .replace(0, np.nan) \
             .dropna()
-        logging.info("df info: %s", describe_frame(filtered))
+        logging.info("df info: %s", util.describe_frame(filtered))
 
         base = alt.Chart(filtered).encode(
             x=alt.X('yearmonthdate(datum_date):O',
@@ -278,4 +281,4 @@ class DailyDeltas(AbstractChart):
             'delta_probable_cases': 'Probables',
             'delta_deaths': 'Muertes'
         })
-        return fix_and_melt(df, "bulletin_date", "datum_date")
+        return util.fix_and_melt(df, "bulletin_date", "datum_date")
