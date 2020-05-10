@@ -3,29 +3,31 @@ import argparse
 import datetime
 import importlib.resources
 import json
+import logging
+import sqlalchemy
 from sqlalchemy.sql import select
 from sqlalchemy.sql.functions import max
 
 from . import animations
 from . import charts
 from . import resources
-from .util import *
+from . import util
 from . import webpage
 
 
 def process_arguments():
     parser = argparse.ArgumentParser(description='Generate Puerto Rico COVID-19 charts')
+    parser.add_argument('--config-file', type=str, required=True,
+                        help='TOML config file (for DB credentials and such')
+    parser.add_argument('--assets-dir', type=str, required=True,
+                        help='Static website assets directory')
     parser.add_argument('--output-dir', type=str, required=True,
                         help='Directory into which to place output')
-    parser.add_argument('--source-material-dir', type=str, required=True,
-                        help="Directory with source material files")
-    parser.add_argument('--template-dir', type=str, required=True,
-                        help="Directory to process for web page templates")
     parser.add_argument('--output-formats', action='append', default=['json'])
     parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat,
                         help='Bulletin date to generate charts for. Default: most recent in DB.')
-    parser.add_argument('--config-file', type=str, required=True,
-                        help='TOML config file (for DB credentials and such')
+    parser.add_argument('--website', action='store_true',
+                        help="Switch to run the website generation (which is a bit slow)")
     parser.add_argument('--animations', action='store_true',
                         help="Switch to run the animations (which are a bit slow to generate)")
     return parser.parse_args()
@@ -37,7 +39,7 @@ def main():
     logging.info("output-dir is %s; output-formats is %s",
                  args.output_dir, args.output_formats)
 
-    engine = create_db(args)
+    engine = util.create_db(args)
     bulletin_date = compute_bulletin_date(args, engine)
     logging.info('Using bulletin date of %s', bulletin_date)
 
@@ -50,10 +52,8 @@ def main():
     if args.animations:
         animations.CaseLag(engine, args).execute(bulletin_date)
 
-    webpage.generate_webpage(args.template_dir,
-                             args.source_material_dir,
-                             args.output_dir,
-                             bulletin_date)
+    if args.website:
+        webpage.Website(args).generate(bulletin_date)
 
 
 

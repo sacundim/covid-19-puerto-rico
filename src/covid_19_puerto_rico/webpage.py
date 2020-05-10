@@ -1,55 +1,53 @@
-import glob
-import itertools
+import datetime
 import logging
+from jinja2 import Environment, PackageLoader, select_autoescape
 import os
-from pathlib import Path
+import pathlib
 import shutil
 from wand.image import Image
 
 class Website:
     def __init__(self, args):
-        self.template_dir = args.template_dir
-        self.source_material_dir = args.source_material_dir
+        self.assets_dir = args.assets_dir
         self.output_dir = args.output_dir
+        self.jinja = Environment(
+            loader=PackageLoader('covid_19_puerto_rico', 'templates'),
+            autoescape=select_autoescape(['html', 'xml'])
+        )
 
+    def generate(self, bulletin_date):
+        logging.info("Generating website for %s", bulletin_date)
+        self.copy_assets()
+        self.render_bulletin_date(bulletin_date)
 
-def generate_webpage(template_dir, source_material_dir, output_dir, bulletin_date):
-    destination = Path(f'{output_dir}/{bulletin_date}')
-    destination.mkdir(exist_ok=True)
+    def copy_assets(self):
+        for directory, subdirs, filenames in os.walk(self.assets_dir):
+            relative = pathlib.Path(directory).relative_to(self.assets_dir)
+            output_directory = pathlib.Path(f'{self.output_dir}/{relative}')
+            output_directory.mkdir(exist_ok=True)
+            for filename in filenames:
+                logging.info("Copying %s from %s/ to %s/", filename, directory, output_directory)
+                basename, extension = os.path.splitext(filename)
+                if (extension == '.jpg' or extension == '.jpeg'):
+                    logging.info("Converting %s to png", filename)
+                    copy_to_png(f'{directory}/{filename}',
+                                f'{output_directory}/{basename}.png')
+                else:
+                    shutil.copyfile(f'{directory}/{filename}',
+                                    f'{output_directory}/{filename}')
 
-    source_material_subdir = f'{source_material_dir}/{bulletin_date}'
-    for png in glob.iglob(f'{source_material_subdir}/*.png'):
-        logging.info('Copying %s to %s', png, destination)
-        shutil.copy(png, destination)
-
-    for jpg in itertools.chain(glob.iglob(f'{source_material_subdir}/*.jpg'),
-                               glob.iglob(f'{source_material_subdir}/*.jpeg')):
-        logging.info('Copying %s to a PNG in %s', jpg, destination)
-        copy_to_png(jpg, destination)
-
-    for dirpath, dirnames, filenames in os.walk(template_dir):
-        for dirname in dirnames:
-            destination_subdir = f'{destination}/{dirpath}/{dirname}'
-            logging.info("Making subdirectory: %s", destination_subdir)
-            Path(destination_subdir).mkdir(exist_ok=True)
-
-        for filename in filenames:
-            logging.info("Copying file: dirpath = %s, filename = %s", dirpath, filename)
-            shutil.copyfile(f'{dirpath}/{filename}',
-                            f'{destination}/{filename}')
+    def render_bulletin_date(self, bulletin_date):
+        output_index_html = f'{self.output_dir}/{bulletin_date}/index.html'
+        logging.info("Rendering %s", output_index_html)
+        previous_date = bulletin_date - datetime.timedelta(days=1)
+        template = self.jinja.get_template('bulletin_date_index.html')
+        template.stream(
+            bulletin_date=bulletin_date,
+            previous_date=previous_date)\
+            .dump(output_index_html)
 
 
 def copy_to_png(origin, destination):
-    (base, extension) = analyze_path(origin)
-    if (extension.lower() == 'png'):
-        shutil.copy(origin, destination)
-    else:
-        with Image(filename=origin) as original:
-            with original.convert('png') as converted:
-                converted.save(filename=f'{destination}/{base}.png')
-
-def analyze_path(path):
-    """Split a path into (dir_path, base_file_name, extension)"""
-    root, ext = os.path.splitext(path)
-    root, base = os.path.split(root)
-    return (base, ext)
+    with Image(filename=origin) as original:
+        with original.convert('png') as converted:
+            converted.save(filename=destination)

@@ -18,6 +18,7 @@ altair = "^4.1.0"
 toml = "^0.10.0"
 altair-saver = "^0.5.0"
 wand = "^0.5.9"
+jinja2 = "^2.11.2"
 
 [tool.poetry.dev-dependencies]
 

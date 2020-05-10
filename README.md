@@ -7,16 +7,15 @@ computadora, y contiene algunos análisis de estos.
 
 ## Datos de fuente y archivos CSV
 
-En el directorio [`source_material/`](source_material/) (al 
-momento incompleto) se recopilan imágenes de boletines y
-gráficas.  Una selección de datos de estos se ha copiado a 
-mano a los archivos CSV en el subdirectorio [`data/`](data/),
-que al momento consisten de:
+En el directorio [`assets/source_material/`](assets/source_material/)
+se recopilan imágenes de boletines y gráficas.  Una selección de datos de 
+estos se ha copiado a mano a los archivos CSV en el subdirectorio 
+[`assets/data/`](assets/data/), que al momento consisten de:
 
-* [`PuertoRico-bulletin.csv`](data/PuertoRico-bulletin.csv), que
+* [`PuertoRico-bulletin.csv`](assets/data/PuertoRico-bulletin.csv), que
   consiste de números de "anuncio" que se hacen todos los días.
   Estas son las cifras que más publicidad reciben.
-* [`PuertoRico-bitemporal.csv`](data/PuertoRico-bitemporal.csv),
+* [`PuertoRico-bitemporal.csv`](assets/data/PuertoRico-bitemporal.csv),
   que consiste de datos de gráficas que acompañan estos boletines
   y que atribuyen las muertes a la fecha en que en verdad sucedieron
   y los casos positivos a la fecha que se tomó la muestra.
@@ -43,12 +42,12 @@ La intención de esto es posibilitar análisis de, por ejemplo:
 Por ejemplo, esta gráfica de casos positivos probables hasta el 
 2 de mayo del 2020 da 9 casos probables para el 1ero de abril:
 
-![Casos probables hasta 2 de mayo](source_material/2020-05-02/2020-05-02_probable.png)
+![Casos probables hasta 2 de mayo](assets/source_material/2020-05-02/2020-05-02_probable.png)
 
 Pero la gráfica del boletín del próximo día (datos hasta 3 de mayo 
 del 2020) da 8 casos probablespara la misma fecha de 1ero de abril:
 
-![Casos probables hasta 3 de mayo](source_material/2020-05-03/2020-05-03_probable.jpeg)
+![Casos probables hasta 3 de mayo](assets/source_material/2020-05-03/2020-05-03_probable.jpeg)
 
 Así que el archivo bitemporal reporta:
 

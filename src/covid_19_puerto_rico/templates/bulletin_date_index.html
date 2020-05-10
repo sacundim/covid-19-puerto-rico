@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  
+  <script type="text/javascript">
+    const bulletin_date = "{{ bulletin_date }}";
+    function embedChart(name, bulletin_date) {
+      vegaEmbed(`#${name}`, `${bulletin_date}_${name}.json`).catch(console.error);
+    }
+  </script>
+</head>
+<body>
+
+<h1>COVID-19 en Puerto Rico</h1>
+
+<h2>Análisis {{ bulletin_date }}</h2>
+
+<div id="DailyDeltas" class="chart"></div>
+
+<script type="text/javascript" class="chart">
+  embedChart('DailyDeltas', bulletin_date);
+</script>
+
+
+<div id="LatenessDaily" class="chart"></div>
+
+<script type="text/javascript">
+  embedChart('LatenessDaily', bulletin_date);
+</script>
+
+
+<div id="Lateness7Day" class="chart"></div>
+
+<script type="text/javascript">
+  embedChart('DailyDeltas', bulletin_date);
+</script>
+
+
+<div id="Cumulative"></div>
+
+<script type="text/javascript">
+  embedChart('Cumulative', bulletin_date);
+</script>
+
+<div id="Doubling" class="chart"></div>
+
+<script type="text/javascript">
+  embedChart('Doubling', bulletin_date);
+</script>
+
+
+<h2>Boletín {{ bulletin_date }}</h2>
+
+<p><img class="chart" src="/source_material/{{ bulletin_date }}/{{ bulletin_date }}_announcement.png"></p>
+
+<h3>Casos únicos confirmados y probables {{ bulletin_date }} (vs. {{ previous_date }})</h3>
+
+<p><img class="chart" src="/source_material/{{ bulletin_date }}/{{ bulletin_date }}_confirmed_and_probable.png"></p>
+<p><img class="chart" src="/source_material/{{ previous_date }}/{{ previous_date }}_confirmed_and_probable.png"></p>
+
+<h3>Casos únicos confirmados {{ bulletin_date }} (vs. {{ previous_date }})</h3>
+
+<p><img class="chart" src="/source_material/{{ bulletin_date }}/{{ bulletin_date }}_confirmed.png"></p>
+<p><img class="chart" src="/source_material/{{ previous_date }}/{{ previous_date }}_confirmed.png"></p>
+
+<h3>Casos únicos probables {{ bulletin_date }} (vs. {{ previous_date }})</h3>
+
+<p><img class="chart" src="/source_material/{{ bulletin_date }}/{{ bulletin_date }}_probable.png"></p>
+<p><img class="chart" src="/source_material/{{ previous_date }}/{{ previous_date }}_probable.png"></p>
+
+<h3>Muertes {{ bulletin_date }} (vs. {{ previous_date }})</h3>
+
+<p><img class="chart" src="/source_material/{{ bulletin_date }}/{{ bulletin_date }}_deaths.png"></p>
+<p><img class="chart" src="/source_material/{{ previous_date }}/{{ previous_date }}_deaths.png"></p>
+
+
+</body>
+</html>

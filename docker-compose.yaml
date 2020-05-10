@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
     - ./postgres:/docker-entrypoint-initdb.d:ro
-    - ./data:/data:ro
+    - ./assets/data:/data:ro
     ports:
     - 5432:5432
 
