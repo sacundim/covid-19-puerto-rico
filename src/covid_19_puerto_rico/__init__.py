@@ -14,7 +14,6 @@ from . import resources
 from . import util
 from . import website
 
-
 def process_arguments():
     parser = argparse.ArgumentParser(description='Generate Puerto Rico COVID-19 charts')
     parser.add_argument('--config-file', type=str, required=True,
@@ -26,6 +25,9 @@ def process_arguments():
     parser.add_argument('--output-formats', action='append', default=['json'])
     parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat,
                         help='Bulletin date to generate charts for. Default: most recent in DB.')
+    parser.add_argument('--earliest-date', type=datetime.date.fromisoformat,
+                        default=datetime.date(2020, 4, 25),
+                        help='Earliest date to generate website for. Has a sensible built-in default.')
     parser.add_argument('--website', action='store_true',
                         help="Switch to run the website generation (which is a bit slow)")
     parser.add_argument('--animations', action='store_true',
@@ -43,18 +45,25 @@ def main():
     bulletin_date = compute_bulletin_date(args, engine)
     logging.info('Using bulletin date of %s', bulletin_date)
 
-    charts.Cumulative(engine, args).execute(bulletin_date)
-    charts.LatenessDaily(engine, args).execute(bulletin_date)
-    charts.Lateness7Day(engine, args).execute(bulletin_date)
-    charts.Doubling(engine, args).execute(bulletin_date)
-    charts.DailyDeltas(engine, args).execute(bulletin_date)
+    targets = [
+        charts.Cumulative(engine, args),
+        charts.LatenessDaily(engine, args),
+        charts.Lateness7Day(engine, args),
+        charts.Doubling(engine, args),
+        charts.DailyDeltas(engine, args)
+    ]
 
     if args.animations:
-        animations.CaseLag(engine, args).execute(bulletin_date)
+        targets.append(animations.CaseLag(engine, args))
 
     if args.website:
-        website.Website(args).generate(bulletin_date)
+        site = website.Website(args)
+        site.copy_assets()
+        targets.append(site)
 
+    for date in make_date_range(args.earliest_date, bulletin_date):
+        for target in targets:
+            target.render(date)
 
 
 def global_configuration():
@@ -78,6 +87,11 @@ def compute_bulletin_date(args, engine):
         return args.bulletin_date
     else:
         return query_for_bulletin_date(engine)
+
+def make_date_range(start, end):
+    """Inclusive date range"""
+    return [start + datetime.timedelta(n)
+            for n in range(int((end - start).days))]
 
 def query_for_bulletin_date(engine):
     metadata = sqlalchemy.MetaData(engine)

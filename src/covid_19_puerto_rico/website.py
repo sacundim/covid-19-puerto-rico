@@ -15,10 +15,10 @@ class Website:
             autoescape=select_autoescape(['html', 'xml'])
         )
 
-    def generate(self, bulletin_date):
-        logging.info("Generating website for %s", bulletin_date)
+    def generate(self, date_range):
         self.copy_assets()
-        self.render_bulletin_date(bulletin_date)
+        for bulletin_date in date_range:
+            self.render(bulletin_date)
 
     def copy_assets(self):
         for directory, subdirs, filenames in os.walk(self.assets_dir):
@@ -36,7 +36,7 @@ class Website:
                     shutil.copyfile(f'{directory}/{filename}',
                                     f'{output_directory}/{filename}')
 
-    def render_bulletin_date(self, bulletin_date):
+    def render(self, bulletin_date):
         output_index_html = f'{self.output_dir}/{bulletin_date}/index.html'
         logging.info("Rendering %s", output_index_html)
         previous_date = bulletin_date - datetime.timedelta(days=1)
