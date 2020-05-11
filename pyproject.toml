@@ -21,6 +21,7 @@ wand = "^0.5.9"
 jinja2 = "^2.11.2"
 
 [tool.poetry.dev-dependencies]
+ghp-import = "^0.5.5"
 
 [build-system]
 requires = ["poetry>=0.12"]
