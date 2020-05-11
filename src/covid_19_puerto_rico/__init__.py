@@ -70,6 +70,8 @@ def main():
 
     if args.website:
         site.copy_assets()
+        site.render_top(bulletin_date)
+
 
 
 def global_configuration():

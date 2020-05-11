@@ -50,6 +50,13 @@ class Website:
             previous_date=previous_date)\
             .dump(output_index_html)
 
+    def render_top(self, bulletin_date):
+        output_index_html = f'{self.output_dir}/index.html'
+        logging.info("Rendering %s", output_index_html)
+        template = self.jinja.get_template('top_index.html')
+        template.stream(bulletin_date=bulletin_date)\
+            .dump(output_index_html)
+
 
 def copy_to_png(origin, destination):
     with Image(filename=origin) as original:

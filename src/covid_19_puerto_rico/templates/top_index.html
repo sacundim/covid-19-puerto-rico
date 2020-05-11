@@ -1,24 +1,16 @@
-{% extends "base.html" %}
-
-{% block title %}Análisis boleties COVID-19 en Puerto Rico{% endblock %}
-
-{% block content %}
-<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-lite@4"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
-
-<script type="text/javascript">
-    const bulletin_date = "{{ bulletin_date }}";
-    function embedChart(name, bulletin_date) {
-      vegaEmbed(`#${name}`, `${bulletin_date}_${name}.json`).catch(console.error);
-    }
-</script>
-
-<h1>Análisis boleties COVID-19 en Puerto Rico</h1>
-
-<ul>
-{% for date in bulletin_dates %}
-    <li><a href="{{ date }}/">{{ date }}</a></li>
-{% endfor %}
-</ul>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="refresh" content="0; url=/{{ bulletin_date }}/" />
+    <script type="text/javascript">
+        window.location.href = "/{{ bulletin_date }}/"
+    </script>
+    <title>Redirección de página</title>
+</head>
+<body>
+    <body>
+        Si tu navegador no te redirige inmediatamente,
+        <a href='/{{ bulletin_date }}/'>sigue este enlace</a>.
+    </body>
+</body>
