@@ -4,6 +4,10 @@ Este proyecto recopila datos sobre COVID-19 publicados por el
 Departamento de Salud de Puerto Rico en un formato legible por
 computadora, y contiene algunos análisis de estos.
 
+Visita el dashboard en:
+
+* https://sacundim.github.io/covid-19-puerto-rico/
+
 
 ## Datos de fuente y archivos CSV
 
