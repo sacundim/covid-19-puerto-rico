@@ -1,11 +1,27 @@
+.page_content {
+    margin-top: 75px;
+    margin-left: 50px;
+    margin-right: 50px;
+}
+
+.section {
+    border-style: solid;
+    margin-bottom: 75px;
+    padding: 25px
+}
+
+h3 {
+    margin-top: 50px
+}
+
 .chart {
-    padding-top: 25px;
-    padding-bottom: 25px;
+    margin-top: 25px;
+    margin-bottom: 25px;
 }
 
 .source_chart {
-    padding-top: 25px;
-    padding-bottom: 25px;
+    margin-top: 25px;
+    margin-bottom: 25px;
     max-width: 800px;
     height=auto;
 }

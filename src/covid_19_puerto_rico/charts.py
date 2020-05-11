@@ -43,7 +43,13 @@ class Cumulative(AbstractChart):
             x=alt.X('yearmonthdate(datum_date):T', title=None),
             y=alt.Y('value', title=None, scale=alt.Scale(type='log')),
             color=alt.Color('variable', title=None,
-                            legend=alt.Legend(orient="top", labelLimit=250)),
+                            legend=alt.Legend(orient="top", labelLimit=250, columns=3),
+                            sort=['Casos confirmados (fecha muestra)',
+                                  'Pruebas positivas (fecha boletín)',
+                                  'Casos (fecha boletín)',
+                                  'Casos probables (fecha muestra)',
+                                  'Muertes (fecha actual)',
+                                  'Muertes (fecha boletín)']),
             tooltip=['datum_date', 'variable', 'value']
         ).properties(
             width=1000,
@@ -73,14 +79,14 @@ class Cumulative(AbstractChart):
         return util.fix_and_melt(df, "datum_date")
 
 class AbstractLateness(AbstractChart):
-    def fetch_data_for_table(self, connection, bulletin_date, table):
+    def fetch_data_for_table(self, connection, bulletin_date, table, days=7):
         query = select([table.c.bulletin_date,
                         table.c.confirmed_and_probable_cases,
                         table.c.confirmed_cases,
                         table.c.probable_cases,
                         table.c.deaths]
         ).where(
-            and_(bulletin_date - datetime.timedelta(days=7) < table.c.bulletin_date,
+            and_(bulletin_date - datetime.timedelta(days=days) < table.c.bulletin_date,
                  table.c.bulletin_date <= bulletin_date)
         )
         df = pd.read_sql_query(query, connection)
@@ -120,7 +126,7 @@ class LatenessDaily(AbstractLateness):
         )
 
         return (bars + text).properties(
-            width=150,
+            width=135,
             height=600
         ).facet(
             column=alt.X("bulletin_date", sort="descending", title="Fecha del boletín")
@@ -172,7 +178,7 @@ class Lateness7Day(AbstractLateness):
     def fetch_data(self, connection, bulletin_date):
         table = sqlalchemy.Table('lateness_7day', self.metadata,
                                  schema='products', autoload=True)
-        return self.fetch_data_for_table(connection, bulletin_date, table)
+        return self.fetch_data_for_table(connection, bulletin_date, table, days=8)
 
 
 class Doubling(AbstractChart):
@@ -183,8 +189,8 @@ class Doubling(AbstractChart):
                     scale=alt.Scale(type='log', domain=(1, 100))),
             color=alt.Color('variable', legend=None)
         ).properties(
-            width=256,
-            height=256
+            width=220,
+            height=220
         ).facet(
             column=alt.X('variable', title=None,
                          sort=['Confirmados y probables',
