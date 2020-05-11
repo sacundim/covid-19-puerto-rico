@@ -5,20 +5,23 @@ import os
 import pathlib
 import shutil
 from wand.image import Image
+from . import util
+
 
 class Website:
-    def __init__(self, args):
+    def __init__(self, args, date_range):
         self.assets_dir = args.assets_dir
         self.output_dir = args.output_dir
         self.jinja = Environment(
             loader=PackageLoader('covid_19_puerto_rico', 'templates'),
             autoescape=select_autoescape(['html', 'xml'])
         )
+        self.date_range = date_range
 
     def generate(self, date_range):
         self.copy_assets()
         for bulletin_date in date_range:
-            self.render(bulletin_date)
+            self.render_bulletin_date(bulletin_date)
 
     def copy_assets(self):
         for directory, subdirs, filenames in os.walk(self.assets_dir):
@@ -42,6 +45,7 @@ class Website:
         previous_date = bulletin_date - datetime.timedelta(days=1)
         template = self.jinja.get_template('bulletin_date_index.html')
         template.stream(
+            bulletin_dates=reversed(self.date_range),
             bulletin_date=bulletin_date,
             previous_date=previous_date)\
             .dump(output_index_html)

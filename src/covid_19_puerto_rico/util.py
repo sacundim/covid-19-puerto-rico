@@ -1,9 +1,15 @@
+import datetime
 import io
 import logging
 import pandas as pd
 import sqlalchemy
 import toml
 
+
+def make_date_range(start, end):
+    """Inclusive date range"""
+    return [start + datetime.timedelta(n)
+            for n in range(int((end - start).days) + 1)]
 
 def create_db(args):
     config = {
