@@ -127,7 +127,7 @@ class LatenessDaily(AbstractLateness):
 
         return (bars + text).properties(
             width=135,
-            height=600
+            height=350
         ).facet(
             column=alt.X("bulletin_date", sort="descending", title="Fecha del boletín")
         )
@@ -169,7 +169,7 @@ class Lateness7Day(AbstractLateness):
         )
 
         return (lines + text).properties(
-            width=500, height=300
+            width=500, height=175
         ).facet(
             columns=2, spacing = 40,
             facet=alt.Facet('variable', title=None, sort=sort_order)
