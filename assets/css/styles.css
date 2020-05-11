@@ -1,4 +1,11 @@
 .chart {
-  padding-top: 50px;
-  padding-bottom: 50px;
+    padding-top: 50px;
+    padding-bottom: 50px;
+}
+
+.source_chart {
+    padding-top: 50px;
+    padding-bottom: 50px;
+    max-width: 800px;
+    height=auto;
 }

@@ -56,14 +56,20 @@ def main():
     if args.animations:
         targets.append(animations.CaseLag(engine, args))
 
+    date_range = list(
+        util.make_date_range(args.earliest_date, bulletin_date)
+    )
+
     if args.website:
-        site = website.Website(args)
-        site.copy_assets()
+        site = website.Website(args, date_range)
         targets.append(site)
 
-    for date in make_date_range(args.earliest_date, bulletin_date):
+    for date in date_range:
         for target in targets:
             target.render(date)
+
+    if args.website:
+        site.copy_assets()
 
 
 def global_configuration():
@@ -87,11 +93,6 @@ def compute_bulletin_date(args, engine):
         return args.bulletin_date
     else:
         return query_for_bulletin_date(engine)
-
-def make_date_range(start, end):
-    """Inclusive date range"""
-    return [start + datetime.timedelta(n)
-            for n in range(int((end - start).days))]
 
 def query_for_bulletin_date(engine):
     metadata = sqlalchemy.MetaData(engine)
