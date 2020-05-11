@@ -46,9 +46,8 @@ class Cumulative(AbstractChart):
                             legend=alt.Legend(orient="top", labelLimit=250)),
             tooltip=['datum_date', 'variable', 'value']
         ).properties(
-            title="Los conteos acumulados que se anuncian cada día vs. revisiones posteriores",
-            width=1200,
-            height=800
+            width=1000,
+            height=600
         )
 
     def fetch_data(self, connection, bulletin_date):
@@ -125,8 +124,6 @@ class LatenessDaily(AbstractLateness):
             height=600
         ).facet(
             column=alt.X("bulletin_date", sort="descending", title="Fecha del boletín")
-        ).properties(
-            title="Estimado de rezagos (día a día)"
         )
 
 
@@ -170,8 +167,6 @@ class Lateness7Day(AbstractLateness):
         ).facet(
             columns=2, spacing = 40,
             facet=alt.Facet('variable', title=None, sort=sort_order)
-        ).properties(
-            title="Tendencia de los rezagos (ventanas de 7 días)"
         )
 
     def fetch_data(self, connection, bulletin_date):
@@ -197,8 +192,6 @@ class Doubling(AbstractChart):
                                'Probables',
                                'Muertes']),
             row=alt.Y('window_size_days:O', title='Ancho de ventana (días)')
-        ).properties(
-            title="Los tiempos de duplicación de casos confirmados han bajado consistentemente"
         )
 
     def fetch_data(self, connection, bulletin_date):
@@ -256,7 +249,6 @@ class DailyDeltas(AbstractChart):
         return (heatmap + text).properties(
             width=900, height=225
         ).facet(
-            title="Muchas veces los casos que se añaden (¡o quitan!) son viejitos",
             row=alt.Row('variable', title=None,
                         sort=['Confirmados',
                               'Probables',
