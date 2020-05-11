@@ -12,36 +12,38 @@
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
-<nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
-  <a class="navbar-brand" href="#">covid-19-puerto-rico</a>
-  <button class="navbar-toggler"
-          type="button" data-toggle="collapse"
-          data-target="#navbarSupportedContent"
-          aria-controls="navbarSupportedContent"
-          aria-expanded="false"
-          aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-  </button>
+    <nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
+      <a class="navbar-brand" href="#">covid-19-puerto-rico</a>
+      <button class="navbar-toggler"
+              type="button" data-toggle="collapse"
+              data-target="#navbarSupportedContent"
+              aria-controls="navbarSupportedContent"
+              aria-expanded="false"
+              aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+      </button>
 
-  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav mr-auto">
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
-           role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            {{ bulletin_date }}
-        </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-            {% for date in bulletin_dates %}
-            <a class="dropdown-item" href="../{{ date }}/">{{ date }}</a>
-            {% endfor %}
-        </div>
-      </li>
-    </ul>
-  </div>
-</nav>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
+               role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                {{ bulletin_date }}
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                {% for date in bulletin_dates %}
+                <a class="dropdown-item" href="../{{ date }}/">{{ date }}</a>
+                {% endfor %}
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
 
-        {% block content %}
-        {% endblock %}
+    <div class="page_content">
+    {% block content %}
+    {% endblock %}
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
             integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
