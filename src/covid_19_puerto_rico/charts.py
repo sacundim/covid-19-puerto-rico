@@ -169,7 +169,7 @@ class Lateness7Day(AbstractLateness):
         )
 
         return (lines + text).properties(
-            width=500, height=175
+            width=500, height=200
         ).facet(
             columns=2, spacing = 40,
             facet=alt.Facet('variable', title=None, sort=sort_order)
@@ -238,12 +238,12 @@ class DailyDeltas(AbstractChart):
             tooltip=['bulletin_date:T', 'datum_date:T', 'value']
         )
 
-        heatmap = base.mark_rect(cornerRadius=12).encode(
+        heatmap = base.mark_rect().encode(
             color=alt.Color('value:Q', title=None,
                             scale=alt.Scale(scheme="redgrey", domainMid=0))
         )
 
-        text = base.mark_text(color='white', size=15).encode(
+        text = base.mark_text(color='white').encode(
             text=alt.Text('value:Q'),
             color=alt.condition(
                 alt.FieldRangePredicate(field='value', range=[0, 15]),
@@ -253,7 +253,7 @@ class DailyDeltas(AbstractChart):
         )
 
         return (heatmap + text).properties(
-            width=900, height=225
+            width=900, height=150
         ).facet(
             row=alt.Row('variable', title=None,
                         sort=['Confirmados',
