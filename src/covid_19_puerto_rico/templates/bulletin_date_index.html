@@ -12,45 +12,145 @@
     const bulletin_date = "{{ bulletin_date }}";
 </script>
 
-<h1>COVID-19 en Puerto Rico</h1>
 
-<h2>Análisis {{ bulletin_date }}</h2>
+<h1>Cambio entre boletines consecutivos</h1>
 
 <div id="DailyDeltas" class="chart"></div>
-
 <script type="text/javascript" class="chart">
   embedChart('DailyDeltas', bulletin_date);
 </script>
 
+<h3>¿Qué es esto?</h3>
+
+<p>Una gráfica que muestra, para los siete boletines más recientes,
+    los resultados tomar los números de sus gráficas como esta:</p>
+
+<p><img class="source_chart" src="/source_material/{{ bulletin_date }}/{{ bulletin_date }}_confirmed.png"></p>
+
+<p>...y restarle sus contrapartes del boletín anterior:</p>
+
+<p><img class="source_chart" src="/source_material/{{ previous_date }}/{{ previous_date }}_confirmed.png"></p>
+
+<p>Esto nos da un desglose aproximado, para cada boletín, de a qué fecha se le
+    atribuyeron los casos nuevos que reporta este.</p>
+
+<p>Hay que notar que frecuentemente se ven fechas que salen números negativos.
+    La información que brinda el Departamento de Salud de Puerto Rico no deja claro
+    qué motiva esto en cada caso; algunas posibilidades podrían ser:</p>
+
+<ul>
+    <li>Casos probables que pasaron a confirmados;</li>
+    <li>Llegada de resultado positivo más antiguo para la misma persona;</li>
+    <li>Corrección de errores clericales en los récords.</li>
+</ul>
+
+<p>La existencia de números negativos también complica la interpretación de este
+    modo: las fechas que dan positivos no sabemos si hubo resta de casos.  Una
+    fecha que diga que un boletín la subió por siete casos bien pudiera ser que
+    se registraron 8 casos nuevos y se restó uno.</p>
+
+
+<h1>Rezago de datos de cada boletín</h1>
 
 <div id="LatenessDaily" class="chart"></div>
-
 <script type="text/javascript">
   embedChart('LatenessDaily', bulletin_date);
 </script>
 
+<h3>¿Qué es esto?</h3>
+
+<p>Un estimado, para los siete boletines más recientes, de cuánto tiempo
+    atrás en promedio se tomaron las muestras que añade y las muertes
+    que reporta.</p>
+
+<p>Este estimado se elabora a partir de los datos arriba de los cambios
+    entre boletines consecutivos. Por el asunto de los números negativos
+    en esos datos, no se puede esperar que estos rezagos estimados
+    sean los valores exactos que calcularíamos si tuvieramos mejor datos.</p>
+
+
+<h1>Tendencia de rezago de datos</h1>
 
 <div id="Lateness7Day" class="chart"></div>
-
 <script type="text/javascript">
   embedChart('Lateness7Day', bulletin_date);
 </script>
 
+<h3>¿Qué es esto?</h3>
+
+<p>Un estimado de rezagos similar al anterior, pero en vez de evaluar
+    los casos de cada boletín aparte, se agrupan en ventanas rodantes
+    de siete días.  O sea, la cifra que se reporta para cada fecha de
+    boletín abarca no solo los casos nuevos reportados en ese boletín,
+    sino también los seis días anteriores.</p>
+
+<p>El ancho de ventana se fijó en siete días para eliminar los ciclos
+    semanales que son evidentes en los datos de fuente, como se aprecia
+    fácil en esta gráfica del boletín:</p>
+
+<p><img class="source_chart" src="/source_material/{{ bulletin_date }}/{{ bulletin_date }}_probable.png"></p>
+
+Las fechas como el 18, 19, 25 y 26 de abril, que reportan bien pocos
+casos, es que son fines de semana.
+
+
+<h1>Curvas de casos acumulados por fecha de suceso y de reporte</h1>
 
 <div id="Cumulative"></div>
-
 <script type="text/javascript">
   embedChart('Cumulative', bulletin_date);
 </script>
 
-<div id="Doubling" class="chart"></div>
+<h3>¿Qué es esto?</h3>
 
+<p>Los números de casos acumulados para cada fecha, interpretándose esta tanto como:</p>
+
+<dl>
+    <dt>Fecha de boletín</dt>
+    <dd>El número de casos que reportó el boletín de esa fecha.  Estos son los
+        números acumulados que se anuncian cada día y que más se comentan.</dd>
+    <dt>Fecha de muestra o actual de muerte</dt>
+    <dd>El número de casos que boletines posteriores le atribuyen a esa fecha,
+        a partir de agrupar los casos por fecha que se tomó la muestra o que
+        aconteció el fallecimiento.</dd>
+</dl>
+
+<p>En esta gráfica vale apreciar:</p>
+
+<ul>
+    <li>Cómo el número verdadero de casos or muertes que se dieron para cada fecha
+        es siempre menor que el verdadero;</li>
+    <li>Los ciclos semanales en la administración de pruebas, más notable para los
+        casos probables;</li>
+    <li>La convergencia de las dos curvas de muertes al final es un artefacto de que
+        aún deben quedar muertes por reportar que sucedieron en fechas recientes.</li>
+</ul>
+
+<h1>Tiempos de duplicación de casos por fecha de suceso</h1>
+
+<div id="Doubling" class="chart"></div>
 <script type="text/javascript">
   embedChart('Doubling', bulletin_date);
 </script>
 
+<h3>¿Qué es esto?</h3>
 
-<h2>Datos {{ bulletin_date }}</h2>
+<p>Las tendencias de la velocidad a la que han crecido los casos, expresadas
+    en términos de tiempos de duplicación constante (duplicación cada dos días,
+    tres días, cuatro días, etc.), y por ventanas de anchos de 7, 14 y 21 días.</p>
+
+<p>Esto es, para cada fecha, el ancho de ventana <i>n</i> dividido entre la subida del
+    logaritmo base entre el valor acumulado hace <i>n</i> días y esa fecha.</p>
+
+<p>Si los datos de base no son una indicación fiable de la propagación de la
+    epidemia, pues esta gráfica tampoco lo es; lo que nos dice es qué sería la
+    verdad si los datos fueran de verdad.  ¯\_(ツ)_/¯</p>
+
+
+<h1>Datos fuente para {{ bulletin_date }}</h1>
+
+Estas son las imágenes de los boletines del Departamento de Salud que
+se usaron para elaborar este análisis.
 
 <p><img class="source_chart" src="/source_material/{{ bulletin_date }}/{{ bulletin_date }}_announcement.png"></p>
 
