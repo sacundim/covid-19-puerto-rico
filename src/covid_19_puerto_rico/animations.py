@@ -35,7 +35,7 @@ class AbstractAnimation(ABC):
             for frame in gif.sequence:
                 frame.delay = self.delay
             gif.type = 'optimize'
-            gif.save(filename=f"{self.output_dir}/{self.name}_{bulletin_date}.gif")
+            gif.save(filename=f"{bulletin_dir}/{bulletin_date}_{self.name}.gif")
 
     def get_bulletin_dates(self, connection, bulletin_date):
         table = sqlalchemy.Table('bitemporal', self.metadata, autoload=True)
