@@ -5,4 +5,5 @@
 dist/
 output/
 tmp/
+.DS_Store
 geckodriver.log
