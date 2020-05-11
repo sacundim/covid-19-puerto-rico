@@ -3,5 +3,6 @@
 *.egg-info
 *.pyc
 dist/
+output/
 tmp/
 geckodriver.log
