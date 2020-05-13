@@ -43,7 +43,7 @@ class Cumulative(AbstractChart):
             x=alt.X('yearmonthdate(datum_date):T', title=None),
             y=alt.Y('value', title=None, scale=alt.Scale(type='log')),
             color=alt.Color('variable', title=None,
-                            legend=alt.Legend(orient="top", labelLimit=250, columns=3),
+                            legend=alt.Legend(orient="top", labelLimit=250, columns=2),
                             sort=['Casos confirmados (fecha muestra)',
                                   'Pruebas positivas (fecha boletín)',
                                   'Casos (fecha boletín)',
@@ -52,8 +52,7 @@ class Cumulative(AbstractChart):
                                   'Muertes (fecha boletín)']),
             tooltip=['datum_date', 'variable', 'value']
         ).properties(
-            width=1000,
-            height=600
+            width=500, height=275
         )
 
     def fetch_data(self, connection, bulletin_date):
@@ -79,7 +78,7 @@ class Cumulative(AbstractChart):
         return util.fix_and_melt(df, "datum_date")
 
 class AbstractLateness(AbstractChart):
-    def fetch_data_for_table(self, connection, bulletin_date, table, days=7):
+    def fetch_data_for_table(self, connection, bulletin_date, table, days=8):
         query = select([table.c.bulletin_date,
                         table.c.confirmed_and_probable_cases,
                         table.c.confirmed_cases,
@@ -105,8 +104,8 @@ class LatenessDaily(AbstractLateness):
                       'Probables',
                       'Muertes']
         bars = alt.Chart(df).mark_bar().encode(
-            y=alt.Y('value', title="Rezago estimado (días)"),
-            x=alt.X('variable', title=None, sort=sort_order, axis=alt.Axis(labels=False)),
+            x=alt.X('value', title="Rezago estimado (días)"),
+            y=alt.Y('variable', title=None, sort=sort_order, axis=None),
             color=alt.Color('variable', sort=sort_order,
                             legend=alt.Legend(orient='bottom', title=None)),
             tooltip=['variable', 'bulletin_date',
@@ -116,20 +115,20 @@ class LatenessDaily(AbstractLateness):
         )
 
         text = bars.mark_text(
-            align='center',
-            baseline='top',
+            align='right',
+            baseline='middle',
             size=12,
-            dy=5
+            dx=-5
         ).encode(
             text=alt.Text('value:Q', format='.1f'),
             color = alt.value('white')
         )
 
         return (bars + text).properties(
-            width=135,
-            height=350
+            width=250,
         ).facet(
-            column=alt.X("bulletin_date", sort="descending", title="Fecha del boletín")
+            columns=2,
+            facet=alt.Facet("bulletin_date", sort="descending", title="Fecha del boletín")
         )
 
 
@@ -169,7 +168,7 @@ class Lateness7Day(AbstractLateness):
         )
 
         return (lines + text).properties(
-            width=500, height=200
+            width=225, height=175
         ).facet(
             columns=2, spacing = 40,
             facet=alt.Facet('variable', title=None, sort=sort_order)
@@ -184,20 +183,21 @@ class Lateness7Day(AbstractLateness):
 class Doubling(AbstractChart):
     def make_chart(self, df):
         return alt.Chart(df.dropna()).mark_line(clip=True).encode(
-            x=alt.X('datum_date:T', title='Fecha del evento'),
-            y=alt.Y('value', title="Tiempo de duplicación (días)",
+            x=alt.X('yearmonthdate(datum_date):O', title='Fecha del evento'),
+            y=alt.Y('value', title=None,
                     scale=alt.Scale(type='log', domain=(1, 100))),
             color=alt.Color('variable', legend=None)
         ).properties(
-            width=220,
-            height=220
+            width=150,
+            height=120
+
         ).facet(
-            column=alt.X('variable', title=None,
-                         sort=['Confirmados y probables',
-                               'Confirmados',
-                               'Probables',
-                               'Muertes']),
-            row=alt.Y('window_size_days:O', title='Ancho de ventana (días)')
+            row=alt.Row('variable', title=None,
+                        sort=['Confirmados y probables',
+                              'Confirmados',
+                              'Probables',
+                              'Muertes']),
+            column=alt.Column('window_size_days:O', title='Ancho de ventana (días)')
         )
 
     def fetch_data(self, connection, bulletin_date):
@@ -239,7 +239,7 @@ class DailyDeltas(AbstractChart):
         )
 
         heatmap = base.mark_rect().encode(
-            color=alt.Color('value:Q', title=None,
+            color=alt.Color('value:Q', title=None, legend=None,
                             scale=alt.Scale(scheme="redgrey", domainMid=0))
         )
 
@@ -253,7 +253,7 @@ class DailyDeltas(AbstractChart):
         )
 
         return (heatmap + text).properties(
-            width=900, height=150
+            width=400
         ).facet(
             row=alt.Row('variable', title=None,
                         sort=['Confirmados',

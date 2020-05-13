@@ -1,7 +1,8 @@
 .page_content {
     margin-top: 75px;
-    margin-left: 50px;
-    margin-right: 50px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 740px;
 }
 
 .section {
@@ -22,6 +23,6 @@ h3 {
 .source_chart {
     margin-top: 25px;
     margin-bottom: 25px;
-    max-width: 800px;
+    max-width: 100%;
     height=auto;
 }
