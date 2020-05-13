@@ -152,7 +152,7 @@ class Lateness7Day(AbstractLateness):
             x=alt.X('yearmonthdate(bulletin_date):O',
                     title="Fecha boletín",
                     axis=alt.Axis(format='%d/%m', titlePadding=10)),
-            y=alt.Y('value:Q', title="Rezago estimado (días)"),
+            y=alt.Y('value:Q', title="Rezago (días)"),
             color = alt.Color('variable', sort=sort_order, legend=None),
             tooltip=['variable', 'bulletin_date',
                      alt.Tooltip(field='value',
@@ -170,7 +170,7 @@ class Lateness7Day(AbstractLateness):
         )
 
         return (lines + text).properties(
-            width=275, height=175
+            width=275, height=84
         ).facet(
             columns=2, spacing = 40,
             facet=alt.Facet('variable', title=None, sort=sort_order)
