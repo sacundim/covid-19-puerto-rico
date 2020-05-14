@@ -262,7 +262,8 @@ class DailyDeltas(AbstractChart):
             width=550
         ).facet(
             row=alt.Row('variable', title=None,
-                        sort=['Confirmados',
+                        sort=['Confirmados y probables',
+                              'Confirmados',
                               'Probables',
                               'Muertes'])
         )
@@ -272,6 +273,7 @@ class DailyDeltas(AbstractChart):
                                  schema='products', autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.datum_date,
+                        table.c.delta_confirmed_and_probable_cases,
                         table.c.delta_confirmed_cases,
                         table.c.delta_probable_cases,
                         table.c.delta_deaths]
@@ -281,6 +283,7 @@ class DailyDeltas(AbstractChart):
         )
         df = pd.read_sql_query(query, connection)
         df = df.rename(columns={
+            'delta_confirmed_and_probable_cases': 'Confirmados y probables',
             'delta_confirmed_cases': 'Confirmados',
             'delta_probable_cases': 'Probables',
             'delta_deaths': 'Muertes'
