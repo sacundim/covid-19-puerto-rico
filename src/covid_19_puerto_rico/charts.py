@@ -10,11 +10,12 @@ from sqlalchemy.sql import select, and_
 from . import util
 
 class AbstractChart(ABC):
-    def __init__(self, engine, args):
+    def __init__(self, engine, output_dir,
+                 output_formats=frozenset(['json'])):
         self.engine = engine
         self.metadata = sqlalchemy.MetaData(engine)
-        self.output_dir = args.output_dir
-        self.output_formats = args.output_formats
+        self.output_dir = output_dir
+        self.output_formats = output_formats
         self.name = type(self).__name__
 
     def render(self, bulletin_date):
