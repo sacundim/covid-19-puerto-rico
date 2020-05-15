@@ -50,7 +50,7 @@ class Cumulative(AbstractChart):
                                   'Pruebas positivas (fecha boletín)',
                                   'Casos (fecha boletín)',
                                   'Casos probables (fecha muestra)',
-                                  'Muertes (fecha actual)',
+                                  'Muertes (fecha muerte)',
                                   'Muertes (fecha boletín)']),
             tooltip=['datum_date', 'variable', 'value']
         ).properties(
@@ -74,7 +74,7 @@ class Cumulative(AbstractChart):
             'probable_cases': 'Casos probables (fecha muestra)',
             'positive_results': 'Pruebas positivas (fecha boletín)',
             'announced_cases': 'Casos (fecha boletín)',
-            'deaths': 'Muertes (fecha actual)',
+            'deaths': 'Muertes (fecha muerte)',
             'announced_deaths': 'Muertes (fecha boletín)'
         })
         return util.fix_and_melt(df, "datum_date")
