@@ -89,17 +89,17 @@ este en la base de datos.  El código está aquí:
 
 ## Análisis y gráficas
 
-Hay además aquí código Python para generar una serie de análisis
-gráficas que aun no he documentado.  La forma más sencilla de
-lanzarlo requiere Docker y Docker Compose. Desde este directorio:
+Hay además aquí código Python para generar una página web con una
+serie de análisis y gráficas.  La forma más sencilla de lanzarlo 
+requiere Docker y Docker Compose. Desde este directorio:
 
-1. `docker-compose up`
+1. `docker-compose up` (inicia base de datos y servidor HTTP local;
+    **ADVERTENCIA:** descarga como 300 MiB);
 2. `./scripts/build-docker-image.sh` (**ADVERTENCIA:** Descarga más 
-   de 1 gigabyte de datos)
+   de 1 gigabyte de datos);
 3. `./scripts/run-in-docker.sh`;
    
-...y las gráficas aparecen dentro del directorio [`output/`](output/),
-en formatos HTML, PNG y Vega (JSON):
+...y navegar a [`http://localhost:8080/`](http://localhost:8080/):
 
 * Casos cumulativos por fecha anuncio y fecha evento;
 * Tiempo de duplicación de casos por ventanas de 7,
@@ -108,15 +108,6 @@ en formatos HTML, PNG y Vega (JSON):
   fecha de evento;
 * Estimado de rezago promedio en reporte de casos 
   (comparando boletines consecutivos).
-
-Para los que prefieran usar menos Docker, hay que tener Python 3.7+,
-Docker, Docker Compose y la la herramienta [`Poetry`](https://python-poetry.org/docs/).
-Entonces desde este directorio:
-
-1. `poetry install` (descarga dependencias Python);
-2. `docker-compose up` desde este directorio (**ADVERTENCIA:** 
-   descarga como 300 MiB);
-3. `./scripts/generate-reports.sh`;
 
 
 ## Agradecimientos

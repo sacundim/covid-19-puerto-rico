@@ -22,12 +22,13 @@ def process_arguments():
                         help='Static website assets directory')
     parser.add_argument('--output-dir', type=str, required=True,
                         help='Directory into which to place output')
-    parser.add_argument('--output-formats', action='append', default=['json'])
     parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat,
                         help='Bulletin date to generate charts for. Default: most recent in DB.')
     parser.add_argument('--earliest-date', type=datetime.date.fromisoformat,
                         default=datetime.date(2020, 4, 25),
                         help='Earliest date to generate website for. Has a sensible built-in default.')
+    parser.add_argument('--png', action='store_true',
+                        help="Switch generate all the PNG files (which is a bit slow)")
     parser.add_argument('--website', action='store_true',
                         help="Switch to run the website generation (which is a bit slow)")
     parser.add_argument('--animations', action='store_true',
@@ -37,20 +38,26 @@ def process_arguments():
 def main():
     global_configuration()
     args = process_arguments()
-    args.output_formats = set(args.output_formats)
-    logging.info("output-dir is %s; output-formats is %s",
-                 args.output_dir, args.output_formats)
+    logging.info("output-dir is %s", args.output_dir)
 
     engine = util.create_db(args)
     bulletin_date = compute_bulletin_date(args, engine)
     logging.info('Using bulletin date of %s', bulletin_date)
 
+    if args.png:
+        output_formats = frozenset(['json', 'png'])
+    else:
+        output_formats = frozenset(['json'])
+
     targets = [
-        charts.Cumulative(engine, args),
-        charts.LatenessDaily(engine, args),
-        charts.Lateness7Day(engine, args),
-        charts.Doubling(engine, args),
-        charts.DailyDeltas(engine, args)
+        charts.Cumulative(engine, args.output_dir, output_formats),
+        charts.LatenessDaily(engine, args.output_dir, output_formats),
+        charts.Doubling(engine, args.output_dir, output_formats),
+        charts.DailyDeltas(engine, args.output_dir, output_formats),
+
+        # We always generate PNG for this because it's our Twitter card
+        charts.Lateness7Day(engine, args.output_dir,
+                            frozenset(['json', 'png']))
     ]
 
     if args.animations:
