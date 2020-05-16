@@ -311,7 +311,7 @@ class DailyDeltas(AbstractChart):
         )
 
         return (heatmap + text).properties(
-            width=550
+            width=570
         ).facet(
             row=alt.Row('variable', title=None,
                         sort=['Confirmados y probables',
