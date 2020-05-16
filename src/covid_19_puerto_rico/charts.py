@@ -55,10 +55,9 @@ class AbstractChartMany(ABC):
             self.render_bulletin_date(df, bulletin_date)
 
     def render_bulletin_date(self, df, bulletin_date):
-        filtered = df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
         bulletin_dir = Path(f'{self.output_dir}/{bulletin_date}')
         bulletin_dir.mkdir(exist_ok=True)
-        util.save_chart(self.make_chart(filtered),
+        util.save_chart(self.make_chart(self.filter_data(df, bulletin_date)),
                         f"{bulletin_dir}/{bulletin_date}_{self.name}",
                         self.output_formats)
 
@@ -69,6 +68,10 @@ class AbstractChartMany(ABC):
     @abstractmethod
     def fetch_data(self, connection):
         pass
+
+    def filter_data(self, df, bulletin_date):
+        """Filter dataframe according to given bulletin_date.  May want to override."""
+        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
 
 
@@ -312,14 +315,9 @@ class Doubling(AbstractChartMany):
                        ["bulletin_date", "datum_date", "window_size_days"])
 
 
-class DailyDeltas(AbstractChart):
+class DailyDeltas(AbstractChartMany):
     def make_chart(self, df):
-        filtered = df \
-            .replace(0, np.nan) \
-            .dropna()
-        logging.info("df info: %s", util.describe_frame(filtered))
-
-        base = alt.Chart(filtered).encode(
+        base = alt.Chart(df).encode(
             x=alt.X('yearmonthdate(datum_date):O',
                     title="Fecha evento", sort="descending",
                     axis=alt.Axis(format='%d/%m')),
@@ -353,7 +351,7 @@ class DailyDeltas(AbstractChart):
                               'Muertes'])
         )
 
-    def fetch_data(self, connection, bulletin_date):
+    def fetch_data(self, connection):
         table = sqlalchemy.Table('daily_deltas', self.metadata,
                                  schema='products', autoload=True)
         query = select([table.c.bulletin_date,
@@ -362,9 +360,6 @@ class DailyDeltas(AbstractChart):
                         table.c.delta_confirmed_cases,
                         table.c.delta_probable_cases,
                         table.c.delta_deaths]
-        ).where(
-            and_(bulletin_date - datetime.timedelta(days=7) < table.c.bulletin_date,
-                 table.c.bulletin_date <= bulletin_date)
         )
         df = pd.read_sql_query(query, connection)
         df = df.rename(columns={
@@ -374,3 +369,12 @@ class DailyDeltas(AbstractChart):
             'delta_deaths': 'Muertes'
         })
         return util.fix_and_melt(df, "bulletin_date", "datum_date")
+
+    def filter_date(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=7))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]\
+            .replace(0, np.nan)\
+            .dropna()
+
