@@ -6,38 +6,10 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import sqlalchemy
-from sqlalchemy.sql import select, and_
+from sqlalchemy.sql import select
 from . import util
 
 class AbstractChart(ABC):
-    def __init__(self, engine, output_dir,
-                 output_formats=frozenset(['json'])):
-        self.engine = engine
-        self.metadata = sqlalchemy.MetaData(engine)
-        self.output_dir = output_dir
-        self.output_formats = output_formats
-        self.name = type(self).__name__
-
-    def render(self, bulletin_date):
-        with self.engine.connect() as connection:
-            df = self.fetch_data(connection, bulletin_date)
-        logging.info("%s dataframe: %s", self.name, util.describe_frame(df))
-
-        bulletin_dir = Path(f'{self.output_dir}/{bulletin_date}')
-        bulletin_dir.mkdir(exist_ok=True)
-        util.save_chart(self.make_chart(df),
-                        f"{bulletin_dir}/{bulletin_date}_{self.name}",
-                        self.output_formats)
-
-    @abstractmethod
-    def make_chart(self, df):
-        pass
-
-    @abstractmethod
-    def fetch_data(self, connection, bulletin_date):
-        pass
-
-class AbstractChartMany(ABC):
     def __init__(self, engine, output_dir,
                  output_formats=frozenset(['json'])):
         self.engine = engine
@@ -75,7 +47,7 @@ class AbstractChartMany(ABC):
 
 
 
-class Cumulative(AbstractChartMany):
+class Cumulative(AbstractChart):
     def make_chart(self, df):
         return alt.Chart(df).mark_line(point=True).encode(
             x=alt.X('yearmonthdate(datum_date):T', title=None,
@@ -117,7 +89,7 @@ class Cumulative(AbstractChartMany):
         return util.fix_and_melt(df, "bulletin_date", "datum_date")
 
 
-class NewCases(AbstractChartMany):
+class NewCases(AbstractChart):
     def make_chart(self, df):
         base = alt.Chart(df.dropna()).encode(
             x=alt.X('yearmonthdate(datum_date):T', title=None,
@@ -168,15 +140,12 @@ class NewCases(AbstractChartMany):
 
 
 class AbstractLateness(AbstractChart):
-    def fetch_data_for_table(self, connection, bulletin_date, table, days=8):
+    def fetch_data_for_table(self, connection, table):
         query = select([table.c.bulletin_date,
                         table.c.confirmed_and_probable_cases,
                         table.c.confirmed_cases,
                         table.c.probable_cases,
                         table.c.deaths]
-        ).where(
-            and_(bulletin_date - datetime.timedelta(days=days) < table.c.bulletin_date,
-                 table.c.bulletin_date <= bulletin_date)
         )
         df = pd.read_sql_query(query, connection)
         df = df.rename(columns={
@@ -186,6 +155,13 @@ class AbstractLateness(AbstractChart):
             'deaths': 'Muertes'
         })
         return util.fix_and_melt(df, "bulletin_date")
+
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=8))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]
+
 
 class LatenessDaily(AbstractLateness):
     def make_chart(self, df):
@@ -222,10 +198,10 @@ class LatenessDaily(AbstractLateness):
         )
 
 
-    def fetch_data(self, connection, bulletin_date):
+    def fetch_data(self, connection):
         table = sqlalchemy.Table('lateness_daily', self.metadata,
                                  schema='products', autoload=True)
-        return self.fetch_data_for_table(connection, bulletin_date, table)
+        return self.fetch_data_for_table(connection, table)
 
 
 class Lateness7Day(AbstractLateness):
@@ -265,13 +241,13 @@ class Lateness7Day(AbstractLateness):
             facet=alt.Facet('variable', title=None, sort=sort_order)
         )
 
-    def fetch_data(self, connection, bulletin_date):
+    def fetch_data(self, connection):
         table = sqlalchemy.Table('lateness_7day', self.metadata,
                                  schema='products', autoload=True)
-        return self.fetch_data_for_table(connection, bulletin_date, table, days=8)
+        return self.fetch_data_for_table(connection, table)
 
 
-class Doubling(AbstractChartMany):
+class Doubling(AbstractChart):
     def make_chart(self, df):
         return alt.Chart(df.dropna()).mark_line(clip=True).encode(
             x=alt.X('datum_date:T',
@@ -315,7 +291,7 @@ class Doubling(AbstractChartMany):
                        ["bulletin_date", "datum_date", "window_size_days"])
 
 
-class DailyDeltas(AbstractChartMany):
+class DailyDeltas(AbstractChart):
     def make_chart(self, df):
         base = alt.Chart(df).encode(
             x=alt.X('yearmonthdate(datum_date):O',
@@ -370,11 +346,13 @@ class DailyDeltas(AbstractChartMany):
         })
         return util.fix_and_melt(df, "bulletin_date", "datum_date")
 
-    def filter_date(self, df, bulletin_date):
+    def filter_data(self, df, bulletin_date):
         since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=7))
         until_date = pd.to_datetime(bulletin_date)
-        return df.loc[(since_date < df['bulletin_date'])
+        filtered = df.loc[(since_date < df['bulletin_date'])
                       & (df['bulletin_date'] <= until_date)]\
             .replace(0, np.nan)\
             .dropna()
-
+        logging.info("Filtered dataframe for DailyDeltas (bulletin_date = %d): %s",
+                     bulletin_date, util.describe_frame(filtered))
+        return filtered
