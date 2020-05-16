@@ -79,6 +79,57 @@ class Cumulative(AbstractChart):
         })
         return util.fix_and_melt(df, "datum_date")
 
+
+class NewCases(AbstractChart):
+    def make_chart(self, df):
+        base = alt.Chart(df.dropna()).encode(
+            x=alt.X('yearmonthdate(datum_date):T', title=None,
+                    axis=alt.Axis(format='%d/%m'))
+        )
+
+        scatter = base.transform_filter(
+            # Needed because log(0) = negative infinity, and this
+            # messes up the axis scale
+            alt.datum.value > 0
+        ).mark_point(opacity=0.5).encode(
+            y=alt.Y('value:Q', title=None, scale=alt.Scale(type='log')),
+            tooltip=['datum_date', 'variable', 'value']
+        )
+
+        average = base.transform_window(
+            frame=[-6, 0],
+            mean_value='mean(value)',
+            groupby=['variable']
+        ).mark_line(strokeWidth=3).encode(
+            y=alt.Y('mean_value:Q', title=None)
+        )
+
+        return (scatter + average).encode(
+            color=alt.Color('variable', title=None,
+                            legend=alt.Legend(orient="top", labelLimit=250, columns=2),
+                            sort=['Casos confirmados (fecha muestra)',
+                                  'Casos probables (fecha muestra)',
+                                  'Muertes (fecha muerte)'])
+        ).properties(
+            width=575, height=350
+        )
+
+    def fetch_data(self, connection, bulletin_date):
+        table = sqlalchemy.Table('bitemporal', self.metadata, autoload=True)
+        query = select([table.c.datum_date,
+                        table.c.confirmed_cases,
+                        table.c.probable_cases,
+                        table.c.deaths])\
+            .where(table.c.bulletin_date == bulletin_date)
+        df = pd.read_sql_query(query, connection)
+        df = df.rename(columns={
+            'confirmed_cases': 'Casos confirmados (fecha muestra)',
+            'probable_cases': 'Casos probables (fecha muestra)',
+            'deaths': 'Muertes (fecha muerte)'
+        })
+        return util.fix_and_melt(df, "datum_date")
+
+
 class AbstractLateness(AbstractChart):
     def fetch_data_for_table(self, connection, bulletin_date, table, days=8):
         query = select([table.c.bulletin_date,
