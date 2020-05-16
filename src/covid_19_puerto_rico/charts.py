@@ -37,8 +37,42 @@ class AbstractChart(ABC):
     def fetch_data(self, connection, bulletin_date):
         pass
 
+class AbstractChartMany(ABC):
+    def __init__(self, engine, output_dir,
+                 output_formats=frozenset(['json'])):
+        self.engine = engine
+        self.metadata = sqlalchemy.MetaData(engine)
+        self.output_dir = output_dir
+        self.output_formats = output_formats
+        self.name = type(self).__name__
 
-class Cumulative(AbstractChart):
+    def render(self, bulletin_dates):
+        with self.engine.connect() as connection:
+            df = self.fetch_data(connection)
+        logging.info("%s dataframe: %s", self.name, util.describe_frame(df))
+
+        for bulletin_date in bulletin_dates:
+            self.render_bulletin_date(df, bulletin_date)
+
+    def render_bulletin_date(self, df, bulletin_date):
+        filtered = df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+        bulletin_dir = Path(f'{self.output_dir}/{bulletin_date}')
+        bulletin_dir.mkdir(exist_ok=True)
+        util.save_chart(self.make_chart(filtered),
+                        f"{bulletin_dir}/{bulletin_date}_{self.name}",
+                        self.output_formats)
+
+    @abstractmethod
+    def make_chart(self, df):
+        pass
+
+    @abstractmethod
+    def fetch_data(self, connection):
+        pass
+
+
+
+class Cumulative(AbstractChartMany):
     def make_chart(self, df):
         return alt.Chart(df).mark_line(point=True).encode(
             x=alt.X('yearmonthdate(datum_date):T', title=None,
@@ -57,17 +91,17 @@ class Cumulative(AbstractChart):
             width=575, height=275
         )
 
-    def fetch_data(self, connection, bulletin_date):
+    def fetch_data(self, connection):
         table = sqlalchemy.Table('cumulative_data', self.metadata,
                                  schema='products', autoload=True)
-        query = select([table.c.datum_date,
+        query = select([table.c.bulletin_date,
+                        table.c.datum_date,
                         table.c.confirmed_cases,
                         table.c.probable_cases,
                         table.c.positive_results,
                         table.c.announced_cases,
                         table.c.deaths,
-                        table.c.announced_deaths])\
-            .where(table.c.bulletin_date == bulletin_date)
+                        table.c.announced_deaths])
         df = pd.read_sql_query(query, connection)
         df = df.rename(columns={
             'confirmed_cases': 'Casos confirmados (fecha muestra)',
@@ -77,10 +111,10 @@ class Cumulative(AbstractChart):
             'deaths': 'Muertes (fecha muerte)',
             'announced_deaths': 'Muertes (fecha boletín)'
         })
-        return util.fix_and_melt(df, "datum_date")
+        return util.fix_and_melt(df, "bulletin_date", "datum_date")
 
 
-class NewCases(AbstractChart):
+class NewCases(AbstractChartMany):
     def make_chart(self, df):
         base = alt.Chart(df.dropna()).encode(
             x=alt.X('yearmonthdate(datum_date):T', title=None,
@@ -114,20 +148,20 @@ class NewCases(AbstractChart):
             width=600, height=400
         )
 
-    def fetch_data(self, connection, bulletin_date):
+    def fetch_data(self, connection):
         table = sqlalchemy.Table('bitemporal', self.metadata, autoload=True)
-        query = select([table.c.datum_date,
+        query = select([table.c.bulletin_date,
+                        table.c.datum_date,
                         table.c.confirmed_cases,
                         table.c.probable_cases,
-                        table.c.deaths])\
-            .where(table.c.bulletin_date == bulletin_date)
+                        table.c.deaths])
         df = pd.read_sql_query(query, connection)
         df = df.rename(columns={
             'confirmed_cases': 'Confirmados',
             'probable_cases': 'Probables',
             'deaths': 'Muertes'
         })
-        return util.fix_and_melt(df, "datum_date")
+        return util.fix_and_melt(df, "bulletin_date", "datum_date")
 
 
 class AbstractLateness(AbstractChart):
@@ -234,7 +268,7 @@ class Lateness7Day(AbstractLateness):
         return self.fetch_data_for_table(connection, bulletin_date, table, days=8)
 
 
-class Doubling(AbstractChart):
+class Doubling(AbstractChartMany):
     def make_chart(self, df):
         return alt.Chart(df.dropna()).mark_line(clip=True).encode(
             x=alt.X('datum_date:T',
@@ -256,17 +290,16 @@ class Doubling(AbstractChart):
             column=alt.Column('window_size_days:O', title='Ancho de ventana (días)')
         )
 
-    def fetch_data(self, connection, bulletin_date):
+    def fetch_data(self, connection):
         table = sqlalchemy.Table('doubling_times', self.metadata,
                                  schema='products', autoload=True)
         query = select([table.c.datum_date,
+                        table.c.bulletin_date,
                         table.c.window_size_days,
                         table.c.cumulative_confirmed_and_probable_cases,
                         table.c.cumulative_confirmed_cases,
                         table.c.cumulative_probable_cases,
                         table.c.cumulative_deaths]
-        ).where(
-            table.c.bulletin_date == bulletin_date
         )
         df = pd.read_sql_query(query, connection)
         df = df.rename(columns={
@@ -275,8 +308,8 @@ class Doubling(AbstractChart):
             'cumulative_probable_cases': 'Probables',
             'cumulative_deaths': 'Muertes'
         })
-        return pd.melt(util.fix_date_columns(df, "datum_date"),
-                       ["datum_date", "window_size_days"])
+        return pd.melt(util.fix_date_columns(df, "bulletin_date", "datum_date"),
+                       ["bulletin_date", "datum_date", "window_size_days"])
 
 
 class DailyDeltas(AbstractChart):
