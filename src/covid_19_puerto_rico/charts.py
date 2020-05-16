@@ -91,7 +91,7 @@ class NewCases(AbstractChart):
             # Needed because log(0) = negative infinity, and this
             # messes up the axis scale
             alt.datum.value > 0
-        ).mark_point(opacity=0.25).encode(
+        ).mark_point(opacity=0.5).encode(
             y=alt.Y('value:Q', title=None, scale=alt.Scale(type='log')),
             tooltip=['datum_date', 'variable', 'value']
         )
@@ -101,33 +101,28 @@ class NewCases(AbstractChart):
             mean_value='mean(value)',
             groupby=['variable']
         ).mark_line(strokeWidth=3).encode(
-            y=alt.Y('mean_value:Q', title=None)
+            y=alt.Y('mean_value:Q', title=None, scale=alt.Scale(type='log'))
         )
 
-        return (scatter + average).encode(
-            color=alt.Color('variable', title=None, legend=None)
+        return (average + scatter).encode(
+            color=alt.Color('variable', title=None,
+                            legend=alt.Legend(orient="top", labelLimit=250),
+                            sort=['Confirmados',
+                                  'Probables',
+                                  'Muertes'])
         ).properties(
-            width=280, height=185
-        ).facet(
-            columns=2,
-            facet=alt.Facet('variable', title=None,
-                            sort = ['Confirmados y probables',
-                                    'Confirmados',
-                                    'Probables',
-                                    'Muertes'])
-        ).resolve_scale(y='independent')
+            width=600, height=400
+        )
 
     def fetch_data(self, connection, bulletin_date):
         table = sqlalchemy.Table('bitemporal', self.metadata, autoload=True)
         query = select([table.c.datum_date,
-                        table.c.confirmed_and_probable_cases,
                         table.c.confirmed_cases,
                         table.c.probable_cases,
                         table.c.deaths])\
             .where(table.c.bulletin_date == bulletin_date)
         df = pd.read_sql_query(query, connection)
         df = df.rename(columns={
-            'confirmed_and_probable_cases': 'Confirmados y probables',
             'confirmed_cases': 'Confirmados',
             'probable_cases': 'Probables',
             'deaths': 'Muertes'
