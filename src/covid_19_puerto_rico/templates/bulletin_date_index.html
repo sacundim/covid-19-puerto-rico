@@ -105,34 +105,6 @@
 
 
 <div class="section">
-    <h1>Tendencia de casos nuevos por fecha de evento</h1>
-
-    <div id="NewCases"></div>
-    <script type="text/javascript">
-      embedChart('NewCases', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>La tendencia de los casos nuevos y las muertes, vista por medio de:</p>
-
-    <ul>
-        <li>La fecha en que se tomó la muestra o se dio el fallecimiento (no
-            la fecha que se anunció el caso, como hacen muchos otros análisis);</li>
-        <li>Promedios en ventanas de siete días que terminan en dicha fecha.</li>
-    </ul>
-
-    <p>Las líneas sólidas representan los promedios.  Los círculos semitransparentes
-        son los números crudos de casos nuevos para cada fecha, a partir de los
-        cuales se calculan estos promedios.  Se usa promedio por ventana de siete
-        días para eliminar el efecto de los ciclos semanales.</p>
-
-    <p><b>ADVERTENCIA:</b> Caídas súbitas al final de cada línea lo más probable
-        no son reales, si no que más bien son artefactos de los rezagos—i.e., no
-        han se han incorporado datos para esas fechas.</p>
-</div>
-
-<div class="section">
     <h1>Curvas de casos acumulados por fecha de evento y de reporte</h1>
 
     <div id="Cumulative"></div>
@@ -168,7 +140,36 @@
 
 
 <div class="section">
-    <h1>Tiempos de duplicación de casos por fecha de suceso</h1>
+    <h1>Tendencia de casos nuevos por fecha de evento (promedios 7 días)</h1>
+
+    <div id="NewCases"></div>
+    <script type="text/javascript">
+      embedChart('NewCases', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>La tendencia de los casos nuevos y las muertes, vista por medio de:</p>
+
+    <ul>
+        <li>La fecha en que se tomó la muestra o se dio el fallecimiento (no
+            la fecha que se anunció el caso, como hacen muchos otros análisis);</li>
+        <li>Promedios en ventanas de siete días que terminan en dicha fecha.</li>
+    </ul>
+
+    <p>Las líneas sólidas representan los promedios.  Los círculos semitransparentes
+        son los números crudos de casos nuevos para cada fecha, a partir de los
+        cuales se calculan estos promedios.  Se usa promedio por ventana de siete
+        días para eliminar el efecto de los ciclos semanales.</p>
+
+    <p><b>ADVERTENCIA:</b> Caídas súbitas al final de cada línea lo más probable
+        no son reales, si no que más bien son artefactos de los rezagos—i.e., no
+        han se han incorporado datos para esas fechas.</p>
+</div>
+
+
+<div class="section">
+    <h1>Tiempos de duplicación de casos por fecha de evento</h1>
 
     <div id="Doubling" class="chart"></div>
     <script type="text/javascript">
