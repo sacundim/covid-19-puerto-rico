@@ -50,10 +50,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
-        charts.Cumulative(engine, args.output_dir, output_formats),
-        charts.NewCases(engine, args.output_dir, output_formats),
         charts.LatenessDaily(engine, args.output_dir, output_formats),
-        charts.Doubling(engine, args.output_dir, output_formats),
         charts.DailyDeltas(engine, args.output_dir, output_formats),
 
         # We always generate PNG for this because it's our Twitter card
@@ -71,6 +68,10 @@ def main():
     if args.website:
         site = website.Website(args, date_range)
         targets.append(site)
+
+    charts.Cumulative(engine, args.output_dir, output_formats).render(date_range)
+    charts.NewCases(engine, args.output_dir, output_formats).render(date_range)
+    charts.Doubling(engine, args.output_dir, output_formats).render(date_range)
 
     for date in date_range:
         for target in targets:
