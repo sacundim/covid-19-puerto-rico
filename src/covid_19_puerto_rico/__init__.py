@@ -50,35 +50,28 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        charts.Cumulative(engine, args.output_dir, output_formats),
+        charts.NewCases(engine, args.output_dir, output_formats),
+        charts.Doubling(engine, args.output_dir, output_formats),
+        charts.DailyDeltas(engine, args.output_dir, output_formats),
         charts.LatenessDaily(engine, args.output_dir, output_formats),
 
         # We always generate PNG for this because it's our Twitter card
         charts.Lateness7Day(engine, args.output_dir,
                             frozenset(['json', 'png']))
     ]
-
-    if args.animations:
-        targets.append(animations.CaseLag(engine, args))
+    if args.website:
+        site = website.Website(args)
+        targets.append(site)
 
     date_range = list(
         util.make_date_range(args.earliest_date, bulletin_date)
     )
 
-    if args.website:
-        site = website.Website(args, date_range)
-        targets.append(site)
-
-    charts.Cumulative(engine, args.output_dir, output_formats).render(date_range)
-    charts.NewCases(engine, args.output_dir, output_formats).render(date_range)
-    charts.Doubling(engine, args.output_dir, output_formats).render(date_range)
-    charts.DailyDeltas(engine, args.output_dir, output_formats).render(date_range)
-
-    for date in date_range:
-        for target in targets:
-            target.render(date)
+    for target in targets:
+        target.render(date_range)
 
     if args.website:
-        site.copy_assets()
         site.render_top(bulletin_date)
 
 
