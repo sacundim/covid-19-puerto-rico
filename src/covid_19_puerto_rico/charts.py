@@ -91,7 +91,7 @@ class NewCases(AbstractChart):
             # Needed because log(0) = negative infinity, and this
             # messes up the axis scale
             alt.datum.value > 0
-        ).mark_point(opacity=0.5).encode(
+        ).mark_point(opacity=0.25).encode(
             y=alt.Y('value:Q', title=None, scale=alt.Scale(type='log')),
             tooltip=['datum_date', 'variable', 'value']
         )
@@ -105,27 +105,32 @@ class NewCases(AbstractChart):
         )
 
         return (scatter + average).encode(
-            color=alt.Color('variable', title=None,
-                            legend=alt.Legend(orient="top", labelLimit=250, columns=2),
-                            sort=['Casos confirmados (fecha muestra)',
-                                  'Casos probables (fecha muestra)',
-                                  'Muertes (fecha muerte)'])
+            color=alt.Color('variable', title=None, legend=None)
         ).properties(
-            width=575, height=350
-        )
+            width=280, height=185
+        ).facet(
+            columns=2,
+            facet=alt.Facet('variable', title=None,
+                            sort = ['Confirmados y probables',
+                                    'Confirmados',
+                                    'Probables',
+                                    'Muertes'])
+        ).resolve_scale(y='independent')
 
     def fetch_data(self, connection, bulletin_date):
         table = sqlalchemy.Table('bitemporal', self.metadata, autoload=True)
         query = select([table.c.datum_date,
+                        table.c.confirmed_and_probable_cases,
                         table.c.confirmed_cases,
                         table.c.probable_cases,
                         table.c.deaths])\
             .where(table.c.bulletin_date == bulletin_date)
         df = pd.read_sql_query(query, connection)
         df = df.rename(columns={
-            'confirmed_cases': 'Casos confirmados (fecha muestra)',
-            'probable_cases': 'Casos probables (fecha muestra)',
-            'deaths': 'Muertes (fecha muerte)'
+            'confirmed_and_probable_cases': 'Confirmados y probables',
+            'confirmed_cases': 'Confirmados',
+            'probable_cases': 'Probables',
+            'deaths': 'Muertes'
         })
         return util.fix_and_melt(df, "datum_date")
 
