@@ -8,7 +8,6 @@ import sqlalchemy
 from sqlalchemy.sql import select
 from sqlalchemy.sql.functions import max
 
-from . import animations
 from . import charts
 from . import resources
 from . import util
