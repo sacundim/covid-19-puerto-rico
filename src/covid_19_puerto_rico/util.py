@@ -27,16 +27,6 @@ def save_chart(chart, basename, formats):
         logging.info("Writing chart to %s", filename)
         chart.save(filename)
 
-def fix_date_columns(df, *date_columns):
-    """Pandas is making us frames with object type for date columns,
-    which some libraries hate."""
-    for col in date_columns:
-        df[col] = pd.to_datetime(df[col])
-    return df
-
-def fix_and_melt(df, *date_columns):
-    return pd.melt(fix_date_columns(df, *date_columns), date_columns)
-
 def describe_frame(df):
     """Because df.info() prints instead of returning a string."""
     buf = io.StringIO()
