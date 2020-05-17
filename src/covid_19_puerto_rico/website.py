@@ -30,10 +30,13 @@ class Website:
             for filename in filenames:
                 logging.info("Copying %s from %s/ to %s/", filename, directory, output_directory)
                 basename, extension = os.path.splitext(filename)
-                if (extension == '.jpg' or extension == '.jpeg'):
-                    logging.info("Converting %s to png", filename)
-                    copy_to_png(f'{directory}/{filename}',
-                                f'{output_directory}/{basename}.png')
+                if extension == '.png':
+                    logging.info("Converting %s to jpg", filename)
+                    copy_to_jpg(f'{directory}/{filename}',
+                                f'{output_directory}/{basename}.jpg')
+                elif extension == '.jpeg':
+                    shutil.copyfile(f'{directory}/{filename}',
+                                    f'{output_directory}/{basename}.jpg')
                 else:
                     shutil.copyfile(f'{directory}/{filename}',
                                     f'{output_directory}/{filename}')
@@ -57,7 +60,7 @@ class Website:
             .dump(output_index_html)
 
 
-def copy_to_png(origin, destination):
+def copy_to_jpg(origin, destination):
     with Image(filename=origin) as original:
-        with original.convert('png') as converted:
+        with original.convert('jpg') as converted:
             converted.save(filename=destination)
