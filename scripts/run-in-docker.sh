@@ -26,7 +26,7 @@ DOCKER_NETWORK="${DOCKER_NETWORK:-covid-19-puerto-rico_default}"
 cd "$(dirname $0)"/..
 ./scripts/build-docker-image.sh
 
-docker run --rm \
+time docker run --rm \
   --network="${DOCKER_NETWORK}" \
   -v "$(pwd)"/config:/config:ro \
   -v "$(pwd)"/assets:/assets:ro \
