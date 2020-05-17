@@ -353,6 +353,4 @@ class DailyDeltas(AbstractChart):
                       & (df['bulletin_date'] <= until_date)]\
             .replace(0, np.nan)\
             .dropna()
-        logging.info("Filtered dataframe for DailyDeltas (bulletin_date = %d): %s",
-                     bulletin_date, util.describe_frame(filtered))
         return filtered
