@@ -77,7 +77,8 @@ class Cumulative(AbstractChart):
                         table.c.announced_cases,
                         table.c.deaths,
                         table.c.announced_deaths])
-        df = pd.read_sql_query(query, connection)
+        df = pd.read_sql_query(query, connection,
+                               parse_dates=["bulletin_date", "datum_date"])
         df = df.rename(columns={
             'confirmed_cases': 'Casos confirmados (fecha muestra)',
             'probable_cases': 'Casos probables (fecha muestra)',
@@ -86,7 +87,7 @@ class Cumulative(AbstractChart):
             'deaths': 'Muertes (fecha muerte)',
             'announced_deaths': 'Muertes (fecha boletín)'
         })
-        return util.fix_and_melt(df, "bulletin_date", "datum_date")
+        return pd.melt(df, ["bulletin_date", "datum_date"])
 
 
 class NewCases(AbstractChart):
@@ -130,13 +131,14 @@ class NewCases(AbstractChart):
                         table.c.confirmed_cases,
                         table.c.probable_cases,
                         table.c.deaths])
-        df = pd.read_sql_query(query, connection)
+        df = pd.read_sql_query(query, connection,
+                               parse_dates=["bulletin_date", "datum_date"])
         df = df.rename(columns={
             'confirmed_cases': 'Confirmados',
             'probable_cases': 'Probables',
             'deaths': 'Muertes'
         })
-        return util.fix_and_melt(df, "bulletin_date", "datum_date")
+        return pd.melt(df, ["bulletin_date", "datum_date"])
 
 
 class AbstractLateness(AbstractChart):
@@ -147,14 +149,15 @@ class AbstractLateness(AbstractChart):
                         table.c.probable_cases,
                         table.c.deaths]
         )
-        df = pd.read_sql_query(query, connection)
+        df = pd.read_sql_query(query, connection,
+                               parse_dates=["bulletin_date"])
         df = df.rename(columns={
             'confirmed_and_probable_cases': 'Confirmados y probables',
             'confirmed_cases': 'Confirmados',
             'probable_cases': 'Probables',
             'deaths': 'Muertes'
         })
-        return util.fix_and_melt(df, "bulletin_date")
+        return pd.melt(df, "bulletin_date")
 
     def filter_data(self, df, bulletin_date):
         since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=8))
@@ -280,15 +283,15 @@ class Doubling(AbstractChart):
                         table.c.cumulative_probable_cases,
                         table.c.cumulative_deaths]
         )
-        df = pd.read_sql_query(query, connection)
+        df = pd.read_sql_query(query, connection,
+                               parse_dates=["bulletin_date", "datum_date"])
         df = df.rename(columns={
             'cumulative_confirmed_and_probable_cases': 'Confirmados y probables',
             'cumulative_confirmed_cases': 'Confirmados',
             'cumulative_probable_cases': 'Probables',
             'cumulative_deaths': 'Muertes'
         })
-        return pd.melt(util.fix_date_columns(df, "bulletin_date", "datum_date"),
-                       ["bulletin_date", "datum_date", "window_size_days"])
+        return pd.melt(df, ["bulletin_date", "datum_date", "window_size_days"])
 
 
 class DailyDeltas(AbstractChart):
@@ -337,14 +340,15 @@ class DailyDeltas(AbstractChart):
                         table.c.delta_probable_cases,
                         table.c.delta_deaths]
         )
-        df = pd.read_sql_query(query, connection)
+        df = pd.read_sql_query(query, connection,
+                               parse_dates=["bulletin_date", "datum_date"])
         df = df.rename(columns={
             'delta_confirmed_and_probable_cases': 'Confirmados y probables',
             'delta_confirmed_cases': 'Confirmados',
             'delta_probable_cases': 'Probables',
             'delta_deaths': 'Muertes'
         })
-        return util.fix_and_melt(df, "bulletin_date", "datum_date")
+        return pd.melt(df, ["bulletin_date", "datum_date"])
 
     def filter_data(self, df, bulletin_date):
         since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=7))
