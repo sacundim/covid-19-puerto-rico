@@ -30,8 +30,6 @@ def process_arguments():
                         help="Switch generate all the PNG files (which is a bit slow)")
     parser.add_argument('--website', action='store_true',
                         help="Switch to run the website generation (which is a bit slow)")
-    parser.add_argument('--animations', action='store_true',
-                        help="Switch to run the animations (which are a bit slow to generate)")
     return parser.parse_args()
 
 def main():
