@@ -1,10 +1,6 @@
 .git/
 .idea/
 .venv/
-config/
-data/
+assets/
 dist/
 output/
-postgres/
-source_material/
-tmp/
