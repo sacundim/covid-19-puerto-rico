@@ -451,8 +451,7 @@ class WeekdayBias(AbstractChart):
 	ba.delta_probable_cases,
 	ba.delta_deaths
 FROM bitemporal_agg ba 
-WHERE ba.datum_date >= ba.bulletin_date - INTERVAL '14' DAY
-AND ba.bulletin_date >= (
+WHERE ba.bulletin_date >= (
 	SELECT min(bulletin_date)
 	FROM bitemporal_agg
 	WHERE delta_confirmed_and_probable_cases IS NOT NULL
