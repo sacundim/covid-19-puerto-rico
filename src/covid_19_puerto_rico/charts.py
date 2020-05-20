@@ -362,22 +362,64 @@ class DailyDeltas(AbstractChart):
 
 class WeekdayBias(AbstractChart):
     def make_chart(self, df):
-        return alt.Chart(df).mark_rect().encode(
-            x=alt.X('day(datum_date):O', title='Día evento'),
-            y=alt.Y('day(bulletin_date):O', title='Día boletín'),
-            color=alt.Color('sum(value):Q', title=None,
-                            scale=alt.Scale(scheme="blues"))
-        ).properties(
-            width=250, height=250
-        ).facet(
-            columns=2,
-            facet=alt.Facet('variable', title=None,
-                            sort=['Confirmados y probables',
-                                  'Confirmados',
-                                  'Probables',
-                                  'Muertes'])
-        ).resolve_scale(
+        total = self.one_variable(df, 'Confirmados y probables')
+        confirmed = self.one_variable(df, 'Confirmados')
+        probable = self.one_variable(df, 'Probables')
+        deaths = self.one_variable(df, 'Muertes')
+
+        row1 = alt.hconcat(total, confirmed, spacing=20).resolve_scale(
             color='independent'
+        )
+        row2 = alt.hconcat(probable, deaths, spacing=20).resolve_scale(
+            color='independent'
+        )
+        return alt.vconcat(row1, row2, spacing=40).resolve_scale(
+            color='independent'
+        )
+
+    def one_variable(self, df, variable):
+        base = alt.Chart(df).transform_filter(
+            alt.datum.variable == variable
+        ).encode(
+            color=alt.Color('mean(value):Q', title=None,
+                            scale=alt.Scale(scheme="blues"))
+        )
+
+        heatmap = base.mark_rect().encode(
+            x=alt.X('day(datum_date):O', title='Día muestra o muerte'),
+            y=alt.Y('day(bulletin_date):O', title='Día boletín')
+        ).properties(
+            width=160, height=160
+        )
+
+        right = base.mark_bar().encode(
+            x=alt.X('mean(value):Q', title=None, axis=None),
+            y=alt.Y('day(bulletin_date):O', title=None, axis=None)
+        ).properties(
+            width=40, height=160
+        )
+
+        top = base.mark_bar().encode(
+            x=alt.X('day(datum_date):O', title=None, axis=None),
+            y=alt.Y('mean(value):Q', title=None, axis=None)
+        ).properties(
+            width=160, height=40,
+            # This title should logically belong to the whole chart,
+            # but assigning it to the concat chart anchors it wrong.
+            # See: https://altair-viz.github.io/user_guide/generated/core/altair.TitleParams.html
+            title=alt.TitleParams(
+                text=variable,
+                anchor='middle',
+                align='center',
+                fontSize=14,
+                fontWeight='normal'
+            )
+        )
+
+        return alt.vconcat(
+            top,
+            alt.hconcat(heatmap, right, spacing=3),
+            spacing=3
         )
 
     def fetch_data(self, connection):

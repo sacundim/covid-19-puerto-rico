@@ -105,6 +105,39 @@
 
 
 <div class="section">
+    <h1>Tendencias por día de semana</h1>
+
+    <div id="WeekdayBias" class="chart"></div>
+    <script type="text/javascript">
+      embedChart('WeekdayBias', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Casos agrupados por la combinación de:</p>
+
+    <ul>
+        <li>Día de la semana que se tomó la muestra (o falleció el paciente);</li>
+        <li>Día de la semana del boletín en que se añadió el caso.</li>
+    </ul>
+
+    <p>La intensidad del color de cada cuadro refleja el promedio de cuántos casos
+        se registraron para esa combinación. Los histogramas marginales muestran
+        los promedios agrupados por la variable de un sólo eje.</p>
+
+    <p><b>ADVERTENCIAS:</b></p>
+
+    <ul>
+        <li>No se cuentan casos añadidos con más de 14 días de tardanza, porque
+            aunque por más comunes que sean se entiende que ocultan tales ciclos;</li>
+        <li>Los boletines siempre salen el día posterior que al que hablan, así
+            que por ejemplo los casos con día de boletín en sábado se anuncian
+            domingo.</li>
+    </ul>
+</div>
+
+
+<div class="section">
     <h1>Curvas de casos acumulados por fecha de evento y de reporte</h1>
 
     <div id="Cumulative"></div>
@@ -188,19 +221,6 @@
     <p>Si los datos de base no son una indicación fiable de la propagación de la
         epidemia, pues esta gráfica tampoco lo es; lo que nos dice es qué sería la
         verdad si los datos fueran de verdad.  ¯\_(ツ)_/¯</p>
-</div>
-
-<div class="section">
-    <h1>Casos anunciados por día de semana</h1>
-
-    <div id="WeekdayBias" class="chart"></div>
-    <script type="text/javascript">
-      embedChart('WeekdayBias', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Casos agrupados por el día de semana de la fecha de boletín en que se añaden.</p>
 </div>
 
 <div class="section">
