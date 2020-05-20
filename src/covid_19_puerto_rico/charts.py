@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import sqlalchemy
-from sqlalchemy.sql import select
+from sqlalchemy.sql import select, text
 from . import util
 
 class AbstractChart(ABC):
@@ -358,3 +358,54 @@ class DailyDeltas(AbstractChart):
             .replace(0, np.nan)\
             .dropna()
         return filtered
+
+
+class WeekdayBias(AbstractChart):
+    def make_chart(self, df):
+        return alt.Chart(df).mark_rect().encode(
+            x=alt.X('day(datum_date):O', title='Día evento'),
+            y=alt.Y('day(bulletin_date):O', title='Día boletín'),
+            color=alt.Color('sum(value):Q', title=None,
+                            scale=alt.Scale(scheme="blues"))
+        ).properties(
+            width=250, height=250
+        ).facet(
+            columns=2,
+            facet=alt.Facet('variable', title=None,
+                            sort=['Confirmados y probables',
+                                  'Confirmados',
+                                  'Probables',
+                                  'Muertes'])
+        ).resolve_scale(
+            color='independent'
+        )
+
+    def fetch_data(self, connection):
+        query = text("""SELECT 
+	ba.bulletin_date,
+	ba.datum_date,
+	ba.delta_confirmed_and_probable_cases,
+	ba.delta_confirmed_cases,
+	ba.delta_probable_cases,
+	ba.delta_deaths
+FROM bitemporal_agg ba 
+WHERE ba.datum_date >= ba.bulletin_date - INTERVAL '14' DAY
+AND ba.bulletin_date >= (
+	SELECT min(bulletin_date)
+	FROM bitemporal_agg
+	WHERE delta_confirmed_and_probable_cases IS NOT NULL
+	AND delta_confirmed_cases IS NOT NULL
+	AND delta_probable_cases IS NOT NULL
+	AND delta_deaths IS NOT NULL)""")
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
+        df = df.rename(columns={
+            'delta_confirmed_and_probable_cases': 'Confirmados y probables',
+            'delta_confirmed_cases': 'Confirmados',
+            'delta_probable_cases': 'Probables',
+            'delta_deaths': 'Muertes'
+        })
+        return pd.melt(df, ['bulletin_date', 'datum_date']).dropna()
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+

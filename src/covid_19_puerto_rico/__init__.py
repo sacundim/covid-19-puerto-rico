@@ -51,6 +51,7 @@ def main():
         charts.NewCases(engine, args.output_dir, output_formats),
         charts.Doubling(engine, args.output_dir, output_formats),
         charts.DailyDeltas(engine, args.output_dir, output_formats),
+        charts.WeekdayBias(engine, args.output_dir, output_formats),
         charts.LatenessDaily(engine, args.output_dir, output_formats),
 
         # We always generate PNG for this because it's our Twitter card
