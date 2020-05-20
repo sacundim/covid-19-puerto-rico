@@ -362,10 +362,10 @@ class DailyDeltas(AbstractChart):
 
 class WeekdayBias(AbstractChart):
     def make_chart(self, df):
-        total = self.one_variable(df, 'Confirmados y probables', 'blues')
-        confirmed = self.one_variable(df, 'Confirmados', 'oranges')
-        probable = self.one_variable(df, 'Probables', 'reds')
-        deaths = self.one_variable(df, 'Muertes', 'teals')
+        total = self.one_variable(df, 'Confirmados y probables', 'Día muestra', 'blues')
+        confirmed = self.one_variable(df, 'Confirmados', 'Día muestra', 'oranges')
+        probable = self.one_variable(df, 'Probables', 'Día muestra', 'reds')
+        deaths = self.one_variable(df, 'Muertes', 'Día muerte', 'teals')
 
         row1 = alt.hconcat(total, confirmed, spacing=20).resolve_scale(
             color='independent'
@@ -377,7 +377,7 @@ class WeekdayBias(AbstractChart):
             color='independent'
         )
 
-    def one_variable(self, df, variable, color_scheme):
+    def one_variable(self, df, variable, axis_title, color_scheme):
         base = alt.Chart(df).transform_filter(
             alt.datum.variable == variable
         ).encode(
@@ -386,13 +386,13 @@ class WeekdayBias(AbstractChart):
         )
 
         heatmap = base.mark_rect().encode(
-            x=alt.X('day(datum_date):O', title='Día muestra o muerte'),
+            x=alt.X('day(datum_date):O', title=axis_title),
             y=alt.Y('day(bulletin_date):O', title='Día boletín'),
             tooltip=['variable', 'day(bulletin_date):O', 'day(datum_date):O',
                      alt.Tooltip(field='value',
                                  type='quantitative',
                                  aggregate='mean',
-                                 format=".1f")]
+                                 format=".2f")]
         )
 
         right = base.mark_bar().encode(
@@ -402,7 +402,7 @@ class WeekdayBias(AbstractChart):
                      alt.Tooltip(field='value',
                                  type='quantitative',
                                  aggregate='mean',
-                                 format=".1f")]
+                                 format=".2f")]
         )
 
         top = base.mark_bar().encode(
@@ -412,7 +412,7 @@ class WeekdayBias(AbstractChart):
                        alt.Tooltip(field='value',
                                    type='quantitative',
                                    aggregate='mean',
-                                   format=".1f")]
+                                   format=".2f")]
         )
 
         heatmap_size = 160
