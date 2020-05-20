@@ -263,16 +263,16 @@ CREATE VIEW products.lateness_daily AS
 SELECT
     bulletin_date,
     cast(sum(lateness_confirmed_and_probable_cases) AS DOUBLE PRECISION)
-        / nullif(sum(delta_confirmed_and_probable_cases), 0)
+        / nullif(greatest(0, sum(delta_confirmed_and_probable_cases)), 0)
         AS confirmed_and_probable_cases,
     cast(sum(lateness_confirmed_cases) AS DOUBLE PRECISION)
-        / nullif(sum(delta_confirmed_cases), 0)
+        / nullif(greatest(0, sum(delta_confirmed_cases)), 0)
         AS confirmed_cases,
     cast(sum(lateness_probable_cases) AS DOUBLE PRECISION)
-        / nullif(sum(delta_probable_cases), 0)
+        / nullif(greatest(0, sum(delta_probable_cases)), 0)
         AS probable_cases,
     cast(sum(lateness_deaths) AS DOUBLE PRECISION)
-        / nullif(sum(delta_deaths), 0)
+        / nullif(greatest(0, sum(delta_deaths)), 0)
         AS deaths
 FROM bitemporal_agg
 -- We exclude the earliest bulletin date because it's artificially late
