@@ -362,10 +362,10 @@ class DailyDeltas(AbstractChart):
 
 class WeekdayBias(AbstractChart):
     def make_chart(self, df):
-        total = self.one_variable(df, 'Confirmados y probables')
-        confirmed = self.one_variable(df, 'Confirmados')
-        probable = self.one_variable(df, 'Probables')
-        deaths = self.one_variable(df, 'Muertes')
+        total = self.one_variable(df, 'Confirmados y probables', 'blues')
+        confirmed = self.one_variable(df, 'Confirmados', 'oranges')
+        probable = self.one_variable(df, 'Probables', 'reds')
+        deaths = self.one_variable(df, 'Muertes', 'teals')
 
         row1 = alt.hconcat(total, confirmed, spacing=20).resolve_scale(
             color='independent'
@@ -377,12 +377,12 @@ class WeekdayBias(AbstractChart):
             color='independent'
         )
 
-    def one_variable(self, df, variable):
+    def one_variable(self, df, variable, color_scheme):
         base = alt.Chart(df).transform_filter(
             alt.datum.variable == variable
         ).encode(
             color=alt.Color('mean(value):Q', title=None,
-                            scale=alt.Scale(scheme="blues"))
+                            scale=alt.Scale(scheme=color_scheme))
         )
 
         heatmap = base.mark_rect().encode(
