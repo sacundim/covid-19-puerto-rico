@@ -387,21 +387,36 @@ class WeekdayBias(AbstractChart):
 
         heatmap = base.mark_rect().encode(
             x=alt.X('day(datum_date):O', title='Día muestra o muerte'),
-            y=alt.Y('day(bulletin_date):O', title='Día boletín')
+            y=alt.Y('day(bulletin_date):O', title='Día boletín'),
+            tooltip=['variable', 'day(bulletin_date):O', 'day(datum_date):O',
+                     alt.Tooltip(field='value',
+                                 type='quantitative',
+                                 aggregate='mean',
+                                 format=".1f")]
         ).properties(
             width=160, height=160
         )
 
         right = base.mark_bar().encode(
             x=alt.X('mean(value):Q', title=None, axis=None),
-            y=alt.Y('day(bulletin_date):O', title=None, axis=None)
+            y=alt.Y('day(bulletin_date):O', title=None, axis=None),
+            tooltip=['variable', 'day(bulletin_date):O',
+                     alt.Tooltip(field='value',
+                                 type='quantitative',
+                                 aggregate='mean',
+                                 format=".1f")]
         ).properties(
             width=40, height=160
         )
 
         top = base.mark_bar().encode(
             x=alt.X('day(datum_date):O', title=None, axis=None),
-            y=alt.Y('mean(value):Q', title=None, axis=None)
+            y=alt.Y('mean(value):Q', title=None, axis=None),
+            tooltip = ['variable', 'day(datum_date):O',
+                       alt.Tooltip(field='value',
+                                   type='quantitative',
+                                   aggregate='mean',
+                                   format=".1f")]
         ).properties(
             width=160, height=40,
             # This title should logically belong to the whole chart,
