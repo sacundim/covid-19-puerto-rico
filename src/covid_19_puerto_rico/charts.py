@@ -393,8 +393,6 @@ class WeekdayBias(AbstractChart):
                                  type='quantitative',
                                  aggregate='mean',
                                  format=".1f")]
-        ).properties(
-            width=160, height=160
         )
 
         right = base.mark_bar().encode(
@@ -405,8 +403,6 @@ class WeekdayBias(AbstractChart):
                                  type='quantitative',
                                  aggregate='mean',
                                  format=".1f")]
-        ).properties(
-            width=40, height=160
         )
 
         top = base.mark_bar().encode(
@@ -417,23 +413,32 @@ class WeekdayBias(AbstractChart):
                                    type='quantitative',
                                    aggregate='mean',
                                    format=".1f")]
-        ).properties(
-            width=160, height=40,
-            # This title should logically belong to the whole chart,
-            # but assigning it to the concat chart anchors it wrong.
-            # See: https://altair-viz.github.io/user_guide/generated/core/altair.TitleParams.html
-            title=alt.TitleParams(
-                text=variable,
-                anchor='middle',
-                align='center',
-                fontSize=14,
-                fontWeight='normal'
-            )
         )
 
+        heatmap_size = 160
+        histogram_size = 40
         return alt.vconcat(
-            top,
-            alt.hconcat(heatmap, right, spacing=3),
+            top.properties(
+                width=heatmap_size, height=histogram_size,
+                # This title should logically belong to the whole chart,
+                # but assigning it to the concat chart anchors it wrong.
+                # See: https://altair-viz.github.io/user_guide/generated/core/altair.TitleParams.html
+                title=alt.TitleParams(
+                    text=variable,
+                    anchor='middle',
+                    align='center',
+                    fontSize=14,
+                    fontWeight='normal'
+                )
+            ),
+            alt.hconcat(
+                heatmap.properties(
+                    width=heatmap_size, height=heatmap_size
+                ),
+                right.properties(
+                    width=histogram_size, height=heatmap_size
+                ),
+                spacing=3),
             spacing=3
         )
 
