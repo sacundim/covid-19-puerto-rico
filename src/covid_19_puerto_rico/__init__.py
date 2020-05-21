@@ -51,12 +51,16 @@ def main():
         charts.NewCases(engine, args.output_dir, output_formats),
         charts.Doubling(engine, args.output_dir, output_formats),
         charts.DailyDeltas(engine, args.output_dir, output_formats),
-        charts.WeekdayBias(engine, args.output_dir, output_formats),
         charts.LatenessDaily(engine, args.output_dir, output_formats),
 
         # We always generate PNG for this because it's our Twitter card
         charts.Lateness7Day(engine, args.output_dir,
-                            frozenset(['json', 'png']))
+                            frozenset(['json', 'png'])),
+
+        # We always generate PNG for this because it renders wrong
+        # on some browsers
+        charts.WeekdayBias(engine, args.output_dir,
+                           frozenset(['json', 'png']))
     ]
     if args.website:
         site = website.Website(args)
