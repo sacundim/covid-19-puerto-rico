@@ -451,13 +451,15 @@ class WeekdayBias(AbstractChart):
 	ba.delta_probable_cases,
 	ba.delta_deaths
 FROM bitemporal_agg ba 
-WHERE ba.bulletin_date >= (
+WHERE ba.datum_date >= ba.bulletin_date - INTERVAL '14' DAY
+AND ba.bulletin_date > (
 	SELECT min(bulletin_date)
 	FROM bitemporal_agg
 	WHERE delta_confirmed_and_probable_cases IS NOT NULL
 	AND delta_confirmed_cases IS NOT NULL
 	AND delta_probable_cases IS NOT NULL
-	AND delta_deaths IS NOT NULL)""")
+	AND delta_deaths IS NOT NULL)
+ORDER BY bulletin_date, datum_date""")
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
         df = df.rename(columns={
             'delta_confirmed_and_probable_cases': 'Confirmados y probables',
@@ -468,5 +470,7 @@ WHERE ba.bulletin_date >= (
         return pd.melt(df, ['bulletin_date', 'datum_date']).dropna()
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
-
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=21))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['bulletin_date'])
+                          & (df['bulletin_date'] <= until_date)]
