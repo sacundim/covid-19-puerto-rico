@@ -373,9 +373,22 @@ class WeekdayBias(AbstractChart):
         row2 = alt.hconcat(probable, deaths, spacing=20).resolve_scale(
             color='independent'
         )
-        return alt.vconcat(row1, row2, spacing=40).resolve_scale(
+
+        rows = alt.vconcat(row1, row2, spacing=40).resolve_scale(
             color='independent'
         )
+
+        footer = alt.Chart(df).mark_text(baseline='middle').encode(
+            text=alt.Text('bulletin_date',
+                          type='temporal',
+                          aggregate='max',
+                          timeUnit='yearmonthdate',
+                          format='Datos hasta boletín del %A %d de %B, %Y'),
+        ).properties(
+            width=300, height=40
+        )
+
+        return alt.vconcat(rows, footer, center=True)
 
     def one_variable(self, df, variable, axis_title, color_scheme):
         base = alt.Chart(df).transform_filter(
