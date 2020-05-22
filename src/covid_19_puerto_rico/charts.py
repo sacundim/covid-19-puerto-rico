@@ -483,7 +483,11 @@ ORDER BY bulletin_date, datum_date""")
         return pd.melt(df, ['bulletin_date', 'datum_date']).dropna()
 
     def filter_data(self, df, bulletin_date):
-        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=21))
-        until_date = pd.to_datetime(bulletin_date)
+        # We exclude the current bulletin_date because this chart's
+        # main use is to compare the current bulletin's data to trends
+        # established **before** it.
+        cutoff_date = bulletin_date - datetime.timedelta(days=1)
+        since_date = pd.to_datetime(cutoff_date - datetime.timedelta(days=21))
+        until_date = pd.to_datetime(cutoff_date)
         return df.loc[(since_date < df['bulletin_date'])
                           & (df['bulletin_date'] <= until_date)]
