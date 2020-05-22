@@ -26,8 +26,8 @@ def process_arguments():
     parser.add_argument('--earliest-date', type=datetime.date.fromisoformat,
                         default=datetime.date(2020, 4, 25),
                         help='Earliest date to generate website for. Has a sensible built-in default.')
-    parser.add_argument('--no-png', action='store_false', dest='png',
-                        help="Switch turn off the PNG files (which is a bit slow)")
+    parser.add_argument('--no-svg', action='store_false', dest='svg',
+                        help="Switch turn off the svg files (which is a bit slow)")
     parser.add_argument('--no-website', action='store_false', dest='website',
                         help="Switch to turn off website generation (which is a bit slow)")
     return parser.parse_args()
@@ -41,8 +41,8 @@ def main():
     bulletin_date = compute_bulletin_date(args, engine)
     logging.info('Using bulletin date of %s', bulletin_date)
 
-    if args.png:
-        output_formats = frozenset(['json', 'png'])
+    if args.svg:
+        output_formats = frozenset(['json', 'svg'])
     else:
         output_formats = frozenset(['json'])
 
@@ -54,9 +54,9 @@ def main():
         charts.DailyDeltas(engine, args.output_dir, output_formats),
         charts.LatenessDaily(engine, args.output_dir, output_formats),
 
-        # We always generate PNG for this because it's our Twitter card
+        # We always generate png for this because it's our Twitter card
         charts.Lateness7Day(engine, args.output_dir,
-                            frozenset(['json', 'png'])),
+                            frozenset(['json', 'svg', 'png'])),
     ]
     if args.website:
         site = website.Website(args)
@@ -80,7 +80,7 @@ def global_configuration():
 
     alt.themes.register("custom_theme", lambda: get_json_resource('theme.json'))
     alt.themes.enable("custom_theme")
-    alt.renderers.enable('altair_saver', fmts=['png'])
+    alt.renderers.enable('altair_saver', fmts=['svg', 'png'])
     alt.renderers.set_embed_options(
         timeFormatLocale=get_json_resource('es-PR.json')
     )
