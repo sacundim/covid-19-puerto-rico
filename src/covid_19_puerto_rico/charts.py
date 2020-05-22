@@ -63,7 +63,7 @@ class Cumulative(AbstractChart):
                                   'Muertes (fecha boletín)']),
             tooltip=['datum_date', 'variable', 'value']
         ).properties(
-            width=575, height=275
+            width=600, height=400
         )
 
     def fetch_data(self, connection):
