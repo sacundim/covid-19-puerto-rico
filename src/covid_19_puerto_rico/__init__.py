@@ -47,6 +47,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        charts.WeekdayBias(engine, args.output_dir, output_formats),
         charts.Cumulative(engine, args.output_dir, output_formats),
         charts.NewCases(engine, args.output_dir, output_formats),
         charts.Doubling(engine, args.output_dir, output_formats),
@@ -56,11 +57,6 @@ def main():
         # We always generate PNG for this because it's our Twitter card
         charts.Lateness7Day(engine, args.output_dir,
                             frozenset(['json', 'png'])),
-
-        # We always generate PNG for this because it renders wrong
-        # on some browsers
-        charts.WeekdayBias(engine, args.output_dir,
-                           frozenset(['json', 'png']))
     ]
     if args.website:
         site = website.Website(args)

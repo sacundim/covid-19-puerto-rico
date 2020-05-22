@@ -385,17 +385,21 @@ class WeekdayBias(AbstractChart):
                           timeUnit='yearmonthdate',
                           format='Datos hasta boletín del %A %d de %B, %Y'),
         ).properties(
-            width=300, height=40
+            width=350, height=40
         )
 
         return alt.vconcat(rows, footer, center=True)
 
-    def one_variable(self, df, variable, axis_title, color_scheme):
+    def one_variable(self, df, variable,
+                     axis_title,
+                     color_scheme):
         base = alt.Chart(df).transform_filter(
             alt.datum.variable == variable
+        ).transform_filter(
+            alt.datum.value > 0
         ).encode(
-            color=alt.Color('mean(value):Q', title=None,
-                            scale=alt.Scale(scheme=color_scheme))
+            color=alt.Color('sum(value):Q', title=None,
+                            scale=alt.Scale(type='log', scheme=color_scheme))
         )
 
         heatmap = base.mark_rect().encode(
@@ -404,28 +408,25 @@ class WeekdayBias(AbstractChart):
             tooltip=['variable', 'day(bulletin_date):O', 'day(datum_date):O',
                      alt.Tooltip(field='value',
                                  type='quantitative',
-                                 aggregate='mean',
-                                 format=".2f")]
+                                 aggregate='sum')]
         )
 
         right = base.mark_bar().encode(
-            x=alt.X('mean(value):Q', title=None, axis=None),
+            x=alt.X('sum(value):Q', title=None, axis=None),
             y=alt.Y('day(bulletin_date):O', title=None, axis=None),
             tooltip=['variable', 'day(bulletin_date):O',
                      alt.Tooltip(field='value',
                                  type='quantitative',
-                                 aggregate='mean',
-                                 format=".2f")]
+                                 aggregate='sum')]
         )
 
         top = base.mark_bar().encode(
             x=alt.X('day(datum_date):O', title=None, axis=None),
-            y=alt.Y('mean(value):Q', title=None, axis=None),
+            y=alt.Y('sum(value):Q', title=None, axis=None),
             tooltip = ['variable', 'day(datum_date):O',
                        alt.Tooltip(field='value',
                                    type='quantitative',
-                                   aggregate='mean',
-                                   format=".2f")]
+                                   aggregate='sum')]
         )
 
         heatmap_size = 160
