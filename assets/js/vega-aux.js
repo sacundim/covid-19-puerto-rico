@@ -9,7 +9,7 @@ function embedChart(name, bulletin_date) {
         vegaEmbed(`#${name}`, `${bulletin_date}_${name}.json`).catch(console.error);
     } else {
         var elem = document.createElement("img");
-        elem.src = `${bulletin_date}_${name}.png`;
+        elem.src = `${bulletin_date}_${name}.svg`;
         document.getElementById(name).appendChild(elem);
     }
 }
