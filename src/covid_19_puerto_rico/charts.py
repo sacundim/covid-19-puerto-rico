@@ -257,7 +257,7 @@ class Doubling(AbstractChart):
                     title='Fecha del evento',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('value', title=None,
-                    scale=alt.Scale(type='log', domain=(1, 100))),
+                    scale=alt.Scale(type='log', base=2, domain=(1, 128))),
             color=alt.Color('variable', legend=None)
         ).properties(
             width=175,
