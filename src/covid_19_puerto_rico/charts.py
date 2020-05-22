@@ -52,7 +52,7 @@ class Cumulative(AbstractChart):
         return alt.Chart(df).mark_line(point=True).encode(
             x=alt.X('yearmonthdate(datum_date):T', title=None,
                     axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('value', title=None, scale=alt.Scale(type='log', base=2)),
+            y=alt.Y('value', title=None, scale=alt.Scale(type='log')),
             color=alt.Color('variable', title=None,
                             legend=alt.Legend(orient="top", labelLimit=250, columns=2),
                             sort=['Casos confirmados (fecha muestra)',
@@ -102,7 +102,7 @@ class NewCases(AbstractChart):
             # messes up the axis scale
             alt.datum.value > 0
         ).mark_point(opacity=0.5).encode(
-            y=alt.Y('value:Q', title=None, scale=alt.Scale(type='log', base=2)),
+            y=alt.Y('value:Q', title=None, scale=alt.Scale(type='log')),
             tooltip=['datum_date', 'variable', 'value']
         )
 
@@ -257,7 +257,7 @@ class Doubling(AbstractChart):
                     title='Fecha del evento',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('value', title=None,
-                    scale=alt.Scale(type='log', base=2, domain=(1, 128))),
+                    scale=alt.Scale(type='log', domain=(1, 128))),
             color=alt.Color('variable', legend=None)
         ).properties(
             width=175,
