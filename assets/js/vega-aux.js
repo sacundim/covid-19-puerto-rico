@@ -1,5 +1,17 @@
+function testCompliance() {
+    var local = Date.parse('2020-05-20T00:00:00');
+    var utc = Date.parse('2020-05-20T00:00:00Z');
+    return local != utc
+}
+
 function embedChart(name, bulletin_date) {
-  vegaEmbed(`#${name}`, `${bulletin_date}_${name}.json`).catch(console.error);
+    if (testCompliance()) {
+        vegaEmbed(`#${name}`, `${bulletin_date}_${name}.json`).catch(console.error);
+    } else {
+        var elem = document.createElement("img");
+        elem.src = `${bulletin_date}_${name}.png`;
+        document.getElementById(name).appendChild(elem);
+    }
 }
 
 vega.timeFormatLocale(
