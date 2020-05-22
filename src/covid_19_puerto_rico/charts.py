@@ -52,7 +52,7 @@ class Cumulative(AbstractChart):
         return alt.Chart(df).mark_line(point=True).encode(
             x=alt.X('yearmonthdate(datum_date):T', title=None,
                     axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('value', title=None, scale=alt.Scale(type='log')),
+            y=alt.Y('value', title=None, scale=alt.Scale(type='log', base=2)),
             color=alt.Color('variable', title=None,
                             legend=alt.Legend(orient="top", labelLimit=250, columns=2),
                             sort=['Casos confirmados (fecha muestra)',
@@ -102,7 +102,7 @@ class NewCases(AbstractChart):
             # messes up the axis scale
             alt.datum.value > 0
         ).mark_point(opacity=0.5).encode(
-            y=alt.Y('value:Q', title=None, scale=alt.Scale(type='log')),
+            y=alt.Y('value:Q', title=None, scale=alt.Scale(type='log', base=2)),
             tooltip=['datum_date', 'variable', 'value']
         )
 
@@ -399,7 +399,7 @@ class WeekdayBias(AbstractChart):
             alt.datum.value > 0
         ).encode(
             color=alt.Color('sum(value):Q', title=None,
-                            scale=alt.Scale(type='log', scheme=color_scheme))
+                            scale=alt.Scale(type='log', base=2, scheme=color_scheme))
         )
 
         heatmap = base.mark_rect().encode(
