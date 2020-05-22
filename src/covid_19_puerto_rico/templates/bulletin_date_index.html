@@ -8,8 +8,25 @@
 <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
 <script src="../js/vega-aux.js"></script>
 
+<div class="section" id="browserCompliance" style="display: none;">
+    <h1>Advertencia de compatibilidad</h1>
+
+    <p>Las visualizaciones de datos en esta página no son enteramente
+        compatibles con su navegador de web.  Como solución parcial,
+        le hemos sustituído imágenes pregeneradas en un navegador que
+        sí es compatible, pero esto a costa de la experiencia óptima
+        (e.g. mostrar más detalle cuando apunta con el ratón a los datos).
+        Recomendamos que use Chrome o Firefox. (Aunque Chrome en iOS
+        tampoco funciona bien. 🤬)</p>
+</div>
+
 <script type="text/javascript">
     const bulletin_date = "{{ bulletin_date }}";
+
+    if (!testCompliance()) {
+        var warning = document.getElementById("browserCompliance");
+        warning.style.display = "block";
+    }
 </script>
 
 <div class="section">
@@ -106,10 +123,6 @@
 
 <div class="section">
     <h1>Tendencias por día de semana</h1>
-
-    <p><b>ADVERTENCIA: Esta gráfica al momento muestra datos incorrectos en Safari.
-        <a href="{{ bulletin_date }}_WeekdayBias.png">Acceda a una versión estática
-            correcta aquí.</a></b></p>
 
     <div id="WeekdayBias" class="chart"></div>
     <script type="text/javascript">
