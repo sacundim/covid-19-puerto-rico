@@ -26,10 +26,10 @@ def process_arguments():
     parser.add_argument('--earliest-date', type=datetime.date.fromisoformat,
                         default=datetime.date(2020, 4, 25),
                         help='Earliest date to generate website for. Has a sensible built-in default.')
-    parser.add_argument('--png', action='store_true',
-                        help="Switch generate all the PNG files (which is a bit slow)")
-    parser.add_argument('--website', action='store_true',
-                        help="Switch to run the website generation (which is a bit slow)")
+    parser.add_argument('--no-png', action='store_false', dest='png',
+                        help="Switch turn off the PNG files (which is a bit slow)")
+    parser.add_argument('--no-website', action='store_false', dest='website',
+                        help="Switch to turn off website generation (which is a bit slow)")
     return parser.parse_args()
 
 def main():
