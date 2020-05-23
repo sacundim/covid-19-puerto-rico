@@ -153,6 +153,36 @@ COMMENT ON VIEW bitemporal_agg IS
   minus previous bulletin_date''s value for previous datum_date;
 - Lateness score: Delta * (bulletin_date - datum_date).';
 
+CREATE VIEW announcement_consolidated AS
+SELECT
+    bulletin_date,
+    coalesce(cumulative_tests,
+             cumulative_positive_results + cumulative_negative_results + cumulative_pending_results)
+        AS cumulative_tests,
+    coalesce(cumulative_positive_results,
+             cumulative_positive_molecular_tests + cumulative_positive_serological_tests)
+        AS cumulative_positive_results,
+    coalesce(cumulative_negative_results,
+             cumulative_negative_molecular_tests + cumulative_negative_serological_tests)
+        AS cumulative_negative_results,
+    cumulative_pending_results,
+    cumulative_molecular_tests,
+    cumulative_positive_molecular_tests,
+    cumulative_negative_molecular_tests,
+    cumulative_inconclusive_molecular_tests,
+    cumulative_serological_tests,
+    cumulative_positive_serological_tests,
+    cumulative_negative_serological_tests,
+    new_cases,
+    new_confirmed_cases,
+    new_probable_cases,
+    cumulative_cases,
+    cumulative_confirmed_cases,
+    cumulative_probable_cases,
+    cumulative_deaths,
+    cumulative_certified_deaths,
+    cumulative_confirmed_deaths
+FROM announcement;
 
 -------------------------------------------------------------------------------
 CREATE SCHEMA quality;
