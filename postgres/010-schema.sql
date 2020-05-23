@@ -41,7 +41,6 @@ CREATE TABLE announcement (
     cumulative_positive_results INTEGER,
     cumulative_negative_results INTEGER,
     cumulative_pending_results INTEGER,
-    cumulative_inconclusive_results INTEGER,
     new_cases INTEGER,
     new_confirmed_cases INTEGER,
     new_probable_cases INTEGER,
@@ -52,11 +51,12 @@ CREATE TABLE announcement (
     cumulative_certified_deaths INTEGER,
     cumulative_confirmed_deaths INTEGER,
 
+    -- These were begun to be reported on 2020-05-22
     cumulative_tests INTEGER,
     cumulative_molecular_tests INTEGER,
     cumulative_positive_molecular_tests INTEGER,
     cumulative_negative_molecular_tests INTEGER,
-    cumulative_inconclusive_tests INTEGER,
+    cumulative_inconclusive_molecular_tests INTEGER,
     cumulative_serological_tests INTEGER,
     cumulative_positive_serological_tests INTEGER,
     cumulative_negative_serological_tests INTEGER,
