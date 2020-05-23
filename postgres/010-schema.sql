@@ -11,6 +11,8 @@ CREATE TABLE bitemporal (
     confirmed_cases INTEGER,
     probable_cases INTEGER,
     deaths INTEGER,
+    positive_molecular_tests INTEGER,
+    molecular_tests INTEGER,
     PRIMARY KEY (bulletin_date, datum_date)
 );
 
@@ -49,6 +51,15 @@ CREATE TABLE announcement (
     cumulative_deaths INTEGER,
     cumulative_certified_deaths INTEGER,
     cumulative_confirmed_deaths INTEGER,
+
+    cumulative_tests INTEGER,
+    cumulative_molecular_tests INTEGER,
+    cumulative_positive_molecular_tests INTEGER,
+    cumulative_negative_molecular_tests INTEGER,
+    cumulative_inconclusive_tests INTEGER,
+    cumulative_serological_tests INTEGER,
+    cumulative_positive_serological_tests INTEGER,
+    cumulative_negative_serological_tests INTEGER,
     PRIMARY KEY (bulletin_date)
 );
 
