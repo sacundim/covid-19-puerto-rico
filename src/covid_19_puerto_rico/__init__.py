@@ -47,6 +47,8 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        charts.CumulativeTestsPerCapita(engine, f'{args.output_dir}/molecular_tests',
+                                        output_formats),
         charts.WeekdayBias(engine, args.output_dir, output_formats),
         charts.Cumulative(engine, args.output_dir, output_formats),
         charts.NewCases(engine, args.output_dir, output_formats),
@@ -61,6 +63,7 @@ def main():
     if args.website:
         site = website.Website(args)
         targets.append(site)
+        site.render_molecular_tests_page()
 
     date_range = list(
         util.make_date_range(args.earliest_date, bulletin_date)
