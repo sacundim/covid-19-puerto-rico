@@ -56,7 +56,7 @@ class DailyMissingTests(AbstractDatelessChart):
             ),
             tooltip=['datum_date', 'difference:Q']
         ).properties(
-            width=575, height=280
+            width=575, height=265
         )
 
     def fetch_data(self, connection):
@@ -78,7 +78,7 @@ class CumulativeMissingTests(AbstractDatelessChart):
             y=alt.Y('difference:Q', title='Positivos menos confirmados'),
             tooltip=['datum_date', 'difference:Q']
         ).properties(
-            width=575, height=280
+            width=575, height=265
         )
 
     def fetch_data(self, connection):
