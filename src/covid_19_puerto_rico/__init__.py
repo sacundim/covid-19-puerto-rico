@@ -50,7 +50,6 @@ def main():
     molecular_output_dir = f'{args.output_dir}/molecular_tests'
     targets = [
         molecular.CumulativeMissingTests(engine, molecular_output_dir, output_formats),
-        molecular.DailyMissingTests(engine, molecular_output_dir, output_formats),
         molecular.NewTestsPerCapita(engine, molecular_output_dir, output_formats),
         molecular.CumulativeTestsPerCapita(engine, molecular_output_dir, output_formats),
 
@@ -61,9 +60,11 @@ def main():
         charts.DailyDeltas(engine, args.output_dir, output_formats),
         charts.LatenessDaily(engine, args.output_dir, output_formats),
 
-        # We always generate png for this because it's our Twitter card
+        # We always generate png for this because they're our Twitter cards
         charts.Lateness7Day(engine, args.output_dir,
                             frozenset(['json', 'svg', 'png'])),
+        molecular.DailyMissingTests(engine, molecular_output_dir,
+                                    frozenset(['json', 'svg', 'png']))
     ]
     if args.website:
         site = website.Website(args)
