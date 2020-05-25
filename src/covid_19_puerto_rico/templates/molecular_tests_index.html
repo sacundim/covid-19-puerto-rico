@@ -14,7 +14,7 @@
     <p>El viernes 22 de mayo, el Departamento de Salud publicó un anuncio
         con su primera actualización en más de un mes en cuanto a datos de
         pruebas moleculares.  A la fecha de hoy (domingo, 24 de mayo) no han
-        vuelto a sacar otro.  Esta página contiene análisis de esos datos</p>
+        vuelto a sacar otro.  Esta página contiene análisis de esos datos.</p>
 
     <h3>Memorando corregido del 23 de mayo</h3>
 
@@ -95,6 +95,22 @@
 
     <p>Ver también <a href="https://ourworldindata.org/grapher/number-of-covid-19-tests-per-confirmed-case?time=2020-02-07..">
         esta gráfica interactiva de Our World in Data de la misma medida</a>.</p>
+</div>
+
+
+<div class="section">
+    <h1>Pruebas moleculares por caso confirmado (promedio 7 días, fecha de muestra)</h1>
+
+    <div id="NewTestsPerCapita"></div>
+    <script type="text/javascript">
+      embedChart('NewTestsPerCapita');
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>El mismo cálculo que la anterior, pero por promedios de pruebas y casos nuevos
+        en ventanas de siete días.  Las fechas más recientes deben ser aún menos confiables
+        que las más tempranas.</p>
 </div>
 
 {% endblock %}
