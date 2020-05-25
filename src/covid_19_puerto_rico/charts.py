@@ -534,6 +534,11 @@ class DailyMissingTests(AbstractDatelessChart):
                     title='Fecha de toma de muestra',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('difference:Q', title='Positivos menos confirmados'),
+            color=alt.condition(
+                alt.datum.difference < 0,
+                alt.value('orange'),
+                alt.value('teal')
+            ),
             tooltip=['datum_date', 'difference:Q']
         ).properties(
             width=575, height=300
