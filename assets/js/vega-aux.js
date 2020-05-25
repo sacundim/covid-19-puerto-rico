@@ -4,12 +4,14 @@ function testCompliance() {
     return local != utc
 }
 
-function embedChart(name, bulletin_date) {
+function embedChart(name, bulletin_date=undefined) {
+    var location = bulletin_date == undefined ? name : `${bulletin_date}_${name}`;
     if (testCompliance()) {
-        vegaEmbed(`#${name}`, `${bulletin_date}_${name}.json`).catch(console.error);
+            vegaEmbed(`#${name}`, `${location}.json`)
+                .catch(console.error);
     } else {
         var elem = document.createElement("img");
-        elem.src = `${bulletin_date}_${name}.svg`;
+        elem.src = `${location}.svg`;
         document.getElementById(name).appendChild(elem);
     }
 }
