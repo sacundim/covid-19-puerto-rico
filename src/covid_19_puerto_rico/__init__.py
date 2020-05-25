@@ -9,6 +9,7 @@ from sqlalchemy.sql import select
 from sqlalchemy.sql.functions import max
 
 from . import charts
+from . import molecular
 from . import resources
 from . import util
 from . import website
@@ -48,10 +49,10 @@ def main():
 
     molecular_output_dir = f'{args.output_dir}/molecular_tests'
     targets = [
-        charts.CumulativeMissingTests(engine, molecular_output_dir, output_formats),
-        charts.DailyMissingTests(engine, molecular_output_dir, output_formats),
-        charts.NewTestsPerCapita(engine, molecular_output_dir, output_formats),
-        charts.CumulativeTestsPerCapita(engine, molecular_output_dir, output_formats),
+        molecular.CumulativeMissingTests(engine, molecular_output_dir, output_formats),
+        molecular.DailyMissingTests(engine, molecular_output_dir, output_formats),
+        molecular.NewTestsPerCapita(engine, molecular_output_dir, output_formats),
+        molecular.CumulativeTestsPerCapita(engine, molecular_output_dir, output_formats),
 
         charts.WeekdayBias(engine, args.output_dir, output_formats),
         charts.Cumulative(engine, args.output_dir, output_formats),
