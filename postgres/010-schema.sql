@@ -139,7 +139,23 @@ SELECT
     deaths - coalesce(lag(deaths) OVER datum, 0)
         AS delta_deaths,
     (deaths - coalesce(lag(deaths) OVER datum, 0))
-        * (bulletin_date - datum_date) AS lateness_deaths
+        * (bulletin_date - datum_date) AS lateness_deaths,
+
+    molecular_tests,
+    sum(molecular_tests) OVER bulletin
+        AS cumulative_molecular_tests,
+    molecular_tests - coalesce(lag(molecular_tests) OVER datum, 0)
+        AS delta_molecular_tests,
+    (molecular_tests - coalesce(lag(molecular_tests) OVER datum, 0))
+        * (bulletin_date - datum_date) AS lateness_molecular_tests,
+
+    positive_molecular_tests,
+    sum(positive_molecular_tests) OVER bulletin
+        AS cumulative_positive_molecular_tests,
+    positive_molecular_tests - coalesce(lag(positive_molecular_tests) OVER datum, 0)
+        AS delta_positive_molecular_tests,
+    (positive_molecular_tests - coalesce(lag(positive_molecular_tests) OVER datum, 0))
+        * (bulletin_date - datum_date) AS lateness_positive_molecular_tests
 FROM bitemporal
 WINDOW
     bulletin AS (PARTITION BY bulletin_date ORDER BY datum_date),
@@ -274,7 +290,9 @@ SELECT
 	ba.cumulative_confirmed_and_probable_cases AS confirmed_and_probable_cases,
 	ba.cumulative_confirmed_cases AS confirmed_cases,
 	ba.cumulative_probable_cases AS probable_cases,
-	ba.cumulative_deaths AS deaths
+	ba.cumulative_deaths AS deaths,
+	ba.cumulative_molecular_tests AS molecular_tests,
+	ba.cumulative_positive_molecular_tests AS positive_molecular_tests
 FROM bulletin_dates
 INNER JOIN dates
 	ON dates.date <= bulletin_dates.bulletin_date
