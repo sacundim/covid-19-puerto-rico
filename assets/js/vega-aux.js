@@ -5,17 +5,13 @@ function testCompliance() {
 }
 
 function embedChart(name, bulletin_date=undefined) {
+    var location = bulletin_date == undefined ? name : `${bulletin_date}_${name}`;
     if (testCompliance()) {
-        if (bulletin_date == undefined) {
-            vegaEmbed(`#${name}`, `${name}.json`)
+            vegaEmbed(`#${name}`, `${location}.json`)
                 .catch(console.error);
-        } else {
-            vegaEmbed(`#${name}`, `${bulletin_date}_${name}.json`)
-                .catch(console.error);
-        }
     } else {
         var elem = document.createElement("img");
-        elem.src = `${bulletin_date}_${name}.svg`;
+        elem.src = `${location}.svg`;
         document.getElementById(name).appendChild(elem);
     }
 }
