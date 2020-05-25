@@ -48,6 +48,7 @@ def main():
 
     molecular_output_dir = f'{args.output_dir}/molecular_tests'
     targets = [
+        charts.CumulativeMissingTests(engine, molecular_output_dir, output_formats),
         charts.DailyMissingTests(engine, molecular_output_dir, output_formats),
         charts.NewTestsPerCapita(engine, molecular_output_dir, output_formats),
         charts.CumulativeTestsPerCapita(engine, molecular_output_dir, output_formats),

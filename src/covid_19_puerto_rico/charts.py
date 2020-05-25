@@ -543,13 +543,33 @@ class DailyMissingTests(AbstractDatelessChart):
         table = sqlalchemy.Table('bitemporal', self.metadata, autoload=True)
         query = select([
             table.c.datum_date,
-            table.c.positive_molecular_tests,
-            table.c.confirmed_cases,
             (table.c.positive_molecular_tests - table.c.confirmed_cases)\
                 .label('difference')
         ]).where(table.c.bulletin_date == datetime.date(year=2020, month=5, day=20))
         return pd.read_sql_query(query, connection, parse_dates=["datum_date"])
 
+
+class CumulativeMissingTests(AbstractDatelessChart):
+    def make_chart(self, df):
+        return alt.Chart(df).mark_line(point=True).encode(
+            x=alt.X('yearmonthdate(datum_date):T',
+                    title='Fecha de toma de muestra',
+                    axis=alt.Axis(format='%d/%m')),
+            y=alt.Y('difference:Q', title='Positivos menos confirmados'),
+            tooltip=['datum_date', 'difference:Q']
+        ).properties(
+            width=575, height=300
+        )
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('cumulative_data', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([
+            table.c.datum_date,
+            (table.c.positive_molecular_tests - table.c.confirmed_cases)\
+                .label('difference')
+        ]).where(table.c.bulletin_date == datetime.date(year=2020, month=5, day=20))
+        return pd.read_sql_query(query, connection, parse_dates=["datum_date"]).dropna()
 
 
 class CumulativeTestsPerCapita(AbstractDatelessChart):
