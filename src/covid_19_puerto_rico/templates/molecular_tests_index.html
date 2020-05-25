@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Análisis datos de pruebas moleculares, 2020-05-20{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+<script src="../js/vega-aux.js"></script>
+
+<div class="section">
+    <h1>Pruebas moleculares por caso confirmado (fecha de muestra)</h1>
+
+    <p>El viernes 22 de mayo, el Departamento de Salud publicó un anuncio
+        con su primera actualización en más de un mes en cuanto a datos de
+        pruebas moleculares.  A la fecha de hoy (domingo, 24 de mayo) no han
+        vuelto a sacar otro.  Esta página contiene análisis de esos datos</p>
+
+    <h3>Memorando corregido del 23 de mayo</h3>
+
+    <p>Este memorando es la versión corregida de uno erróneo que sacaron el
+        22 de mayo, que dió la fecha incorrecta para los datos.  Nótese que
+        este presente atribuye estos datos al 21 de mayo, con cierre a las
+        11 de la mañana.</p>
+
+    <p><img class="source_chart" src="../source_material/2020-05-21/2020-05-21_tests_announcement.jpg"></p>
+
+    <h3>Gráficas con datos hasta el 20 de mayo</h3>
+
+    <p>Poco después del memorando del 22 de mayo compartieron estas dos
+        gráficas, que son la fuente de datos para el presente análisis.
+        Nótese que dicen que sus datos son hasta el 20 de mayo, y que el
+        total de pruebas moleculares que presentan es menor que el memorando.</p>
+
+    <p><img class="source_chart" src="../source_material/2020-05-20/2020-05-20_molecular_tests.jpg"></p>
+    <p><img class="source_chart" src="../source_material/2020-05-20/2020-05-20_molecular_tests_percentage.jpg"></p>
+
+
+    <h3>Casos únicos positivos confirmados hasta el 20 de mayo</h3>
+
+    <p>El presente análisis también hace uso de los datos de esta gráfica
+        publicada regularmente, aquí la que también está etiquetada hasta 20
+        de mayo:</p>
+
+    <p><img class="source_chart" src="../source_material/2020-05-20/2020-05-20_confirmed.jpg"></p>
+</div>
+
+<div class="section">
+    <h1>Pruebas moleculares por caso confirmado (acumuladas, fecha de muestra)</h1>
+
+    <div id="CumulativeTestsPerCapita"></div>
+    <script type="text/javascript">
+      embedChart('CumulativeTestsPerCapita');
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Un cálculo de la tendencia de la cantidad de pruebas moleculares cuando se
+        divide entre:</p>
+
+    <ul>
+        <li>Cada mil habitantes;</li>
+        <li>El número de casos confirmados por muestras en la misma fecha.</li>
+    </ul>
+
+    <p>La página Our World in Data, que recopila datos y análisis de la pandemia a nivel global,
+        <a href="https://ourworldindata.org/what-can-data-on-testing-tell-us-about-the-pandemic">recomienda
+            el segundo cálculo</a> como herramienta para desencubrir países en que la cantidad de pruebas,
+        a pesar de ser comparativamente alta per cápita, en realidad no da a basto en relación al tamaño del
+        brote que experimentan.  Como explica la página:</p>
+
+    <blockquote>
+        <p>En términos de cobertura de pruebas el Reino Unido parece estar adelante
+            de Taiwán, con por lo menos el doble de pruebas por mil personas, a la
+            fecha del 11 de abril.</p>
+
+        <p>Pero en la misma fecha habían 60 veces más casos confirmados por millón en
+            el Reino Unido que en Taiwan — 1,035 por millón y 16 casos por millón
+            respectivamente.</p>
+
+        <p>Así que mientras que la cantidad de pruebas relativo a tamaño de población
+            es mayor en el Reino Unido, la cantidad de pruebas <em>relativo al tamaño
+            del brote</em> es mucho, mucho mayor en Taiwán.</p>
+
+        <p>Al 11 de abril, en Taiwan se confirmaba un caso por cada 120 pruebas.  En
+            el Reino Unido, un caso se confirmaba en menos de cada cuatro pruebas.</p>
+
+        <p>[...] Un país que realiza pocas pruebas por cada caso que confirma no está
+            administrando suficientes para que el número de casos confirmados pinte
+            un cuadro confiable de la verdadera dispersión del virus.  Mientras que
+            las personas con los síntomas más severos pudieran habérseles dado
+            pruebas en tales países, probablemente hay muchísimas más personas con
+            síntomas leves o nulos que nunca se les realizó prueba.</p>
+    </blockquote>
+
+    <p>Ver también <a href="https://ourworldindata.org/grapher/number-of-covid-19-tests-per-confirmed-case?time=2020-02-07..">
+        esta gráfica interactiva de Our World in Data de la misma medida</a>.</p>
+</div>
+
+{% endblock %}

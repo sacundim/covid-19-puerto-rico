@@ -52,6 +52,15 @@ class Website:
             previous_date=previous_date)\
             .dump(output_index_html)
 
+    def render_molecular_tests_page(self):
+        molecular_dir = pathlib.Path(f'{self.output_dir}/molecular_tests')
+        molecular_dir.mkdir(exist_ok=True)
+        molecular_index_html = f'{molecular_dir}/index.html'
+        logging.info("Rendering %s", molecular_index_html)
+        template = self.jinja.get_template('molecular_tests_index.html')
+        template.stream()\
+            .dump(molecular_index_html)
+
     def render_top(self, bulletin_date):
         output_index_html = f'{self.output_dir}/index.html'
         logging.info("Rendering %s", output_index_html)
