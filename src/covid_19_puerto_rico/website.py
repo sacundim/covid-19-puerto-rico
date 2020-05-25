@@ -47,10 +47,21 @@ class Website:
         previous_date = bulletin_date - datetime.timedelta(days=1)
         template = self.jinja.get_template('bulletin_date_index.html')
         template.stream(
-            bulletin_dates=reversed(date_range),
+            bulletin_dates=sorted(date_range, reverse=True),
             bulletin_date=bulletin_date,
             previous_date=previous_date)\
             .dump(output_index_html)
+
+    def render_molecular_tests_page(self, date_range):
+        molecular_dir = pathlib.Path(f'{self.output_dir}/molecular_tests')
+        molecular_dir.mkdir(exist_ok=True)
+        molecular_index_html = f'{molecular_dir}/index.html'
+        logging.info("Rendering %s", molecular_index_html)
+        template = self.jinja.get_template('molecular_tests_index.html')
+        template.stream(
+            bulletin_dates=sorted(date_range, reverse=True),
+            bulletin_date=max(date_range))\
+            .dump(molecular_index_html)
 
     def render_top(self, bulletin_date):
         output_index_html = f'{self.output_dir}/index.html'
