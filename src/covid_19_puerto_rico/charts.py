@@ -311,10 +311,10 @@ class DailyDeltas(AbstractChart):
                             scale=alt.Scale(scheme="redgrey", domainMid=0))
         )
 
-        text = base.mark_text(color='white', size=8).encode(
+        text = base.mark_text(color='white', size=7).encode(
             text=alt.Text('value:Q'),
             color=alt.condition(
-                alt.FieldRangePredicate(field='value', range=[0, 15]),
+                alt.FieldRangePredicate(field='value', range=[0, 30]),
                 alt.value('black'),
                 alt.value('white')
             )
