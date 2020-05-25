@@ -20,7 +20,7 @@
 
 
 <div class="section">
-    <h1>Pruebas perdidas, por fecha de muestra</h1>
+    <h1>Pruebas perdidas diarias</h1>
 
     <div id="DailyMissingTests"></div>
     <script type="text/javascript">
@@ -50,6 +50,21 @@
         alguno de los pacientes que más temprano aparece como prueba "perdida."
         El llamarlo "prueba perdida" no es un diagnóstico de la causa del descuadre,
         sino una puyita para llamar la atención a este.</p>
+</div>
+
+
+<div class="section">
+    <h1>Pruebas perdidas acumuladas</h1>
+
+    <div id="CumulativeMissingTests"></div>
+    <script type="text/javascript">
+      embedChart('CumulativeMissingTests');
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>El mismo análisis de "pruebas perdidas" que el anterior pero con números
+        acumulados en vez de diarios.</p>
 </div>
 
 
