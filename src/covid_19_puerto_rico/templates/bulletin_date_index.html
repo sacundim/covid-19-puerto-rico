@@ -3,41 +3,8 @@
 {% block title %}Análisis boletín {{ bulletin_date }}{% endblock %}
 
 {% block content %}
-<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-lite@4"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
-<script src="../js/vega-aux.js"></script>
-
-<div class="section" id="browserCompliance" style="display: none;">
-    <h1>Advertencia de compatibilidad</h1>
-
-    <p>Las visualizaciones de datos en esta página no son enteramente
-        compatibles con su navegador de web.  Como solución parcial,
-        he sustituído imágenes pregeneradas en un navegador que sí es
-        compatible, pero a costa de la experiencia óptima (e.g. mostrar
-        más detalle cuando apunta con el ratón a los datos).</p>
-
-    <p>Conocidos incompatibles:</p>
-    <ul>
-        <li>Safari en computadora (portatil o de escritorio)</li>
-        <li>Tabletas y teléfonos Apple (no importa cuál navegador)</li>
-    </ul>
-    <p>Conocidos compatibles:</p>
-    <ul>
-        <li>Chrome (en computadora)</li>
-        <li>Firefox (en computadora)</li>
-    </ul>
-
-    <p>La compatibilidad de otros navegadores se desconoce.</p>
-</div>
-
 <script type="text/javascript">
     const bulletin_date = "{{ bulletin_date }}";
-
-    if (!testCompliance()) {
-        var warning = document.getElementById("browserCompliance");
-        warning.style.display = "block";
-    }
 </script>
 
 <div class="section">
