@@ -301,7 +301,7 @@ class DailyDeltas(AbstractChart):
                     title="Fecha evento", sort="descending",
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('yearmonthdate(bulletin_date):O',
-                    title="Fecha boletín", sort="descending",
+                    title=None, sort="descending",
                     axis=alt.Axis(format='%d/%m')),
             tooltip=['bulletin_date:T', 'datum_date:T', 'value']
         )
@@ -321,11 +321,10 @@ class DailyDeltas(AbstractChart):
         )
 
         return (heatmap + text).properties(
-            width=570
+            width=585, height=100
         ).facet(
             row=alt.Row('variable', title=None,
-                        sort=['Confirmados y probables',
-                              'Confirmados',
+                        sort=['Confirmados',
                               'Probables',
                               'Muertes'])
         )
@@ -335,7 +334,6 @@ class DailyDeltas(AbstractChart):
                                  schema='products', autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.datum_date,
-                        table.c.delta_confirmed_and_probable_cases,
                         table.c.delta_confirmed_cases,
                         table.c.delta_probable_cases,
                         table.c.delta_deaths]
@@ -343,7 +341,6 @@ class DailyDeltas(AbstractChart):
         df = pd.read_sql_query(query, connection,
                                parse_dates=["bulletin_date", "datum_date"])
         df = df.rename(columns={
-            'delta_confirmed_and_probable_cases': 'Confirmados y probables',
             'delta_confirmed_cases': 'Confirmados',
             'delta_probable_cases': 'Probables',
             'delta_deaths': 'Muertes'
