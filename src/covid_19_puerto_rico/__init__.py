@@ -63,7 +63,6 @@ def main():
     if args.website:
         site = website.Website(args)
         targets.append(site)
-        site.render_molecular_tests_page()
 
     date_range = list(
         util.make_date_range(args.earliest_date, bulletin_date)
@@ -73,6 +72,7 @@ def main():
         target.render(date_range)
 
     if args.website:
+        site.render_molecular_tests_page(date_range)
         site.render_top(bulletin_date)
 
 
