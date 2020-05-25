@@ -46,9 +46,10 @@ def main():
     else:
         output_formats = frozenset(['json'])
 
+    molecular_output_dir = f'{args.output_dir}/molecular_tests'
     targets = [
-        charts.CumulativeTestsPerCapita(engine, f'{args.output_dir}/molecular_tests',
-                                        output_formats),
+        charts.NewTestsPerCapita(engine, molecular_output_dir, output_formats),
+        charts.CumulativeTestsPerCapita(engine, molecular_output_dir, output_formats),
         charts.WeekdayBias(engine, args.output_dir, output_formats),
         charts.Cumulative(engine, args.output_dir, output_formats),
         charts.NewCases(engine, args.output_dir, output_formats),
