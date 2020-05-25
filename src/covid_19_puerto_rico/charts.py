@@ -492,3 +492,5 @@ ORDER BY bulletin_date, datum_date""")
         until_date = pd.to_datetime(cutoff_date)
         return df.loc[(since_date < df['bulletin_date'])
                           & (df['bulletin_date'] <= until_date)]
+
+
