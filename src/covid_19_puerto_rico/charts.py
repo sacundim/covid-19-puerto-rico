@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import sqlalchemy
-from sqlalchemy.sql import select, text
+from sqlalchemy.sql import select, text, cast
+from sqlalchemy.types import Float
 from . import util
 
 class AbstractChart(ABC):
@@ -492,3 +493,70 @@ ORDER BY bulletin_date, datum_date""")
         until_date = pd.to_datetime(cutoff_date)
         return df.loc[(since_date < df['bulletin_date'])
                           & (df['bulletin_date'] <= until_date)]
+
+
+#################################################################################
+#
+# Charts about molecular test data from 2020-05-20.
+#
+
+class AbstractDatelessChart(ABC):
+    def __init__(self, engine, output_dir,
+                 output_formats=frozenset(['json'])):
+        self.engine = engine
+        self.metadata = sqlalchemy.MetaData(engine)
+        self.output_dir = output_dir
+        self.output_formats = output_formats
+        self.name = type(self).__name__
+
+    def render(self, date_range):
+        with self.engine.connect() as connection:
+            df = self.fetch_data(connection)
+        logging.info("%s dataframe: %s", self.name, util.describe_frame(df))
+
+        Path(self.output_dir).mkdir(exist_ok=True)
+        util.save_chart(self.make_chart(df),
+                        f"{self.output_dir}/{self.name}",
+                        self.output_formats)
+
+    @abstractmethod
+    def make_chart(self, df):
+        pass
+
+    @abstractmethod
+    def fetch_data(self, connection):
+        pass
+
+class CumulativeTestsPerCapita(AbstractDatelessChart):
+    def make_chart(self, df):
+        return alt.Chart(df).mark_line(point=True).encode(
+            x=alt.X('yearmonthdate(datum_date):T', title=None,
+                    axis=alt.Axis(format='%d/%m')),
+            y=alt.Y('value', title=None),
+            tooltip=['datum_date', 'variable',
+                     alt.Tooltip(field='value',
+                                 type='quantitative',
+                                 format=".1f")]
+        ).properties(
+            width=575, height=175
+        ).facet(
+            row=alt.Row('variable', title=None)
+        ).resolve_scale(
+            y='independent'
+        )
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('cumulative_data', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([table.c.datum_date,
+                        (table.c.molecular_tests / 3193.694).label("tests_per_thousand"),
+                        (cast(table.c.molecular_tests, Float)
+                         / cast(table.c.confirmed_cases, Float)).label('tests_per_case')])\
+            .where(table.c.bulletin_date == datetime.date(year=2020, month=5, day=20))
+        df = pd.read_sql_query(query, connection,
+                               parse_dates=["datum_date"])
+        df = df.rename(columns={
+            'tests_per_thousand': 'Pruebas por 1,000',
+            'tests_per_case': 'Pruebas por caso confirmado',
+        })
+        return pd.melt(df, ["datum_date"])
