@@ -307,7 +307,12 @@ class CurrentDeltas(AbstractChart):
 
         heatmap = base.mark_rect().encode(
             color=alt.Color('value:Q', title=None, legend=None,
-                            scale=alt.Scale(scheme="redgrey", domainMid=0))
+                            scale=alt.Scale(scheme="redgrey", domainMid=0,
+                                            # WORKAROUND: Set the domain manually to forcibly
+                                            # include the domainMid or else we run into
+                                            # https://github.com/vega/vega-lite/issues/6544
+                                            domain=[min(0, df['value'].min()),
+                                                    max(0, df['value'].max())]))
         )
 
         text = base.mark_text(fontSize=9).encode(
@@ -359,7 +364,12 @@ class DailyDeltas(AbstractChart):
 
         heatmap = base.mark_rect().encode(
             color=alt.Color('value:Q', title=None, legend=None,
-                            scale=alt.Scale(scheme="redgrey", domainMid=0))
+                            scale=alt.Scale(scheme="redgrey", domainMid=0,
+                                            # WORKAROUND: Set the domain manually to forcibly
+                                            # include the domainMid or else we run into
+                                            # https://github.com/vega/vega-lite/issues/6544
+                                            domain=[min(0, df['value'].min()),
+                                                    max(0, df['value'].max())]))
         )
 
         text = base.mark_text(fontSize=4).encode(
