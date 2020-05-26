@@ -310,13 +310,13 @@ class CurrentDeltas(AbstractChart):
                             scale=alt.Scale(scheme="redgrey", domainMid=0))
         )
 
-        text = base.mark_text().encode(
+        text = base.mark_text(fontSize=9).encode(
             text=alt.Text('value:Q'),
             color=util.heatmap_text_color(df, 'value')
         )
 
         return (heatmap + text).properties(
-            width=585, height=80
+            width=585, height=70
         ).facet(
             row=alt.Row('variable', title=None,
                         sort=['Confirmados',
