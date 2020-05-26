@@ -310,13 +310,9 @@ class CurrentDeltas(AbstractChart):
                             scale=alt.Scale(scheme="redgrey", domainMid=0))
         )
 
-        text = base.mark_text(color='white').encode(
+        text = base.mark_text().encode(
             text=alt.Text('value:Q'),
-            color=alt.condition(
-                alt.FieldRangePredicate(field='value', range=[0, 10]),
-                alt.value('black'),
-                alt.value('white')
-            )
+            color=util.heatmap_text_color(df, 'value')
         )
 
         return (heatmap + text).properties(
@@ -349,22 +345,29 @@ class CurrentDeltas(AbstractChart):
             .dropna()
 
 
-
 class DailyDeltas(AbstractChart):
     def make_chart(self, df):
-        heatmap = alt.Chart(df).mark_rect().encode(
+        base = alt.Chart(df).mark_rect().encode(
             x=alt.X('yearmonthdate(datum_date):O',
                     title="Fecha evento", sort="descending",
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('yearmonthdate(bulletin_date):O',
                     title=None, sort="descending",
                     axis=alt.Axis(format='%d/%m')),
-            color=alt.Color('value:Q', title=None, legend=None,
-                            scale=alt.Scale(scheme="redgrey", domainMid=0)),
             tooltip=['bulletin_date:T', 'datum_date:T', 'value']
         )
 
-        return heatmap.properties(
+        heatmap = base.mark_rect().encode(
+            color=alt.Color('value:Q', title=None, legend=None,
+                            scale=alt.Scale(scheme="redgrey", domainMid=0))
+        )
+
+        text = base.mark_text(fontSize=4).encode(
+            text=alt.Text('value:Q'),
+            color=util.heatmap_text_color(df, 'value')
+        )
+
+        return (heatmap + text).properties(
             width=585, height=120
         ).facet(
             row=alt.Row('variable', title=None,
