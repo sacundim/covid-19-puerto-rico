@@ -309,10 +309,9 @@ class CurrentDeltas(AbstractChart):
             color=alt.Color('value:Q', title=None, legend=None,
                             scale=alt.Scale(scheme="redgrey", domainMid=0,
                                             # WORKAROUND: Set the domain manually to forcibly
-                                            # include the domainMid or else we run into
+                                            # include zero or else we run into
                                             # https://github.com/vega/vega-lite/issues/6544
-                                            domain=[min(0, df['value'].min()),
-                                                    max(0, df['value'].max())]))
+                                            domain=alt.DomainUnionWith(unionWith=[0])))
         )
 
         text = base.mark_text(fontSize=9).encode(
@@ -366,10 +365,9 @@ class DailyDeltas(AbstractChart):
             color=alt.Color('value:Q', title=None, legend=None,
                             scale=alt.Scale(scheme="redgrey", domainMid=0,
                                             # WORKAROUND: Set the domain manually to forcibly
-                                            # include the domainMid or else we run into
+                                            # include zero or else we run into
                                             # https://github.com/vega/vega-lite/issues/6544
-                                            domain=[min(0, df['value'].min()),
-                                                    max(0, df['value'].max())]))
+                                            domain=alt.DomainUnionWith(unionWith=[0])))
         )
 
         text = base.mark_text(fontSize=4).encode(
