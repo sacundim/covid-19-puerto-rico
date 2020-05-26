@@ -49,6 +49,7 @@ def main():
 
     molecular_output_dir = f'{args.output_dir}/molecular_tests'
     targets = [
+        charts.CurrentDeltas(engine, args.output_dir, output_formats),
         molecular.CumulativeMissingTests(engine, molecular_output_dir, output_formats),
         molecular.NewTestsPerCapita(engine, molecular_output_dir, output_formats),
         molecular.CumulativeTestsPerCapita(engine, molecular_output_dir, output_formats),

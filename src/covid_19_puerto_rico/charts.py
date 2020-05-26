@@ -293,17 +293,16 @@ class Doubling(AbstractChart):
         })
         return pd.melt(df, ["bulletin_date", "datum_date", "window_size_days"])
 
-
-class DailyDeltas(AbstractChart):
+class CurrentDeltas(AbstractChart):
     def make_chart(self, df):
-        base = alt.Chart(df).encode(
-            x=alt.X('yearmonthdate(datum_date):O',
-                    title="Fecha evento", sort="descending",
-                    axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('yearmonthdate(bulletin_date):O',
+        base = alt.Chart(df.dropna()).encode(
+            x=alt.X('date(datum_date):O',
+                    title="Día del mes",
+                    axis=alt.Axis(format='%d')),
+            y=alt.Y('month(datum_date):O',
                     title=None, sort="descending",
-                    axis=alt.Axis(format='%d/%m')),
-            tooltip=['bulletin_date:T', 'datum_date:T', 'value']
+                    axis=alt.Axis(format='%B')),
+            tooltip=['datum_date:T', 'value']
         )
 
         heatmap = base.mark_rect().encode(
@@ -311,17 +310,62 @@ class DailyDeltas(AbstractChart):
                             scale=alt.Scale(scheme="redgrey", domainMid=0))
         )
 
-        text = base.mark_text(color='white', size=7).encode(
+        text = base.mark_text(color='white').encode(
             text=alt.Text('value:Q'),
             color=alt.condition(
-                alt.FieldRangePredicate(field='value', range=[0, 30]),
+                alt.FieldRangePredicate(field='value', range=[0, 10]),
                 alt.value('black'),
                 alt.value('white')
             )
         )
 
         return (heatmap + text).properties(
-            width=585, height=100
+            width=585, height=80
+        ).facet(
+            row=alt.Row('variable', title=None,
+                        sort=['Confirmados',
+                              'Probables',
+                              'Muertes'])
+        )
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('daily_deltas', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.datum_date,
+                        table.c.delta_confirmed_cases,
+                        table.c.delta_probable_cases,
+                        table.c.delta_deaths]
+        )
+        df = pd.read_sql_query(query, connection,
+                               parse_dates=["bulletin_date", "datum_date"])
+        df = df.rename(columns={
+            'delta_confirmed_cases': 'Confirmados',
+            'delta_probable_cases': 'Probables',
+            'delta_deaths': 'Muertes'
+        })
+        return pd.melt(df, ["bulletin_date", "datum_date"]) \
+            .replace(0, np.nan) \
+            .dropna()
+
+
+
+class DailyDeltas(AbstractChart):
+    def make_chart(self, df):
+        heatmap = alt.Chart(df).mark_rect().encode(
+            x=alt.X('yearmonthdate(datum_date):O',
+                    title="Fecha evento", sort="descending",
+                    axis=alt.Axis(format='%d/%m')),
+            y=alt.Y('yearmonthdate(bulletin_date):O',
+                    title=None, sort="descending",
+                    axis=alt.Axis(format='%d/%m')),
+            color=alt.Color('value:Q', title=None, legend=None,
+                            scale=alt.Scale(scheme="redgrey", domainMid=0)),
+            tooltip=['bulletin_date:T', 'datum_date:T', 'value']
+        )
+
+        return heatmap.properties(
+            width=585, height=120
         ).facet(
             row=alt.Row('variable', title=None,
                         sort=['Confirmados',
@@ -348,7 +392,7 @@ class DailyDeltas(AbstractChart):
         return pd.melt(df, ["bulletin_date", "datum_date"])
 
     def filter_data(self, df, bulletin_date):
-        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=7))
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=14))
         until_date = pd.to_datetime(bulletin_date)
         filtered = df.loc[(since_date < df['bulletin_date'])
                       & (df['bulletin_date'] <= until_date)]\
