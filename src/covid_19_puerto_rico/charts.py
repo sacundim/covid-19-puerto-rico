@@ -295,9 +295,9 @@ class Doubling(AbstractChart):
 
 class CurrentDeltas(AbstractChart):
     def make_chart(self, df):
-        base = alt.Chart(df.dropna()).encode(
+        base = alt.Chart(df).encode(
             x=alt.X('date(datum_date):O',
-                    title="Día del mes",
+                    title="Día del mes", sort="descending",
                     axis=alt.Axis(format='%d')),
             y=alt.Y('month(datum_date):O',
                     title=None, sort="descending",
@@ -317,7 +317,7 @@ class CurrentDeltas(AbstractChart):
         text = base.mark_text(fontSize=9).encode(
             text=alt.Text('value:Q'),
             color=util.heatmap_text_color(df, 'value')
-        )
+        ).transform_filter("(datum.value !== 0) & (datum.value !== null)")
 
         return (heatmap + text).properties(
             width=585, height=70
@@ -345,8 +345,7 @@ class CurrentDeltas(AbstractChart):
             'delta_deaths': 'Muertes'
         })
         return pd.melt(df, ["bulletin_date", "datum_date"]) \
-            .replace(0, np.nan) \
-            .dropna()
+            .replace(0, np.nan)
 
 
 class DailyDeltas(AbstractChart):
