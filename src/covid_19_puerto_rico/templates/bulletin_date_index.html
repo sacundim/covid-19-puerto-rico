@@ -166,6 +166,58 @@
 
 
 <div class="section">
+    <h1>Pruebas duplicadas y perdidas diarias</h1>
+
+    <div id="DailyMissingTests"></div>
+    <script type="text/javascript">
+        embedChart('DailyMissingTests', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>La resta, por cada fecha de muestra, de:</p>
+    <ol>
+        <li>El número de casos confirmados (por prueba molecular) no duplicados
+            que el boletín le atribuye a esa fecha de muestra;</li>
+        <li>El número de pruebas positivas que la gráfica con datos <b>hasta
+            el 20 de mayo solamente</b> le atribuye a esa fecha de muestra.</li>
+    </ol>
+
+    <p>Ninguna de estas restas se supone que sea menos que cero, porque si has
+        confirmado tantos casos por prueba molecular tomada en tal fecha, se supone
+        que tengas por lo menos la misma cantidad de pruebas positivas tomadas
+        en esa misma fecha.  Pero se vé que no es así en estos datos.  Las fechas
+        que dan negativo las llamo <b>pruebas perdidas</b>—casos confirmados no
+        duplicados que se han reportado pero cuyas pruebas confirmatorias, a primera
+        vista, no parecen haberse contado.</p>
+
+    <p>Nótese que esto no es un procedimiento que de respuestas exactas, y puede
+        por ejemplo que una de las pruebas en exceso en fechas posteriores sea de
+        alguno de los pacientes que más temprano aparece como prueba "perdida."
+        El llamarlo "prueba perdida" no es un diagnóstico de la causa del descuadre,
+        sino una puyita para llamar la atención a este.</p>
+
+    <p>Nótese también que los datos sobre pruebas son del 20 de mayo porque esos
+        son los únicos que Salud ha publicado al momento.</p>
+</div>
+
+
+<div class="section">
+    <h1>Pruebas duplicadas y perdidas acumuladas</h1>
+
+    <div id="CumulativeMissingTests"></div>
+    <script type="text/javascript">
+        embedChart('CumulativeMissingTests', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>El mismo análisis de "pruebas perdidas" que el anterior pero con números
+        acumulados en vez de diarios.</p>
+</div>
+
+
+<div class="section">
     <h1>Curvas de casos acumulados por fecha de evento y de reporte</h1>
 
     <div id="Cumulative"></div>

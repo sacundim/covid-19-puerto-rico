@@ -25,7 +25,7 @@ def process_arguments():
     parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat,
                         help='Bulletin date to generate charts for. Default: most recent in DB.')
     parser.add_argument('--earliest-date', type=datetime.date.fromisoformat,
-                        default=datetime.date(2020, 4, 25),
+                        default=datetime.date(2020, 5, 20),
                         help='Earliest date to generate website for. Has a sensible built-in default.')
     parser.add_argument('--no-svg', action='store_false', dest='svg',
                         help="Switch turn off the svg files (which is a bit slow)")
@@ -47,13 +47,10 @@ def main():
     else:
         output_formats = frozenset(['json'])
 
-    molecular_output_dir = f'{args.output_dir}/molecular_tests'
     targets = [
+        molecular.CumulativeMissingTests(engine, args.output_dir, output_formats),
+        molecular.DailyMissingTests(engine, args.output_dir, output_formats),
         charts.CurrentDeltas(engine, args.output_dir, output_formats),
-        molecular.CumulativeMissingTests(engine, molecular_output_dir, output_formats),
-        molecular.NewTestsPerCapita(engine, molecular_output_dir, output_formats),
-        molecular.CumulativeTestsPerCapita(engine, molecular_output_dir, output_formats),
-
         charts.WeekdayBias(engine, args.output_dir, output_formats),
         charts.Cumulative(engine, args.output_dir, output_formats),
         charts.NewCases(engine, args.output_dir, output_formats),
@@ -62,10 +59,7 @@ def main():
         charts.LatenessDaily(engine, args.output_dir, output_formats),
 
         # We always generate png for this because they're our Twitter cards
-        charts.Lateness7Day(engine, args.output_dir,
-                            frozenset(['json', 'svg', 'png'])),
-        molecular.DailyMissingTests(engine, molecular_output_dir,
-                                    frozenset(['json', 'svg', 'png']))
+        charts.Lateness7Day(engine, args.output_dir, frozenset(['json', 'svg', 'png']))
     ]
     if args.website:
         site = website.Website(args)
@@ -79,7 +73,6 @@ def main():
         target.render(date_range)
 
     if args.website:
-        site.render_molecular_tests_page(date_range)
         site.render_top(bulletin_date)
 
 
