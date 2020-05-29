@@ -13,6 +13,7 @@ from pathlib import Path
 import sqlalchemy
 from sqlalchemy.sql import select, text, cast
 from sqlalchemy.types import Float
+from . import charts
 from . import util
 
 class AbstractDatelessChart(ABC):
@@ -42,7 +43,7 @@ class AbstractDatelessChart(ABC):
     def fetch_data(self, connection):
         pass
 
-class DailyMissingTests(AbstractDatelessChart):
+class DailyMissingTests(charts.AbstractChart):
     def make_chart(self, df):
         return alt.Chart(df).mark_bar().encode(
             x=alt.X('yearmonthdate(datum_date):T',
@@ -61,15 +62,19 @@ class DailyMissingTests(AbstractDatelessChart):
 
     def fetch_data(self, connection):
         table = sqlalchemy.Table('bitemporal', self.metadata, autoload=True)
+        tests = table.alias()
+        cases = table.alias()
         query = select([
-            table.c.datum_date,
-            (table.c.positive_molecular_tests - table.c.confirmed_cases)\
-                .label('difference')
-        ]).where(table.c.bulletin_date == datetime.date(year=2020, month=5, day=20))
-        return pd.read_sql_query(query, connection, parse_dates=["datum_date"])
+            cases.c.bulletin_date,
+            cases.c.datum_date,
+            (tests.c.positive_molecular_tests - cases.c.confirmed_cases).label('difference')
+        ]).select_from(
+            tests.outerjoin(cases, tests.c.datum_date == cases.c.datum_date)
+        ).where(tests.c.bulletin_date == datetime.date(year=2020, month=5, day=20))
+        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"])
 
 
-class CumulativeMissingTests(AbstractDatelessChart):
+class CumulativeMissingTests(charts.AbstractChart):
     def make_chart(self, df):
         return alt.Chart(df).mark_line(point=True).encode(
             x=alt.X('yearmonthdate(datum_date):T',
@@ -84,12 +89,16 @@ class CumulativeMissingTests(AbstractDatelessChart):
     def fetch_data(self, connection):
         table = sqlalchemy.Table('cumulative_data', self.metadata,
                                  schema='products', autoload=True)
+        tests = table.alias()
+        cases = table.alias()
         query = select([
-            table.c.datum_date,
-            (table.c.positive_molecular_tests - table.c.confirmed_cases)\
-                .label('difference')
-        ]).where(table.c.bulletin_date == datetime.date(year=2020, month=5, day=20))
-        return pd.read_sql_query(query, connection, parse_dates=["datum_date"]).dropna()
+            cases.c.bulletin_date,
+            cases.c.datum_date,
+            (tests.c.positive_molecular_tests - cases.c.confirmed_cases).label('difference')
+        ]).select_from(
+            tests.outerjoin(cases, tests.c.datum_date == cases.c.datum_date)
+        ).where(tests.c.bulletin_date == datetime.date(year=2020, month=5, day=20))
+        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"]).dropna()
 
 
 class CumulativeTestsPerCapita(AbstractDatelessChart):
