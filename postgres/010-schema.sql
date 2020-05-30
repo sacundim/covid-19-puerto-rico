@@ -50,16 +50,6 @@ CREATE TABLE announcement (
     cumulative_deaths INTEGER,
     cumulative_certified_deaths INTEGER,
     cumulative_confirmed_deaths INTEGER,
-
-    -- These were begun to be reported on 2020-05-22
-    cumulative_tests INTEGER,
-    cumulative_molecular_tests INTEGER,
-    cumulative_positive_molecular_tests INTEGER,
-    cumulative_negative_molecular_tests INTEGER,
-    cumulative_inconclusive_molecular_tests INTEGER,
-    cumulative_serological_tests INTEGER,
-    cumulative_positive_serological_tests INTEGER,
-    cumulative_negative_serological_tests INTEGER,
     PRIMARY KEY (bulletin_date)
 );
 
@@ -102,6 +92,24 @@ COMMENT ON COLUMN announcement.cumulative_certified_deaths IS
 doctor or coroner indicated COVID-19 as cause of death in the
 death certificate.  Given by date that they were announced (not
 date of actual death).  First reported April 8';
+
+
+CREATE TABLE bioportal (
+    bulletin_date DATE NOT NULL,
+    cumulative_tests INTEGER,
+    cumulative_molecular_tests INTEGER,
+    cumulative_positive_molecular_tests INTEGER,
+    cumulative_negative_molecular_tests INTEGER,
+    cumulative_inconclusive_molecular_tests INTEGER,
+    cumulative_serological_tests INTEGER,
+    cumulative_positive_serological_tests INTEGER,
+    cumulative_negative_serological_tests INTEGER,
+    PRIMARY KEY (bulletin_date)
+);
+
+COMMENT ON TABLE bioportal IS
+'Weekly (?) report on number of test results counted by the Department of Health.
+Publication began with 2020-05-21 report.';
 
 
 CREATE VIEW bitemporal_agg AS
@@ -198,7 +206,10 @@ SELECT
     cumulative_deaths,
     cumulative_certified_deaths,
     cumulative_confirmed_deaths
-FROM announcement;
+FROM announcement
+LEFT OUTER JOIN bioportal USING (bulletin_date);
+
+
 
 -------------------------------------------------------------------------------
 CREATE SCHEMA quality;
