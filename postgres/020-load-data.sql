@@ -5,3 +5,7 @@ FROM '/data/PuertoRico-bulletin.csv'
 COPY bitemporal
 FROM '/data/PuertoRico-bitemporal.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
+
+COPY bioportal
+FROM '/data/PuertoRico-bioportal.csv'
+    CSV ENCODING 'UTF-8' HEADER NULL '';
