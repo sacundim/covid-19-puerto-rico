@@ -104,6 +104,14 @@ CREATE TABLE bioportal (
     cumulative_serological_tests INTEGER,
     cumulative_positive_serological_tests INTEGER,
     cumulative_negative_serological_tests INTEGER,
+    new_tests INTEGER,
+    new_molecular_tests INTEGER,
+    new_positive_molecular_tests INTEGER,
+    new_negative_molecular_tests INTEGER,
+    new_inconclusive_molecular_tests INTEGER,
+    new_serological_tests INTEGER,
+    new_positive_serological_tests INTEGER,
+    new_negative_serological_tests INTEGER,
     PRIMARY KEY (bulletin_date)
 );
 
