@@ -76,7 +76,7 @@ class DailyMissingTests(charts.AbstractChart):
 
 class CumulativeMissingTests(charts.AbstractChart):
     def make_chart(self, df):
-        return alt.Chart(df).mark_line(point=True).encode(
+        return alt.Chart(df).mark_area(line=True, point=True).encode(
             x=alt.X('yearmonthdate(datum_date):T',
                     title='Fecha de toma de muestra',
                     axis=alt.Axis(format='%d/%m')),
