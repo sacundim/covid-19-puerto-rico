@@ -19,6 +19,32 @@
 </script>
 
 <div class="section">
+    <h1>COVID-19 en Puerto Rico, análisis {{ bulletin_date }}</h1>
+
+    <p><img class="source_chart" src="../source_material/{{ bulletin_date }}/{{ bulletin_date }}_announcement.jpg"></p>
+
+    <p><b>Advertencia:</b> Favor notar que esta página usa las fechas que aparecen
+        a la cabeza de los boletines del Departamento de Salud, pero estos suelen
+        publicarse la mañana del próximo día, y muchas bases de datos y fuentes
+        periodísticas reportan los mismos datos a base de la fecha de publicación.</p>
+
+    <ul>
+        <li><a href="#CurrentDeltas_section">Cambio entre boletín actual y anterior</a></li>
+        <li><a href="#DailyDeltas_section">Cambios entre boletines recientes</a></li>
+        <li><a href="#LatenessDaily_section">Rezago de datos de cada boletín</a></li>
+        <li><a href="#Lateness7Day_section">Tendencia de rezago de datos</a></li>
+        <li><a href="#WeekdayBias_section">Tendencias por día de semana</a></li>
+        <li><a href="#DailyMissingTests_section">Pruebas duplicadas y perdidas diarias</a></li>
+        <li><a href="#CumulativeMissingTests_section">Pruebas duplicadas y perdidas acumuladas</a></li>
+        <li><a href="#Cumulative_section">Curvas de casos acumulados por fecha de evento y de reporte</a></li>
+        <li><a href="#NewCases_section">Tendencia de casos nuevos por fecha de evento (promedios 7 días)</a></li>
+        <li><a href="#Doubling_section">Tiempos de duplicación de casos por fecha de evento</a></li>
+        <li><a href="#CurrentDeltas_section">Terminología</a></li>
+        <li><a href="#Sources_section">Datos fuente para {{ bulletin_date }}</a></li>
+    </ul>
+</div>
+
+<div class="section" id="CurrentDeltas_section">
     <h1>Cambio entre boletín actual y anterior</h1>
 
     <div id="CurrentDeltas" class="chart"></div>
@@ -56,7 +82,7 @@
         se registraron 8 casos nuevos y se restó uno.</p>
 </div>
 
-<div class="section">
+<div class="section" id="DailyDeltas_section">
     <h1>Cambios entre boletines recientes</h1>
 
     <div id="DailyDeltas" class="chart"></div>
@@ -71,7 +97,7 @@
 </div>
 
 
-<div class="section">
+<div class="section" id="LatenessDaily_section">
     <h1>Rezago de datos de cada boletín</h1>
 
     <div id="LatenessDaily" class="chart"></div>
@@ -92,7 +118,7 @@
 </div>
 
 
-<div class="section">
+<div class="section" id="Lateness7Day_section">
     <h1>Tendencia de rezago de datos</h1>
 
     <div id="Lateness7Day" class="chart"></div>
@@ -124,7 +150,7 @@
 </div>
 
 
-<div class="section">
+<div class="section" id="WeekdayBias_section">
     <h1>Tendencias por día de semana</h1>
 
     <div id="WeekdayBias" class="chart"></div>
@@ -165,7 +191,7 @@
 </div>
 
 
-<div class="section">
+<div class="section" id="DailyMissingTests_section">
     <h1>Pruebas duplicadas y perdidas diarias</h1>
 
     <div id="DailyMissingTests"></div>
@@ -202,7 +228,7 @@
 </div>
 
 
-<div class="section">
+<div class="section" id="CumulativeMissingTests_section">
     <h1>Pruebas duplicadas y perdidas acumuladas</h1>
 
     <div id="CumulativeMissingTests"></div>
@@ -217,7 +243,7 @@
 </div>
 
 
-<div class="section">
+<div class="section" id="Cumulative_section">
     <h1>Curvas de casos acumulados por fecha de evento y de reporte</h1>
 
     <div id="Cumulative"></div>
@@ -252,7 +278,7 @@
 </div>
 
 
-<div class="section">
+<div class="section" id="NewCases_section">
     <h1>Tendencia de casos nuevos por fecha de evento (promedios 7 días)</h1>
 
     <div id="NewCases"></div>
@@ -281,7 +307,7 @@
 </div>
 
 
-<div class="section">
+<div class="section" id="Doubling_section">
     <h1>Tiempos de duplicación de casos por fecha de evento</h1>
 
     <div id="Doubling" class="chart"></div>
@@ -303,7 +329,7 @@
         verdad si los datos fueran de verdad.  ¯\_(ツ)_/¯</p>
 </div>
 
-<div class="section">
+<div class="section" id="Terminology_section">
     <h1>Terminología</h1>
 
     <h3>Fecha de boletín</h3>
@@ -339,7 +365,7 @@
         paciente único que ha dado positivo a una prueba serológica ("rápida").</p>
 </div>
 
-<div class="section">
+<div class="section" id="Sources_section">
     <h1>Datos fuente para {{ bulletin_date }}</h1>
 
     Estas son las imágenes de los boletines del Departamento de Salud que
@@ -366,5 +392,10 @@
 
     <p><img class="source_chart" src="../source_material/{{ bulletin_date }}/{{ bulletin_date }}_deaths.jpg"></p>
     <p><img class="source_chart" src="../source_material/{{ previous_date }}/{{ previous_date }}_deaths.jpg"></p>
+
+    <h3>Pruebas moleculares por fecha de toma de muestra, al 20 de mayo del 2020</h3>
+
+    <p><img class="source_chart" src="../source_material/2020-05-20/2020-05-20_molecular_tests_percentage.jpg"></p>
+    <p><img class="source_chart" src="../source_material/2020-05-20/2020-05-20_molecular_tests.jpg"></p>
 </div>
 {% endblock %}
