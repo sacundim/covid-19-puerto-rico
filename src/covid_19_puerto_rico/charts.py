@@ -144,17 +144,17 @@ class NewCases(AbstractChart):
 class AbstractLateness(AbstractChart):
     def fetch_data_for_table(self, connection, table):
         query = select([table.c.bulletin_date,
-                        table.c.confirmed_and_probable_cases_total,
-                        table.c.confirmed_cases_total,
-                        table.c.probable_cases_total,
+                        table.c.confirmed_and_probable_cases_additions,
+                        table.c.confirmed_cases_additions,
+                        table.c.probable_cases_additions,
                         table.c.deaths_total]
         )
         df = pd.read_sql_query(query, connection,
                                parse_dates=["bulletin_date"])
         df = df.rename(columns={
-            'confirmed_and_probable_cases_total': 'Confirmados y probables',
-            'confirmed_cases_total': 'Confirmados',
-            'probable_cases_total': 'Probables',
+            'confirmed_and_probable_cases_additions': 'Confirmados y probables',
+            'confirmed_cases_additions': 'Confirmados',
+            'probable_cases_additions': 'Probables',
             'deaths_total': 'Muertes'
         })
         return pd.melt(df, "bulletin_date")
