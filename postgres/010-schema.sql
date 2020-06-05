@@ -337,21 +337,55 @@ FROM bitemporal_agg
 WHERE bulletin_date > (SELECT min(bulletin_date) FROM bitemporal_agg);
 
 
+CREATE FUNCTION safediv(n NUMERIC, m NUMERIC)
+RETURNS DOUBLE PRECISION AS $$
+    SELECT cast(n AS DOUBLE PRECISION) / nullif(m, 0);
+$$ LANGUAGE SQL;
+
 CREATE VIEW products.lateness_daily AS
 SELECT
     bulletin_date,
-    cast(sum(lateness_confirmed_and_probable_cases) AS DOUBLE PRECISION)
-        / nullif(greatest(0, sum(delta_confirmed_and_probable_cases)), 0)
-        AS confirmed_and_probable_cases,
-    cast(sum(lateness_confirmed_cases) AS DOUBLE PRECISION)
-        / nullif(greatest(0, sum(delta_confirmed_cases)), 0)
-        AS confirmed_cases,
-    cast(sum(lateness_probable_cases) AS DOUBLE PRECISION)
-        / nullif(greatest(0, sum(delta_probable_cases)), 0)
-        AS probable_cases,
-    cast(sum(lateness_deaths) AS DOUBLE PRECISION)
-        / nullif(greatest(0, sum(delta_deaths)), 0)
-        AS deaths
+
+    safediv(sum(lateness_confirmed_and_probable_cases),
+            sum(delta_confirmed_and_probable_cases))
+        AS confirmed_and_probable_cases_total,
+    safediv(sum(lateness_confirmed_and_probable_cases)
+                FILTER (WHERE lateness_confirmed_and_probable_cases > 0),
+            sum(delta_confirmed_and_probable_cases)
+                FILTER (WHERE delta_confirmed_and_probable_cases > 0))
+        AS confirmed_and_probable_cases_additions,
+    -safediv(sum(lateness_confirmed_and_probable_cases)
+                 FILTER (WHERE lateness_confirmed_and_probable_cases < 0),
+             sum(delta_confirmed_and_probable_cases)
+                 FILTER (WHERE delta_confirmed_and_probable_cases < 0))
+         AS confirmed_and_probable_cases_removals,
+
+    safediv(sum(lateness_confirmed_cases), sum(delta_confirmed_cases))
+        AS confirmed_cases_total,
+    safediv(sum(lateness_confirmed_cases) FILTER (WHERE lateness_confirmed_cases > 0),
+            sum(delta_confirmed_cases) FILTER (WHERE delta_confirmed_cases > 0))
+        AS confirmed_cases_additions,
+    -safediv(sum(lateness_confirmed_cases) FILTER (WHERE lateness_confirmed_cases < 0),
+             sum(delta_confirmed_cases) FILTER (WHERE delta_confirmed_cases < 0))
+         AS confirmed_cases_removals,
+
+    safediv(sum(lateness_probable_cases), sum(delta_probable_cases))
+        AS probable_cases_total,
+    safediv(sum(lateness_probable_cases) FILTER (WHERE lateness_probable_cases > 0),
+            sum(delta_probable_cases) FILTER (WHERE delta_probable_cases > 0))
+        AS probable_cases_additions,
+    -safediv(sum(lateness_probable_cases) FILTER (WHERE lateness_probable_cases < 0),
+             sum(delta_probable_cases) FILTER (WHERE delta_probable_cases < 0))
+         AS probable_cases_removals,
+
+    safediv(sum(lateness_deaths), sum(delta_deaths))
+        AS deaths_total,
+    safediv(sum(lateness_deaths) FILTER (WHERE lateness_deaths > 0),
+            sum(delta_deaths) FILTER (WHERE delta_deaths > 0))
+        AS deaths_additions,
+    -safediv(sum(lateness_deaths) FILTER (WHERE lateness_deaths < 0),
+             sum(delta_deaths) FILTER (WHERE delta_deaths < 0))
+         AS deaths_removals
 FROM bitemporal_agg
 -- We exclude the earliest bulletin date because it's artificially late
 WHERE bulletin_date > (SELECT min(bulletin_date) FROM bitemporal_agg)
@@ -373,43 +407,132 @@ WITH min_date AS (
 ), bulletin_sums AS (
 	SELECT
 		ba.bulletin_date,
+
 		sum(lateness_confirmed_and_probable_cases) lateness_confirmed_and_probable_cases,
 		sum(delta_confirmed_and_probable_cases) delta_confirmed_and_probable_cases,
+		sum(lateness_confirmed_and_probable_cases)
+			FILTER (WHERE lateness_confirmed_and_probable_cases > 0)
+			AS lateness_added_confirmed_and_probable_cases,
+		sum(delta_confirmed_and_probable_cases)
+			FILTER (WHERE delta_confirmed_and_probable_cases > 0)
+			AS delta_added_confirmed_and_probable_cases,
+		sum(lateness_confirmed_and_probable_cases)
+			FILTER (WHERE lateness_confirmed_and_probable_cases < 0)
+			AS lateness_removed_confirmed_and_probable_cases,
+		sum(delta_confirmed_and_probable_cases)
+			FILTER (WHERE delta_confirmed_and_probable_cases < 0)
+			AS delta_removed_confirmed_and_probable_cases,
+
 		sum(lateness_confirmed_cases) lateness_confirmed_cases,
 		sum(delta_confirmed_cases) delta_confirmed_cases,
+		sum(lateness_confirmed_cases)
+			FILTER (WHERE lateness_confirmed_cases > 0)
+			AS lateness_added_confirmed_cases,
+		sum(delta_confirmed_cases)
+			FILTER (WHERE delta_confirmed_cases > 0)
+			AS delta_added_confirmed_cases,
+		sum(lateness_confirmed_cases)
+			FILTER (WHERE lateness_confirmed_cases < 0)
+			AS lateness_removed_confirmed_cases,
+		sum(delta_confirmed_cases)
+			FILTER (WHERE delta_confirmed_cases < 0)
+			AS delta_removed_confirmed_cases,
+
 		sum(lateness_probable_cases) lateness_probable_cases,
 		sum(delta_probable_cases) delta_probable_cases,
+		sum(lateness_probable_cases)
+			FILTER (WHERE lateness_probable_cases > 0)
+			AS lateness_added_probable_cases,
+		sum(delta_probable_cases)
+			FILTER (WHERE delta_probable_cases > 0)
+			AS delta_added_probable_cases,
+		sum(lateness_probable_cases)
+			FILTER (WHERE lateness_probable_cases < 0)
+			AS lateness_removed_probable_cases,
+		sum(delta_probable_cases)
+			FILTER (WHERE delta_probable_cases < 0)
+			AS delta_removed_probable_cases,
+
 		sum(lateness_deaths) lateness_deaths,
-		sum(delta_deaths) delta_deaths
+		sum(delta_deaths) delta_deaths,
+		sum(lateness_deaths)
+			FILTER (WHERE lateness_deaths > 0)
+			AS lateness_added_deaths,
+		sum(delta_deaths)
+			FILTER (WHERE delta_deaths > 0)
+			AS delta_added_deaths,
+		sum(lateness_deaths)
+			FILTER (WHERE lateness_deaths < 0)
+			AS lateness_removed_deaths,
+		sum(delta_deaths)
+			FILTER (WHERE delta_deaths < 0)
+			AS delta_removed_deaths
 	FROM bitemporal_agg ba, min_date md
 	WHERE ba.bulletin_date > md.bulletin_date
 	GROUP BY ba.bulletin_date
 ), windowed_sums AS (
 	SELECT
 		bulletin_date,
-		CAST(SUM(lateness_confirmed_and_probable_cases) OVER bulletin AS DOUBLE PRECISION)
-	        / NULLIF(SUM(delta_confirmed_and_probable_cases) OVER bulletin, 0)
-	        AS confirmed_and_probable_cases,
-		CAST(SUM(lateness_confirmed_cases) OVER bulletin AS DOUBLE PRECISION)
-	        / NULLIF(SUM(delta_confirmed_cases) OVER bulletin, 0)
-	        AS confirmed_cases,
-		CAST(SUM(lateness_probable_cases) OVER bulletin AS DOUBLE PRECISION)
-	        / NULLIF(SUM(delta_probable_cases) OVER bulletin, 0)
-	        AS probable_cases,
-		CAST(SUM(lateness_deaths) OVER bulletin AS DOUBLE PRECISION)
-	        / NULLIF(SUM(delta_deaths) OVER bulletin, 0)
-	        AS deaths
+
+		safediv(SUM(lateness_confirmed_and_probable_cases) OVER bulletin,
+	        	SUM(delta_confirmed_and_probable_cases) OVER bulletin)
+	        AS confirmed_and_probable_cases_total,
+        safediv(SUM(lateness_added_confirmed_and_probable_cases) OVER bulletin,
+	        	SUM(delta_added_confirmed_and_probable_cases) OVER bulletin)
+	        AS confirmed_and_probable_cases_additions,
+		safediv(SUM(lateness_removed_confirmed_and_probable_cases) OVER bulletin,
+	        	SUM(delta_removed_confirmed_and_probable_cases) OVER bulletin)
+	        AS confirmed_and_probable_cases_removals,
+
+        safediv(SUM(lateness_confirmed_cases) OVER bulletin,
+	        	SUM(delta_confirmed_cases) OVER bulletin)
+	        AS confirmed_cases_total,
+        safediv(SUM(lateness_confirmed_cases) OVER bulletin,
+	        	SUM(delta_added_confirmed_cases) OVER bulletin)
+	        AS confirmed_cases_additions,
+		safediv(SUM(lateness_removed_confirmed_cases) OVER bulletin,
+	        	SUM(delta_removed_confirmed_cases) OVER bulletin)
+	        AS confirmed_cases_removals,
+
+        safediv(SUM(lateness_probable_cases) OVER bulletin,
+	        	SUM(delta_probable_cases) OVER bulletin)
+	        AS probable_cases_total,
+        safediv(SUM(lateness_added_probable_cases) OVER bulletin,
+	        	SUM(delta_added_probable_cases) OVER bulletin)
+	        AS probable_cases_additions,
+		safediv(SUM(lateness_removed_confirmed_cases) OVER bulletin,
+	        	SUM(delta_removed_confirmed_cases) OVER bulletin)
+	        AS probable_cases_removals,
+
+        safediv(SUM(lateness_deaths) OVER bulletin,
+	        	SUM(delta_deaths) OVER bulletin)
+	        AS deaths_total,
+        safediv(SUM(lateness_added_deaths) OVER bulletin,
+	        	SUM(delta_added_deaths) OVER bulletin)
+	        AS deaths_additions,
+		safediv(SUM(lateness_removed_deaths) OVER bulletin,
+	        	SUM(delta_removed_deaths) OVER bulletin)
+	        AS deaths_removals
 	FROM bulletin_sums bs
 	WINDOW bulletin AS (ORDER BY bulletin_date ROWS 6 PRECEDING)
 )
 SELECT
 	ws.bulletin_date,
-	confirmed_and_probable_cases,
-	confirmed_cases,
-	probable_cases,
-	deaths
+	confirmed_and_probable_cases_total,
+	confirmed_and_probable_cases_additions,
+	-confirmed_and_probable_cases_removals confirmed_and_probable_cases_removals,
+	confirmed_cases_total,
+	confirmed_cases_additions,
+	-confirmed_cases_removals confirmed_cases_removals,
+	probable_cases_total,
+	probable_cases_additions,
+	-probable_cases_removals probable_cases_removals,
+	deaths_total,
+	deaths_additions,
+	-deaths_removals deaths_removals
 FROM windowed_sums ws, min_date m
-WHERE ws.bulletin_date >= m.bulletin_date + INTERVAL '7' DAY;
+WHERE ws.bulletin_date >= m.bulletin_date + INTERVAL '7' DAY
+ORDER BY bulletin_date;
 
 COMMENT ON VIEW products.lateness_7day IS
 'An estimate of how late on average new data is, based on the
