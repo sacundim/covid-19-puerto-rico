@@ -487,7 +487,7 @@ WITH min_date AS (
         safediv(SUM(lateness_confirmed_cases) OVER bulletin,
 	        	SUM(delta_confirmed_cases) OVER bulletin)
 	        AS confirmed_cases_total,
-        safediv(SUM(lateness_confirmed_cases) OVER bulletin,
+        safediv(SUM(lateness_added_confirmed_cases) OVER bulletin,
 	        	SUM(delta_added_confirmed_cases) OVER bulletin)
 	        AS confirmed_cases_additions,
 		safediv(SUM(lateness_removed_confirmed_cases) OVER bulletin,
