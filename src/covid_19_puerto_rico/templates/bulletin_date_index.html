@@ -115,6 +115,28 @@
         entre boletines consecutivos. Por el asunto de los números negativos
         en esos datos, no se puede esperar que estos rezagos estimados
         sean los valores exactos que calcularíamos si tuvieramos mejor datos.</p>
+
+    <h3>Revisión 5 de junio del 2020</h3>
+
+    <p>El método de cálculo de esta gráfica se revisó el 5 de junio y se aplicó
+        el cambio retroactivamente a fechas anteriores.  Antes de esa revisión,
+        las fechas con números negativos se incorporaban en los totales, cosa que
+        tendía a rebajar el estimado.  Esto se hacía por entenderse que:</p>
+
+    <ol>
+        <li>Muchas de las restas correspondían no a casos nuevos sino a revisiones
+            de fecha de casos conocidos;</li>
+        <li>Las fechas en que aparecen sumas o ceros probablemente son resultado
+            también en muchos casos de una combinación de sumas y restas, así que
+            excluir las fechas que esos totales dan negativo en realidad no excluye
+            todas las restas.</li>
+    </ol>
+
+    <p>Se abandonó este procedimiento porque hubo boletines que claramente violaron
+        el primer supuesto de manera tan crasa que daban estimado de rezago negativo.
+        Después de la revisión sólo las sumas se toman en cuenta para calcular los
+        rezagos de pruebas.  El rezago de muertes sin embargo aun se calcula mediante
+        el criterio original.</p>
 </div>
 
 
@@ -147,6 +169,10 @@
         primero y el último son estadísticamente independientes.  Por ejemplo
         la cifra más reciente y la anterior son calculadas a partir de ventanas
         de siete días que coinciden en seis de estos.</p>
+
+    <h3>Revisión 5 de junio del 2020</h3>
+
+    <p>Esta gráfica se revisó retroactivamente de la misma manera descrita arriba.</p>
 </div>
 
 
