@@ -97,12 +97,8 @@ class NewCases(AbstractChart):
                     axis=alt.Axis(format='%d/%m'))
         )
 
-        scatter = base.transform_filter(
-            # Needed because log(0) = negative infinity, and this
-            # messes up the axis scale
-            alt.datum.value > 0
-        ).mark_point(opacity=0.5).encode(
-            y=alt.Y('value:Q', title=None, scale=alt.Scale(type='log')),
+        scatter = base.mark_point(opacity=0.5, clip=True).encode(
+            y=alt.Y('value:Q', title=None, scale=alt.Scale(type='symlog')),
             tooltip=['datum_date', 'variable', 'value']
         )
 
@@ -111,7 +107,7 @@ class NewCases(AbstractChart):
             mean_value='mean(value)',
             groupby=['variable']
         ).mark_line(strokeWidth=3).encode(
-            y=alt.Y('mean_value:Q', title=None, scale=alt.Scale(type='log'))
+            y=alt.Y('mean_value:Q', title=None, scale=alt.Scale(type='symlog'))
         )
 
         return (average + scatter).encode(
