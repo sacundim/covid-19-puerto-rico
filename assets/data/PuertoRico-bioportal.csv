@@ -1,3 +1,4 @@
 bulletin_date,cumulative_tests,cumulative_molecular_tests,cumulative_positive_molecular_tests,cumulative_negative_molecular_tests,cumulative_inconclusive_molecular_tests,cumulative_serological_tests,cumulative_positive_serological_tests,cumulative_negative_serological_tests,new_tests,new_molecular_tests,new_positive_molecular_tests,new_negative_molecular_tests,new_inconclusive_molecular_tests,new_serological_tests,new_positive_serological_tests,new_negative_serological_tests
 2020-05-21,89430,41701,1572,40095,34,47729,2179,45550,,,,,,,,
 2020-05-28,127107,61702,1952,59701,49,65405,2899,62506,37677,20001,380,19606,15,17676,720,16956
+2020-06-06,193187,90045,2060,87930,55,103142,3964,99178,66080,28343,108,28229,6,37737,1065,36672
