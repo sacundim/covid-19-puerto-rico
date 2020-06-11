@@ -524,3 +524,32 @@ ORDER BY bulletin_date, datum_date""")
                           & (df['bulletin_date'] <= until_date)]
 
 
+class MunicipalCumulative(AbstractChart):
+    def make_chart(self, df):
+        return alt.Chart(df).mark_line().encode(
+            x=alt.X('yearmonthdate(bulletin_date):T', title=None,
+                    axis=alt.Axis(format='%d/%m')),
+            y=alt.Y('confirmed_cases', title=None, scale=alt.Scale(type='log'))
+        ).properties(
+            width=100, height=100
+        ).facet(
+            columns=4,
+            facet=alt.Facet('Municipio', title=None)
+        ).resolve_axis(
+            x='independent'
+        )
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('municipal', self.metadata, autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.municipality,
+                        table.c.confirmed_cases])\
+            .where(table.c.municipality != 'Total')
+        df = pd.read_sql_query(query, connection,
+                               parse_dates=["bulletin_date"])
+        return df.rename(columns={
+            'municipality': 'Municipio'
+        })
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
