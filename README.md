@@ -11,10 +11,22 @@ Visita el dashboard en:
 
 ## Datos de fuente y archivos CSV
 
+Los datos provienen principalmente de los [informes de Casos Positivos COVID-19](http://www.salud.gov.pr/Estadisticas-Registros-y-Publicaciones/Pages/COVID-19.aspx)
+del Departamento de Salud de Puerto Rico, en algunos casos suplementados 
+por fuentes misceláneas como reportes de prensa o informes y gráficas
+de Salud que no aparecen (al momento) en ese enlace pero que se han
+compartido con periodistas.
+
 En el directorio [`assets/source_material/`](assets/source_material/)
-se recopilan imágenes de boletines y gráficas.  Una selección de datos de 
-estos se ha copiado a mano a los archivos CSV en el subdirectorio 
-[`assets/data/`](assets/data/), que al momento consisten de:
+se recopilan imágenes de boletines y gráficas, según este esquema:
+
+* Archivos PDF originales de los informes en 
+  [`assets/source_materials/pdf/`](assets/source_materials/pdf/);
+* Archivos de imágenes extraídos de estos en directorios
+  fechados dentro de [`assets/source_materials/`](assets/source_materials/).
+
+Una selección de datos de estos se ha copiado a mano a los archivos CSV 
+en el subdirectorio [`assets/data/`](assets/data/), que al momento consisten de:
 
 * [`PuertoRico-bulletin.csv`](assets/data/PuertoRico-bulletin.csv), que
   consiste de números de "anuncio" que se hacen todos los días.
@@ -23,6 +35,9 @@ estos se ha copiado a mano a los archivos CSV en el subdirectorio
   que consiste de datos de gráficas que acompañan estos boletines
   y que atribuyen las muertes a la fecha en que en verdad sucedieron
   y los casos positivos a la fecha que se tomó la muestra.
+* [`PuertoRico-bioportal.csv`](assets/data/PuertoRico-bioportal.csv),
+  que consiste de datos del informe sobre pruebas entradas al bioportal
+  (que al momento no están en PDF).
 
 
 ## Esquema bitemporal
