@@ -140,7 +140,6 @@ class NewCases(AbstractChart):
 class AbstractLateness(AbstractChart):
     def fetch_data_for_table(self, connection, table):
         query = select([table.c.bulletin_date,
-                        table.c.confirmed_and_probable_cases_additions,
                         table.c.confirmed_cases_additions,
                         table.c.probable_cases_additions,
                         table.c.deaths_total]
@@ -148,7 +147,6 @@ class AbstractLateness(AbstractChart):
         df = pd.read_sql_query(query, connection,
                                parse_dates=["bulletin_date"])
         df = df.rename(columns={
-            'confirmed_and_probable_cases_additions': 'Confirmados y probables',
             'confirmed_cases_additions': 'Confirmados',
             'probable_cases_additions': 'Probables',
             'deaths_total': 'Muertes'
@@ -164,8 +162,7 @@ class AbstractLateness(AbstractChart):
 
 class LatenessDaily(AbstractLateness):
     def make_chart(self, df):
-        sort_order = ['Confirmados y probables',
-                      'Confirmados',
+        sort_order = ['Confirmados',
                       'Probables',
                       'Muertes']
         bars = alt.Chart(df).mark_bar().encode(
@@ -205,8 +202,7 @@ class LatenessDaily(AbstractLateness):
 
 class Lateness7Day(AbstractLateness):
     def make_chart(self, df):
-        sort_order = ['Confirmados y probables',
-                      'Confirmados',
+        sort_order = ['Confirmados',
                       'Probables',
                       'Muertes']
         lines = alt.Chart(df).mark_line(
@@ -216,7 +212,7 @@ class Lateness7Day(AbstractLateness):
             x=alt.X('yearmonthdate(bulletin_date):O',
                     title="Fecha boletín",
                     axis=alt.Axis(format='%d/%m', titlePadding=10)),
-            y=alt.Y('value:Q', title="Rezago (días)"),
+            y=alt.Y('value:Q', title=None),
             color = alt.Color('variable', sort=sort_order, legend=None),
             tooltip=['variable', 'bulletin_date',
                      alt.Tooltip(field='value',
@@ -234,10 +230,9 @@ class Lateness7Day(AbstractLateness):
         )
 
         return (lines + text).properties(
-            width=275, height=75
+            width=550, height=37
         ).facet(
-            columns=2, spacing = 40,
-            facet=alt.Facet('variable', title=None, sort=sort_order)
+            row=alt.Row('variable', title=None, sort=sort_order)
         )
 
     def fetch_data(self, connection):
@@ -257,12 +252,11 @@ class Doubling(AbstractChart):
             color=alt.Color('variable', legend=None)
         ).properties(
             width=175,
-            height=120
+            height=150
 
         ).facet(
             row=alt.Row('variable', title=None,
-                        sort=['Confirmados y probables',
-                              'Confirmados',
+                        sort=['Confirmados',
                               'Probables',
                               'Muertes']),
             column=alt.Column('window_size_days:O', title='Ancho de ventana (días)')
@@ -274,7 +268,6 @@ class Doubling(AbstractChart):
         query = select([table.c.datum_date,
                         table.c.bulletin_date,
                         table.c.window_size_days,
-                        table.c.cumulative_confirmed_and_probable_cases,
                         table.c.cumulative_confirmed_cases,
                         table.c.cumulative_probable_cases,
                         table.c.cumulative_deaths]
@@ -282,7 +275,6 @@ class Doubling(AbstractChart):
         df = pd.read_sql_query(query, connection,
                                parse_dates=["bulletin_date", "datum_date"])
         df = df.rename(columns={
-            'cumulative_confirmed_and_probable_cases': 'Confirmados y probables',
             'cumulative_confirmed_cases': 'Confirmados',
             'cumulative_probable_cases': 'Probables',
             'cumulative_deaths': 'Muertes'
@@ -409,33 +401,27 @@ class DailyDeltas(AbstractChart):
 
 class WeekdayBias(AbstractChart):
     def make_chart(self, df):
-        total = self.one_variable(df, 'Confirmados y probables', 'Día muestra', 'blues')
         confirmed = self.one_variable(df, 'Confirmados', 'Día muestra', 'oranges')
         probable = self.one_variable(df, 'Probables', 'Día muestra', 'reds')
         deaths = self.one_variable(df, 'Muertes', 'Día muerte', 'teals')
 
-        row1 = alt.hconcat(total, confirmed, spacing=20).resolve_scale(
-            color='independent'
-        )
-        row2 = alt.hconcat(probable, deaths, spacing=20).resolve_scale(
-            color='independent'
-        )
-
-        rows = alt.vconcat(row1, row2, spacing=40).resolve_scale(
-            color='independent'
-        )
-
-        footer = alt.Chart(df).mark_text(baseline='middle').encode(
+        data_date = alt.Chart(df).mark_text(baseline='middle').encode(
             text=alt.Text('bulletin_date',
                           type='temporal',
                           aggregate='max',
                           timeUnit='yearmonthdate',
-                          format='Datos hasta boletín del %A %d de %B, %Y'),
+                          format='Datos hasta: %A %d de %B, %Y'),
         ).properties(
             width=350, height=40
         )
 
-        return alt.vconcat(rows, footer, center=True)
+        row1 = alt.hconcat(confirmed, probable, spacing=20).resolve_scale(
+            color='independent'
+        )
+
+        return alt.vconcat(row1, data_date, deaths, center=True).resolve_scale(
+            color='independent'
+        )
 
     def one_variable(self, df, variable,
                      axis_title,
@@ -507,7 +493,6 @@ class WeekdayBias(AbstractChart):
         query = text("""SELECT 
 	ba.bulletin_date,
 	ba.datum_date,
-	ba.delta_confirmed_and_probable_cases,
 	ba.delta_confirmed_cases,
 	ba.delta_probable_cases,
 	ba.delta_deaths
@@ -516,14 +501,12 @@ WHERE ba.datum_date >= ba.bulletin_date - INTERVAL '14' DAY
 AND ba.bulletin_date > (
 	SELECT min(bulletin_date)
 	FROM bitemporal_agg
-	WHERE delta_confirmed_and_probable_cases IS NOT NULL
-	AND delta_confirmed_cases IS NOT NULL
+	WHERE delta_confirmed_cases IS NOT NULL
 	AND delta_probable_cases IS NOT NULL
 	AND delta_deaths IS NOT NULL)
 ORDER BY bulletin_date, datum_date""")
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
         df = df.rename(columns={
-            'delta_confirmed_and_probable_cases': 'Confirmados y probables',
             'delta_confirmed_cases': 'Confirmados',
             'delta_probable_cases': 'Probables',
             'delta_deaths': 'Muertes'
