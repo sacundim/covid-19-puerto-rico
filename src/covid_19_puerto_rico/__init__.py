@@ -48,6 +48,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        charts.MunicipalCumulative(engine, args.output_dir, output_formats),
         molecular.CumulativeMissingTests(engine, args.output_dir, output_formats),
         molecular.DailyMissingTests(engine, args.output_dir, output_formats),
         charts.CurrentDeltas(engine, args.output_dir, output_formats),
