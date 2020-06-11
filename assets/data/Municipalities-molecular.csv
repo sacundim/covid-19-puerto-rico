@@ -1,4 +1,4 @@
-bulletin_date,municipality,count,percent
+bulletin_date,municipality,confirmed_cases,confirmed_cases_percent
 2020-04-24,Adjuntas,3,0.3
 2020-04-24,Aguada,5,0.6
 2020-04-24,Aguadilla,12,1.4
