@@ -7,7 +7,9 @@ import pandas as pd
 from pathlib import Path
 import sqlalchemy
 from sqlalchemy.sql import select, text
+
 from . import util
+
 
 class AbstractChart(ABC):
     def __init__(self, engine, output_dir,
@@ -553,3 +555,42 @@ class Municipal(AbstractChart):
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+
+class MunicipalMap(AbstractChart):
+    def make_chart(self, df):
+        municipalities = self.geography()
+
+        return alt.Chart(municipalities).mark_geoshape().encode(
+            color=alt.Color('new_7day_confirmed_cases:Q', title=None,
+                            scale=alt.Scale(scheme='reds')),
+            tooltip=['Municipio:N', 'new_7day_confirmed_cases:Q']
+        ).transform_lookup(
+            lookup='properties.NAME',
+            from_=alt.LookupData(df, 'Municipio', ['Municipio', 'new_7day_confirmed_cases']),
+            default='0'
+        ).configure_view(
+            strokeWidth=0
+        ).properties(
+            width=585,
+            height=300
+        )
+
+
+    def geography(self):
+        return alt.UrlData(url='../geography/municipalities.geojson',
+                           format=alt.JsonDataFormat(property='features'))
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('municipal_agg', self.metadata, autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.municipality,
+                        table.c.new_7day_confirmed_cases])\
+            .where(table.c.municipality.notin_(['Total', 'No disponible']))
+        df = pd.read_sql_query(query, connection,
+                               parse_dates=["bulletin_date"])
+        return df.rename(columns={
+            'municipality': 'Municipio'
+        })
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
