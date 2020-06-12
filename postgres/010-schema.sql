@@ -233,10 +233,12 @@ SELECT
 	municipality,
 	confirmed_cases,
 	confirmed_cases - lag(confirmed_cases) OVER bulletin
-		AS new_confirmed_cases
+		AS new_confirmed_cases,
+	confirmed_cases - lag(confirmed_cases, 7) OVER bulletin
+		AS new_7day_confirmed_cases
 FROM municipal m
 WINDOW bulletin AS (
-	PARTITION BY municipality ORDER BY bulletin_date
+	PARTITION BY municipality ORDER BY bulletin_date ROWS 6 PRECEDING
 )
 ORDER BY municipality, bulletin_date;
 
