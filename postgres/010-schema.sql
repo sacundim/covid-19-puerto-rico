@@ -227,6 +227,19 @@ FROM announcement
 LEFT OUTER JOIN bioportal USING (bulletin_date);
 
 
+CREATE VIEW municipal_agg AS
+SELECT
+	bulletin_date,
+	municipality,
+	confirmed_cases,
+	confirmed_cases - lag(confirmed_cases) OVER bulletin
+		AS new_confirmed_cases
+FROM municipal m
+WINDOW bulletin AS (
+	PARTITION BY municipality ORDER BY bulletin_date
+)
+ORDER BY municipality, bulletin_date;
+
 
 -------------------------------------------------------------------------------
 CREATE SCHEMA quality;
