@@ -37,9 +37,8 @@
         <li><a href="#DailyMissingTests_section">Pruebas duplicadas y perdidas diarias</a></li>
         <li><a href="#CumulativeMissingTests_section">Pruebas duplicadas y perdidas acumuladas</a></li>
         <li><a href="#Cumulative_section">Curvas de casos acumulados por fecha de evento y de reporte</a></li>
-        <li><a href="#Municipal_section">Municipios por fecha de reporte</a></li>
         <li><a href="#NewCases_section">Tendencia de casos nuevos por fecha de evento (promedios 7 días)</a></li>
-        <li><a href="#Doubling_section">Tiempos de duplicación de casos por fecha de evento</a></li>
+        <li><a href="#Municipal_section">Casos confirmados nuevos por municipio, por fecha de reporte</a></li>
         <li><a href="#Terminology_section">Terminología</a></li>
         <li><a href="#Sources_section">Datos fuente para {{ bulletin_date }}</a></li>
     </ul>
@@ -305,22 +304,6 @@
 </div>
 
 
-<div class="section" id="Municipal_section">
-    <h1>Casos confirmados nuevos por municipio, por fecha de reporte</h1>
-
-    <div id="Municipal"></div>
-    <script type="text/javascript">
-      embedChart('Municipal', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Los números de casos nuevos para cada municipio para cada fecha, interpretándose
-        esta como fecha de boletín.  Nótese que esto último quiere decir que esta gráfica
-        no nos dice cuándo sucedieron los casos, sino cuándo se detectaron.</p>
-</div>
-
-
 <div class="section" id="NewCases_section">
     <h1>Tendencia de casos nuevos por fecha de evento (promedios 7 días)</h1>
 
@@ -350,27 +333,21 @@
 </div>
 
 
-<div class="section" id="Doubling_section">
-    <h1>Tiempos de duplicación de casos por fecha de evento</h1>
+<div class="section" id="Municipal_section">
+    <h1>Casos confirmados nuevos por municipio, por fecha de reporte</h1>
 
-    <div id="Doubling" class="chart"></div>
+    <div id="Municipal"></div>
     <script type="text/javascript">
-      embedChart('Doubling', bulletin_date);
+      embedChart('Municipal', bulletin_date);
     </script>
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Las tendencias de la velocidad a la que han crecido los casos, expresadas
-        en términos de tiempos de duplicación constante (duplicación cada dos días,
-        tres días, cuatro días, etc.), y por ventanas de anchos de 7, 14 y 21 días.</p>
-
-    <p>Esto es, para cada fecha, el ancho de ventana <i>n</i> dividido entre la subida del
-        logaritmo base entre el valor acumulado hace <i>n</i> días y esa fecha.</p>
-
-    <p>Si los datos de base no son una indicación fiable de la propagación de la
-        epidemia, pues esta gráfica tampoco lo es; lo que nos dice es qué sería la
-        verdad si los datos fueran de verdad.  ¯\_(ツ)_/¯</p>
+    <p>Los números de casos nuevos para cada municipio para cada fecha, interpretándose
+        esta como fecha de boletín.  Nótese que esto último quiere decir que esta gráfica
+        no nos dice cuándo sucedieron los casos, sino cuándo se detectaron.</p>
 </div>
+
 
 <div class="section" id="Terminology_section">
     <h1>Terminología</h1>
