@@ -94,13 +94,16 @@ class Cumulative(AbstractChart):
 
 class NewCases(AbstractChart):
     def make_chart(self, df):
+        max_value = df['value'].max()
+
         base = alt.Chart(df.dropna()).encode(
             x=alt.X('yearmonthdate(datum_date):T', title=None,
                     axis=alt.Axis(format='%d/%m'))
         )
 
         scatter = base.mark_point(opacity=0.5, clip=True).encode(
-            y=alt.Y('value:Q', title=None, scale=alt.Scale(type='symlog')),
+            y=alt.Y('value:Q', title=None,
+                    scale=alt.Scale(type='symlog', domain=[0, max_value])),
             tooltip=['datum_date', 'variable', 'value']
         )
 
@@ -109,7 +112,8 @@ class NewCases(AbstractChart):
             mean_value='mean(value)',
             groupby=['variable']
         ).mark_line(strokeWidth=3).encode(
-            y=alt.Y('mean_value:Q', title=None, scale=alt.Scale(type='symlog'))
+            y=alt.Y('mean_value:Q', title=None,
+                    scale=alt.Scale(type='symlog', domain=[0, max_value]))
         )
 
         return (average + scatter).encode(
