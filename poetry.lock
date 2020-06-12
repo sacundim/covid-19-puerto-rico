@@ -79,6 +79,14 @@ python-versions = ">=2.7"
 version = "0.3"
 
 [[package]]
+category = "main"
+description = "Python bindings and utilities for GeoJSON"
+name = "geojson"
+optional = false
+python-versions = "*"
+version = "2.5.0"
+
+[[package]]
 category = "dev"
 description = "Copy your docs directly to the gh-pages branch."
 name = "ghp-import"
@@ -318,7 +326,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "9bc48aa3227bd9f714abfe4005ec78361b3d23787e56e5e61e92154af38b7885"
+content-hash = "92d3716394ab012dd6c0b757708741132e94adc8df7fd2bdd2ebc41bee9d5c41"
 python-versions = "^3.7"
 
 [metadata.files]
@@ -345,6 +353,10 @@ attrs = [
 entrypoints = [
     {file = "entrypoints-0.3-py2.py3-none-any.whl", hash = "sha256:589f874b313739ad35be6e0cd7efde2a4e9b6fea91edcc34e58ecbb8dbe56d19"},
     {file = "entrypoints-0.3.tar.gz", hash = "sha256:c70dd71abe5a8c85e55e12c19bd91ccfeec11a6e99044204511f9ed547d48451"},
+]
+geojson = [
+    {file = "geojson-2.5.0-py2.py3-none-any.whl", hash = "sha256:ccbd13368dd728f4e4f13ffe6aaf725b6e802c692ba0dde628be475040c534ba"},
+    {file = "geojson-2.5.0.tar.gz", hash = "sha256:6e4bb7ace4226a45d9c8c8b1348b3fc43540658359f93c3f7e03efa9f15f658a"},
 ]
 ghp-import = [
     {file = "ghp-import-0.5.5.tar.gz", hash = "sha256:3e924ea720e4e1f82d56753db2154bfb86067472c5830732159c3a4c4fbc75d7"},
