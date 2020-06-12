@@ -234,7 +234,7 @@ SELECT
 	confirmed_cases,
 	confirmed_cases - lag(confirmed_cases) OVER bulletin
 		AS new_confirmed_cases,
-	confirmed_cases - lag(confirmed_cases, 7) OVER bulletin
+	confirmed_cases - lag(confirmed_cases, 7, 0) OVER bulletin
 		AS new_7day_confirmed_cases
 FROM municipal m
 WINDOW bulletin AS (
