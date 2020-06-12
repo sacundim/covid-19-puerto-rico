@@ -114,7 +114,7 @@ requiere Docker y Docker Compose. Desde este directorio:
    de 1 gigabyte de datos);
 3. `./scripts/run-in-docker.sh`;
    
-...y navegar a [`http://localhost:8080/`](http://localhost:8080/):
+...y navegar a [`http://localhost:8078/`](http://localhost:8078/):
 
 * Casos cumulativos por fecha anuncio y fecha evento;
 * Tiempo de duplicación de casos por ventanas de 7,
