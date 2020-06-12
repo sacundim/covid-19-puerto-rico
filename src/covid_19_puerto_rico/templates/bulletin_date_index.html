@@ -37,7 +37,6 @@
         <li><a href="#DailyMissingTests_section">Pruebas duplicadas y perdidas diarias</a></li>
         <li><a href="#CumulativeMissingTests_section">Pruebas duplicadas y perdidas acumuladas</a></li>
         <li><a href="#NewCases_section">Tendencia de casos nuevos por fecha de evento (promedios 7 días)</a></li>
-        <li><a href="#Cumulative_section">Curvas de casos acumulados por fecha de evento y de reporte</a></li>
         <li><a href="#MunicipalMap_section">Casos recientes por municipio</a></li>
         <li><a href="#Municipal_section">Casos confirmados nuevos por municipio, por fecha de reporte</a></li>
         <li><a href="#Terminology_section">Terminología</a></li>
@@ -296,41 +295,6 @@
     <p><b>ADVERTENCIA:</b> Caídas súbitas al final de cada línea lo más probable
         no son reales, si no que más bien son artefactos de los rezagos—i.e., no
         han se han incorporado datos para esas fechas.</p>
-</div>
-
-
-<div class="section" id="Cumulative_section">
-    <h1>Curvas de casos acumulados por fecha de evento y de reporte</h1>
-
-    <div id="Cumulative"></div>
-    <script type="text/javascript">
-      embedChart('Cumulative', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Los números de casos acumulados para cada fecha, interpretándose esta tanto como:</p>
-
-    <dl>
-        <dt>Fecha de boletín</dt>
-        <dd>El número de casos que reportó el boletín de esa fecha.  Estos son los
-            números acumulados que se anuncian cada día y que más se comentan.</dd>
-        <dt>Fecha de muestra o actual de muerte</dt>
-        <dd>El número de casos que boletines posteriores le atribuyen a esa fecha,
-            a partir de agrupar los casos por fecha que se tomó la muestra o que
-            aconteció el fallecimiento.</dd>
-    </dl>
-
-    <p>En esta gráfica vale apreciar:</p>
-
-    <ul>
-        <li>Cómo el número verdadero de casos or muertes que se dieron para cada fecha
-            es siempre menor que el verdadero;</li>
-        <li>Los ciclos semanales en la administración de pruebas, más notable para los
-            casos probables;</li>
-        <li>La convergencia de las dos curvas de muertes al final es un artefacto de que
-            aún deben quedar muertes por reportar que sucedieron en fechas recientes.</li>
-    </ul>
 </div>
 
 
