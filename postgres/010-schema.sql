@@ -120,6 +120,15 @@ COMMENT ON TABLE bioportal IS
 Publication began with 2020-05-21 report.';
 
 
+CREATE TABLE municipal (
+    bulletin_date DATE NOT NULL,
+    municipality TEXT NOT NULL,
+    confirmed_cases INTEGER,
+    confirmed_cases_percent DOUBLE PRECISION,
+    PRIMARY KEY (bulletin_date, municipality)
+);
+
+
 CREATE VIEW bitemporal_agg AS
 SELECT
     bulletin_date,
@@ -217,6 +226,19 @@ SELECT
 FROM announcement
 LEFT OUTER JOIN bioportal USING (bulletin_date);
 
+
+CREATE VIEW municipal_agg AS
+SELECT
+	bulletin_date,
+	municipality,
+	confirmed_cases,
+	confirmed_cases - lag(confirmed_cases) OVER bulletin
+		AS new_confirmed_cases
+FROM municipal m
+WINDOW bulletin AS (
+	PARTITION BY municipality ORDER BY bulletin_date
+)
+ORDER BY municipality, bulletin_date;
 
 
 -------------------------------------------------------------------------------

@@ -524,3 +524,32 @@ ORDER BY bulletin_date, datum_date""")
                           & (df['bulletin_date'] <= until_date)]
 
 
+class Municipal(AbstractChart):
+    def make_chart(self, df):
+        return alt.Chart(df).mark_area().encode(
+            x=alt.X('yearmonthdate(bulletin_date):T', title=None,
+                    axis=alt.Axis(format='%d/%m')),
+            y=alt.Y('new_confirmed_cases', title=None, scale=alt.Scale(type='linear'))
+        ).properties(
+            width=175, height=75
+        ).facet(
+            columns=3,
+            facet=alt.Facet('Municipio', title=None)
+        ).resolve_axis(
+            x='independent'
+        )
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('municipal_agg', self.metadata, autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.municipality,
+                        table.c.new_confirmed_cases])\
+            .where(table.c.municipality.notin_(['Total', 'No disponible']))
+        df = pd.read_sql_query(query, connection,
+                               parse_dates=["bulletin_date"])
+        return df.rename(columns={
+            'municipality': 'Municipio'
+        })
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
