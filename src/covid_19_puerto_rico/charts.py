@@ -577,8 +577,8 @@ class MunicipalMap(AbstractChart):
 
 
     def geography(self):
-        return alt.UrlData(url='../geography/municipalities.geojson',
-                           format=alt.JsonDataFormat(property='features'))
+        return alt.InlineData(values=util.get_geojson_resource('municipalities.geojson'),
+                              format=alt.JsonDataFormat(property='features'))
 
     def fetch_data(self, connection):
         table = sqlalchemy.Table('municipal_agg', self.metadata, autoload=True)
