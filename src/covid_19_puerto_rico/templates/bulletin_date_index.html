@@ -38,7 +38,7 @@
         <li><a href="#CumulativeMissingTests_section">Pruebas duplicadas y perdidas acumuladas</a></li>
         <li><a href="#NewCases_section">Tendencia de casos nuevos por fecha de evento (promedios 7 días)</a></li>
         <li><a href="#Cumulative_section">Curvas de casos acumulados por fecha de evento y de reporte</a></li>
-        <li><a href="#MunicipalMap_section">Casos confirmados recientes por municipio, últimos 7 boletines</a></li>
+        <li><a href="#MunicipalMap_section">Casos recientes por municipio</a></li>
         <li><a href="#Municipal_section">Casos confirmados nuevos por municipio, por fecha de reporte</a></li>
         <li><a href="#Terminology_section">Terminología</a></li>
         <li><a href="#Sources_section">Datos fuente para {{ bulletin_date }}</a></li>
@@ -335,7 +335,7 @@
 
 
 <div class="section" id="MunicipalMap_section">
-    <h1>Casos confirmados recientes por municipio, últimos 7 boletines</h1>
+    <h1>Casos recientes por municipio</h1>
 
     <div id="MunicipalMap"></div>
     <script type="text/javascript">
@@ -344,8 +344,12 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Casos nuevos confirmados reportados por municipio durante los últimos 7 días.
-        Nótese que esto es por fecha de boletín, no de muestra, y que por lo tanto
+    <p>Casos nuevos confirmados reportados por municipio, tanto para el boletín más reciente
+        como para los siete más recientes. La primera ayuda identificar dónde son los casos
+        reportados en el nuevo boletín; la segunda a identificar municipios que pudieran
+        haber experimentado brotes recientemente.</p>
+
+    <p>Nótese que esto es por fecha de boletín, no de muestra, y que por lo tanto
         esta gráfica nos dice cuándo se detectaron los casos, no cuándo sucedieron.</p>
 </div>
 
