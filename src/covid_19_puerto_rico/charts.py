@@ -558,21 +558,32 @@ class Municipal(AbstractChart):
 
 class MunicipalMap(AbstractChart):
     def make_chart(self, df):
+        variables = ['Casos nuevos (último boletín)',
+                     'Casos nuevos (últimos 7 boletines)']
         municipalities = self.geography()
 
-        return alt.Chart(municipalities).mark_geoshape().encode(
-            color=alt.Color('new_7day_confirmed_cases:Q', title=None,
-                            scale=alt.Scale(scheme='reds')),
-            tooltip=['Municipio:N', 'new_7day_confirmed_cases:Q']
-        ).transform_lookup(
+        return alt.Chart(municipalities).transform_lookup(
             lookup='properties.NAME',
-            from_=alt.LookupData(df, 'Municipio', ['Municipio', 'new_7day_confirmed_cases']),
+            from_=alt.LookupData(df, 'Municipio', variables),
             default='0'
+        ).mark_geoshape().encode(
+            color=alt.Color(alt.repeat('row'), type='quantitative',
+                            scale=alt.Scale(scheme='reds'),
+                            legend=alt.Legend(orient='left', titleLimit=400,
+                                              titleOrient='left')),
+            tooltip=[alt.Tooltip(field='properties.NAME', type='nominal'),
+                     alt.Tooltip(alt.repeat('row'), type='quantitative')]
+        ).properties(
+            width=575,
+            height=200
+        ).repeat(
+            row=variables
+        ).resolve_scale(
+            color='independent'
         ).configure_view(
             strokeWidth=0
-        ).properties(
-            width=585,
-            height=300
+        ).configure_concat(
+            spacing=80
         )
 
 
@@ -584,12 +595,14 @@ class MunicipalMap(AbstractChart):
         table = sqlalchemy.Table('municipal_agg', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.municipality,
+                        table.c.new_confirmed_cases,
                         table.c.new_7day_confirmed_cases])\
             .where(table.c.municipality.notin_(['Total', 'No disponible']))
-        df = pd.read_sql_query(query, connection,
-                               parse_dates=["bulletin_date"])
+        df = pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
         return df.rename(columns={
-            'municipality': 'Municipio'
+            'municipality': 'Municipio',
+            'new_confirmed_cases': 'Casos nuevos (último boletín)',
+            'new_7day_confirmed_cases': 'Casos nuevos (últimos 7 boletines)'
         })
 
     def filter_data(self, df, bulletin_date):
