@@ -16,4 +16,4 @@ services:
     volumes:
     - ./output:/usr/share/nginx/html:ro
     ports:
-    - 8080:80
+    - 8078:80
