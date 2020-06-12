@@ -566,10 +566,13 @@ class MunicipalMap(AbstractChart):
             tooltip=['Municipio:N', 'new_7day_confirmed_cases:Q']
         ).transform_lookup(
             lookup='properties.NAME',
-            from_=alt.LookupData(df, 'Municipio', ['Municipio', 'new_7day_confirmed_cases'])
+            from_=alt.LookupData(df, 'Municipio', ['Municipio', 'new_7day_confirmed_cases']),
+            default='0'
+        ).configure_view(
+            strokeWidth=0
         ).properties(
-            width=425,
-            height=300
+            width=550,
+            height=175
         )
 
 
