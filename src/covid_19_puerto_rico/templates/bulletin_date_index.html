@@ -38,6 +38,7 @@
         <li><a href="#CumulativeMissingTests_section">Pruebas duplicadas y perdidas acumuladas</a></li>
         <li><a href="#Cumulative_section">Curvas de casos acumulados por fecha de evento y de reporte</a></li>
         <li><a href="#NewCases_section">Tendencia de casos nuevos por fecha de evento (promedios 7 días)</a></li>
+        <li><a href="#MunicipalMap_section">Casos confirmados recientes por municipio</a></li>
         <li><a href="#Municipal_section">Casos confirmados nuevos por municipio, por fecha de reporte</a></li>
         <li><a href="#Terminology_section">Terminología</a></li>
         <li><a href="#Sources_section">Datos fuente para {{ bulletin_date }}</a></li>
@@ -330,6 +331,20 @@
     <p><b>ADVERTENCIA:</b> Caídas súbitas al final de cada línea lo más probable
         no son reales, si no que más bien son artefactos de los rezagos—i.e., no
         han se han incorporado datos para esas fechas.</p>
+</div>
+
+
+<div class="section" id="MunicipalMap_section">
+    <h1>Mapa de casos confirmados recientes por municipio</h1>
+
+    <div id="MunicipalMap"></div>
+    <script type="text/javascript">
+      embedChart('MunicipalMap', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Casos nuevos reportados por municipio, últimos 7 días.</p>
 </div>
 
 
