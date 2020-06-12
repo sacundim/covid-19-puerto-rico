@@ -1,8 +1,6 @@
 import altair as alt
 import argparse
 import datetime
-import importlib.resources
-import json
 import logging
 import sqlalchemy
 from sqlalchemy.sql import select
@@ -10,7 +8,6 @@ from sqlalchemy.sql.functions import max
 
 from . import charts
 from . import molecular
-from . import resources
 from . import util
 from . import website
 
@@ -48,6 +45,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        charts.MunicipalMap(engine, args.output_dir, output_formats),
         charts.Municipal(engine, args.output_dir, output_formats),
         molecular.CumulativeMissingTests(engine, args.output_dir, output_formats),
         molecular.DailyMissingTests(engine, args.output_dir, output_formats),
@@ -81,16 +79,13 @@ def global_configuration():
     logging.basicConfig(format='%(asctime)s %(message)s',
                         level=logging.INFO)
 
-    alt.themes.register("custom_theme", lambda: get_json_resource('theme.json'))
+    alt.themes.register("custom_theme", lambda: util.get_json_resource('theme.json'))
     alt.themes.enable("custom_theme")
     alt.renderers.enable('altair_saver', fmts=['svg', 'png'])
     alt.renderers.set_embed_options(
-        timeFormatLocale=get_json_resource('es-PR.json')
+        timeFormatLocale=util.get_json_resource('es-PR.json')
     )
 
-def get_json_resource(filename):
-    text = importlib.resources.read_text(resources, filename)
-    return json.loads(text)
 
 
 def compute_bulletin_date(args, engine):

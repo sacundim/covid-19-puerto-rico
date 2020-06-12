@@ -1,11 +1,14 @@
 import altair as alt
 import datetime
+import geojson
+import importlib.resources
 import io
+import json
 import logging
-import pandas as pd
 import sqlalchemy
 import toml
 
+from . import resources
 
 def make_date_range(start, end):
     """Inclusive date range"""
@@ -53,3 +56,12 @@ def describe_frame(df):
     buf = io.StringIO()
     df.info(buf=buf)
     return buf.getvalue()
+
+
+def get_json_resource(filename):
+    text = importlib.resources.read_text(resources, filename)
+    return json.loads(text)
+
+def get_geojson_resource(filename):
+    text = importlib.resources.read_text(resources, filename)
+    return geojson.loads(text)
