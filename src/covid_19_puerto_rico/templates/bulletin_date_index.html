@@ -38,7 +38,7 @@
         <li><a href="#CumulativeMissingTests_section">Pruebas duplicadas y perdidas acumuladas</a></li>
         <li><a href="#NewCases_section">Tendencia de casos nuevos por fecha de evento (promedios 7 días)</a></li>
         <li><a href="#MunicipalMap_section">Casos recientes por municipio</a></li>
-        <li><a href="#Municipal_section">Casos confirmados nuevos por municipio, por fecha de reporte</a></li>
+        <li><a href="#Municipal_section">Historial de casos confirmados por municipio (fecha de boletín)</a></li>
         <li><a href="#Terminology_section">Terminología</a></li>
         <li><a href="#Sources_section">Datos fuente para {{ bulletin_date }}</a></li>
     </ul>
@@ -319,18 +319,16 @@
 
 
 <div class="section" id="Municipal_section">
-    <h1>Casos confirmados nuevos por municipio, por fecha de reporte</h1>
+    <h1>Historial de casos confirmados por municipio (fecha de boletín)</h1>
+
+    <p>Los números de casos nuevos para cada municipio para cada fecha, interpretándose
+        esta como fecha de boletín.  Nótese que esto último quiere decir que esta gráfica
+        no nos dice cuándo sucedieron los casos, sino cuándo se detectaron.</p>
 
     <div id="Municipal"></div>
     <script type="text/javascript">
       embedChart('Municipal', bulletin_date);
     </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Los números de casos nuevos para cada municipio para cada fecha, interpretándose
-        esta como fecha de boletín.  Nótese que esto último quiere decir que esta gráfica
-        no nos dice cuándo sucedieron los casos, sino cuándo se detectaron.</p>
 </div>
 
 
