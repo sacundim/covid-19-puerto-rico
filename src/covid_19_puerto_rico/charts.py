@@ -571,14 +571,16 @@ class MunicipalMap(AbstractChart):
         ).configure_view(
             strokeWidth=0
         ).properties(
-            width=550,
+            width=575,
             height=175
         )
 
 
     def geography(self):
-        return alt.InlineData(values=util.get_geojson_resource('PR-72-puerto-rico-municipios.json'),
-                              format=alt.TopoDataFormat(type='topojson', feature='cb_2015_puerto_rico_county_20m'))
+        return alt.UrlData(url='../geography/PR-72-puerto-rico-municipios.json',
+                              format=alt.TopoDataFormat(
+                                  type='topojson',
+                                  feature='cb_2015_puerto_rico_county_20m'))
 
     def fetch_data(self, connection):
         table = sqlalchemy.Table('municipal_agg', self.metadata, autoload=True)
