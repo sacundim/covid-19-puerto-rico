@@ -571,8 +571,12 @@ class MunicipalMap(AbstractChart):
             from_=alt.LookupData(df, 'Municipio', variables),
             default='0'
         ).mark_geoshape().encode(
-            color=alt.Color(alt.repeat('row'), type='quantitative',
-                            scale=alt.Scale(scheme='reds'),
+            color=alt.Color(alt.repeat('row'), type='quantitative', sort="descending",
+                            scale=alt.Scale(type='symlog', scheme='redgrey', domainMid=0,
+                                            # WORKAROUND: Set the domain manually to forcibly
+                                            # include zero or else we run into
+                                            # https://github.com/vega/vega-lite/issues/6544
+                                            domain=alt.DomainUnionWith(unionWith=[0])),
                             legend=alt.Legend(orient='left', titleLimit=400,
                                               titleOrient='left')),
             tooltip=[alt.Tooltip(field='properties.NAME', type='nominal'),
