@@ -614,16 +614,14 @@ WINDOW bulletin AS (PARTITION BY bulletin_date ROWS UNBOUNDED PRECEDING);
 CREATE VIEW products.tests AS
 SELECT
 	b.bulletin_date,
-	b.bulletin_date - lag(b.bulletin_date) OVER bulletin
-		AS days_since_last,
-	b.cumulative_molecular_tests,
-	a.cumulative_confirmed_cases,
+	b.cumulative_molecular_tests / 3193.694
+		AS cumulative_tests_per_thousand,
 	CAST(b.cumulative_molecular_tests AS DOUBLE PRECISION)
 		/ a.cumulative_confirmed_cases
 		AS cumulative_tests_per_confirmed_case,
-	b.new_molecular_tests,
-	a.cumulative_confirmed_cases - lag(a.cumulative_confirmed_cases) OVER bulletin
-		AS new_confirmed_cases,
+	(b.new_molecular_tests / 3193.694)
+		/ (b.bulletin_date - lag(b.bulletin_date) OVER bulletin)
+		AS new_daily_tests_per_thousand,
 	CAST(b.new_molecular_tests AS DOUBLE PRECISION)
 		/ (a.cumulative_confirmed_cases - lag(a.cumulative_confirmed_cases) OVER bulletin)
 		AS new_tests_per_confirmed_case
