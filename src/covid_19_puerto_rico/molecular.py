@@ -69,16 +69,13 @@ class CumulativeMissingTests(charts.AbstractChart):
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"]).dropna()
 
 
-# Census Bureau population estimates program figure:
-POPULATION_2019 = 3_193_694
-
 class TestsPerCase(charts.AbstractChart):
     def make_chart(self, df):
         sort_order = [
             'Pruebas nuevas por caso confirmado',
             'Pruebas acumuladas por caso confirmado',
-            'Pruebas nuevas por 1,000 habitantes',
-            'Pruebas acumuladas por 1,000 habitantes'
+            'Pruebas nuevas diarias (promedio) por mil habitantes',
+            'Pruebas acumuladas por mil habitantes'
         ]
         lines = alt.Chart(df).mark_line(point=True).encode(
             x=alt.X('yearmonthdate(bulletin_date):T', title=None,
@@ -108,15 +105,12 @@ class TestsPerCase(charts.AbstractChart):
         )
 
     def fetch_data(self, connection):
-        population_thousands = POPULATION_2019 / 1000.0
         table = sqlalchemy.Table('tests', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.bulletin_date,
-            (table.c.cumulative_molecular_tests / population_thousands)\
-                .label("cumulative_tests_per_thousand"),
-            (table.c.new_molecular_tests / population_thousands)\
-                .label("new_tests_per_thousand"),
+            table.c.cumulative_tests_per_thousand,
+            table.c.new_daily_tests_per_thousand,
             table.c.cumulative_tests_per_confirmed_case,
             table.c.new_tests_per_confirmed_case
         ])
@@ -124,8 +118,8 @@ class TestsPerCase(charts.AbstractChart):
         df = df.rename(columns={
             'new_tests_per_confirmed_case': 'Pruebas nuevas por caso confirmado',
             'cumulative_tests_per_confirmed_case': 'Pruebas acumuladas por caso confirmado',
-            'new_tests_per_thousand': 'Pruebas nuevas por 1,000 habitantes',
-            'cumulative_tests_per_thousand': 'Pruebas acumuladas por 1,000 habitantes',
+            'new_daily_tests_per_thousand': 'Pruebas nuevas diarias (promedio) por mil habitantes',
+            'cumulative_tests_per_thousand': 'Pruebas acumuladas por mil habitantes',
         })
         return pd.melt(df, ["bulletin_date"])
 
