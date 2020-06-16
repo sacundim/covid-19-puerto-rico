@@ -629,7 +629,7 @@ AND datum_date <= bulletin_date
 WINDOW bulletin AS (PARTITION BY bulletin_date ROWS UNBOUNDED PRECEDING);
 
 
-CREATE VIEW products.tests AS
+CREATE VIEW products.tests_by_bulletin_date AS
 SELECT
 	b.bulletin_date,
 	b.cumulative_molecular_tests / 3193.694
@@ -648,3 +648,28 @@ INNER JOIN announcement a
 	USING (bulletin_date)
 WINDOW bulletin AS (ORDER BY b.bulletin_date)
 ORDER BY bulletin_date;
+
+CREATE VIEW products.tests_by_sample_date AS
+SELECT
+	bulletin_date,
+	datum_date,
+	CAST(sum(tests.molecular_tests) OVER cumulative AS DOUBLE PRECISION)
+		/ sum(cases.confirmed_cases) OVER cumulative
+		AS cumulative_tests_per_confirmed_case,
+	CAST(sum(tests.molecular_tests) OVER seven AS DOUBLE PRECISION)
+		/ sum(cases.confirmed_cases) OVER seven
+		AS new_tests_per_confirmed_case
+FROM bitemporal_agg cases
+INNER JOIN bioportal_bitemporal_agg tests
+	USING (bulletin_date, datum_date)
+WINDOW
+	cumulative AS (
+		PARTITION BY bulletin_date
+		ORDER BY datum_date
+	),
+	seven AS (
+		PARTITION BY bulletin_date
+		ORDER BY datum_date
+		RANGE BETWEEN '6 days' PRECEDING AND CURRENT ROW
+	)
+ORDER BY bulletin_date, datum_date;
