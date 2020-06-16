@@ -68,11 +68,23 @@ class CumulativeMissingTests(charts.AbstractChart):
 
 class TestsBySampleDate(charts.AbstractChart):
     def make_chart(self, df):
+        data_date = alt.Chart(df).mark_text(baseline='middle').encode(
+            text=alt.Text('bulletin_date',
+                          type='temporal',
+                          aggregate='max',
+                          timeUnit='yearmonthdate',
+                          format='Datos hasta: %d de %B, %Y'),
+        ).properties(
+            width=575, height=40
+        )
+
         sort_order = [
             'Pruebas nuevas por caso confirmado',
             'Pruebas acumuladas por caso confirmado (promedio 7 días)'
+            'Pruebas nuevas diarias por mil habitantes (promedio 7 días)',
+            'Pruebas acumuladas diarias por mil habitantes',
         ]
-        return alt.Chart(df).mark_line(point=True).encode(
+        trellis = alt.Chart(df).mark_line(point=True).encode(
             x=alt.X('yearmonthdate(datum_date):T',
                     title='Fecha de toma de muestra',
                     axis=alt.Axis(format='%d/%m')),
@@ -90,6 +102,8 @@ class TestsBySampleDate(charts.AbstractChart):
             y='independent'
         )
 
+        return alt.vconcat(data_date, trellis)
+
     def fetch_data(self, connection):
         table = sqlalchemy.Table('tests_by_sample_date', self.metadata,
                                  schema='products', autoload=True)
@@ -98,11 +112,15 @@ class TestsBySampleDate(charts.AbstractChart):
             table.c.datum_date,
             table.c.new_tests_per_confirmed_case,
             table.c.cumulative_tests_per_confirmed_case,
+            table.c.new_daily_tests_per_thousand,
+            table.c.cumulative_daily_tests_per_thousand,
         ])
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
         df = df.rename(columns={
-            'new_tests_per_confirmed_case': 'Pruebas nuevas por caso confirmado',
-            'cumulative_tests_per_confirmed_case': 'Pruebas acumuladas por caso confirmado (promedio 7 días)',
+            'new_tests_per_confirmed_case': 'Pruebas nuevas por caso confirmado  (promedio 7 días)',
+            'cumulative_tests_per_confirmed_case': 'Pruebas acumuladas por caso confirmado',
+            'new_daily_tests_per_thousand': 'Pruebas nuevas diarias por mil habitantes (promedio 7 días)',
+            'cumulative_daily_tests_per_thousand': 'Pruebas acumuladas diarias por mil habitantes',
         })
         return pd.melt(df, ['bulletin_date', 'datum_date'])
 
@@ -114,6 +132,16 @@ class TestsBySampleDate(charts.AbstractChart):
 
 class AbstractTestsPerCaseChart(charts.AbstractChart):
     def make_chart(self, df):
+        data_date = alt.Chart(df).mark_text(baseline='middle').encode(
+            text=alt.Text('bulletin_date',
+                          type='temporal',
+                          aggregate='max',
+                          timeUnit='yearmonthdate',
+                          format='Datos hasta: %d de %B, %Y'),
+        ).properties(
+            width=575, height=40
+        )
+
         lines = alt.Chart(df.dropna()).mark_line(point=True).encode(
             x=alt.X('yearmonthdate(bulletin_date):T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
@@ -132,12 +160,15 @@ class AbstractTestsPerCaseChart(charts.AbstractChart):
             text=alt.Text('value:Q', format='.2f')
         )
 
-        return (lines + text).properties(
-            width=550, height=75
+        trellis = (lines + text).properties(
+            width=575, height=75
         )
+
+        return alt.vconcat(data_date, trellis, spacing=0)
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+
 
 class NewTestsPerCase(AbstractTestsPerCaseChart):
     def fetch_data(self, connection):
