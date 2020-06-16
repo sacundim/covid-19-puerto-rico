@@ -653,12 +653,16 @@ CREATE VIEW products.tests_by_sample_date AS
 SELECT
 	bulletin_date,
 	datum_date,
+	CAST(sum(tests.molecular_tests) OVER seven AS DOUBLE PRECISION)
+		/ sum(cases.confirmed_cases) OVER seven
+		AS new_tests_per_confirmed_case,
 	CAST(sum(tests.molecular_tests) OVER cumulative AS DOUBLE PRECISION)
 		/ sum(cases.confirmed_cases) OVER cumulative
 		AS cumulative_tests_per_confirmed_case,
-	CAST(sum(tests.molecular_tests) OVER seven AS DOUBLE PRECISION)
-		/ sum(cases.confirmed_cases) OVER seven
-		AS new_tests_per_confirmed_case
+	(sum(tests.molecular_tests) OVER seven / 3193.694) / 7.0
+		AS new_daily_tests_per_thousand,
+	(sum(tests.molecular_tests) OVER cumulative / 3193.694)
+		AS cumulative_daily_tests_per_thousand
 FROM bitemporal_agg cases
 INNER JOIN bioportal_bitemporal_agg tests
 	USING (bulletin_date, datum_date)
