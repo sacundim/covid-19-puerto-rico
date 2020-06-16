@@ -165,7 +165,9 @@ class AbstractTestsPerCaseChart(charts.AbstractChart):
             width=575, height=75
         )
 
-        return alt.vconcat(data_date, trellis, spacing=0)
+        return alt.vconcat(data_date, trellis, spacing=0).configure_view(
+            strokeWidth=0
+        )
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
