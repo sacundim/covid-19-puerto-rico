@@ -14,3 +14,7 @@ COPY bioportal
 FROM '/data/PuertoRico-bioportal.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
+COPY bioportal_bitemporal
+FROM '/data/PuertoRico-bioportal-bitemporal.csv'
+    CSV ENCODING 'UTF-8' HEADER NULL '';
+

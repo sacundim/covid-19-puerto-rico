@@ -29,9 +29,8 @@ class DailyMissingTests(charts.AbstractChart):
         )
 
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('bitemporal', self.metadata, autoload=True)
-        tests = table.alias()
-        cases = table.alias()
+        cases = sqlalchemy.Table('bitemporal', self.metadata, autoload=True)
+        tests = sqlalchemy.Table('bioportal_bitemporal', self.metadata, autoload=True)
         query = select([
             cases.c.bulletin_date,
             cases.c.datum_date,
@@ -55,10 +54,8 @@ class CumulativeMissingTests(charts.AbstractChart):
         )
 
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('cumulative_data', self.metadata,
-                                 schema='products', autoload=True)
-        tests = table.alias()
-        cases = table.alias()
+        cases = sqlalchemy.Table('bitemporal_agg', self.metadata, autoload=True)
+        tests = sqlalchemy.Table('bioportal_bitemporal_agg', self.metadata, autoload=True)
         query = select([
             cases.c.bulletin_date,
             cases.c.datum_date,
@@ -67,6 +64,7 @@ class CumulativeMissingTests(charts.AbstractChart):
             tests.outerjoin(cases, tests.c.datum_date == cases.c.datum_date)
         ).where(tests.c.bulletin_date == datetime.date(year=2020, month=5, day=20))
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"]).dropna()
+
 
 
 class AbstractTestsPerCaseChart(charts.AbstractChart):
