@@ -69,22 +69,16 @@ class CumulativeMissingTests(charts.AbstractChart):
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"]).dropna()
 
 
-class TestsPerCase(charts.AbstractChart):
+class AbstractTestsPerCaseChart(charts.AbstractChart):
     def make_chart(self, df):
-        sort_order = [
-            'Pruebas nuevas por caso confirmado',
-            'Pruebas acumuladas por caso confirmado',
-            'Pruebas nuevas diarias (promedio) por mil habitantes',
-            'Pruebas acumuladas por mil habitantes'
-        ]
-        lines = alt.Chart(df).mark_line(point=True).encode(
-            x=alt.X('yearmonthdate(bulletin_date):T', title=None,
+        lines = alt.Chart(df.dropna()).mark_line(point=True).encode(
+            x=alt.X('yearmonthdate(bulletin_date):T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('value', title=None),
-            tooltip=['yearmonthdate(bulletin_date):T', 'variable',
+            tooltip=['yearmonthdate(bulletin_date):T',
                      alt.Tooltip(field='value',
                                  type='quantitative',
-                                 format=".1f")]
+                                 format=".2f")]
         )
 
         text = lines.mark_text(
@@ -92,36 +86,53 @@ class TestsPerCase(charts.AbstractChart):
             baseline='line-top',
             dy=5, dx=5
         ).encode(
-            text=alt.Text('value:Q', format='.1f')
+            text=alt.Text('value:Q', format='.2f')
         )
 
         return (lines + text).properties(
             width=550, height=75
-        ).facet(
-            columns=1,
-            facet=alt.Facet('variable', title=None, sort=sort_order)
-        ).resolve_scale(
-            y='independent'
         )
 
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+
+class NewTestsPerCase(AbstractTestsPerCaseChart):
     def fetch_data(self, connection):
         table = sqlalchemy.Table('tests', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.bulletin_date,
-            table.c.cumulative_tests_per_thousand,
-            table.c.new_daily_tests_per_thousand,
-            table.c.cumulative_tests_per_confirmed_case,
-            table.c.new_tests_per_confirmed_case
+            table.c.new_tests_per_confirmed_case.label('value')
         ])
-        df = pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
-        df = df.rename(columns={
-            'new_tests_per_confirmed_case': 'Pruebas nuevas por caso confirmado',
-            'cumulative_tests_per_confirmed_case': 'Pruebas acumuladas por caso confirmado',
-            'new_daily_tests_per_thousand': 'Pruebas nuevas diarias (promedio) por mil habitantes',
-            'cumulative_tests_per_thousand': 'Pruebas acumuladas por mil habitantes',
-        })
-        return pd.melt(df, ["bulletin_date"])
+        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
 
-    def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+class CumulativeTestsPerCase(AbstractTestsPerCaseChart):
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('tests', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.cumulative_tests_per_confirmed_case.label('value')
+        ])
+        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
+
+class NewDailyTestsPerCapita(AbstractTestsPerCaseChart):
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('tests', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.new_daily_tests_per_thousand.label('value')
+        ])
+        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
+
+class CumulativeTestsPerCapita(AbstractTestsPerCaseChart):
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('tests', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.cumulative_tests_per_thousand.label('value')
+        ])
+        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
+
