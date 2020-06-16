@@ -59,7 +59,8 @@ class CumulativeMissingTests(charts.AbstractChart):
         query = select([
             cases.c.bulletin_date,
             cases.c.datum_date,
-            (tests.c.positive_molecular_tests - cases.c.confirmed_cases).label('difference')
+            (tests.c.cumulative_positive_molecular_tests - cases.c.cumulative_confirmed_cases)\
+                .label('difference')
         ]).select_from(
             tests.outerjoin(cases, tests.c.datum_date == cases.c.datum_date)
         ).where(tests.c.bulletin_date == datetime.date(year=2020, month=5, day=20))
