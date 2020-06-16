@@ -11,8 +11,6 @@ CREATE TABLE bitemporal (
     confirmed_cases INTEGER,
     probable_cases INTEGER,
     deaths INTEGER,
-    positive_molecular_tests INTEGER,
-    molecular_tests INTEGER,
     PRIMARY KEY (bulletin_date, datum_date)
 );
 
@@ -120,6 +118,18 @@ COMMENT ON TABLE bioportal IS
 Publication began with 2020-05-21 report.';
 
 
+CREATE TABLE bioportal_bitemporal (
+    bulletin_date DATE NOT NULL,
+    datum_date DATE NOT NULL,
+    positive_molecular_tests INTEGER,
+    molecular_tests INTEGER,
+    PRIMARY KEY (bulletin_date, datum_date)
+);
+
+COMMENT ON TABLE bioportal IS
+'Very irregularly published charts on number of tests by sample date.';
+
+
 CREATE TABLE municipal (
     bulletin_date DATE NOT NULL,
     municipality TEXT NOT NULL,
@@ -164,7 +174,24 @@ SELECT
     deaths - coalesce(lag(deaths) OVER datum, 0)
         AS delta_deaths,
     (deaths - coalesce(lag(deaths) OVER datum, 0))
-        * (bulletin_date - datum_date) AS lateness_deaths,
+        * (bulletin_date - datum_date) AS lateness_deaths
+FROM bitemporal
+WINDOW
+    bulletin AS (PARTITION BY bulletin_date ORDER BY datum_date),
+    datum AS (PARTITION BY datum_date ORDER BY bulletin_date);
+
+COMMENT ON VIEW bitemporal_agg IS
+'Useful aggregations/windows over the bitemporal table:
+
+- Cumulative: Cumulative sums, partitioned by bulletin date;
+- Delta: Current bulletin_date''s value for current datum_date
+  minus previous bulletin_date''s value for previous datum_date;
+- Lateness score: Delta * (bulletin_date - datum_date).';
+
+CREATE VIEW bioportal_bitemporal_agg AS
+SELECT
+    bulletin_date,
+    datum_date,
 
     molecular_tests,
     sum(molecular_tests) OVER bulletin
@@ -181,18 +208,11 @@ SELECT
         AS delta_positive_molecular_tests,
     (positive_molecular_tests - coalesce(lag(positive_molecular_tests) OVER datum, 0))
         * (bulletin_date - datum_date) AS lateness_positive_molecular_tests
-FROM bitemporal
+FROM bioportal_bitemporal
 WINDOW
     bulletin AS (PARTITION BY bulletin_date ORDER BY datum_date),
     datum AS (PARTITION BY datum_date ORDER BY bulletin_date);
 
-COMMENT ON VIEW bitemporal_agg IS
-'Useful aggregations/windows over the bitemporal table:
-
-- Cumulative: Cumulative sums, partitioned by bulletin date;
-- Delta: Current bulletin_date''s value for current datum_date
-  minus previous bulletin_date''s value for previous datum_date;
-- Lateness score: Delta * (bulletin_date - datum_date).';
 
 CREATE VIEW announcement_consolidated AS
 SELECT
@@ -333,9 +353,7 @@ SELECT
 	ba.cumulative_confirmed_and_probable_cases AS confirmed_and_probable_cases,
 	ba.cumulative_confirmed_cases AS confirmed_cases,
 	ba.cumulative_probable_cases AS probable_cases,
-	ba.cumulative_deaths AS deaths,
-	ba.cumulative_molecular_tests AS molecular_tests,
-	ba.cumulative_positive_molecular_tests AS positive_molecular_tests
+	ba.cumulative_deaths AS deaths
 FROM bulletin_dates
 INNER JOIN dates
 	ON dates.date <= bulletin_dates.bulletin_date
