@@ -45,7 +45,6 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
-        molecular.TestsBySampleDate(engine, args.output_dir, output_formats),
         molecular.NewTestsPerCase(engine, args.output_dir, output_formats),
         molecular.CumulativeTestsPerCase(engine, args.output_dir, output_formats),
         molecular.NewDailyTestsPerCapita(engine, args.output_dir, output_formats),
