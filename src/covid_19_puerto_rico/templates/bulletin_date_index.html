@@ -43,6 +43,7 @@
         <li><a href="#CumulativeTestsPerCase_section">Pruebas moleculares acumuladas por caso confirmado</a></li>
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas moleculares nuevas por mil habitantes, promedio diario</a></li>
         <li><a href="#CumulativeTestsPerCapita_section">Pruebas moleculares acumuladas por mil habitantes</a></li>
+        <li><a href="#TestsBySampleDate_section">Pruebas moleculares por caso confirmado, por fecha de muestra</a></li>
         <li><a href="#Terminology_section">Terminología</a></li>
         <li><a href="#Sources_section">Datos fuente para {{ bulletin_date }}</a></li>
     </ul>
@@ -484,6 +485,23 @@
         de población, acompañado de comparación internacional.</p>
 </div>
 
+
+<div class="section" id="TestsBySampleDate_section">
+    <h1>Pruebas moleculares por caso confirmado, por fecha de muestra</h1>
+
+    <div id="TestsBySampleDate"></div>
+    <script type="text/javascript">
+        embedChart('TestsBySampleDate', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Los cálculos de pruebas moleculares por caso confirmado, pero elaborado a partir
+        de los poquísimos datos que han salido que agrupan las pruebas por fecha de
+        muestra.  <b>ADVERTENCIA:</b> mirar detenidamente el eje horizontal de esta
+        gráfica, porque los datos que usa no son más nuevos que su valor máximo, que
+        puede ser viejísimo.</p>
+</div>
 
 <div class="section" id="Terminology_section">
     <h1>Terminología</h1>

@@ -66,6 +66,51 @@ class CumulativeMissingTests(charts.AbstractChart):
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"]).dropna()
 
 
+class TestsBySampleDate(charts.AbstractChart):
+    def make_chart(self, df):
+        sort_order = [
+            'Pruebas nuevas por caso confirmado',
+            'Pruebas acumuladas por caso confirmado (promedio 7 días)'
+        ]
+        return alt.Chart(df).mark_line(point=True).encode(
+            x=alt.X('yearmonthdate(datum_date):T',
+                    title='Fecha de toma de muestra',
+                    axis=alt.Axis(format='%d/%m')),
+            y=alt.Y('value:Q', title=None, scale=alt.Scale(type='linear')),
+            tooltip=['datum_date', 'variable:N',
+                     alt.Tooltip(field='value',
+                                 type='quantitative',
+                                 format=".2f")]
+        ).properties(
+            width=575, height=100
+        ).facet(
+            columns=1,
+            facet=alt.Facet('variable', title=None, sort=sort_order)
+        ).resolve_scale(
+            y='independent'
+        )
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('tests_by_sample_date', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.datum_date,
+            table.c.new_tests_per_confirmed_case,
+            table.c.cumulative_tests_per_confirmed_case,
+        ])
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
+        df = df.rename(columns={
+            'new_tests_per_confirmed_case': 'Pruebas nuevas por caso confirmado',
+            'cumulative_tests_per_confirmed_case': 'Pruebas acumuladas por caso confirmado (promedio 7 días)',
+        })
+        return pd.melt(df, ['bulletin_date', 'datum_date'])
+
+    def filter_data(self, df, bulletin_date):
+        chopped = df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+        max_date = chopped['bulletin_date'].max()
+        return df.loc[df['bulletin_date'] == max_date]
+
 
 class AbstractTestsPerCaseChart(charts.AbstractChart):
     def make_chart(self, df):
@@ -96,7 +141,7 @@ class AbstractTestsPerCaseChart(charts.AbstractChart):
 
 class NewTestsPerCase(AbstractTestsPerCaseChart):
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests', self.metadata,
+        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.bulletin_date,
@@ -106,7 +151,7 @@ class NewTestsPerCase(AbstractTestsPerCaseChart):
 
 class CumulativeTestsPerCase(AbstractTestsPerCaseChart):
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests', self.metadata,
+        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.bulletin_date,
@@ -116,7 +161,7 @@ class CumulativeTestsPerCase(AbstractTestsPerCaseChart):
 
 class NewDailyTestsPerCapita(AbstractTestsPerCaseChart):
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests', self.metadata,
+        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.bulletin_date,
@@ -126,7 +171,7 @@ class NewDailyTestsPerCapita(AbstractTestsPerCaseChart):
 
 class CumulativeTestsPerCapita(AbstractTestsPerCaseChart):
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests', self.metadata,
+        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.bulletin_date,
