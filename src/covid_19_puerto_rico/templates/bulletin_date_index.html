@@ -39,7 +39,10 @@
         <li><a href="#Municipal_section">Historial de casos confirmados por municipio (fecha de boletín)</a></li>
         <li><a href="#DailyMissingTests_section">Pruebas duplicadas y perdidas diarias</a></li>
         <li><a href="#CumulativeMissingTests_section">Pruebas duplicadas y perdidas acumuladas</a></li>
-        <li><a href="#TestsPerCase_section">Pruebas moleculares por caso confirmado y por población</a></li>
+        <li><a href="#NewTestsPerCase_section">Pruebas moleculares nuevas por caso confirmado</a></li>
+        <li><a href="#CumulativeTestsPerCase_section">Pruebas moleculares acumuladas por caso confirmado</a></li>
+        <li><a href="#NewDailyTestsPerCapita_section">Pruebas moleculares nuevas por mil habitantes, promedio diario</a></li>
+        <li><a href="#CumulativeTestsPerCapita_section">Pruebas moleculares acumuladas por mil habitantes</a></li>
         <li><a href="#Terminology_section">Terminología</a></li>
         <li><a href="#Sources_section">Datos fuente para {{ bulletin_date }}</a></li>
     </ul>
@@ -337,58 +340,25 @@
 </div>
 
 
-<div class="section" id="TestsPerCase_section">
-    <h1>Pruebas moleculares por caso confirmado y por población</h1>
+<div class="section" id="NewTestsPerCase_section">
+    <h1>Pruebas moleculares nuevas por caso confirmado</h1>
 
-    <div id="TestsPerCase"></div>
+    <div id="NewTestsPerCase"></div>
     <script type="text/javascript">
-        embedChart('TestsPerCase', bulletin_date);
+        embedChart('NewTestsPerCase', bulletin_date);
     </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Cuántas pruebas moleculares ha reportado el Departamento de Salud en su
-        informe de bioportal, dividido por:</p>
-
-    <ol>
-        <li>El número de casos confirmados reportados a la misma fecha;</li>
-        <li>Millares de población de Puerto Rico (de acuerdo al estimado del
-            Census Bureau para el 1ero de julio del 2019).</li>
-    </ol>
-
-    <p>Esto se presenta tanto como cifra acumulada, como cifra de casos entre las
-        fechas de reporte.</p>
-
-    <h3>Comparación internacional</h3>
-
-    <p>Estas gráficas de <a href="">Our World in Data</a> pueden ayudar a contextualizar
-        las cifras calculadas para Puerto Rico.  Nótese sin embargo que no son enteramente
-        comparables—Our World in Data calcula promedios de siete días, y las calculadas aquí
-        para Puerto Rico son entre los informes consecutivos de Bioportal, salgan cuando salgan
-        (si es que salen).</p>
 
     <div class="chart">
         <iframe src="https://ourworldindata.org/grapher/tests-per-confirmed-case-daily-smoothed?tab=map&year={{next_date}}&time=2020-05-21..{{next_date}}"
                 loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
     </div>
 
-    <div class="chart">
-        <iframe src="https://ourworldindata.org/grapher/number-of-covid-19-tests-per-confirmed-case-bar-chart?tab=map&year={{next_date}}&time=2020-05-21..{{next_date}}"
-                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
-    </div>
+    <h3>¿Qué es esto?</h3>
 
-    <div class="chart">
-        <iframe src="https://ourworldindata.org/grapher/daily-tests-per-thousand-people-smoothed-7-day?tab=map&year={{next_date}}&time=2020-05-21..{{next_date}}"
-                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>    </div>
-
-    <div class="chart">
-        <iframe src="https://ourworldindata.org/grapher/full-list-cumulative-total-tests-per-thousand-map?year={{next_date}}&time=2020-05-21..{{next_date}}"
-                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>    </div>
-
-    <h3>Explicación</h3>
-
-    <p>Las cifras de pruebas por millar miden cuán extensamente un país le está
-        administrado pruebas a la población.</p>
+    <p>Cuántas pruebas moleculares nuevas ha reportado el Departamento de Salud en su
+        más reciente informe de Bioportal, dividido por el número de casos confirmados
+        reportados hasta la misma fecha.  Se acompaña con gráfica de
+        <a href="https://ourworldindata.org/">Our World in Data</a></p> para contextualizar.
 
     <p>La cifra de pruebas por caso confirmado es una recomendada por la página
         <a href="https://ourworldindata.org/">Our World in Data</a> como herramienta para
@@ -396,7 +366,7 @@
         alta per cápita, en realidad no da a basto en relación al tamaño del brote que
         experimentan.  Como explica la página:</p>
 
-        <blockquote>
+    <blockquote>
         <p>En términos de cobertura de pruebas el Reino Unido parece estar adelante
             de Taiwán, con por lo menos el doble de pruebas por mil personas, a la
             fecha del 11 de abril.</p>
@@ -419,6 +389,7 @@
             pruebas en tales países, probablemente hay muchísimas más personas con
             síntomas leves o nulos que nunca se les realizó prueba.</p>
     </blockquote>
+
 
     <h3>Advertencias</h3>
 
@@ -445,6 +416,66 @@
             contabilizadas son una muestra representativa de las realizadas, o que si existe
             sesgo este es a favor de contabilizar pruebas positivas y casos.</li>
     </ol>
+</div>
+
+
+<div class="section" id="CumulativeTestsPerCase_section">
+    <h1>Pruebas moleculares acumuladas por caso confirmado</h1>
+
+    <div id="CumulativeTestsPerCase"></div>
+    <script type="text/javascript">
+        embedChart('CumulativeTestsPerCase', bulletin_date);
+    </script>
+
+    <div class="chart">
+        <iframe src="https://ourworldindata.org/grapher/number-of-covid-19-tests-per-confirmed-case-bar-chart?tab=map&year={{next_date}}&time=2020-05-21..{{next_date}}"
+                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
+    </div>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>El mismo cálculo de pruebas moleculares por caso confirmado, pero con cifras
+        acumuladas en vez de nuevas.  Las mismas advertencias aplican.</p>
+</div>
+
+
+
+<div class="section" id="NewDailyTestsPerCapita_section">
+    <h1>Pruebas moleculares nuevas por mil habitantes, promedio diario</h1>
+
+    <div id="NewDailyTestsPerCapita"></div>
+    <script type="text/javascript">
+        embedChart('NewDailyTestsPerCapita', bulletin_date);
+    </script>
+
+    <div class="chart">
+        <iframe src="https://ourworldindata.org/grapher/daily-tests-per-thousand-people-smoothed-7-day?tab=map&year={{next_date}}&time=2020-05-21..{{next_date}}"
+                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>    </div>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Cuántas pruebas diarias promedio se realizaron entre informes del Bioportal, por millar
+        de población.  Se presenta una gráfica de Our World in Data para comparación, pero
+        <b>advertencia</b>, OWID usa promedios rodantes de siete días, y nuestro cálculo aquí
+        es a partir de periodos irregulares entre los informes de Bioportal.</p>
+</div>
+
+<div class="section" id="CumulativeTestsPerCapita_section">
+    <h1>Pruebas moleculares acumuladas por mil habitantes</h1>
+
+    <div id="CumulativeTestsPerCapita"></div>
+    <script type="text/javascript">
+        embedChart('CumulativeTestsPerCapita', bulletin_date);
+    </script>
+
+    <div class="chart">
+        <iframe src="https://ourworldindata.org/grapher/full-list-cumulative-total-tests-per-thousand-map?year={{next_date}}&time=2020-05-21..{{next_date}}"
+                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>    </div>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Cuántas pruebas moleculares se han administrado cumulativamente, divido por millares
+        de población, acompañado de comparación internacional.</p>
 </div>
 
 
