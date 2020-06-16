@@ -609,3 +609,26 @@ FROM products.cumulative_data
 WHERE (SELECT min(bulletin_date) FROM bitemporal_agg) <= datum_date
 AND datum_date <= bulletin_date
 WINDOW bulletin AS (PARTITION BY bulletin_date ROWS UNBOUNDED PRECEDING);
+
+
+CREATE VIEW products.tests AS
+SELECT
+	b.bulletin_date,
+	b.bulletin_date - lag(b.bulletin_date) OVER bulletin
+		AS days_since_last,
+	b.cumulative_molecular_tests,
+	a.cumulative_confirmed_cases,
+	CAST(b.cumulative_molecular_tests AS DOUBLE PRECISION)
+		/ a.cumulative_confirmed_cases
+		AS cumulative_tests_per_confirmed_case,
+	b.new_molecular_tests,
+	a.cumulative_confirmed_cases - lag(a.cumulative_confirmed_cases) OVER bulletin
+		AS new_confirmed_cases,
+	CAST(b.new_molecular_tests AS DOUBLE PRECISION)
+		/ (a.cumulative_confirmed_cases - lag(a.cumulative_confirmed_cases) OVER bulletin)
+		AS new_tests_per_confirmed_case
+FROM bioportal b
+INNER JOIN announcement a
+	USING (bulletin_date)
+WINDOW bulletin AS (ORDER BY b.bulletin_date)
+ORDER BY bulletin_date;

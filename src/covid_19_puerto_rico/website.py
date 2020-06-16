@@ -45,11 +45,13 @@ class Website:
         output_index_html = f'{self.output_dir}/{bulletin_date}/index.html'
         logging.info("Rendering %s", output_index_html)
         previous_date = bulletin_date - datetime.timedelta(days=1)
+        next_date = bulletin_date + datetime.timedelta(days=1)
         template = self.jinja.get_template('bulletin_date_index.html')
         template.stream(
             bulletin_dates=sorted(date_range, reverse=True),
             bulletin_date=bulletin_date,
-            previous_date=previous_date)\
+            previous_date=previous_date,
+            next_date=next_date)\
             .dump(output_index_html)
 
     def render_molecular_tests_page(self, date_range):
