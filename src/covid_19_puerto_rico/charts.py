@@ -575,7 +575,7 @@ class Municipal(AbstractChart):
         )
 
         return (base + excess4 + excess8 + excess16 + negative).properties(
-            width=525, height=35
+            width=525, height=23
         ).facet(
             row=alt.Row('Municipio:N', title=None,
                         header=alt.Header(
