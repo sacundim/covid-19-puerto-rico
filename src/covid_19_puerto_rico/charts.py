@@ -532,33 +532,25 @@ ORDER BY bulletin_date, datum_date""")
 
 class Municipal(AbstractChart):
     def make_chart(self, df):
-        return alt.Chart(df).transform_calculate(
-            abs='abs(datum.new_confirmed_cases)'
-        ).transform_filter(
-            alt.datum.abs != 0
-        ).mark_point(fillOpacity=0.25, strokeWidth=1).encode(
+        return alt.Chart(df).mark_area().encode(
             x=alt.X('yearmonthdate(bulletin_date):T', title=None,
                     axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('Municipio', title=None, axis=alt.Axis(grid=True)),
-            size=alt.Size('abs:Q', scale=alt.Scale(type='log', base=2),
-                          legend=alt.Legend(
-                              orient='top', titleLimit=0, titleOrient='left',
-                              title="Casos nuevos (naranja = resta)")),
-            color=alt.condition(
-                alt.datum.new_confirmed_cases < 0,
-                alt.value('orange'),
-                alt.value('teal')
-            ),
-            fill=alt.condition(
-                alt.datum.new_confirmed_cases < 0,
-                alt.value('orange'),
-                alt.value('teal')
-            ),
+            y=alt.Y('new_confirmed_cases:Q', title=None, axis=None),
+            row=alt.Row('Municipio',  title=None,
+                        header=alt.Header(
+                            labelAngle=0,
+                            labelAlign='left',
+                            labelBaseline='top')),
+            color=alt.Color('Municipio:N', legend=None),
             tooltip=[
                 'Municipio:N', 'bulletin_date:T', 'new_confirmed_cases:Q'
             ]
         ).properties(
-            width=500
+            width=500, height=30, bounds='flush'
+        ).configure_facet(
+            spacing=0
+        ).configure_view(
+            stroke=None
         )
 
     def fetch_data(self, connection):
