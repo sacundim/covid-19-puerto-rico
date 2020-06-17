@@ -532,25 +532,48 @@ ORDER BY bulletin_date, datum_date""")
 
 class Municipal(AbstractChart):
     def make_chart(self, df):
-        return alt.Chart(df).mark_area().encode(
-            x=alt.X('yearmonthdate(bulletin_date):T', title=None,
+        base = alt.Chart(df).mark_area(
+            color='teal', opacity=0.33, interpolate='monotone', clip=True
+        ).encode(
+            x=alt.X('bulletin_date:T', title=None,
                     axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('new_confirmed_cases:Q', title=None, axis=None),
-            row=alt.Row('Municipio',  title=None,
+            y=alt.Y('new_confirmed_cases:Q', title=None, axis=None,
+                    scale=alt.Scale(domain=[0, 8])),
+            tooltip=['Municipio:N', 'bulletin_date:T', 'new_confirmed_cases:Q']
+        )
+
+        eight = base.transform_calculate(
+            excess8=alt.datum.new_confirmed_cases - 8,
+        ).encode(
+            y=alt.Y('excess8:Q', title=None, axis=None,
+                    scale=alt.Scale(domain=[0, 8])),
+        )
+
+        sixteen = base.transform_calculate(
+            excess16=alt.datum.new_confirmed_cases - 16,
+        ).encode(
+            y=alt.Y('excess16:Q', title=None, axis=None,
+                    scale=alt.Scale(domain=[0, 8])),
+        )
+
+        negative = base.transform_calculate(
+            negative=-alt.datum.new_confirmed_cases,
+        ).encode(
+            y=alt.Y('negative:Q', title=None, axis=None,
+                    scale=alt.Scale(domain=[0, 8])),
+            color=alt.value('orange')
+        )
+
+        return (base + eight + sixteen + negative).properties(
+            width=500, height=30
+        ).facet(
+            row=alt.Row('Municipio:N', title=None,
                         header=alt.Header(
                             labelAngle=0,
                             labelAlign='left',
                             labelBaseline='top')),
-            color=alt.Color('Municipio:N', legend=None),
-            tooltip=[
-                'Municipio:N', 'bulletin_date:T', 'new_confirmed_cases:Q'
-            ]
-        ).properties(
-            width=500, height=30, bounds='flush'
         ).configure_facet(
             spacing=0
-        ).configure_view(
-            stroke=None
         )
 
     def fetch_data(self, connection):
