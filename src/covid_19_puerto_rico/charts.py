@@ -538,43 +538,35 @@ class Municipal(AbstractChart):
             x=alt.X('bulletin_date:T', title=None,
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('new_confirmed_cases:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 4])),
+                    scale=alt.Scale(domain=[0, 5])),
             tooltip=['Municipio:N', 'bulletin_date:T', 'new_confirmed_cases:Q']
         )
 
-        excess4 = base.transform_calculate(
-            excess4=alt.datum.new_confirmed_cases - 4,
+        excess5 = base.transform_calculate(
+            excess5=alt.datum.new_confirmed_cases - 5,
         ).encode(
-            y=alt.Y('excess4:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 4])),
+            y=alt.Y('excess5:Q', title=None, axis=None,
+                    scale=alt.Scale(domain=[0, 5])),
             color=alt.value('#f4ae91'),
         )
 
-        excess8 = base.transform_calculate(
-            excess8=alt.datum.new_confirmed_cases - 8,
+        excess10 = base.transform_calculate(
+            excess10=alt.datum.new_confirmed_cases - 10,
         ).encode(
-            y=alt.Y('excess8:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 4])),
+            y=alt.Y('excess10:Q', title=None, axis=None,
+                    scale=alt.Scale(domain=[0, 5])),
             color=alt.value('#df745e'),
-        )
-
-        excess16 = base.transform_calculate(
-            excess16=alt.datum.new_confirmed_cases - 16,
-        ).encode(
-            y=alt.Y('excess16:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 4])),
-            color=alt.value('#bf363a'),
         )
 
         negative = base.transform_calculate(
             negative=-alt.datum.new_confirmed_cases,
         ).encode(
             y=alt.Y('negative:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 4])),
+                    scale=alt.Scale(domain=[0, 5])),
             color=alt.value('#c0c0c0')
         )
 
-        return (base + excess4 + excess8 + excess16 + negative).properties(
+        return (base + excess5 + excess10 + negative).properties(
             width=525, height=23
         ).facet(
             row=alt.Row('Municipio:N', title=None,
