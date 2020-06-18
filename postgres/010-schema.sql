@@ -251,14 +251,12 @@ CREATE VIEW municipal_agg AS
 SELECT
 	bulletin_date,
 	municipality,
-	confirmed_cases,
+	confirmed_cases AS cumulative_confirmed_cases,
 	confirmed_cases - lag(confirmed_cases) OVER bulletin
-		AS new_confirmed_cases,
-	confirmed_cases - lag(confirmed_cases, 7, 0) OVER bulletin
-		AS new_7day_confirmed_cases
+		AS new_confirmed_cases
 FROM municipal m
 WINDOW bulletin AS (
-	PARTITION BY municipality ORDER BY bulletin_date ROWS 6 PRECEDING
+	PARTITION BY municipality ORDER BY bulletin_date
 )
 ORDER BY municipality, bulletin_date;
 
@@ -677,3 +675,39 @@ WINDOW
 		RANGE BETWEEN '6 days' PRECEDING AND CURRENT ROW
 	)
 ORDER BY bulletin_date, datum_date;
+
+
+CREATE VIEW products.municipal_map AS
+SELECT
+	municipality,
+	bulletin_date,
+	cumulative_confirmed_cases,
+	new_confirmed_cases,
+	sum(new_confirmed_cases) OVER seven_most_recent
+		AS new_7day_confirmed_cases,
+	sum(new_confirmed_cases) OVER seven_before
+		AS previous_7day_confirmed_cases,
+	sum(new_confirmed_cases) OVER fourteen_most_recent
+		AS new_14day_confirmed_cases,
+	sum(new_confirmed_cases) OVER fourteen_before
+		AS previous_14day_confirmed_cases
+FROM municipal_agg ma
+WINDOW seven_most_recent AS (
+	PARTITION BY municipality
+	ORDER BY bulletin_date
+	RANGE BETWEEN '6 days' PRECEDING AND CURRENT ROW
+), seven_before AS (
+	PARTITION BY municipality
+	ORDER BY bulletin_date
+	RANGE BETWEEN '7 days' PRECEDING AND CURRENT ROW
+	EXCLUDE CURRENT ROW
+), fourteen_most_recent AS (
+	PARTITION BY municipality
+	ORDER BY bulletin_date
+	RANGE BETWEEN '13 days' PRECEDING AND CURRENT ROW
+), fourteen_before AS (
+	PARTITION BY municipality
+	ORDER BY bulletin_date
+	RANGE BETWEEN '14 days' PRECEDING AND CURRENT ROW
+	EXCLUDE CURRENT ROW
+);
