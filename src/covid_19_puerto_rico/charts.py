@@ -533,41 +533,41 @@ ORDER BY bulletin_date, datum_date""")
 class Municipal(AbstractChart):
     def make_chart(self, df):
         base = alt.Chart(df).mark_area(
-            color='#fddccb', interpolate='monotone', clip=True
+            color='#fbe3d6', interpolate='monotone', clip=True
         ).encode(
             x=alt.X('bulletin_date:T', title=None,
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('new_confirmed_cases:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 5])),
+                    scale=alt.Scale(domain=[0, 4])),
             tooltip=['Municipio:N', 'bulletin_date:T', 'new_confirmed_cases:Q']
         )
 
-        excess5 = base.transform_calculate(
-            excess5=alt.datum.new_confirmed_cases - 5,
+        excess4 = base.transform_calculate(
+            excess4=alt.datum.new_confirmed_cases - 4,
         ).encode(
-            y=alt.Y('excess5:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 5])),
-            color=alt.value('#f4ae91'),
+            y=alt.Y('excess4:Q', title=None, axis=None,
+                    scale=alt.Scale(domain=[0, 4])),
+            color=alt.value('#f1a68a'),
         )
 
-        excess10 = base.transform_calculate(
-            excess10=alt.datum.new_confirmed_cases - 10,
+        excess8 = base.transform_calculate(
+            excess8=alt.datum.new_confirmed_cases - 8,
         ).encode(
-            y=alt.Y('excess10:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 5])),
-            color=alt.value('#df745e'),
+            y=alt.Y('excess8:Q', title=None, axis=None,
+                    scale=alt.Scale(domain=[0, 4])),
+            color=alt.value('#cd5149'),
         )
 
         negative = base.transform_calculate(
             negative=-alt.datum.new_confirmed_cases,
         ).encode(
             y=alt.Y('negative:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 5])),
-            color=alt.value('#c0c0c0')
+                    scale=alt.Scale(domain=[0, 4])),
+            color=alt.value('#bababa')
         )
 
-        return (base + excess5 + excess10 + negative).properties(
-            width=525, height=23
+        return (base + excess4 + excess8 + negative).properties(
+            width=525, height=25
         ).facet(
             row=alt.Row('Municipio:N', title=None,
                         header=alt.Header(
