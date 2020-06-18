@@ -634,12 +634,14 @@ class MunicipalMap(AbstractChart):
                               format=alt.TopoDataFormat(type='topojson', feature='municipalities'))
 
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('municipal_agg', self.metadata, autoload=True)
-        query = select([table.c.bulletin_date,
-                        table.c.municipality,
-                        table.c.new_confirmed_cases,
-                        table.c.new_7day_confirmed_cases])\
-            .where(table.c.municipality.notin_(['Total', 'No disponible']))
+        table = sqlalchemy.Table('municipal_map', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.municipality,
+            table.c.new_confirmed_cases,
+            table.c.new_7day_confirmed_cases,
+        ]).where(table.c.municipality.notin_(['Total', 'No disponible', 'Otro lugar fuera de PR']))
         df = pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
         return df.rename(columns={
             'municipality': 'Municipio',
