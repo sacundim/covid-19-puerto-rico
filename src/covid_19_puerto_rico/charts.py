@@ -596,8 +596,25 @@ class Municipal(AbstractChart):
 
 class MunicipalMap(AbstractChart):
     def make_chart(self, df):
-        variables = ['Casos nuevos (último boletín)',
-                     'Casos nuevos (últimos 7 boletines)']
+        left_half = self.make_half_chart(
+            df, 'd',
+            ['Casos nuevos (último boletín)',
+             'Casos nuevos (últimos 7)']
+        )
+
+        right_half = self.make_half_chart(
+            df, '.0%',
+            ['Crecida (último vs 7 anteriores)',
+             'Crecida (últimos 7 vs 7 anteriores)']
+        )
+
+        return alt.vconcat(left_half, right_half).configure_view(
+            strokeWidth=0
+        ).configure_concat(
+            spacing=40
+        )
+
+    def make_half_chart(self, df, number_format, variables):
         municipalities = self.geography()
 
         return alt.Chart(municipalities).transform_lookup(
@@ -605,27 +622,23 @@ class MunicipalMap(AbstractChart):
             from_=alt.LookupData(df, 'Municipio', variables),
             default='0'
         ).mark_geoshape().encode(
-            color=alt.Color(alt.repeat('row'), type='quantitative', sort="descending",
+            color=alt.Color(alt.repeat('column'), type='quantitative', sort="descending",
                             scale=alt.Scale(type='symlog', scheme='redgrey', domainMid=0,
                                             # WORKAROUND: Set the domain manually to forcibly
                                             # include zero or else we run into
                                             # https://github.com/vega/vega-lite/issues/6544
                                             domain=alt.DomainUnionWith(unionWith=[0])),
-                            legend=alt.Legend(orient='left', titleLimit=400,
-                                              titleOrient='left')),
+                            legend=alt.Legend(orient='bottom', titleLimit=400,
+                                              titleOrient='bottom', format=number_format)),
             tooltip=[alt.Tooltip(field='properties.NAME', type='nominal'),
-                     alt.Tooltip(alt.repeat('row'), type='quantitative')]
+                     alt.Tooltip(alt.repeat('column'), type='quantitative', format=number_format)]
         ).properties(
-            width=575,
-            height=200
+            width=300,
+            height=125
         ).repeat(
-            row=variables
+            column=variables
         ).resolve_scale(
             color='independent'
-        ).configure_view(
-            strokeWidth=0
-        ).configure_concat(
-            spacing=80
         )
 
 
@@ -641,12 +654,16 @@ class MunicipalMap(AbstractChart):
             table.c.municipality,
             table.c.new_confirmed_cases,
             table.c.new_7day_confirmed_cases,
+            table.c.pct_increase_1day,
+            table.c.pct_increase_7day
         ]).where(table.c.municipality.notin_(['Total', 'No disponible', 'Otro lugar fuera de PR']))
         df = pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
         return df.rename(columns={
             'municipality': 'Municipio',
             'new_confirmed_cases': 'Casos nuevos (último boletín)',
-            'new_7day_confirmed_cases': 'Casos nuevos (últimos 7 boletines)'
+            'new_7day_confirmed_cases': 'Casos nuevos (últimos 7)',
+            'pct_increase_1day': 'Crecida (último vs 7 anteriores)',
+            'pct_increase_7day': 'Crecida (últimos 7 vs 7 anteriores)'
         })
 
     def filter_data(self, df, bulletin_date):
