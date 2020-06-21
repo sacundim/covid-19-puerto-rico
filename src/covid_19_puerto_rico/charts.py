@@ -533,60 +533,39 @@ ORDER BY bulletin_date, datum_date""")
 class Municipal(AbstractChart):
     REDS = ('#fad1bd', '#ea9178', '#c74643')
     GRAYS = ('#dadada', '#ababab', '#717171')
+    DOMAIN=[0, 4]
 
     def make_chart(self, df):
-        base = alt.Chart(df).mark_area(
-            color=self.REDS[0], interpolate='monotone', clip=True
-        ).encode(
-            x=alt.X('bulletin_date:T', title=None,
+        base = alt.Chart(df).mark_area(interpolate='monotone', clip=True).encode(
+            x=alt.X('bulletin_date:T', title='Fecha de boletín',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('new_confirmed_cases:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 4])),
+                    scale=alt.Scale(domain=self.DOMAIN)),
+            color=alt.value(self.REDS[0]),
             tooltip=['Municipio:N', 'bulletin_date:T', 'new_confirmed_cases:Q']
         )
 
-        excess4 = base.transform_calculate(
-            excess4=alt.datum.new_confirmed_cases - 4,
-        ).encode(
-            y=alt.Y('excess4:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 4])),
-            color=alt.value(self.REDS[1]),
-        )
+        def make_band(variable, color, calculate):
+            return base.transform_calculate(
+                as_=variable, calculate=calculate
+            ).encode(
+                y=alt.Y(f'{variable}:Q'),
+                color=alt.value(color)
+            )
 
-        excess8 = base.transform_calculate(
-            excess8=alt.datum.new_confirmed_cases - 8,
-        ).encode(
-            y=alt.Y('excess8:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 4])),
-            color=alt.value(self.REDS[2]),
-        )
+        one_above = make_band('one_above', self.REDS[1],
+                              alt.datum.new_confirmed_cases - self.DOMAIN[1])
+        two_above = make_band('two_above', self.REDS[2],
+                              alt.datum.new_confirmed_cases - 2 * self.DOMAIN[1])
+        negative = make_band('negative', self.GRAYS[0], -alt.datum.new_confirmed_cases)
+        one_below = make_band('one_below', self.GRAYS[1],
+                              -alt.datum.new_confirmed_cases - self.DOMAIN[1])
+        two_below = make_band('two_below', self.GRAYS[2],
+                              -alt.datum.new_confirmed_cases - 2 * self.DOMAIN[1])
 
-        negative = base.transform_calculate(
-            negative=-alt.datum.new_confirmed_cases,
-        ).encode(
-            y=alt.Y('negative:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 4])),
-            color=alt.value(self.GRAYS[0])
-        )
-
-        under_minus4 = base.transform_calculate(
-            under_minus4=-alt.datum.new_confirmed_cases - 4,
-        ).encode(
-            y=alt.Y('under_minus4:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 4])),
-            color=alt.value(self.GRAYS[1])
-        )
-
-        under_minus8 = base.transform_calculate(
-            under_minus8=-alt.datum.new_confirmed_cases - 8,
-        ).encode(
-            y=alt.Y('under_minus8:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=[0, 4])),
-            color=alt.value(self.GRAYS[2])
-        )
-
-        return (base + excess4 + excess8 + negative + under_minus4 + under_minus8).properties(
-            width=525, height=25
+        return (base + one_above + two_above
+                + negative + one_below + two_below).properties(
+            width=525, height=24
         ).facet(
             row=alt.Row('Municipio:N', title=None,
                         header=alt.Header(
