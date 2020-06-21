@@ -531,9 +531,12 @@ ORDER BY bulletin_date, datum_date""")
 
 
 class Municipal(AbstractChart):
+    REDS = ('#fad1bd', '#ea9178', '#c74643')
+    GRAYS = ('#dadada', '#ababab', '#717171')
+
     def make_chart(self, df):
         base = alt.Chart(df).mark_area(
-            color='#fbe3d6', interpolate='monotone', clip=True
+            color=self.REDS[0], interpolate='monotone', clip=True
         ).encode(
             x=alt.X('bulletin_date:T', title=None,
                     axis=alt.Axis(format='%d/%m')),
@@ -547,7 +550,7 @@ class Municipal(AbstractChart):
         ).encode(
             y=alt.Y('excess4:Q', title=None, axis=None,
                     scale=alt.Scale(domain=[0, 4])),
-            color=alt.value('#f1a68a'),
+            color=alt.value(self.REDS[1]),
         )
 
         excess8 = base.transform_calculate(
@@ -555,7 +558,7 @@ class Municipal(AbstractChart):
         ).encode(
             y=alt.Y('excess8:Q', title=None, axis=None,
                     scale=alt.Scale(domain=[0, 4])),
-            color=alt.value('#cd5149'),
+            color=alt.value(self.REDS[2]),
         )
 
         negative = base.transform_calculate(
@@ -563,10 +566,26 @@ class Municipal(AbstractChart):
         ).encode(
             y=alt.Y('negative:Q', title=None, axis=None,
                     scale=alt.Scale(domain=[0, 4])),
-            color=alt.value('#bababa')
+            color=alt.value(self.GRAYS[0])
         )
 
-        return (base + excess4 + excess8 + negative).properties(
+        under_minus4 = base.transform_calculate(
+            under_minus4=-alt.datum.new_confirmed_cases - 4,
+        ).encode(
+            y=alt.Y('under_minus4:Q', title=None, axis=None,
+                    scale=alt.Scale(domain=[0, 4])),
+            color=alt.value(self.GRAYS[1])
+        )
+
+        under_minus8 = base.transform_calculate(
+            under_minus8=-alt.datum.new_confirmed_cases - 8,
+        ).encode(
+            y=alt.Y('under_minus8:Q', title=None, axis=None,
+                    scale=alt.Scale(domain=[0, 4])),
+            color=alt.value(self.GRAYS[2])
+        )
+
+        return (base + excess4 + excess8 + negative + under_minus4 + under_minus8).properties(
             width=525, height=25
         ).facet(
             row=alt.Row('Municipio:N', title=None,
@@ -584,7 +603,7 @@ class Municipal(AbstractChart):
         query = select([table.c.bulletin_date,
                         table.c.municipality,
                         table.c.new_confirmed_cases])\
-            .where(table.c.municipality.notin_(['Total', 'No disponible']))
+            .where(table.c.municipality.notin_(['Total']))
         df = pd.read_sql_query(query, connection,
                                parse_dates=["bulletin_date"])
         return df.rename(columns={
