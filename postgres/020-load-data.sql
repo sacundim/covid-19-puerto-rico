@@ -6,6 +6,10 @@ COPY bitemporal
 FROM '/data/PuertoRico-bitemporal.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
+COPY canonical_municipal_names
+FROM '/data/Municipalities-canonical_names.csv'
+    CSV ENCODING 'UTF-8' HEADER NULL '';
+
 COPY municipal
 FROM '/data/Municipalities-molecular.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';

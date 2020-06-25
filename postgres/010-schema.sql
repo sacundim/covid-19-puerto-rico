@@ -130,9 +130,20 @@ COMMENT ON TABLE bioportal IS
 'Very irregularly published charts on number of tests by sample date.';
 
 
+CREATE TABLE canonical_municipal_names (
+    name TEXT NOT NULL,
+    PRIMARY KEY (name)
+);
+
+COMMENT ON TABLE canonical_municipal_names IS
+'A list of the canonical form of municipal names, meant to be used in constraints
+to catch mispelled names in the municipal tables.';
+
+
 CREATE TABLE municipal (
     bulletin_date DATE NOT NULL,
-    municipality TEXT NOT NULL,
+    municipality TEXT NOT NULL
+        REFERENCES canonical_municipal_names (name),
     confirmed_cases INTEGER,
     confirmed_cases_percent DOUBLE PRECISION,
     PRIMARY KEY (bulletin_date, municipality)
