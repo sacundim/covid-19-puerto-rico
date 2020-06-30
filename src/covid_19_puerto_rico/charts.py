@@ -536,7 +536,12 @@ class Municipal(AbstractChart):
     DOMAIN=[0, 4]
 
     def make_chart(self, df):
-        base = alt.Chart(df).mark_area(interpolate='monotone', clip=True).encode(
+        base = alt.Chart(df).transform_impute(
+            impute='new_confirmed_cases',
+            groupby=['Municipio'],
+            key='bulletin_date',
+            value=0
+        ).mark_area(interpolate='monotone', clip=True).encode(
             x=alt.X('bulletin_date:T', title='Fecha de boletín',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('new_confirmed_cases:Q', title=None, axis=None,
