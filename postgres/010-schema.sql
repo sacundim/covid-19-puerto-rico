@@ -259,19 +259,24 @@ LEFT OUTER JOIN bioportal USING (bulletin_date);
 
 
 CREATE VIEW municipal_agg AS
-WITH new_cases AS (
+WITH first_bulletin AS (
+	SELECT min(bulletin_date) min_bulletin_date
+	FROM municipal
+), new_cases AS (
 	SELECT
 		bulletin_date,
 		municipality,
 		confirmed_cases AS cumulative_confirmed_cases,
-		confirmed_cases - lag(confirmed_cases) OVER bulletin
-			AS new_confirmed_cases
+        CASE WHEN bulletin_date > first_bulletin.min_bulletin_date
+		THEN COALESCE(confirmed_cases - lag(confirmed_cases) OVER bulletin,
+    				  confirmed_cases)
+		END AS new_confirmed_cases
 	FROM municipal m
+	CROSS JOIN first_bulletin
 	WINDOW bulletin AS (
 		PARTITION BY municipality ORDER BY bulletin_date
 	)
-)
-SELECT
+)SELECT
 	bulletin_date,
 	municipality,
 	cumulative_confirmed_cases,
