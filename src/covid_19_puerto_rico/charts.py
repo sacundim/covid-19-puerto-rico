@@ -595,7 +595,10 @@ class Municipal(AbstractChart):
         })
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+        since = pd.to_datetime(bulletin_date - datetime.timedelta(days=35))
+        until = pd.to_datetime(bulletin_date)
+        return df.loc[(since <= df['bulletin_date']) & (df['bulletin_date'] <= until)]
+
 
 class MunicipalMap(AbstractChart):
     def make_chart(self, df):
