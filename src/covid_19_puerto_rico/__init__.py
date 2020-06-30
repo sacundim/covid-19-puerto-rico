@@ -45,6 +45,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        charts.Doubling(engine, args.output_dir, output_formats),
         charts.MunicipalMap(engine, args.output_dir, output_formats),
         charts.Municipal(engine, args.output_dir, output_formats),
         molecular.NewTestsPerCase(engine, args.output_dir, output_formats),

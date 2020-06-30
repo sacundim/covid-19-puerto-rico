@@ -35,10 +35,9 @@
         <li><a href="#Lateness7Day_section">Tendencia de rezago de datos</a></li>
         <li><a href="#WeekdayBias_section">Tendencias por día de semana</a></li>
         <li><a href="#NewCases_section">Tendencia de casos nuevos por fecha de evento (promedios 7 días)</a></li>
+        <li><a href="#Doubling_section">Tiempos de duplicación de casos por fecha de evento</a></li>
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
         <li><a href="#Municipal_section">Historial de casos confirmados por municipio (fecha de boletín)</a></li>
-        <li><a href="#DailyMissingTests_section">Pruebas duplicadas y perdidas diarias</a></li>
-        <li><a href="#CumulativeMissingTests_section">Pruebas duplicadas y perdidas acumuladas</a></li>
         <li><a href="#NewTestsPerCase_section">Pruebas moleculares nuevas por caso confirmado</a></li>
         <li><a href="#CumulativeTestsPerCase_section">Pruebas moleculares acumuladas por caso confirmado</a></li>
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas moleculares nuevas por mil habitantes, promedio diario</a></li>
@@ -249,6 +248,29 @@
 </div>
 
 
+<div class="section" id="Doubling_section">
+    <h1>Tiempos de duplicación de casos por fecha de evento</h1>
+
+    <div id="Doubling" class="chart"></div>
+    <script type="text/javascript">
+      embedChart('Doubling', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Las tendencias de la velocidad a la que han crecido los casos, expresadas
+        en términos de tiempos de duplicación constante (duplicación cada dos días,
+        tres días, cuatro días, etc.), y por ventanas de anchos de 7, 14 y 21 días.</p>
+
+    <p>Esto es, para cada fecha, el ancho de ventana <i>n</i> dividido entre la subida del
+        logaritmo base entre el valor acumulado hace <i>n</i> días y esa fecha.</p>
+
+    <p>Si los datos de base no son una indicación fiable de la propagación de la
+        epidemia, pues esta gráfica tampoco lo es; lo que nos dice es qué sería la
+        verdad si los datos fueran de verdad.  ¯\_(ツ)_/¯</p>
+</div>
+
+
 <div class="section" id="MunicipalMap_section">
     <h1>Mapas municipales de casos recientes</h1>
 
@@ -307,58 +329,6 @@
     <script type="text/javascript">
       embedChart('Municipal', bulletin_date);
     </script>
-</div>
-
-
-<div class="section" id="DailyMissingTests_section">
-    <h1>Pruebas duplicadas y perdidas diarias</h1>
-
-    <div id="DailyMissingTests"></div>
-    <script type="text/javascript">
-        embedChart('DailyMissingTests', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>La resta, por cada fecha de muestra, de:</p>
-    <ol>
-        <li>El número de casos confirmados (por prueba molecular) no duplicados
-            que el boletín le atribuye a esa fecha de muestra;</li>
-        <li>El número de pruebas positivas que la gráfica con datos <b>hasta
-            el 20 de mayo solamente</b> le atribuye a esa fecha de muestra.</li>
-    </ol>
-
-    <p>Ninguna de estas restas se supone que sea menos que cero, porque si has
-        confirmado tantos casos por prueba molecular tomada en tal fecha, se supone
-        que tengas por lo menos la misma cantidad de pruebas positivas tomadas
-        en esa misma fecha.  Pero se vé que no es así en estos datos.  Las fechas
-        que dan negativo las llamo <b>pruebas perdidas</b>—casos confirmados no
-        duplicados que se han reportado pero cuyas pruebas confirmatorias, a primera
-        vista, no parecen haberse contado.</p>
-
-    <p>Nótese que esto no es un procedimiento que de respuestas exactas, y puede
-        por ejemplo que una de las pruebas en exceso en fechas posteriores sea de
-        alguno de los pacientes que más temprano aparece como prueba "perdida."
-        El llamarlo "prueba perdida" no es un diagnóstico de la causa del descuadre,
-        sino una puyita para llamar la atención a este.</p>
-
-    <p>Nótese también que los datos sobre pruebas son del 20 de mayo porque esos
-        son los únicos que Salud ha publicado al momento.</p>
-</div>
-
-
-<div class="section" id="CumulativeMissingTests_section">
-    <h1>Pruebas duplicadas y perdidas acumuladas</h1>
-
-    <div id="CumulativeMissingTests"></div>
-    <script type="text/javascript">
-        embedChart('CumulativeMissingTests', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>El mismo análisis de "pruebas perdidas" que el anterior pero con números
-        acumulados en vez de diarios.</p>
 </div>
 
 
