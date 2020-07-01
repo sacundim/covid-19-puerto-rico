@@ -145,17 +145,16 @@ class AbstractPositiveRate(charts.AbstractChart):
         )
 
         lines = alt.Chart(df.dropna()).mark_line(
-            strokeWidth=3,
-            point=alt.OverlayMarkDef(size=50)
+            color='grey', strokeWidth=2,
+            point=alt.OverlayMarkDef(color='black', size=50)
         ).encode(
             x=alt.X('bulletin_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('value:Q', title=None, axis=alt.Axis(format='.1%')),
-            color=alt.Color('variable:N', legend=None),
+            y=alt.Y('value:Q', title=None, axis=alt.Axis(format='.2%')),
             tooltip=['bulletin_date:T',
                      alt.Tooltip(field='value',
                                  type='quantitative',
-                                 format=".1%")]
+                                 format=".2%")]
         )
 
         text = lines.mark_text(
@@ -163,7 +162,7 @@ class AbstractPositiveRate(charts.AbstractChart):
             baseline='line-top',
             size=15, dy=5, dx=5
         ).encode(
-            text=alt.Text('value:Q', format='.1%')
+            text=alt.Text('value:Q', format='.2%')
         )
 
         trellis = (lines + text).properties(
@@ -191,10 +190,10 @@ class NewPositiveRate(AbstractPositiveRate):
             table.c.bulletin_date,
             (cast(table.c.new_positive_molecular_tests, DOUBLE_PRECISION)
                 / table.c.new_molecular_tests)\
-                .label('Positivas / pruebas'),
+                .label('Moleculares positivas / total'),
             (cast(table.c.new_confirmed_cases, DOUBLE_PRECISION)
                   / table.c.new_molecular_tests)\
-                .label('Casos confirmados / pruebas')
+                .label('Casos confirmados / Moleculares total')
         ])
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
         return pd.melt(df, ['bulletin_date'])
@@ -237,8 +236,8 @@ class AbstractPerCapitaChart(charts.AbstractChart):
         lines = alt.Chart(df.dropna()).transform_calculate(
             per_thousand=alt.datum.value / self.POPULATION_THOUSANDS
         ).mark_line(
-            strokeWidth=3,
-            point=alt.OverlayMarkDef(size=50)
+            color='grey', strokeWidth=2,
+            point=alt.OverlayMarkDef(color='black', size=50)
         ).encode(
             x=alt.X('yearmonthdate(bulletin_date):T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
