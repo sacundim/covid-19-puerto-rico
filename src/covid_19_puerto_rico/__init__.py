@@ -45,13 +45,13 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        molecular.NewPositiveRate(engine, args.output_dir, output_formats),
+        molecular.CumulativePositiveRate(engine, args.output_dir, output_formats),
+        molecular.NewDailyTestsPerCapita(engine, args.output_dir, output_formats),
+        molecular.CumulativeTestsPerCapita(engine, args.output_dir, output_formats),
         charts.Doubling(engine, args.output_dir, output_formats),
         charts.MunicipalMap(engine, args.output_dir, output_formats),
         charts.Municipal(engine, args.output_dir, output_formats),
-        molecular.NewTestsPerCase(engine, args.output_dir, output_formats),
-        molecular.CumulativeTestsPerCase(engine, args.output_dir, output_formats),
-        molecular.NewDailyTestsPerCapita(engine, args.output_dir, output_formats),
-        molecular.CumulativeTestsPerCapita(engine, args.output_dir, output_formats),
         molecular.CumulativeMissingTests(engine, args.output_dir, output_formats),
         molecular.DailyMissingTests(engine, args.output_dir, output_formats),
         charts.CurrentDeltas(engine, args.output_dir, output_formats),
