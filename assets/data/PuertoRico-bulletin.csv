@@ -1,4 +1,4 @@
-bulletin_date,cumulative_positive_results,cumulative_negative_results,cumulative_pending_results,new_cases,new_confirmed_cases,new_probable_cases,additional_confirmed_cases,additional_probable_cases,cumulative_cases,cumulative_confirmed_cases,cumulative_probable_cases,cumulative_deaths,cumulative_certified_deaths,cumulative_confirmed_deaths
+bulletin_date,cumulative_positive_results,cumulative_negative_results,cumulative_pending_results,new_cases,new_confirmed_cases,new_probable_cases,adjusted_confirmed_cases,adjusted_probable_cases,cumulative_cases,cumulative_confirmed_cases,cumulative_probable_cases,cumulative_deaths,cumulative_certified_deaths,cumulative_confirmed_deaths
 2020-03-13,3,5,10,,,,,,,,,,,
 2020-03-14,4,12,4,,,,,,,,,,,
 2020-03-15,5,12,4,,,,,,,,,,,

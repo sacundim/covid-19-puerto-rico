@@ -42,8 +42,8 @@ CREATE TABLE announcement (
     new_cases INTEGER,
     new_confirmed_cases INTEGER,
     new_probable_cases INTEGER,
-    additional_confirmed_cases INTEGER,
-    additional_probable_cases INTEGER,
+    adjusted_confirmed_cases INTEGER,
+    adjusted_probable_cases INTEGER,
     cumulative_cases INTEGER,
     cumulative_confirmed_cases INTEGER,
     cumulative_probable_cases INTEGER,
@@ -73,7 +73,8 @@ Publication stopped on April 22.';
 
 COMMENT ON COLUMN announcement.new_cases IS
 'Unique confirmed or probable cases (deduplicated by person),
-by date that they were announced (not date of test sample).';
+by date that they were announced (not date of test sample).
+Publication stopped on July 10.';
 
 COMMENT ON COLUMN announcement.new_confirmed_cases IS
 'Unique confirmed cases (molecular test, deduplicated by person),
@@ -83,6 +84,25 @@ COMMENT ON COLUMN announcement.new_probable_cases IS
 'Unique probable cases (antibody test, deduplicated by person),
 by date that they were announced (not date of test sample).';
 
+COMMENT ON COLUMN announcement.adjusted_confirmed_cases IS
+'Irregular retroactive adjustment applied to cumulative_confirmed_cases,
+that was not counted toward new_confirmed_cases.  When this is done it
+usually means either old cases that were belatedly added to the count,
+or subtracted cases.  Adjustments to confirmed cases became a not uncommon
+occurrence in July 2020 but the earliest one is from 2020-05-19.  These
+are reported in footnotes that give free-form textual reports of cases
+added and subtracted, which we add up manually to get the net adjustment
+we record in this column.';
+
+COMMENT ON COLUMN announcement.adjusted_probable_cases IS
+'Irregular retroactive adjustment applied to cumulative_probable_cases,
+that was not counted toward new_probable_cases.  When this is done it
+usually means either old cases that were belatedly added to the count.
+Adjustments to probable cases became a common occurrence since 2020-06-03.
+These are reported in footnotes that give free-form textual reports of cases
+added and subtracted, which we add up manually to get the net adjustment we
+record in this column.';
+
 COMMENT ON COLUMN announcement.cumulative_confirmed_deaths IS
 'Deaths confirmed by a positive lab test, by date that they
 were announced (not date of actual death).';
@@ -91,7 +111,7 @@ COMMENT ON COLUMN announcement.cumulative_certified_deaths IS
 'Deaths not confirmed by a positive lab test, but for which a
 doctor or coroner indicated COVID-19 as cause of death in the
 death certificate.  Given by date that they were announced (not
-date of actual death).  First reported April 8';
+date of actual death).  First reported April 8.';
 
 
 CREATE TABLE bioportal (
@@ -340,12 +360,12 @@ SELECT
 	cumulative_confirmed_cases,
 	lag(cumulative_confirmed_cases) OVER bulletin
 		+ COALESCE(new_confirmed_cases, 0)
-		+ COALESCE(additional_confirmed_cases, 0)
+		+ COALESCE(adjusted_confirmed_cases, 0)
 		AS computed_cumulative_confirmed_cases,
 	cumulative_probable_cases,
 	lag(cumulative_probable_cases) OVER bulletin
 		+ COALESCE(new_probable_cases, 0)
-		+ COALESCE(additional_probable_cases, 0)
+		+ COALESCE(adjusted_probable_cases, 0)
 		AS computed_cumulative_probable_cases,
 	cumulative_deaths,
 	COALESCE(cumulative_certified_deaths , 0)
