@@ -7,6 +7,8 @@ import altair as alt
 import datetime
 import pandas as pd
 import sqlalchemy
+from sqlalchemy import cast, Float
+from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION
 from sqlalchemy.sql import select
 from . import charts
 
@@ -131,7 +133,93 @@ class TestsBySampleDate(charts.AbstractChart):
         return df.loc[df['bulletin_date'] == max_date]
 
 
-class AbstractTestsPerCaseChart(charts.AbstractChart):
+class AbstractPositiveRate(charts.AbstractChart):
+    def make_chart(self, df):
+        data_date = alt.Chart(df).mark_text(baseline='middle').encode(
+            text=alt.Text('bulletin_date',
+                          type='temporal',
+                          aggregate='max',
+                          format='Datos hasta: %d de %B, %Y'),
+        ).properties(
+            width=575, height=40
+        )
+
+        lines = alt.Chart(df.dropna()).mark_line(point=True).encode(
+            x=alt.X('bulletin_date:T', title='Puerto Rico',
+                    axis=alt.Axis(format='%d/%m')),
+            y=alt.Y('value:Q', title=None, axis=alt.Axis(format='.1%')),
+            color=alt.Color('variable:N', legend=None),
+            tooltip=['bulletin_date:T',
+                     alt.Tooltip(field='value',
+                                 type='quantitative',
+                                 format=".1%")]
+        )
+
+        text = lines.mark_text(
+            align='left',
+            baseline='line-top',
+            dy=5, dx=5
+        ).encode(
+            text=alt.Text('value:Q', format='.1%')
+        )
+
+        trellis = (lines + text).properties(
+            width=575, height=35
+        ).facet(
+            columns=1,
+            facet=alt.Facet('variable:N', title=None)
+        ).resolve_scale(
+            y='independent'
+        )
+
+        return alt.vconcat(data_date, trellis, spacing=0).configure_view(
+            strokeWidth=0
+        )
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+
+
+class NewPositiveRate(AbstractPositiveRate):
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            (cast(table.c.new_positive_molecular_tests, DOUBLE_PRECISION)
+                / table.c.new_molecular_tests)\
+                .label('Positivas / pruebas'),
+            (cast(table.c.new_confirmed_cases, DOUBLE_PRECISION)
+                  / table.c.new_molecular_tests)\
+                .label('Casos confirmados / pruebas')
+        ])
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+        return pd.melt(df, ['bulletin_date'])
+
+
+class CumulativePositiveRate(AbstractPositiveRate):
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            (cast(table.c.cumulative_positive_molecular_tests, DOUBLE_PRECISION)
+                / table.c.cumulative_molecular_tests)\
+                .label('Positivas / pruebas'),
+            (cast(table.c.cumulative_confirmed_cases, DOUBLE_PRECISION)
+                  / table.c.cumulative_molecular_tests)\
+                .label('Casos confirmados / pruebas')
+        ])
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+        return pd.melt(df, ['bulletin_date'])
+
+
+
+class AbstractPerCapitaChart(charts.AbstractChart):
+    POPULATION = 3_193_694
+    POPULATION_THOUSANDS = POPULATION / 1_000.0
+    POPULATION_MILLIONS = POPULATION / 1_000_000.0
+
     def make_chart(self, df):
         data_date = alt.Chart(df).mark_text(baseline='middle').encode(
             text=alt.Text('bulletin_date',
@@ -143,12 +231,14 @@ class AbstractTestsPerCaseChart(charts.AbstractChart):
             width=575, height=40
         )
 
-        lines = alt.Chart(df.dropna()).mark_line(point=True).encode(
+        lines = alt.Chart(df.dropna()).transform_calculate(
+            per_thousand=alt.datum.value / self.POPULATION_THOUSANDS
+        ).mark_line(point=True).encode(
             x=alt.X('yearmonthdate(bulletin_date):T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('value', title=None),
+            y=alt.Y('per_thousand:Q', title=None),
             tooltip=['yearmonthdate(bulletin_date):T',
-                     alt.Tooltip(field='value',
+                     alt.Tooltip(field='per_thousand',
                                  type='quantitative',
                                  format=".2f")]
         )
@@ -158,7 +248,7 @@ class AbstractTestsPerCaseChart(charts.AbstractChart):
             baseline='line-top',
             dy=5, dx=5
         ).encode(
-            text=alt.Text('value:Q', format='.2f')
+            text=alt.Text('per_thousand:Q', format='.2f')
         )
 
         trellis = (lines + text).properties(
@@ -173,43 +263,22 @@ class AbstractTestsPerCaseChart(charts.AbstractChart):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
 
 
-class NewTestsPerCase(AbstractTestsPerCaseChart):
+class NewDailyTestsPerCapita(AbstractPerCapitaChart):
     def fetch_data(self, connection):
         table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.bulletin_date,
-            table.c.new_tests_per_confirmed_case.label('value')
+            table.c.new_daily_tests.label('value')
         ])
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
 
-class CumulativeTestsPerCase(AbstractTestsPerCaseChart):
+class CumulativeTestsPerCapita(AbstractPerCapitaChart):
     def fetch_data(self, connection):
         table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.bulletin_date,
-            table.c.cumulative_tests_per_confirmed_case.label('value')
+            table.c.cumulative_molecular_tests.label('value')
         ])
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
-
-class NewDailyTestsPerCapita(AbstractTestsPerCaseChart):
-    def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
-                                 schema='products', autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.new_daily_tests_per_thousand.label('value')
-        ])
-        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
-
-class CumulativeTestsPerCapita(AbstractTestsPerCaseChart):
-    def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
-                                 schema='products', autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.cumulative_tests_per_thousand.label('value')
-        ])
-        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
-

@@ -692,24 +692,37 @@ WINDOW bulletin AS (PARTITION BY bulletin_date ROWS UNBOUNDED PRECEDING);
 
 
 CREATE VIEW products.tests_by_bulletin_date AS
+WITH raw AS (
+	SELECT
+		b.bulletin_date,
+		b.bulletin_date - lag(b.bulletin_date) OVER bulletin
+			AS days,
+		b.cumulative_molecular_tests,
+		b.cumulative_positive_molecular_tests,
+		a.cumulative_confirmed_cases,
+		b.new_molecular_tests,
+		b.new_positive_molecular_tests,
+	    a.cumulative_confirmed_cases - lag(a.cumulative_confirmed_cases) OVER bulletin
+	        AS new_confirmed_cases
+	FROM bioportal b
+	INNER JOIN announcement a
+		USING (bulletin_date)
+	WINDOW bulletin AS (ORDER BY b.bulletin_date)
+)
 SELECT
-	b.bulletin_date,
-	b.cumulative_molecular_tests / 3193.694
-		AS cumulative_tests_per_thousand,
-	CAST(b.cumulative_molecular_tests AS DOUBLE PRECISION)
-		/ a.cumulative_confirmed_cases
-		AS cumulative_tests_per_confirmed_case,
-	(b.new_molecular_tests / 3193.694)
-		/ (b.bulletin_date - lag(b.bulletin_date) OVER bulletin)
-		AS new_daily_tests_per_thousand,
-	CAST(b.new_molecular_tests AS DOUBLE PRECISION)
-		/ (a.cumulative_confirmed_cases - lag(a.cumulative_confirmed_cases) OVER bulletin)
-		AS new_tests_per_confirmed_case
-FROM bioportal b
-INNER JOIN announcement a
-	USING (bulletin_date)
-WINDOW bulletin AS (ORDER BY b.bulletin_date)
+	bulletin_date,
+	days AS days_since_last_report,
+	cumulative_molecular_tests,
+	cumulative_positive_molecular_tests,
+	cumulative_confirmed_cases,
+    new_molecular_tests,
+	new_molecular_tests / days
+		AS new_daily_tests,
+	new_positive_molecular_tests,
+	new_confirmed_cases
+FROM raw
 ORDER BY bulletin_date;
+
 
 CREATE VIEW products.tests_by_sample_date AS
 SELECT
