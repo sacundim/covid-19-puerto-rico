@@ -40,8 +40,8 @@ def heatmap_text_color(df, field, extreme_color='white', mid_color='black'):
         # have **exclusive** endpoints, but FieldRangePredicate is
         # inclusive.  Hence this dance:
         alt.LogicalOrPredicate(
-            **{'or': [alt.FieldLTEPredicate(field=field, lte=lo),
-                      alt.FieldGTEPredicate(field=field, gte=hi)]}),
+            **{'or': [alt.FieldLTPredicate(field=field, lt=lo),
+                      alt.FieldGTPredicate(field=field, gt=hi)]}),
         alt.value(extreme_color),
         alt.value(mid_color)
     )
