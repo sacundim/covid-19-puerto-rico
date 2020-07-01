@@ -42,6 +42,8 @@ CREATE TABLE announcement (
     new_cases INTEGER,
     new_confirmed_cases INTEGER,
     new_probable_cases INTEGER,
+    additional_confirmed_cases INTEGER,
+    additional_probable_cases INTEGER,
     cumulative_cases INTEGER,
     cumulative_confirmed_cases INTEGER,
     cumulative_probable_cases INTEGER,
@@ -333,42 +335,25 @@ COMMENT ON SCHEMA quality IS
 
 
 CREATE VIEW quality.mismatched_announcement_aggregates AS
-WITH base AS (
-	SELECT
-		bulletin_date,
-		lag(cumulative_cases) OVER bulletin
-			AS previous_cumulative_cases,
-		new_cases,
-		cumulative_cases - lag(cumulative_cases) OVER bulletin
-			AS computed_new_cases,
-		cumulative_cases,
-		lag(cumulative_cases) OVER bulletin + new_cases
-			AS computed_cumulative_cases,
-
-		lag(cumulative_confirmed_cases) OVER bulletin
-			AS previous_cumulative_confirmed_cases,
-		new_confirmed_cases,
-		cumulative_confirmed_cases - lag(cumulative_confirmed_cases) OVER bulletin
-			AS computed_new_confirmed_cases,
-		cumulative_confirmed_cases,
-		lag(cumulative_confirmed_cases) OVER bulletin + new_confirmed_cases
-			AS computed_cumulative_confirmed_cases,
-
-		lag(cumulative_probable_cases) OVER bulletin
-			AS previous_cumulative_probable_cases,
-		new_probable_cases,
-		cumulative_probable_cases - lag(cumulative_probable_cases) OVER bulletin
-			AS computed_new_probable_cases,
-		cumulative_probable_cases,
-		lag(cumulative_probable_cases) OVER bulletin + new_probable_cases
-			AS computed_cumulative_probable_cases
-	FROM announcement a
-	WINDOW bulletin AS (ORDER BY bulletin_date))
-SELECT *
-FROM base
-WHERE new_cases != computed_new_cases
-OR new_confirmed_cases != computed_new_confirmed_cases
-OR new_probable_cases != computed_new_probable_cases;
+SELECT
+	bulletin_date,
+	cumulative_confirmed_cases,
+	lag(cumulative_confirmed_cases) OVER bulletin
+		+ COALESCE(new_confirmed_cases, 0)
+		+ COALESCE(additional_confirmed_cases, 0)
+		AS computed_cumulative_confirmed_cases,
+	cumulative_probable_cases,
+	lag(cumulative_probable_cases) OVER bulletin
+		+ COALESCE(new_probable_cases, 0)
+		+ COALESCE(additional_probable_cases, 0)
+		AS computed_cumulative_probable_cases,
+	cumulative_deaths,
+	COALESCE(cumulative_certified_deaths , 0)
+		+ COALESCE(cumulative_confirmed_deaths , 0)
+		AS computed_cumulative_deaths
+FROM announcement a
+WINDOW bulletin AS (ORDER BY bulletin_date)
+ORDER BY bulletin_date;
 
 COMMENT ON VIEW quality.mismatched_announcement_aggregates IS
 'Check whether the daily new cases and the cumulative figures
