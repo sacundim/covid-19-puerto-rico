@@ -144,7 +144,10 @@ class AbstractPositiveRate(charts.AbstractChart):
             width=575, height=40
         )
 
-        lines = alt.Chart(df.dropna()).mark_line(point=True).encode(
+        lines = alt.Chart(df.dropna()).mark_line(
+            strokeWidth=3,
+            point=alt.OverlayMarkDef(size=50)
+        ).encode(
             x=alt.X('bulletin_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('value:Q', title=None, axis=alt.Axis(format='.1%')),
@@ -158,7 +161,7 @@ class AbstractPositiveRate(charts.AbstractChart):
         text = lines.mark_text(
             align='left',
             baseline='line-top',
-            dy=5, dx=5
+            size=15, dy=5, dx=5
         ).encode(
             text=alt.Text('value:Q', format='.1%')
         )
@@ -205,7 +208,7 @@ class CumulativePositiveRate(AbstractPositiveRate):
             table.c.bulletin_date,
             (cast(table.c.cumulative_positive_molecular_tests, DOUBLE_PRECISION)
                 / table.c.cumulative_molecular_tests)\
-                .label('Positivas / pruebas'),
+                .label('Moleculares positivas / pruebas'),
             (cast(table.c.cumulative_confirmed_cases, DOUBLE_PRECISION)
                   / table.c.cumulative_molecular_tests)\
                 .label('Casos confirmados / pruebas')
@@ -233,7 +236,10 @@ class AbstractPerCapitaChart(charts.AbstractChart):
 
         lines = alt.Chart(df.dropna()).transform_calculate(
             per_thousand=alt.datum.value / self.POPULATION_THOUSANDS
-        ).mark_line(point=True).encode(
+        ).mark_line(
+            strokeWidth=3,
+            point=alt.OverlayMarkDef(size=50)
+        ).encode(
             x=alt.X('yearmonthdate(bulletin_date):T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('per_thousand:Q', title=None),
@@ -246,7 +252,7 @@ class AbstractPerCapitaChart(charts.AbstractChart):
         text = lines.mark_text(
             align='left',
             baseline='line-top',
-            dy=5, dx=5
+            size=15, dy=5, dx=5
         ).encode(
             text=alt.Text('per_thousand:Q', format='.2f')
         )
