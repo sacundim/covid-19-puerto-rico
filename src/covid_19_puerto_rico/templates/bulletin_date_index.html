@@ -42,6 +42,7 @@
         <li><a href="#CumulativePositiveRate_section">Tasa de positividad (pruebas acumuladas)</a></li>
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas moleculares nuevas por mil habitantes, promedio diario</a></li>
         <li><a href="#CumulativeTestsPerCapita_section">Pruebas moleculares acumuladas por mil habitantes</a></li>
+        <li><a href="#ConsecutiveBulletinMismatch_section">Descuadres de boletines consecutivos</a></li>
         <li><a href="#Terminology_section">Terminología</a></li>
         <li><a href="#Sources_section">Datos fuente para {{ bulletin_date }}</a></li>
     </ul>
@@ -460,6 +461,31 @@
 
     <p>Cuántas pruebas moleculares se han administrado cumulativamente, divido por millares
         de población, acompañado de comparación internacional.</p>
+</div>
+
+
+<div class="section" id="ConsecutiveBulletinMismatch_section">
+    <h1>Descuadres de boletines consecutivos</h1>
+
+    <div id="ConsecutiveBulletinMismatch" class="chart"></div>
+    <script type="text/javascript" class="chart">
+      embedChart('ConsecutiveBulletinMismatch', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Comparación entre los totales de casos acumulados reportados en la primera página
+        de cada boletín y el resultado de sumarle los casos nuevos y adicionales al total
+        del boletín anterior.  Esto es un cotejo de calidad de datos.</p>
+
+    <h3>Descuadres constatados en los datos de fuente</h3>
+    <dl>
+        <dt>2020-04-22</dt>
+        <dd>La cifra de 849 casos confirmados acumulados se obtuvo de <a href="../2020-04-22/2020-04-22_confirmed.jpg">una
+            gráfica publicada por el Instituto de Estadísticas de Puerto Rico con esa fecha de
+            referencia</a>. Nótese que esto antedata el boletín regular más temprano disponible
+            en las páginas del Departamento de Salud, fechado 25 de abril y con datos hasta el 24.</dd>
+    </dl>
 </div>
 
 

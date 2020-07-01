@@ -38,3 +38,13 @@ blockquote {
   padding: 0.5em 10px;
   quotes: "\201C""\201D""\2018""\2019";
 }
+
+dt {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+dd {
+    margin: 0;
+    padding: 0 0 0.5em 0;
+}
