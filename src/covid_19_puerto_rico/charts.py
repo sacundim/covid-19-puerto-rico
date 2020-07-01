@@ -89,6 +89,44 @@ class ConsecutiveBulletinMismatch(AbstractChart):
             width=575
         )
 
+class BulletinChartMismatch(AbstractChart):
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('mismatched_announcement_and_chart', self.metadata,
+                                 schema='quality', autoload=True)
+        query = select([table.c.bulletin_date,
+                        (table.c.cumulative_confirmed_cases - table.c.sum_confirmed_cases)\
+                           .label('confirmed_cases_mismatch'),
+                        (table.c.cumulative_probable_cases - table.c.sum_probable_cases)\
+                           .label('probable_cases_mismatch'),
+                        (table.c.cumulative_deaths - table.c.sum_deaths)\
+                           .label('deaths_mismatch'),
+                        ])
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+        df = df.rename(columns={
+            'confirmed_cases_mismatch': 'Confirmados',
+            'probable_cases_mismatch': 'Probables',
+            'deaths_mismatch': 'Muertes'
+        })
+        return pd.melt(df, ['bulletin_date']).dropna()
+
+    def filter_data(self, df, bulletin_date):
+        until = pd.to_datetime(bulletin_date)
+        return df.loc[df['bulletin_date'] <= until]
+
+    def make_chart(self, df):
+        sort_order = ['Confirmados', 'Probables', 'Muertes']
+        return alt.Chart(df).mark_bar().encode(
+            y=alt.Y('value:Q', title="Descuadre"),
+            x=alt.X('bulletin_date:T', title="Fecha del boletín"),
+            color=alt.Color('variable:N', sort=sort_order,
+                            legend=alt.Legend(orient='bottom', title=None)),
+            tooltip=['bulletin_date:T', 'variable:N',
+                     alt.Tooltip(field='value',
+                                 type='quantitative')]
+        ).properties(
+            width=575
+        )
+
 
 class Cumulative(AbstractChart):
     def make_chart(self, df):

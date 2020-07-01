@@ -43,6 +43,7 @@
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas moleculares nuevas por mil habitantes, promedio diario</a></li>
         <li><a href="#CumulativeTestsPerCapita_section">Pruebas moleculares acumuladas por mil habitantes</a></li>
         <li><a href="#ConsecutiveBulletinMismatch_section">Descuadres de boletines consecutivos</a></li>
+        <li><a href="#BulletinChartMismatch_section">Descuadres de boletines consecutivos</a></li>
         <li><a href="#Terminology_section">Terminología</a></li>
         <li><a href="#Sources_section">Datos fuente para {{ bulletin_date }}</a></li>
     </ul>
@@ -486,6 +487,30 @@
             referencia</a>. Nótese que esto antedata el boletín regular más temprano disponible
             en las páginas del Departamento de Salud, fechado 25 de abril y con datos hasta el 24.</dd>
     </dl>
+
+    <p>Cualquier otra fecha que no dé cero en esta gráfica hay que cotejar que se hayan
+        copiado bien los datos.</p>
+</div>
+
+
+<div class="section" id="BulletinChartMismatch_section">
+    <h1>Descuadre de boletín y gráficas</h1>
+
+    <div id="BulletinChartMismatch" class="chart"></div>
+    <script type="text/javascript" class="chart">
+      embedChart('BulletinChartMismatch', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Comparación entre los totales de casos acumulados reportados en la primera página
+        de cada boletín y las sumas de los datos por fecha de muestra en las gráficas de
+        este mismo boletín.  Esto es un cotejo de calidad de datos.</p>
+
+    <h3>Descuadres constatados en los datos de fuente</h3>
+
+    <p>Ninguno.  Si esta gráfica no está vacía hay que cotejar que se hayan copiado
+        correctamente los datos.</p>
 </div>
 
 

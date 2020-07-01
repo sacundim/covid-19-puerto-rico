@@ -356,8 +356,28 @@ WINDOW bulletin AS (ORDER BY bulletin_date)
 ORDER BY bulletin_date;
 
 COMMENT ON VIEW quality.mismatched_announcement_aggregates IS
-'Check whether the daily new cases and the cumulative figures
-in the bulletins match. Which they don''t always do...';
+'Check whether daily new cases plus previous cumulative cases
+matches the cumulative cases figure.';
+
+
+CREATE VIEW quality.mismatched_announcement_and_chart AS
+SELECT
+	bulletin_date,
+	a.cumulative_confirmed_cases,
+	sum(bi.confirmed_cases) sum_confirmed_cases,
+	a.cumulative_probable_cases,
+	sum(bi.probable_cases) sum_probable_cases,
+	a.cumulative_deaths,
+	sum(bi.deaths) sum_deaths
+FROM announcement a
+INNER JOIN bitemporal bi
+	USING (bulletin_date)
+GROUP BY bulletin_date
+ORDER BY bulletin_date;
+
+COMMENT ON VIEW quality.mismatched_announcement_and_chart IS
+'Check whether the announced cumulative figures and the sample date
+charts match in each bulletin.';
 
 
 -------------------------------------------------------------------------------
