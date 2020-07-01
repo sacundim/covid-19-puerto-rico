@@ -171,6 +171,45 @@ CREATE TABLE municipal (
     PRIMARY KEY (bulletin_date, municipality)
 );
 
+CREATE TABLE prpht_molecular_raw (
+    bulletin_date DATE NOT NULL,
+    laboratory TEXT NOT NULL,
+    cumulative_molecular_tests INTEGER,
+    cumulative_positive_molecular_tests INTEGER,
+    new_molecular_tests INTEGER,
+    new_positive_molecular_tests INTEGER,
+    current_molecular_capacity_per_week INTEGER,
+    PRIMARY KEY (bulletin_date, laboratory)
+);
+
+CREATE OR REPLACE VIEW prpht_molecular_cleaned AS
+SELECT
+	bulletin_date,
+	laboratory,
+	bulletin_date - lag(bulletin_date) OVER previous
+		AS days_since_last,
+	COALESCE(cumulative_positive_molecular_tests,
+		     LAG(cumulative_positive_molecular_tests) OVER previous + new_positive_molecular_tests,
+		     SUM(new_positive_molecular_tests) OVER previous)
+		AS cumulative_positive_molecular_tests,
+	COALESCE(new_positive_molecular_tests,
+	         cumulative_positive_molecular_tests - LAG(cumulative_positive_molecular_tests) OVER previous,
+	         0)
+	    AS new_positive_molecular_tests,
+	COALESCE(cumulative_molecular_tests,
+		     LAG(cumulative_molecular_tests) OVER previous + new_molecular_tests,
+		     SUM(new_molecular_tests) OVER previous)
+		AS cumulative_molecular_tests,
+	COALESCE(new_molecular_tests,
+	         cumulative_molecular_tests - LAG(cumulative_molecular_tests) OVER previous,
+	         0)
+	    AS new_molecular_tests
+FROM prpht_molecular_raw
+WINDOW previous AS (
+	PARTITION BY laboratory ORDER BY bulletin_date ROWS UNBOUNDED PRECEDING
+)
+ORDER BY laboratory, bulletin_date;
+
 
 CREATE VIEW bitemporal_agg AS
 SELECT
@@ -345,6 +384,27 @@ WINDOW seven_most_recent AS (
 	EXCLUDE CURRENT ROW
 )
 ORDER BY municipality, bulletin_date;
+
+
+CREATE VIEW prpht_molecular_deltas AS
+SELECT
+	laboratory,
+	bulletin_date,
+	days_since_last,
+	cumulative_molecular_tests,
+	cumulative_molecular_tests
+		- LAG(cumulative_molecular_tests, 1, 0::BIGINT) OVER previous
+		AS delta_molecular_tests,
+	cumulative_positive_molecular_tests,
+	cumulative_positive_molecular_tests
+		- LAG(cumulative_positive_molecular_tests, 1, 0::BIGINT) OVER previous
+		AS delta_positive_molecular_tests
+FROM prpht_molecular_cleaned
+WINDOW previous AS (
+	PARTITION BY laboratory ORDER BY bulletin_date ROWS 1 PRECEDING
+)
+ORDER BY laboratory, bulletin_date;
+
 
 
 -------------------------------------------------------------------------------
