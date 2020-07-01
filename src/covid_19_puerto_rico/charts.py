@@ -48,7 +48,47 @@ class AbstractChart(ABC):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
 
-class ConsecutiveBulletinMismatch(AbstractChart):
+class AbstractMismatchChart(AbstractChart):
+    def filter_data(self, df, bulletin_date):
+        until = pd.to_datetime(bulletin_date)
+        return df.loc[df['bulletin_date'] <= until]
+
+    def make_chart(self, df):
+        base = alt.Chart(df).encode(
+            x=alt.X('date(bulletin_date):O',
+                    title="Día del mes", sort="descending",
+                    axis=alt.Axis(format='%d')),
+            y=alt.Y('month(bulletin_date):O',
+                    title=None, sort="descending",
+                    axis=alt.Axis(format='%B')),
+            tooltip=['bulletin_date:T', 'value']
+        )
+
+        heatmap = base.mark_rect().encode(
+            color=alt.Color('value:Q', title=None, legend=None,
+                            scale=alt.Scale(scheme="redgrey", domainMid=0,
+                                            # WORKAROUND: Set the domain manually to forcibly
+                                            # include zero or else we run into
+                                            # https://github.com/vega/vega-lite/issues/6544
+                                            domain=alt.DomainUnionWith(unionWith=[0])))
+        )
+
+        text = base.mark_text(fontSize=9).encode(
+            text=alt.Text('value:Q'),
+            color=util.heatmap_text_color(df, 'value')
+        )
+
+        return (heatmap + text).properties(
+            width=585, height=70
+        ).facet(
+            row=alt.Row('variable', title=None,
+                        sort=['Confirmados',
+                              'Probables',
+                              'Muertes'])
+        )
+
+
+class ConsecutiveBulletinMismatch(AbstractMismatchChart):
     def fetch_data(self, connection):
         table = sqlalchemy.Table('mismatched_announcement_aggregates', self.metadata,
                                  schema='quality', autoload=True)
@@ -71,25 +111,9 @@ class ConsecutiveBulletinMismatch(AbstractChart):
         })
         return pd.melt(df, ['bulletin_date']).dropna()
 
-    def filter_data(self, df, bulletin_date):
-        until = pd.to_datetime(bulletin_date)
-        return df.loc[df['bulletin_date'] <= until]
 
-    def make_chart(self, df):
-        sort_order = ['Confirmados', 'Probables', 'Muertes']
-        return alt.Chart(df).mark_bar().encode(
-            y=alt.Y('value:Q', title="Descuadre"),
-            x=alt.X('bulletin_date:T', title="Fecha del boletín"),
-            color=alt.Color('variable:N', sort=sort_order,
-                            legend=alt.Legend(orient='bottom', title=None)),
-            tooltip=['bulletin_date:T', 'variable:N',
-                     alt.Tooltip(field='value',
-                                 type='quantitative')]
-        ).properties(
-            width=575
-        )
 
-class BulletinChartMismatch(AbstractChart):
+class BulletinChartMismatch(AbstractMismatchChart):
     def fetch_data(self, connection):
         table = sqlalchemy.Table('mismatched_announcement_and_chart', self.metadata,
                                  schema='quality', autoload=True)
@@ -108,24 +132,6 @@ class BulletinChartMismatch(AbstractChart):
             'deaths_mismatch': 'Muertes'
         })
         return pd.melt(df, ['bulletin_date']).dropna()
-
-    def filter_data(self, df, bulletin_date):
-        until = pd.to_datetime(bulletin_date)
-        return df.loc[df['bulletin_date'] <= until]
-
-    def make_chart(self, df):
-        sort_order = ['Confirmados', 'Probables', 'Muertes']
-        return alt.Chart(df).mark_bar().encode(
-            y=alt.Y('value:Q', title="Descuadre"),
-            x=alt.X('bulletin_date:T', title="Fecha del boletín"),
-            color=alt.Color('variable:N', sort=sort_order,
-                            legend=alt.Legend(orient='bottom', title=None)),
-            tooltip=['bulletin_date:T', 'variable:N',
-                     alt.Tooltip(field='value',
-                                 type='quantitative')]
-        ).properties(
-            width=575
-        )
 
 
 class Cumulative(AbstractChart):

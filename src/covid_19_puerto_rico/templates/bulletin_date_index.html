@@ -42,8 +42,8 @@
         <li><a href="#CumulativePositiveRate_section">Tasa de positividad (pruebas acumuladas)</a></li>
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas moleculares nuevas por mil habitantes, promedio diario</a></li>
         <li><a href="#CumulativeTestsPerCapita_section">Pruebas moleculares acumuladas por mil habitantes</a></li>
-        <li><a href="#ConsecutiveBulletinMismatch_section">Descuadres de boletines consecutivos</a></li>
-        <li><a href="#BulletinChartMismatch_section">Descuadres de boletines consecutivos</a></li>
+        <li><a href="#ConsecutiveBulletinMismatch_section">Descuadre de encabezado de boletín</a></li>
+        <li><a href="#BulletinChartMismatch_section">Descuadre de boletín y gráficas</a></li>
         <li><a href="#Terminology_section">Terminología</a></li>
         <li><a href="#Sources_section">Datos fuente para {{ bulletin_date }}</a></li>
     </ul>
@@ -466,7 +466,7 @@
 
 
 <div class="section" id="ConsecutiveBulletinMismatch_section">
-    <h1>Descuadres de boletines consecutivos</h1>
+    <h1>Descuadre de encabezado de boletín</h1>
 
     <div id="ConsecutiveBulletinMismatch" class="chart"></div>
     <script type="text/javascript" class="chart">
@@ -475,9 +475,13 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Comparación entre los totales de casos acumulados reportados en la primera página
-        de cada boletín y el resultado de sumarle los casos nuevos y adicionales al total
-        del boletín anterior.  Esto es un cotejo de calidad de datos.</p>
+    <p>Cotejos de cifras reportadas en la primera página de cada boletín. Se compara:</p>
+    <ul>
+        <li>Para casos confirmados y probables, que cuadren el total reportado en el
+            boletín anterior con los casos nuevos, ajustes y total en el corriente;</li>
+        <li>Para las muertes, que cuadren la cifras de confirmadas y probables con
+            la de total.</li>
+    </ul>
 
     <h3>Descuadres constatados en los datos de fuente</h3>
     <dl>
@@ -493,7 +497,7 @@
     </dl>
 
     <p>Cualquier otra fecha que no dé cero en esta gráfica hay que cotejar que se hayan
-        copiado bien los datos.</p>
+        copiado correctamente los datos.</p>
 </div>
 
 
@@ -513,8 +517,8 @@
 
     <h3>Descuadres constatados en los datos de fuente</h3>
 
-    <p>Ninguno.  Si esta gráfica no está vacía hay que cotejar que se hayan copiado
-        correctamente los datos.</p>
+    <p>Ninguno.  Cualquier fecha que no dé cero en esta gráfica hay que cotejar que se
+        hayan copiado correctamente los datos.</p>
 </div>
 
 
