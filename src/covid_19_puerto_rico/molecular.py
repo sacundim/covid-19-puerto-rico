@@ -166,7 +166,7 @@ class AbstractPositiveRate(charts.AbstractChart):
         )
 
         trellis = (lines + text).properties(
-            width=575, height=35
+            width=560, height=35
         ).facet(
             columns=1,
             facet=alt.Facet('variable:N', title=None)
