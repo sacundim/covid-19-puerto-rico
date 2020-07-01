@@ -45,6 +45,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        charts.BulletinChartMismatch(engine, args.output_dir, output_formats),
         charts.ConsecutiveBulletinMismatch(engine, args.output_dir, output_formats),
         molecular.NewPositiveRate(engine, args.output_dir, output_formats),
         molecular.CumulativePositiveRate(engine, args.output_dir, output_formats),
