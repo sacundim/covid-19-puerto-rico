@@ -145,26 +145,25 @@ class AbstractPositiveRate(charts.AbstractChart):
         )
 
         lines = alt.Chart(df.dropna()).mark_line(
-            color='grey', point=alt.OverlayMarkDef(color='black', size=10)
+            point=True
         ).encode(
             x=alt.X('bulletin_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('value:Q', title=None, axis=alt.Axis(format='.2%')),
+            color=alt.Color('Fuente:N', legend=alt.Legend(orient='top')),
             tooltip=['bulletin_date:T',
                      alt.Tooltip(field='value',
                                  type='quantitative',
                                  format=".2%")]
         )
 
-        trellis = lines.properties(
-            width=275, height=100
+        return lines.properties(
+            width=575, height=150
         ).facet(
-            row=alt.Row('Fuente:N', title=None),
-            column=alt.Column('variable:N', title=None)
-        )
-
-        return alt.vconcat(data_date, trellis, spacing=0).configure_view(
-            strokeWidth=0
+            columns=1,
+            facet=alt.Facet('variable:N', title=None)
+        ).resolve_scale(
+            y='independent'
         )
 
     def filter_data(self, df, bulletin_date):
@@ -221,27 +220,22 @@ class AbstractPerCapitaChart(charts.AbstractChart):
             width=575, height=40
         )
 
-        lines = alt.Chart(df.dropna()).transform_calculate(
+        return alt.Chart(df.dropna()).transform_calculate(
             per_thousand=alt.datum.value / self.POPULATION_THOUSANDS
         ).mark_line(
-            color='grey', point=alt.OverlayMarkDef(color='black', size=10)
+            point=True
         ).encode(
             x=alt.X('bulletin_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('per_thousand:Q', title=None),
+            color=alt.Color('Fuente:N', legend=alt.Legend(orient='top')),
             tooltip=['bulletin_date:T',
                      alt.Tooltip(field='per_thousand',
                                  type='quantitative',
                                  format=".2f")]
+        ).properties(
+            width=575, height=150
         )
-
-        trellis = lines.properties(
-            width=575, height=125
-        ).facet(
-            columns=1,
-            facet=alt.Facet('Fuente:N', title=None)
-        )
-        return trellis
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
