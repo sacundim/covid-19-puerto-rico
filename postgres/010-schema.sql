@@ -171,6 +171,45 @@ CREATE TABLE municipal (
     PRIMARY KEY (bulletin_date, municipality)
 );
 
+CREATE TABLE prpht_molecular_raw (
+    bulletin_date DATE NOT NULL,
+    laboratory TEXT NOT NULL,
+    cumulative_molecular_tests INTEGER,
+    cumulative_positive_molecular_tests INTEGER,
+    new_molecular_tests INTEGER,
+    new_positive_molecular_tests INTEGER,
+    current_molecular_capacity_per_week INTEGER,
+    PRIMARY KEY (bulletin_date, laboratory)
+);
+
+CREATE OR REPLACE VIEW prpht_molecular_cleaned AS
+SELECT
+	bulletin_date,
+	laboratory,
+	bulletin_date - lag(bulletin_date) OVER previous
+		AS days_since_last,
+	COALESCE(cumulative_positive_molecular_tests,
+		     LAG(cumulative_positive_molecular_tests) OVER previous + new_positive_molecular_tests,
+		     SUM(new_positive_molecular_tests) OVER previous)
+		AS cumulative_positive_molecular_tests,
+	COALESCE(new_positive_molecular_tests,
+	         cumulative_positive_molecular_tests - LAG(cumulative_positive_molecular_tests) OVER previous,
+	         0)
+	    AS new_positive_molecular_tests,
+	COALESCE(cumulative_molecular_tests,
+		     LAG(cumulative_molecular_tests) OVER previous + new_molecular_tests,
+		     SUM(new_molecular_tests) OVER previous)
+		AS cumulative_molecular_tests,
+	COALESCE(new_molecular_tests,
+	         cumulative_molecular_tests - LAG(cumulative_molecular_tests) OVER previous,
+	         0)
+	    AS new_molecular_tests
+FROM prpht_molecular_raw
+WINDOW previous AS (
+	PARTITION BY laboratory ORDER BY bulletin_date ROWS UNBOUNDED PRECEDING
+)
+ORDER BY laboratory, bulletin_date;
+
 
 CREATE VIEW bitemporal_agg AS
 SELECT
@@ -345,6 +384,27 @@ WINDOW seven_most_recent AS (
 	EXCLUDE CURRENT ROW
 )
 ORDER BY municipality, bulletin_date;
+
+
+CREATE VIEW prpht_molecular_deltas AS
+SELECT
+	laboratory,
+	bulletin_date,
+	days_since_last,
+	cumulative_molecular_tests,
+	cumulative_molecular_tests
+		- LAG(cumulative_molecular_tests, 1, 0::BIGINT) OVER previous
+		AS delta_molecular_tests,
+	cumulative_positive_molecular_tests,
+	cumulative_positive_molecular_tests
+		- LAG(cumulative_positive_molecular_tests, 1, 0::BIGINT) OVER previous
+		AS delta_positive_molecular_tests
+FROM prpht_molecular_cleaned
+WINDOW previous AS (
+	PARTITION BY laboratory ORDER BY bulletin_date ROWS 1 PRECEDING
+)
+ORDER BY laboratory, bulletin_date;
+
 
 
 -------------------------------------------------------------------------------
@@ -717,36 +777,88 @@ WINDOW bulletin AS (PARTITION BY bulletin_date ROWS UNBOUNDED PRECEDING);
 
 
 CREATE VIEW products.tests_by_bulletin_date AS
-WITH raw AS (
+WITH prdoh AS (
+	WITH bio_raw AS (
+		SELECT
+			b.bulletin_date,
+			b.bulletin_date - lag(b.bulletin_date) OVER bulletin
+				AS days,
+			b.cumulative_molecular_tests,
+			b.cumulative_positive_molecular_tests,
+			a.cumulative_confirmed_cases,
+			b.new_molecular_tests,
+			b.new_positive_molecular_tests,
+		    a.cumulative_confirmed_cases - lag(a.cumulative_confirmed_cases) OVER bulletin
+		        AS new_confirmed_cases
+		FROM bioportal b
+		INNER JOIN announcement a
+			USING (bulletin_date)
+		WINDOW bulletin AS (ORDER BY b.bulletin_date)
+	)
 	SELECT
-		b.bulletin_date,
-		b.bulletin_date - lag(b.bulletin_date) OVER bulletin
-			AS days,
-		b.cumulative_molecular_tests,
-		b.cumulative_positive_molecular_tests,
-		a.cumulative_confirmed_cases,
-		b.new_molecular_tests,
-		b.new_positive_molecular_tests,
-	    a.cumulative_confirmed_cases - lag(a.cumulative_confirmed_cases) OVER bulletin
-	        AS new_confirmed_cases
-	FROM bioportal b
+		bulletin_date,
+		'Salud' AS source,
+		days AS days_since_last_report,
+		cumulative_molecular_tests,
+		cumulative_positive_molecular_tests,
+		cumulative_confirmed_cases,
+		new_molecular_tests / days
+			AS smoothed_daily_tests,
+		new_positive_molecular_tests / days
+			AS smoothed_daily_positive_molecular_tests,
+		new_confirmed_cases / days
+			AS smoothed_daily_confirmed_cases
+	FROM bio_raw
+), prpht AS (
+	WITH weekly_cumulatives AS (
+		SELECT
+			dates.bulletin_date :: date bulletin_date,
+			sum(delta_molecular_tests) cumulative_molecular_tests,
+			sum(delta_positive_molecular_tests) cumulative_positive_molecular_tests
+		FROM generate_series(date '2020-03-29',
+		   					 date '2020-06-28',
+		   					 INTERVAL '7 day')
+				AS dates (bulletin_date)
+		INNER JOIN prpht_molecular_deltas pmd
+			ON pmd.bulletin_date <= dates.bulletin_date
+		GROUP BY dates.bulletin_date
+		ORDER BY dates.bulletin_date
+	), weekly_deltas AS (
+		SELECT
+			bulletin_date,
+			cumulative_molecular_tests,
+			cumulative_molecular_tests
+				- lag(cumulative_molecular_tests) OVER prev
+				AS delta_molecular_tests,
+			cumulative_positive_molecular_tests,
+			cumulative_positive_molecular_tests
+				- lag(cumulative_positive_molecular_tests) OVER prev
+				AS delta_positive_molecular_tests
+		FROM weekly_cumulatives
+		WINDOW prev AS (ORDER BY bulletin_date)
+	)
+	SELECT
+		bulletin_date,
+		'PRPHT' source,
+		7 AS days_since_last_report,
+		cumulative_molecular_tests,
+		cumulative_positive_molecular_tests,
+		cumulative_confirmed_cases,
+		delta_molecular_tests / 7.0
+			AS smoothed_daily_tests,
+		delta_positive_molecular_tests / 7.0
+			AS smoothed_daily_positive_molecular_tests,
+		(a.cumulative_confirmed_cases - LAG(a.cumulative_confirmed_cases) OVER prev) / 7.0
+			AS smoothed_daily_confirmed_cases
+	FROM weekly_deltas wd
 	INNER JOIN announcement a
 		USING (bulletin_date)
-	WINDOW bulletin AS (ORDER BY b.bulletin_date)
+	WINDOW prev AS (ORDER BY bulletin_date)
 )
-SELECT
-	bulletin_date,
-	days AS days_since_last_report,
-	cumulative_molecular_tests,
-	cumulative_positive_molecular_tests,
-	cumulative_confirmed_cases,
-    new_molecular_tests,
-	new_molecular_tests / days
-		AS new_daily_tests,
-	new_positive_molecular_tests,
-	new_confirmed_cases
-FROM raw
-ORDER BY bulletin_date;
+SELECT * FROM prdoh
+UNION
+SELECT * FROM prpht
+ORDER BY bulletin_date, source;
 
 
 CREATE VIEW products.tests_by_sample_date AS

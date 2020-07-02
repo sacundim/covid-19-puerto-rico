@@ -135,47 +135,26 @@ class TestsBySampleDate(charts.AbstractChart):
 
 class AbstractPositiveRate(charts.AbstractChart):
     def make_chart(self, df):
-        data_date = alt.Chart(df).mark_text(baseline='middle').encode(
-            text=alt.Text('bulletin_date',
-                          type='temporal',
-                          aggregate='max',
-                          format='Datos hasta: %d de %B, %Y'),
-        ).properties(
-            width=575, height=40
-        )
-
         lines = alt.Chart(df.dropna()).mark_line(
-            color='grey', strokeWidth=2,
-            point=alt.OverlayMarkDef(color='black', size=50)
+            point=True
         ).encode(
             x=alt.X('bulletin_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('value:Q', title=None, axis=alt.Axis(format='.2%')),
+            color=alt.Color('Fuente:N', legend=alt.Legend(orient='top', title=None, offset=-14)),
             tooltip=['bulletin_date:T',
                      alt.Tooltip(field='value',
                                  type='quantitative',
                                  format=".2%")]
         )
 
-        text = lines.mark_text(
-            align='left',
-            baseline='line-top',
-            size=15, dy=5, dx=5
-        ).encode(
-            text=alt.Text('value:Q', format='.2%')
-        )
-
-        trellis = (lines + text).properties(
-            width=560, height=35
+        return lines.properties(
+            width=600, height=150
         ).facet(
             columns=1,
             facet=alt.Facet('variable:N', title=None)
         ).resolve_scale(
             y='independent'
-        )
-
-        return alt.vconcat(data_date, trellis, spacing=0).configure_view(
-            strokeWidth=0
         )
 
     def filter_data(self, df, bulletin_date):
@@ -187,16 +166,15 @@ class NewPositiveRate(AbstractPositiveRate):
         table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
+            table.c.source.label('Fuente'),
             table.c.bulletin_date,
-            (cast(table.c.new_positive_molecular_tests, DOUBLE_PRECISION)
-                / table.c.new_molecular_tests)\
+            (table.c.smoothed_daily_positive_molecular_tests / table.c.smoothed_daily_tests)\
                 .label('Moleculares positivas / total'),
-            (cast(table.c.new_confirmed_cases, DOUBLE_PRECISION)
-                  / table.c.new_molecular_tests)\
+            (table.c.smoothed_daily_confirmed_cases / table.c.smoothed_daily_tests)\
                 .label('Casos confirmados / Moleculares total')
         ])
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
-        return pd.melt(df, ['bulletin_date'])
+        return pd.melt(df, ['Fuente', 'bulletin_date'])
 
 
 class CumulativePositiveRate(AbstractPositiveRate):
@@ -204,6 +182,7 @@ class CumulativePositiveRate(AbstractPositiveRate):
         table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
+            table.c.source.label('Fuente'),
             table.c.bulletin_date,
             (cast(table.c.cumulative_positive_molecular_tests, DOUBLE_PRECISION)
                 / table.c.cumulative_molecular_tests)\
@@ -213,7 +192,7 @@ class CumulativePositiveRate(AbstractPositiveRate):
                 .label('Casos confirmados / pruebas')
         ])
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
-        return pd.melt(df, ['bulletin_date'])
+        return pd.melt(df, ['Fuente', 'bulletin_date'])
 
 
 
@@ -223,45 +202,21 @@ class AbstractPerCapitaChart(charts.AbstractChart):
     POPULATION_MILLIONS = POPULATION / 1_000_000.0
 
     def make_chart(self, df):
-        data_date = alt.Chart(df).mark_text(baseline='middle').encode(
-            text=alt.Text('bulletin_date',
-                          type='temporal',
-                          aggregate='max',
-                          timeUnit='yearmonthdate',
-                          format='Datos hasta: %d de %B, %Y'),
-        ).properties(
-            width=575, height=40
-        )
-
-        lines = alt.Chart(df.dropna()).transform_calculate(
+        return alt.Chart(df.dropna()).transform_calculate(
             per_thousand=alt.datum.value / self.POPULATION_THOUSANDS
         ).mark_line(
-            color='grey', strokeWidth=2,
-            point=alt.OverlayMarkDef(color='black', size=50)
+            point=True
         ).encode(
-            x=alt.X('yearmonthdate(bulletin_date):T', title='Puerto Rico',
+            x=alt.X('bulletin_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('per_thousand:Q', title=None),
-            tooltip=['yearmonthdate(bulletin_date):T',
+            color=alt.Color('Fuente:N', legend=alt.Legend(orient='top', title=None)),
+            tooltip=['bulletin_date:T',
                      alt.Tooltip(field='per_thousand',
                                  type='quantitative',
                                  format=".2f")]
-        )
-
-        text = lines.mark_text(
-            align='left',
-            baseline='line-top',
-            size=15, dy=5, dx=5
-        ).encode(
-            text=alt.Text('per_thousand:Q', format='.2f')
-        )
-
-        trellis = (lines + text).properties(
-            width=575, height=75
-        )
-
-        return alt.vconcat(data_date, trellis, spacing=0).configure_view(
-            strokeWidth=0
+        ).properties(
+            width=600, height=125
         )
 
     def filter_data(self, df, bulletin_date):
@@ -273,8 +228,9 @@ class NewDailyTestsPerCapita(AbstractPerCapitaChart):
         table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
+            table.c.source.label('Fuente'),
             table.c.bulletin_date,
-            table.c.new_daily_tests.label('value')
+            table.c.smoothed_daily_tests.label('value')
         ])
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
 
@@ -283,7 +239,71 @@ class CumulativeTestsPerCapita(AbstractPerCapitaChart):
         table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
+            table.c.source.label('Fuente'),
             table.c.bulletin_date,
             table.c.cumulative_molecular_tests.label('value')
         ])
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
+
+
+class CumulativeTestsVsCases(charts.AbstractChart):
+    POPULATION_MILLIONS = 3.193_694
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.source.label('Fuente'),
+            table.c.cumulative_molecular_tests,
+            table.c.cumulative_confirmed_cases
+        ])
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df):
+        max_x = 1_000
+        reference = alt.Chart(
+            alt.sequence(0, max_x + 1, max_x, as_='x')
+        ).transform_calculate(
+            point_five_percent=alt.datum.x / 0.005,
+            one_percent=alt.datum.x / 0.01,
+            two_percent=alt.datum.x / 0.02,
+            five_percent=alt.datum.x / 0.05,
+        ).transform_fold(
+            ['point_five_percent', 'one_percent', 'two_percent', 'five_percent']
+        ).mark_line(color='grey', strokeWidth=0.5, clip=True).encode(
+            x=alt.X('x:Q'),
+            y=alt.Y('value:Q'),
+            strokeDash=alt.StrokeDash('key:N', legend=None)
+        )
+
+        main = alt.Chart(df.dropna()).transform_calculate(
+            tests_per_million=alt.datum.cumulative_molecular_tests / self.POPULATION_MILLIONS,
+            cases_per_million=alt.datum.cumulative_confirmed_cases / self.POPULATION_MILLIONS,
+            positive_rate=alt.datum.cumulative_confirmed_cases / alt.datum.cumulative_molecular_tests
+        ).mark_line(point=True).encode(
+            y=alt.Y('tests_per_million:Q', scale=alt.Scale(domain=[0, max_x * 100]),
+                    title='Total de pruebas por millón de habitantes'),
+            x=alt.X('cases_per_million:Q', scale=alt.Scale(domain=[0, max_x]),
+                    title='Total de casos confirmados por millón de habitantes'),
+            order=alt.Order('bulletin_date:T'),
+            color=alt.Color('Fuente:N', legend=alt.Legend(orient='top', title=None)),
+            tooltip=['yearmonthdate(bulletin_date):T', 'Fuente:N',
+                     alt.Tooltip(field='tests_per_million',
+                                 type='quantitative',
+                                 format=".2f"),
+                     alt.Tooltip(field='cases_per_million',
+                                 type='quantitative',
+                                 format=".2f"),
+                     alt.Tooltip(field='positive_rate',
+                                 type='quantitative',
+                                 format=".2%")
+                     ]
+        )
+
+        return (reference + main).properties(
+            width=570, height=570
+        )
