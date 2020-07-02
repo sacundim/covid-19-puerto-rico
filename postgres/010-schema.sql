@@ -806,7 +806,7 @@ WITH bio_raw AS (
 )
 SELECT
 	bulletin_date,
-	'PRDoH' AS source,
+	'Salud' AS source,
 	days AS days_since_last_report,
 	cumulative_molecular_tests,
 	cumulative_positive_molecular_tests,
