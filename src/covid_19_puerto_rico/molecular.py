@@ -145,8 +145,7 @@ class AbstractPositiveRate(charts.AbstractChart):
         )
 
         lines = alt.Chart(df.dropna()).mark_line(
-            color='grey', strokeWidth=2,
-            point=alt.OverlayMarkDef(color='black', size=50)
+            color='grey', point=alt.OverlayMarkDef(color='black', size=10)
         ).encode(
             x=alt.X('bulletin_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
@@ -157,21 +156,11 @@ class AbstractPositiveRate(charts.AbstractChart):
                                  format=".2%")]
         )
 
-        text = lines.mark_text(
-            align='left',
-            baseline='line-top',
-            size=15, dy=5, dx=5
-        ).encode(
-            text=alt.Text('value:Q', format='.2%')
-        )
-
-        trellis = (lines + text).properties(
-            width=560, height=35
+        trellis = lines.properties(
+            width=275, height=100
         ).facet(
-            columns=1,
-            facet=alt.Facet('variable:N', title=None)
-        ).resolve_scale(
-            y='independent'
+            row=alt.Row('Fuente:N', title=None),
+            column=alt.Column('variable:N', title=None)
         )
 
         return alt.vconcat(data_date, trellis, spacing=0).configure_view(
@@ -187,16 +176,15 @@ class NewPositiveRate(AbstractPositiveRate):
         table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
+            table.c.source.label('Fuente'),
             table.c.bulletin_date,
-            (cast(table.c.new_positive_molecular_tests, DOUBLE_PRECISION)
-                / table.c.new_molecular_tests)\
+            (table.c.smoothed_daily_positive_molecular_tests / table.c.smoothed_daily_tests)\
                 .label('Moleculares positivas / total'),
-            (cast(table.c.new_confirmed_cases, DOUBLE_PRECISION)
-                  / table.c.new_molecular_tests)\
+            (table.c.smoothed_daily_confirmed_cases / table.c.smoothed_daily_tests)\
                 .label('Casos confirmados / Moleculares total')
         ])
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
-        return pd.melt(df, ['bulletin_date'])
+        return pd.melt(df, ['Fuente', 'bulletin_date'])
 
 
 class CumulativePositiveRate(AbstractPositiveRate):
@@ -204,6 +192,7 @@ class CumulativePositiveRate(AbstractPositiveRate):
         table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
+            table.c.source.label('Fuente'),
             table.c.bulletin_date,
             (cast(table.c.cumulative_positive_molecular_tests, DOUBLE_PRECISION)
                 / table.c.cumulative_molecular_tests)\
@@ -213,7 +202,7 @@ class CumulativePositiveRate(AbstractPositiveRate):
                 .label('Casos confirmados / pruebas')
         ])
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
-        return pd.melt(df, ['bulletin_date'])
+        return pd.melt(df, ['Fuente', 'bulletin_date'])
 
 
 
@@ -227,7 +216,6 @@ class AbstractPerCapitaChart(charts.AbstractChart):
             text=alt.Text('bulletin_date',
                           type='temporal',
                           aggregate='max',
-                          timeUnit='yearmonthdate',
                           format='Datos hasta: %d de %B, %Y'),
         ).properties(
             width=575, height=40
@@ -236,33 +224,24 @@ class AbstractPerCapitaChart(charts.AbstractChart):
         lines = alt.Chart(df.dropna()).transform_calculate(
             per_thousand=alt.datum.value / self.POPULATION_THOUSANDS
         ).mark_line(
-            color='grey', strokeWidth=2,
-            point=alt.OverlayMarkDef(color='black', size=50)
+            color='grey', point=alt.OverlayMarkDef(color='black', size=10)
         ).encode(
-            x=alt.X('yearmonthdate(bulletin_date):T', title='Puerto Rico',
+            x=alt.X('bulletin_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('per_thousand:Q', title=None),
-            tooltip=['yearmonthdate(bulletin_date):T',
+            tooltip=['bulletin_date:T',
                      alt.Tooltip(field='per_thousand',
                                  type='quantitative',
                                  format=".2f")]
         )
 
-        text = lines.mark_text(
-            align='left',
-            baseline='line-top',
-            size=15, dy=5, dx=5
-        ).encode(
-            text=alt.Text('per_thousand:Q', format='.2f')
+        trellis = lines.properties(
+            width=575, height=125
+        ).facet(
+            columns=1,
+            facet=alt.Facet('Fuente:N', title=None)
         )
-
-        trellis = (lines + text).properties(
-            width=575, height=75
-        )
-
-        return alt.vconcat(data_date, trellis, spacing=0).configure_view(
-            strokeWidth=0
-        )
+        return trellis
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
@@ -273,8 +252,9 @@ class NewDailyTestsPerCapita(AbstractPerCapitaChart):
         table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
+            table.c.source.label('Fuente'),
             table.c.bulletin_date,
-            table.c.new_daily_tests.label('value')
+            table.c.smoothed_daily_tests.label('value')
         ])
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
 
@@ -283,6 +263,7 @@ class CumulativeTestsPerCapita(AbstractPerCapitaChart):
         table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
+            table.c.source.label('Fuente'),
             table.c.bulletin_date,
             table.c.cumulative_molecular_tests.label('value')
         ])
