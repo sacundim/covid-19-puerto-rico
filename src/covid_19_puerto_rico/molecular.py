@@ -244,3 +244,66 @@ class CumulativeTestsPerCapita(AbstractPerCapitaChart):
             table.c.cumulative_molecular_tests.label('value')
         ])
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
+
+
+class CumulativeTestsVsCases(charts.AbstractChart):
+    POPULATION_MILLIONS = 3.193_694
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.source.label('Fuente'),
+            table.c.cumulative_molecular_tests,
+            table.c.cumulative_confirmed_cases
+        ])
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df):
+        max_x = 1_000
+        reference = alt.Chart(
+            alt.sequence(0, max_x + 1, max_x, as_='x')
+        ).transform_calculate(
+            point_five_percent=alt.datum.x / 0.005,
+            one_percent=alt.datum.x / 0.01,
+            two_percent=alt.datum.x / 0.02,
+            five_percent=alt.datum.x / 0.05,
+        ).transform_fold(
+            ['point_five_percent', 'one_percent', 'two_percent', 'five_percent']
+        ).mark_line(color='grey', strokeWidth=0.5, clip=True).encode(
+            x=alt.X('x:Q'),
+            y=alt.Y('value:Q'),
+            strokeDash=alt.StrokeDash('key:N', legend=None)
+        )
+
+        main = alt.Chart(df.dropna()).transform_calculate(
+            tests_per_million=alt.datum.cumulative_molecular_tests / self.POPULATION_MILLIONS,
+            cases_per_million=alt.datum.cumulative_confirmed_cases / self.POPULATION_MILLIONS,
+            positive_rate=alt.datum.cumulative_confirmed_cases / alt.datum.cumulative_molecular_tests
+        ).mark_line(point=True).encode(
+            y=alt.Y('tests_per_million:Q', scale=alt.Scale(domain=[0, max_x * 100]),
+                    title='Total de pruebas por millón de habitantes'),
+            x=alt.X('cases_per_million:Q', scale=alt.Scale(domain=[0, max_x]),
+                    title='Total de casos confirmados por millón de habitantes'),
+            order=alt.Order('bulletin_date:T'),
+            color=alt.Color('Fuente:N', legend=alt.Legend(orient='top', title=None)),
+            tooltip=['yearmonthdate(bulletin_date):T', 'Fuente:N',
+                     alt.Tooltip(field='tests_per_million',
+                                 type='quantitative',
+                                 format=".2f"),
+                     alt.Tooltip(field='cases_per_million',
+                                 type='quantitative',
+                                 format=".2f"),
+                     alt.Tooltip(field='positive_rate',
+                                 type='quantitative',
+                                 format=".2%")
+                     ]
+        )
+
+        return (reference + main).properties(
+            width=570, height=570
+        )
