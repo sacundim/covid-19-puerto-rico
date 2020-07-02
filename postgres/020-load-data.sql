@@ -22,3 +22,7 @@ COPY bioportal_bitemporal
 FROM '/data/PuertoRico-bioportal-bitemporal.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
+COPY prpht_molecular_raw
+FROM '/data/PRPHT-molecular.csv'
+    CSV ENCODING 'UTF-8' HEADER NULL '';
+
