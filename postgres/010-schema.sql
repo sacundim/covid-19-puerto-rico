@@ -777,78 +777,87 @@ WINDOW bulletin AS (PARTITION BY bulletin_date ROWS UNBOUNDED PRECEDING);
 
 
 CREATE VIEW products.tests_by_bulletin_date AS
-WITH bio_raw AS (
-	SELECT
-		b.bulletin_date,
-		b.bulletin_date - lag(b.bulletin_date) OVER bulletin
-			AS days,
-		b.cumulative_molecular_tests,
-		b.cumulative_positive_molecular_tests,
-		a.cumulative_confirmed_cases,
-		b.new_molecular_tests,
-		b.new_positive_molecular_tests,
-	    a.cumulative_confirmed_cases - lag(a.cumulative_confirmed_cases) OVER bulletin
-	        AS new_confirmed_cases
-	FROM bioportal b
-	INNER JOIN announcement a
-		USING (bulletin_date)
-	WINDOW bulletin AS (ORDER BY b.bulletin_date)
-),  prpht_min AS (
-	SELECT min(bulletin_date) min_bulletin_date
-	FROM prpht_molecular_raw
-), prpht_grouped AS (
+WITH prdoh AS (
+	WITH bio_raw AS (
+		SELECT
+			b.bulletin_date,
+			b.bulletin_date - lag(b.bulletin_date) OVER bulletin
+				AS days,
+			b.cumulative_molecular_tests,
+			b.cumulative_positive_molecular_tests,
+			a.cumulative_confirmed_cases,
+			b.new_molecular_tests,
+			b.new_positive_molecular_tests,
+		    a.cumulative_confirmed_cases - lag(a.cumulative_confirmed_cases) OVER bulletin
+		        AS new_confirmed_cases
+		FROM bioportal b
+		INNER JOIN announcement a
+			USING (bulletin_date)
+		WINDOW bulletin AS (ORDER BY b.bulletin_date)
+	)
 	SELECT
 		bulletin_date,
-		sum(delta_molecular_tests) delta_molecular_tests,
-		sum(delta_positive_molecular_tests) delta_positive_molecular_tests
-	FROM prpht_molecular_deltas pmd
-	GROUP BY bulletin_date
+		'Salud' AS source,
+		days AS days_since_last_report,
+		cumulative_molecular_tests,
+		cumulative_positive_molecular_tests,
+		cumulative_confirmed_cases,
+		new_molecular_tests / days
+			AS smoothed_daily_tests,
+		new_positive_molecular_tests / days
+			AS smoothed_daily_positive_molecular_tests,
+		new_confirmed_cases / days
+			AS smoothed_daily_confirmed_cases
+	FROM bio_raw
+), prpht AS (
+	WITH weekly_cumulatives AS (
+		SELECT
+			dates.bulletin_date :: date bulletin_date,
+			sum(delta_molecular_tests) cumulative_molecular_tests,
+			sum(delta_positive_molecular_tests) cumulative_positive_molecular_tests
+		FROM generate_series(date '2020-03-29',
+		   					 date '2020-06-28',
+		   					 INTERVAL '7 day')
+				AS dates (bulletin_date)
+		INNER JOIN prpht_molecular_deltas pmd
+			ON pmd.bulletin_date <= dates.bulletin_date
+		GROUP BY dates.bulletin_date
+		ORDER BY dates.bulletin_date
+	), weekly_deltas AS (
+		SELECT
+			bulletin_date,
+			cumulative_molecular_tests,
+			cumulative_molecular_tests
+				- lag(cumulative_molecular_tests) OVER prev
+				AS delta_molecular_tests,
+			cumulative_positive_molecular_tests,
+			cumulative_positive_molecular_tests
+				- lag(cumulative_positive_molecular_tests) OVER prev
+				AS delta_positive_molecular_tests
+		FROM weekly_cumulatives
+		WINDOW prev AS (ORDER BY bulletin_date)
+	)
+	SELECT
+		bulletin_date,
+		'PRPHT' source,
+		7 AS days_since_last_report,
+		cumulative_molecular_tests,
+		cumulative_positive_molecular_tests,
+		cumulative_confirmed_cases,
+		delta_molecular_tests / 7.0
+			AS smoothed_daily_tests,
+		delta_positive_molecular_tests / 7.0
+			AS smoothed_daily_positive_molecular_tests,
+		(a.cumulative_confirmed_cases - LAG(a.cumulative_confirmed_cases) OVER prev) / 7.0
+			AS smoothed_daily_confirmed_cases
+	FROM weekly_deltas wd
+	INNER JOIN announcement a
+		USING (bulletin_date)
+	WINDOW prev AS (ORDER BY bulletin_date)
 )
-SELECT
-	bulletin_date,
-	'Salud' AS source,
-	days AS days_since_last_report,
-	cumulative_molecular_tests,
-	cumulative_positive_molecular_tests,
-	cumulative_confirmed_cases,
-	new_molecular_tests / days
-		AS smoothed_daily_tests,
-	new_positive_molecular_tests / days
-		AS smoothed_daily_positive_molecular_tests,
-	new_confirmed_cases / days
-		AS smoothed_daily_confirmed_cases
-FROM bio_raw
+SELECT * FROM prdoh
 UNION
-SELECT
-	bulletin_date,
-	'PRPHT' source,
-	bulletin_date - LAG(bulletin_date) OVER bulletin
-		AS days_since_last_report,
-	SUM(delta_molecular_tests) OVER bulletin
-		AS cumulative_molecular_tests,
-	SUM(delta_positive_molecular_tests) OVER bulletin
-		AS cumulative_positive_molecular_tests,
-	cumulative_confirmed_cases,
-	CASE WHEN bulletin_date >= min_bulletin_date + INTERVAL '7 day'
-	THEN sum(delta_molecular_tests) OVER seven / 7.0
-	END AS smoothed_daily_tests,
-	CASE WHEN bulletin_date >= min_bulletin_date + INTERVAL '7 day'
-	THEN sum(delta_positive_molecular_tests) OVER seven / 7.0
-	END AS smoothed_daily_positive_molecular_tests,
-    (a.cumulative_confirmed_cases
-    	- FIRST_VALUE(a.cumulative_confirmed_cases) OVER seven)
-    	/ 7.0
-        AS smoothed_daily_confirmed_cases
-FROM prpht_grouped
-INNER JOIN announcement a
-	USING (bulletin_date)
-CROSS JOIN prpht_min
-WINDOW bulletin AS (
-	ORDER BY bulletin_date
-), seven AS (
-	ORDER BY bulletin_date
-	RANGE BETWEEN '6 day' PRECEDING AND CURRENT ROW
-)
+SELECT * FROM prpht
 ORDER BY bulletin_date, source;
 
 
