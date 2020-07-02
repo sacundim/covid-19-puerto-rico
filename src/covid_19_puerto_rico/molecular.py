@@ -135,22 +135,13 @@ class TestsBySampleDate(charts.AbstractChart):
 
 class AbstractPositiveRate(charts.AbstractChart):
     def make_chart(self, df):
-        data_date = alt.Chart(df).mark_text(baseline='middle').encode(
-            text=alt.Text('bulletin_date',
-                          type='temporal',
-                          aggregate='max',
-                          format='Datos hasta: %d de %B, %Y'),
-        ).properties(
-            width=575, height=40
-        )
-
         lines = alt.Chart(df.dropna()).mark_line(
             point=True
         ).encode(
             x=alt.X('bulletin_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('value:Q', title=None, axis=alt.Axis(format='.2%')),
-            color=alt.Color('Fuente:N', legend=alt.Legend(orient='top')),
+            color=alt.Color('Fuente:N', legend=alt.Legend(orient='top', title=None, offset=-14)),
             tooltip=['bulletin_date:T',
                      alt.Tooltip(field='value',
                                  type='quantitative',
@@ -158,7 +149,7 @@ class AbstractPositiveRate(charts.AbstractChart):
         )
 
         return lines.properties(
-            width=575, height=150
+            width=600, height=150
         ).facet(
             columns=1,
             facet=alt.Facet('variable:N', title=None)
@@ -211,15 +202,6 @@ class AbstractPerCapitaChart(charts.AbstractChart):
     POPULATION_MILLIONS = POPULATION / 1_000_000.0
 
     def make_chart(self, df):
-        data_date = alt.Chart(df).mark_text(baseline='middle').encode(
-            text=alt.Text('bulletin_date',
-                          type='temporal',
-                          aggregate='max',
-                          format='Datos hasta: %d de %B, %Y'),
-        ).properties(
-            width=575, height=40
-        )
-
         return alt.Chart(df.dropna()).transform_calculate(
             per_thousand=alt.datum.value / self.POPULATION_THOUSANDS
         ).mark_line(
@@ -228,13 +210,13 @@ class AbstractPerCapitaChart(charts.AbstractChart):
             x=alt.X('bulletin_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('per_thousand:Q', title=None),
-            color=alt.Color('Fuente:N', legend=alt.Legend(orient='top')),
+            color=alt.Color('Fuente:N', legend=alt.Legend(orient='top', title=None)),
             tooltip=['bulletin_date:T',
                      alt.Tooltip(field='per_thousand',
                                  type='quantitative',
                                  format=".2f")]
         ).properties(
-            width=575, height=150
+            width=600, height=125
         )
 
     def filter_data(self, df, bulletin_date):
