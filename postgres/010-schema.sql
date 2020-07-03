@@ -584,13 +584,17 @@ SELECT
              sum(delta_probable_cases) FILTER (WHERE delta_probable_cases < 0))
          AS probable_cases_removals,
 
-    safediv(sum(lateness_deaths), sum(delta_deaths))
+    -- There is a very weird (nondeterminism?) bug in PRDoH's deaths data processing
+    -- that causes weird back-and-forth revisions to the same six dates up to 2020-04-18,
+    -- so we just filter those out.
+    safediv(sum(lateness_deaths) FILTER (WHERE datum_date > '2020-04-18'),
+            sum(delta_deaths) FILTER (WHERE datum_date > '2020-04-18'))
         AS deaths_total,
-    safediv(sum(lateness_deaths) FILTER (WHERE lateness_deaths > 0),
-            sum(delta_deaths) FILTER (WHERE delta_deaths > 0))
+    safediv(sum(lateness_deaths) FILTER (WHERE lateness_deaths > 0 AND datum_date > '2020-04-18'),
+            sum(delta_deaths) FILTER (WHERE delta_deaths > 0 AND datum_date > '2020-04-18'))
         AS deaths_additions,
-    -safediv(sum(lateness_deaths) FILTER (WHERE lateness_deaths < 0),
-             sum(delta_deaths) FILTER (WHERE delta_deaths < 0))
+    -safediv(sum(lateness_deaths) FILTER (WHERE lateness_deaths < 0 AND datum_date > '2020-04-18'),
+             sum(delta_deaths) FILTER (WHERE delta_deaths < 0 AND datum_date > '2020-04-18'))
          AS deaths_removals
 FROM bitemporal_agg
 -- We exclude the earliest bulletin date because it's artificially late
@@ -659,19 +663,22 @@ WITH min_date AS (
 			FILTER (WHERE delta_probable_cases < 0)
 			AS delta_removed_probable_cases,
 
-		sum(lateness_deaths) lateness_deaths,
-		sum(delta_deaths) delta_deaths,
+        -- There is a very weird (nondeterminism?) bug in PRDoH's deaths data processing
+        -- that causes weird back-and-forth revisions to the same six dates up to 2020-04-18,
+        -- so we just filter those out.
+		sum(lateness_deaths) FILTER (WHERE datum_date > '2020-04-18') lateness_deaths,
+		sum(delta_deaths) FILTER (WHERE datum_date > '2020-04-18') delta_deaths,
 		sum(lateness_deaths)
-			FILTER (WHERE lateness_deaths > 0)
+			FILTER (WHERE lateness_deaths > 0 AND datum_date > '2020-04-18')
 			AS lateness_added_deaths,
 		sum(delta_deaths)
-			FILTER (WHERE delta_deaths > 0)
+			FILTER (WHERE delta_deaths > 0 AND datum_date > '2020-04-18')
 			AS delta_added_deaths,
 		sum(lateness_deaths)
-			FILTER (WHERE lateness_deaths < 0)
+			FILTER (WHERE lateness_deaths < 0 AND datum_date > '2020-04-18')
 			AS lateness_removed_deaths,
 		sum(delta_deaths)
-			FILTER (WHERE delta_deaths < 0)
+			FILTER (WHERE delta_deaths < 0 AND datum_date > '2020-04-18')
 			AS delta_removed_deaths
 	FROM bitemporal_agg ba, min_date md
 	WHERE ba.bulletin_date > md.bulletin_date
