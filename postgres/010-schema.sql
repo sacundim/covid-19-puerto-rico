@@ -3,6 +3,11 @@ RETURNS NUMERIC AS $$
     SELECT log(2.0, x);
 $$ LANGUAGE SQL;
 
+CREATE FUNCTION safe_log2(x NUMERIC)
+RETURNS NUMERIC AS $$
+    SELECT CASE WHEN x > 0.0 THEN log(2.0, x) END;
+$$ LANGUAGE SQL;
+
 
 CREATE TABLE bitemporal (
     bulletin_date DATE NOT NULL,
@@ -734,17 +739,17 @@ SELECT
     datum_date,
     window_size.days window_size_days,
     CAST(window_size.days AS NUMERIC)
-    	/ NULLIF(log2(cumulative_confirmed_and_probable_cases)
-    				- log2(LAG(cumulative_confirmed_and_probable_cases, window_size.days) OVER datum), 0)
+    	/ NULLIF(safe_log2(cumulative_confirmed_and_probable_cases)
+    				- safe_log2(LAG(cumulative_confirmed_and_probable_cases, window_size.days) OVER datum), 0)
     	AS cumulative_confirmed_and_probable_cases,
     CAST(window_size.days AS NUMERIC)
-    	/ NULLIF(log2(cumulative_confirmed_cases) - log2(LAG(cumulative_confirmed_cases, window_size.days) OVER datum), 0)
+    	/ NULLIF(safe_log2(cumulative_confirmed_cases) - safe_log2(LAG(cumulative_confirmed_cases, window_size.days) OVER datum), 0)
     	AS cumulative_confirmed_cases,
     CAST(window_size.days AS NUMERIC)
-    	/ NULLIF(log2(cumulative_probable_cases) - log2(LAG(cumulative_probable_cases, window_size.days) OVER datum), 0)
+    	/ NULLIF(safe_log2(cumulative_probable_cases) - safe_log2(LAG(cumulative_probable_cases, window_size.days) OVER datum), 0)
     	AS cumulative_probable_cases,
     CAST(window_size.days AS NUMERIC)
-    	/ NULLIF(log2(cumulative_deaths) - log2(LAG(cumulative_deaths, window_size.days) OVER datum), 0)
+    	/ NULLIF(safe_log2(cumulative_deaths) - safe_log2(LAG(cumulative_deaths, window_size.days) OVER datum), 0)
     	AS cumulative_deaths
 FROM bitemporal_agg
 CROSS JOIN (VALUES (7), (14), (21)) AS window_size (days)
