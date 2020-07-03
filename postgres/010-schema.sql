@@ -224,38 +224,50 @@ SELECT
     confirmed_and_probable_cases,
     sum(confirmed_and_probable_cases) OVER bulletin
         AS cumulative_confirmed_and_probable_cases,
-    confirmed_and_probable_cases - coalesce(lag(confirmed_and_probable_cases) OVER datum, 0)
+    COALESCE(confirmed_and_probable_cases, 0)
+    		- lag(confirmed_and_probable_cases, 1, 0) OVER datum
         AS delta_confirmed_and_probable_cases,
-    (confirmed_and_probable_cases - coalesce(lag(confirmed_and_probable_cases) OVER datum, 0))
-        * (bulletin_date - datum_date) AS lateness_confirmed_and_probable_cases,
+    (COALESCE(confirmed_and_probable_cases, 0)
+    		- lag(confirmed_and_probable_cases, 1, 0) OVER datum)
+        * (bulletin_date - datum_date)
+        AS lateness_confirmed_and_probable_cases,
 
     confirmed_cases,
     sum(confirmed_cases) OVER bulletin
         AS cumulative_confirmed_cases,
-    confirmed_cases - coalesce(lag(confirmed_cases) OVER datum, 0)
+    COALESCE(confirmed_cases, 0) - lag(confirmed_cases, 1, 0) OVER datum
         AS delta_confirmed_cases,
-    (confirmed_cases - coalesce(lag(confirmed_cases) OVER datum, 0))
-        * (bulletin_date - datum_date) AS lateness_confirmed_cases,
+    (COALESCE(confirmed_cases, 0) - lag(confirmed_cases, 1, 0) OVER datum)
+        * (bulletin_date - datum_date)
+        AS lateness_confirmed_cases,
 
     probable_cases,
     sum(probable_cases) OVER bulletin
         AS cumulative_probable_cases,
-    probable_cases - coalesce(lag(probable_cases) OVER datum, 0)
+    COALESCE(probable_cases, 0) - lag(probable_cases, 1, 0) OVER datum
         AS delta_probable_cases,
-    (probable_cases - coalesce(lag(probable_cases) OVER datum, 0))
-        * (bulletin_date - datum_date) AS lateness_probable_cases,
+    (COALESCE(probable_cases, 0) - lag(probable_cases, 1, 0) OVER datum)
+        * (bulletin_date - datum_date)
+        AS lateness_probable_cases,
 
     deaths,
     sum(deaths) OVER bulletin
         AS cumulative_deaths,
-    deaths - coalesce(lag(deaths) OVER datum, 0)
+    COALESCE(deaths, 0) - lag(deaths, 1, 0) OVER datum
         AS delta_deaths,
-    (deaths - coalesce(lag(deaths) OVER datum, 0))
-        * (bulletin_date - datum_date) AS lateness_deaths
+    (COALESCE(deaths, 0) - lag(deaths, 1, 0) OVER datum)
+        * (bulletin_date - datum_date)
+        AS lateness_deaths
 FROM bitemporal
-WINDOW
-    bulletin AS (PARTITION BY bulletin_date ORDER BY datum_date),
-    datum AS (PARTITION BY datum_date ORDER BY bulletin_date);
+WINDOW bulletin AS (
+	PARTITION BY bulletin_date
+	ORDER BY datum_date
+), datum AS (
+	PARTITION BY datum_date
+	ORDER BY bulletin_date
+	RANGE '1 day' PRECEDING
+)
+ORDER BY bulletin_date DESC, datum_date ASC;
 
 COMMENT ON VIEW bitemporal_agg IS
 'Useful aggregations/windows over the bitemporal table:
