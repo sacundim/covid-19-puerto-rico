@@ -52,7 +52,6 @@ def main():
         molecular.CumulativePositiveRate(engine, args.output_dir, output_formats),
         molecular.NewDailyTestsPerCapita(engine, args.output_dir, output_formats),
         molecular.CumulativeTestsPerCapita(engine, args.output_dir, output_formats),
-        charts.Doubling(engine, args.output_dir, output_formats),
         charts.MunicipalMap(engine, args.output_dir, output_formats),
         charts.Municipal(engine, args.output_dir, output_formats),
         molecular.CumulativeMissingTests(engine, args.output_dir, output_formats),
