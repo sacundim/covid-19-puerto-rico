@@ -618,7 +618,7 @@ ORDER BY bulletin_date, datum_date""")
 class Municipal(AbstractChart):
     REDS = ('#fad1bd', '#ea9178', '#c74643')
     GRAYS = ('#dadada', '#ababab', '#717171')
-    DOMAIN=[0, 4]
+    DOMAIN=[0, 6]
 
     def make_chart(self, df):
         base = alt.Chart(df).transform_impute(
