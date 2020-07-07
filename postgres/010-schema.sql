@@ -867,16 +867,15 @@ WITH prdoh AS (
 		7 AS days_since_last_report,
 		cumulative_molecular_tests,
 		cumulative_positive_molecular_tests,
-		cumulative_confirmed_cases,
+		-- We omit this because it's not comparable with PRPHT data
+		NULL::BIGINT cumulative_confirmed_cases,
 		delta_molecular_tests / 7.0
 			AS smoothed_daily_tests,
 		delta_positive_molecular_tests / 7.0
 			AS smoothed_daily_positive_molecular_tests,
-		(a.cumulative_confirmed_cases - LAG(a.cumulative_confirmed_cases) OVER prev) / 7.0
-			AS smoothed_daily_confirmed_cases
+		-- We omit this because it's not comparable with PRPHT data
+		NULL::BIGINT smoothed_daily_confirmed_cases
 	FROM weekly_deltas wd
-	INNER JOIN announcement a
-		USING (bulletin_date)
 	WINDOW prev AS (ORDER BY bulletin_date)
 )
 SELECT * FROM prdoh

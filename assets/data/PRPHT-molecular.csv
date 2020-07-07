@@ -41,6 +41,7 @@ reporting_date,laboratory,cumulative_molecular_tests,cumulative_positive_molecul
 2020-06-13,Ponce,6805,41,634,6,1000
 2020-06-19,Ponce,7507,42,192,1,1000
 2020-06-27,Ponce,8002,45,344,3,1000
+2020-07-04,Ponce,8433,56,398,11,1000
 2020-05-17,PRDoH,,,,,400
 2020-05-24,PRDoH,,,,,400
 2020-05-31,PRDoH,,,,,400
@@ -74,3 +75,4 @@ reporting_date,laboratory,cumulative_molecular_tests,cumulative_positive_molecul
 2020-06-14,Toledo,51093,868,6500,17,4500
 2020-06-21,Toledo,59296,888,5203,18,4500
 2020-06-28,Toledo,64520,961,8224,73,4500
+2020-07-05,Toledo,72747,1104,2810,62,4500
