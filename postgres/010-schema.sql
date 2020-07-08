@@ -225,37 +225,43 @@ SELECT
     sum(confirmed_and_probable_cases) OVER bulletin
         AS cumulative_confirmed_and_probable_cases,
     COALESCE(confirmed_and_probable_cases, 0)
-    		- lag(confirmed_and_probable_cases, 1, 0) OVER datum
+    		- COALESCE(lag(confirmed_and_probable_cases) OVER datum, 0)
         AS delta_confirmed_and_probable_cases,
     (COALESCE(confirmed_and_probable_cases, 0)
-    		- lag(confirmed_and_probable_cases, 1, 0) OVER datum)
+    		- COALESCE(lag(confirmed_and_probable_cases) OVER datum, 0))
         * (bulletin_date - datum_date)
         AS lateness_confirmed_and_probable_cases,
 
     confirmed_cases,
     sum(confirmed_cases) OVER bulletin
         AS cumulative_confirmed_cases,
-    COALESCE(confirmed_cases, 0) - lag(confirmed_cases, 1, 0) OVER datum
+    COALESCE(confirmed_cases, 0)
+        - COALESCE(lag(confirmed_cases) OVER datum, 0)
         AS delta_confirmed_cases,
-    (COALESCE(confirmed_cases, 0) - lag(confirmed_cases, 1, 0) OVER datum)
+    (COALESCE(confirmed_cases, 0)
+        - COALESCE(lag(confirmed_cases) OVER datum, 0))
         * (bulletin_date - datum_date)
         AS lateness_confirmed_cases,
 
     probable_cases,
     sum(probable_cases) OVER bulletin
         AS cumulative_probable_cases,
-    COALESCE(probable_cases, 0) - lag(probable_cases, 1, 0) OVER datum
+    COALESCE(probable_cases, 0)
+        - COALESCE(lag(probable_cases) OVER datum, 0)
         AS delta_probable_cases,
-    (COALESCE(probable_cases, 0) - lag(probable_cases, 1, 0) OVER datum)
+    (COALESCE(probable_cases, 0)
+        - COALESCE(lag(probable_cases) OVER datum, 0))
         * (bulletin_date - datum_date)
         AS lateness_probable_cases,
 
     deaths,
     sum(deaths) OVER bulletin
         AS cumulative_deaths,
-    COALESCE(deaths, 0) - lag(deaths, 1, 0) OVER datum
+    COALESCE(deaths, 0)
+        - COALESCE(lag(deaths) OVER datum, 0)
         AS delta_deaths,
-    (COALESCE(deaths, 0) - lag(deaths, 1, 0) OVER datum)
+    (COALESCE(deaths, 0)
+        - COALESCE(lag(deaths) OVER datum, 0))
         * (bulletin_date - datum_date)
         AS lateness_deaths
 FROM bitemporal
