@@ -30,6 +30,7 @@
 
     <ul>
         <li><a href="#NewCases_section">Tendencia de casos nuevos por fecha de evento (promedios 7 días)</a></li>
+        <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
         <li><a href="#CurrentDeltas_section">Cambio entre boletín actual y anterior</a></li>
         <li><a href="#DailyDeltas_section">Cambios entre boletines recientes</a></li>
         <li><a href="#LatenessDaily_section">Rezago de datos de cada boletín</a></li>
@@ -75,6 +76,20 @@
     <p><b>ADVERTENCIA:</b> Caídas súbitas al final de cada línea lo más probable
         no son reales, si no que más bien son artefactos de los rezagos—i.e., no
         han se han incorporado datos para esas fechas.</p>
+</div>
+
+
+<div class="section" id="Hospitalizations_section">
+    <h1>Historial de hospitalizaciones</h1>
+
+    <div id="Hospitalizations"></div>
+    <script type="text/javascript">
+      embedChart('Hospitalizations', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Cuántos pacientes han estado hospitalizados por COVID-19, por fecha y región.</p>
 </div>
 
 
