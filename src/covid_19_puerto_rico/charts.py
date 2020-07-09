@@ -759,3 +759,34 @@ class MunicipalMap(AbstractChart):
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+
+class Hospitalizations(AbstractChart):
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('hospitalizations', self.metadata, autoload=True)
+        query = select([
+            table.c.datum_date,
+            table.c['Arecibo'],
+            table.c['Bayamón'],
+            table.c['Caguas'],
+            table.c['Fajardo'],
+            table.c['Mayagüez'],
+            table.c['Metro'],
+            table.c['Ponce']
+        ])
+        df = pd.read_sql_query(query, connection, parse_dates=['datum_date'])
+        return pd.melt(df, ['datum_date'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['datum_date'] <= pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df):
+        return alt.Chart(df).mark_area(
+            fillOpacity=0.825, tooltip=True
+        ).encode(
+            x=alt.X('datum_date:T', title='Fecha'),
+            y=alt.Y('value:Q', title='Hospitalizados'),
+            color=alt.Color('variable:N', title='Región',
+                            legend=alt.Legend(orient='top'))
+        ).properties(
+            width=575, height=300
+        )

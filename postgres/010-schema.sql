@@ -153,8 +153,25 @@ CREATE TABLE bioportal_bitemporal (
     PRIMARY KEY (bulletin_date, datum_date)
 );
 
-COMMENT ON TABLE bioportal IS
+COMMENT ON TABLE bioportal_bitemporal IS
 'Very irregularly published charts on number of tests by sample date.';
+
+
+CREATE TABLE hospitalizations (
+    datum_date DATE NOT NULL,
+    "Arecibo" INTEGER NOT NULL,
+    "Bayamón" INTEGER NOT NULL,
+    "Caguas" INTEGER NOT NULL,
+    "Fajardo" INTEGER NOT NULL,
+    "Mayagüez" INTEGER NOT NULL,
+    "Metro" INTEGER NOT NULL,
+    "Ponce" INTEGER NOT NULL,
+    "Total" INTEGER NOT NULL,
+    PRIMARY KEY (datum_date)
+);
+
+COMMENT ON TABLE hospitalizations IS
+'Total # of patients hospitalized for COVID-19 by date and region.';
 
 
 CREATE TABLE canonical_municipal_names (
@@ -341,6 +358,20 @@ SELECT
 FROM announcement
 LEFT OUTER JOIN bioportal USING (bulletin_date);
 
+
+CREATE VIEW hospitalizations_delta AS
+SELECT
+    datum_date,
+    "Arecibo" - lag("Arecibo") OVER datum AS "Arecibo",
+    "Bayamón" - lag("Bayamón") OVER datum AS "Bayamón",
+    "Caguas" - lag("Caguas") OVER datum AS "Caguas",
+    "Fajardo" - lag("Fajardo") OVER datum AS "Fajardo",
+    "Mayagüez" - lag("Mayagüez") OVER datum AS "Mayagüez",
+    "Metro" - lag("Metro") OVER datum AS "Metro",
+    "Ponce" - lag("Ponce") OVER datum AS "Ponce",
+    "Total" - lag("Total") OVER datum AS "Total"
+FROM hospitalizations
+WINDOW datum AS (ORDER BY datum_date);
 
 CREATE VIEW municipal_agg AS
 WITH first_bulletin AS (
