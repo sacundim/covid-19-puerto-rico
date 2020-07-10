@@ -158,14 +158,14 @@ COMMENT ON TABLE bioportal_bitemporal IS
 
 
 CREATE TABLE hospitalizations (
-    datum_date DATE NOT NULL,
-    "Arecibo" INTEGER NOT NULL,
-    "Bayamón" INTEGER NOT NULL,
-    "Caguas" INTEGER NOT NULL,
-    "Fajardo" INTEGER NOT NULL,
-    "Mayagüez" INTEGER NOT NULL,
-    "Metro" INTEGER NOT NULL,
-    "Ponce" INTEGER NOT NULL,
+    datum_date DATE,
+    "Arecibo" INTEGER,
+    "Bayamón" INTEGER,
+    "Caguas" INTEGER,
+    "Fajardo" INTEGER,
+    "Mayagüez" INTEGER,
+    "Metro" INTEGER,
+    "Ponce" INTEGER,
     "Total" INTEGER NOT NULL,
     PRIMARY KEY (datum_date)
 );
