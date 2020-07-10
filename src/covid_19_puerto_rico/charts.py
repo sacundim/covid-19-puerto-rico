@@ -189,7 +189,10 @@ class NewCases(AbstractChart):
         scatter = base.mark_point(opacity=0.5, clip=True).encode(
             y=alt.Y('value:Q', title=None,
                     scale=alt.Scale(type='symlog', domain=[0, max_value])),
-            tooltip=['datum_date', 'variable', 'value']
+            tooltip=[
+                alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
+                alt.Tooltip('variable:N', title='Variable'),
+                alt.Tooltip('value:Q', title='Valor')]
         )
 
         average = base.transform_window(
@@ -261,10 +264,9 @@ class LatenessDaily(AbstractLateness):
             y=alt.Y('variable', title=None, sort=sort_order, axis=None),
             color=alt.Color('variable', sort=sort_order,
                             legend=alt.Legend(orient='bottom', title=None)),
-            tooltip=['variable', 'bulletin_date',
-                     alt.Tooltip(field='value',
-                                 type='quantitative',
-                                 format=".1f")]
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                     alt.Tooltip('variable:N', title='Variable'),
+                     alt.Tooltip('value:Q', format=".1f", title='Rezago promedio')]
         )
 
         text = bars.mark_text(
@@ -305,10 +307,9 @@ class Lateness7Day(AbstractLateness):
                     axis=alt.Axis(format='%d/%m', titlePadding=10)),
             y=alt.Y('value:Q', title=None),
             color = alt.Color('variable', sort=sort_order, legend=None),
-            tooltip=['variable', 'bulletin_date',
-                     alt.Tooltip(field='value',
-                                 type='quantitative',
-                                 format=".1f")]
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                     alt.Tooltip('variable:N', title='Variable'),
+                     alt.Tooltip('value:Q', format=".1f", title='Rezago promedio')]
         )
 
         text = lines.mark_text(
@@ -381,7 +382,8 @@ class CurrentDeltas(AbstractChart):
             y=alt.Y('month(datum_date):O',
                     title=None, sort="descending",
                     axis=alt.Axis(format='%B')),
-            tooltip=['datum_date:T', 'value']
+            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra o muerte'),
+                     alt.Tooltip('value:Q', title='Casos añadidos (o restados)')]
         )
 
         heatmap = base.mark_rect().encode(
@@ -436,7 +438,9 @@ class DailyDeltas(AbstractChart):
             y=alt.Y('yearmonthdate(bulletin_date):O',
                     title=None, sort="descending",
                     axis=alt.Axis(format='%d/%m')),
-            tooltip=['bulletin_date:T', 'datum_date:T', 'value']
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                     alt.Tooltip('datum_date:T', title='Fecha de muestra o muerte'),
+                     alt.Tooltip('value:Q', title='Casos añadidos (o restados)')]
         )
 
         heatmap = base.mark_rect().encode(
@@ -529,28 +533,26 @@ class WeekdayBias(AbstractChart):
         heatmap = base.mark_rect().encode(
             x=alt.X('day(datum_date):O', title=axis_title),
             y=alt.Y('day(bulletin_date):O', title='Día boletín'),
-            tooltip=['variable', 'day(bulletin_date):O', 'day(datum_date):O',
-                     alt.Tooltip(field='value',
-                                 type='quantitative',
-                                 aggregate='sum')]
+            tooltip=[alt.Tooltip('variable:N', title='Variable'),
+                     alt.Tooltip('day(bulletin_date):O', title='Día de boletín'),
+                     alt.Tooltip('day(datum_date):O', title='Día de muestra o muerte'),
+                     alt.Tooltip('value:Q', aggregate='sum', title='Casos')]
         )
 
         right = base.mark_bar().encode(
             x=alt.X('sum(value):Q', title=None, axis=None),
             y=alt.Y('day(bulletin_date):O', title=None, axis=None),
-            tooltip=['variable', 'day(bulletin_date):O',
-                     alt.Tooltip(field='value',
-                                 type='quantitative',
-                                 aggregate='sum')]
+            tooltip=[alt.Tooltip('variable:N', title='Variable'),
+                     alt.Tooltip('day(bulletin_date):O', title='Día de boletín'),
+                     alt.Tooltip('value:Q', aggregate='sum', title='Casos')]
         )
 
         top = base.mark_bar().encode(
             x=alt.X('day(datum_date):O', title=None, axis=None),
             y=alt.Y('sum(value):Q', title=None, axis=None),
-            tooltip = ['variable', 'day(datum_date):O',
-                       alt.Tooltip(field='value',
-                                   type='quantitative',
-                                   aggregate='sum')]
+            tooltip=[alt.Tooltip('variable:N', title='Variable'),
+                     alt.Tooltip('day(datum_date):O', title='Día de muestra o muerte'),
+                     alt.Tooltip('value:Q', aggregate='sum', title='Casos')]
         )
 
         heatmap_size = 160
@@ -632,7 +634,9 @@ class Municipal(AbstractChart):
             y=alt.Y('new_confirmed_cases:Q', title=None, axis=None,
                     scale=alt.Scale(domain=self.DOMAIN)),
             color=alt.value(self.REDS[0]),
-            tooltip=['Municipio:N', 'bulletin_date:T', 'new_confirmed_cases:Q']
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                     alt.Tooltip('Municipio:N'),
+                     alt.Tooltip('new_confirmed_cases:Q', title='Casos confirmados nuevos')]
         )
 
         def make_band(variable, color, calculate):
@@ -688,13 +692,13 @@ class Municipal(AbstractChart):
 class MunicipalMap(AbstractChart):
     def make_chart(self, df):
         left_half = self.make_half_chart(
-            df, 'd',
+            df, 'd', 'Casos',
             ['Casos nuevos (último boletín)',
              'Casos nuevos (últimos 7)']
         )
 
         right_half = self.make_half_chart(
-            df, '.0%',
+            df, '.0%', 'Crecida',
             ['Crecida (último vs 7 anteriores)',
              'Crecida (últimos 7 vs 7 anteriores)']
         )
@@ -705,7 +709,7 @@ class MunicipalMap(AbstractChart):
             spacing=40
         )
 
-    def make_half_chart(self, df, number_format, variables):
+    def make_half_chart(self, df, number_format, short_title, variables):
         municipalities = self.geography()
 
         return alt.Chart(municipalities).transform_lookup(
@@ -721,8 +725,11 @@ class MunicipalMap(AbstractChart):
                                             domain=alt.DomainUnionWith(unionWith=[0])),
                             legend=alt.Legend(orient='bottom', titleLimit=400,
                                               titleOrient='bottom', format=number_format)),
-            tooltip=[alt.Tooltip(field='properties.NAME', type='nominal'),
-                     alt.Tooltip(alt.repeat('column'), type='quantitative', format=number_format)]
+            tooltip=[alt.Tooltip(field='properties.NAME', type='nominal', title='Municipio'),
+                     alt.Tooltip(alt.repeat('column'),
+                                 type='quantitative',
+                                 format=number_format,
+                                 title=short_title)]
         ).properties(
             width=300,
             height=125
@@ -791,8 +798,8 @@ class Hospitalizations(AbstractChart):
             color=alt.Color('variable:N', title='Región',
                             legend=alt.Legend(orient='top')),
             tooltip=[
-                alt.Tooltip('variable:N', title='Región'),
                 alt.Tooltip('datum_date:T', title='Fecha'),
+                alt.Tooltip('variable:N', title='Región'),
                 alt.Tooltip('value:Q', title='Hospitalizados (región)'),
                 alt.Tooltip('total:Q', title='Hospitalizados (total)'),
             ]

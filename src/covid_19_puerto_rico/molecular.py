@@ -92,10 +92,9 @@ class TestsBySampleDate(charts.AbstractChart):
                     title='Fecha de toma de muestra',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('value:Q', title=None, scale=alt.Scale(type='linear')),
-            tooltip=['datum_date', 'variable:N',
-                     alt.Tooltip(field='value',
-                                 type='quantitative',
-                                 format=".2f")]
+            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
+                     alt.Tooltip('variable:N', title='Variable'),
+                     alt.Tooltip(field='value:Q', format=".2f", title='Pruebas')]
         ).properties(
             width=575, height=100
         ).facet(
@@ -142,10 +141,8 @@ class AbstractPositiveRate(charts.AbstractChart):
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('value:Q', title=None, axis=alt.Axis(format='.2%')),
             color=alt.Color('Fuente:N', legend=alt.Legend(orient='top', title=None, offset=-14)),
-            tooltip=['bulletin_date:T',
-                     alt.Tooltip(field='value',
-                                 type='quantitative',
-                                 format=".2%")]
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                     alt.Tooltip('value:Q', format=".2%", title='Tasa de positividad')]
         )
 
         return lines.properties(
@@ -211,10 +208,9 @@ class AbstractPerCapitaChart(charts.AbstractChart):
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('per_thousand:Q', title=None),
             color=alt.Color('Fuente:N', legend=alt.Legend(orient='top', title=None)),
-            tooltip=['bulletin_date:T',
-                     alt.Tooltip(field='per_thousand',
-                                 type='quantitative',
-                                 format=".2f")]
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                     alt.Tooltip('per_thousand:Q', format=".2f",
+                                 title='Pruebas por mil habitantes')]
         ).properties(
             width=600, height=125
         )
@@ -274,7 +270,9 @@ class CumulativeTestsVsCases(charts.AbstractChart):
             five_percent=alt.datum.x / 0.05,
         ).transform_fold(
             ['point_five_percent', 'one_percent', 'two_percent', 'five_percent']
-        ).mark_line(color='grey', strokeWidth=0.5, clip=True).encode(
+        ).mark_line(
+            color='grey', strokeWidth=0.5, clip=True
+        ).encode(
             x=alt.X('x:Q'),
             y=alt.Y('value:Q'),
             strokeDash=alt.StrokeDash('key:N', legend=None)
@@ -291,17 +289,14 @@ class CumulativeTestsVsCases(charts.AbstractChart):
                     title='Total de casos confirmados por millón de habitantes'),
             order=alt.Order('bulletin_date:T'),
             color=alt.Color('Fuente:N', legend=alt.Legend(orient='top', title=None)),
-            tooltip=['yearmonthdate(bulletin_date):T', 'Fuente:N',
-                     alt.Tooltip(field='tests_per_million',
-                                 type='quantitative',
-                                 format=".2f"),
-                     alt.Tooltip(field='cases_per_million',
-                                 type='quantitative',
-                                 format=".2f"),
-                     alt.Tooltip(field='positive_rate',
-                                 type='quantitative',
-                                 format=".2%")
-                     ]
+            tooltip=[alt.Tooltip('yearmonthdate(bulletin_date):T', title='Fecha de boletín'),
+                     alt.Tooltip('Fuente:N'),
+                     alt.Tooltip('tests_per_million:Q', format=",d",
+                                 title='Pruebas por millón de habitantes'),
+                     alt.Tooltip('cases_per_million:Q', format=",d",
+                                 title='Casos por millón de habitantes'),
+                     alt.Tooltip('positive_rate:Q', format=".2%",
+                                 title='Tasa de positividad')]
         )
 
         return (reference + main).properties(
