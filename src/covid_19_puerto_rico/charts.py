@@ -181,7 +181,11 @@ class NewCases(AbstractChart):
     def make_chart(self, df):
         max_value = df['value'].max()
 
-        base = alt.Chart(df.dropna()).encode(
+        base = alt.Chart(df.dropna()).transform_window(
+            frame=[-6, 0],
+            mean_value='mean(value)',
+            groupby=['variable']
+        ).encode(
             x=alt.X('yearmonthdate(datum_date):T', title=None,
                     axis=alt.Axis(format='%d/%m'))
         )
@@ -192,16 +196,17 @@ class NewCases(AbstractChart):
             tooltip=[
                 alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
                 alt.Tooltip('variable:N', title='Variable'),
-                alt.Tooltip('value:Q', title='Valor')]
+                alt.Tooltip('value:Q', title='Valor crudo'),
+                alt.Tooltip('mean_value:Q', format='.1f', title='Promedio 7 días')]
         )
 
-        average = base.transform_window(
-            frame=[-6, 0],
-            mean_value='mean(value)',
-            groupby=['variable']
-        ).mark_line(strokeWidth=3).encode(
+        average = base.mark_line(strokeWidth=3, point='transparent').encode(
             y=alt.Y('mean_value:Q', title=None,
-                    scale=alt.Scale(type='symlog', domain=[0, max_value]))
+                    scale=alt.Scale(type='symlog', domain=[0, max_value])),
+            tooltip = [
+                alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
+                alt.Tooltip('variable:N', title='Variable'),
+                alt.Tooltip('mean_value:Q', format='.1f', title='Promedio 7 días')]
         )
 
         return (average + scatter).encode(
