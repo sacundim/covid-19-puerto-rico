@@ -780,13 +780,22 @@ class Hospitalizations(AbstractChart):
         return df.loc[df['datum_date'] <= pd.to_datetime(bulletin_date)]
 
     def make_chart(self, df):
-        return alt.Chart(df).mark_area(
+        return alt.Chart(df).transform_joinaggregate(
+            groupby=['datum_date'],
+            total='sum(value)'
+        ).mark_area(
             fillOpacity=0.825, tooltip=True
         ).encode(
             x=alt.X('datum_date:T', title='Fecha'),
             y=alt.Y('value:Q', title='Hospitalizados'),
             color=alt.Color('variable:N', title='Región',
-                            legend=alt.Legend(orient='top'))
+                            legend=alt.Legend(orient='top')),
+            tooltip=[
+                alt.Tooltip('variable:N', title='Región'),
+                alt.Tooltip('datum_date:T', title='Fecha'),
+                alt.Tooltip('value:Q', title='Hospitalizados (región)'),
+                alt.Tooltip('total:Q', title='Hospitalizados (total)'),
+            ]
         ).properties(
             width=575, height=300
         )
