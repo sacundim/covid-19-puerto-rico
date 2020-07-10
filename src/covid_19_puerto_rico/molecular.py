@@ -7,7 +7,7 @@ import altair as alt
 import datetime
 import pandas as pd
 import sqlalchemy
-from sqlalchemy import cast, Float
+from sqlalchemy import cast
 from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION
 from sqlalchemy.sql import select
 from . import charts
@@ -261,29 +261,14 @@ class CumulativeTestsVsCases(charts.AbstractChart):
 
     def make_chart(self, df):
         max_x = 1_000
-        reference = alt.Chart(
-            alt.sequence(0, max_x + 1, max_x, as_='x')
-        ).transform_calculate(
-            point_five_percent=alt.datum.x / 0.005,
-            one_percent=alt.datum.x / 0.01,
-            two_percent=alt.datum.x / 0.02,
-            five_percent=alt.datum.x / 0.05,
-        ).transform_fold(
-            ['point_five_percent', 'one_percent', 'two_percent', 'five_percent']
-        ).mark_line(
-            color='grey', strokeWidth=0.5, clip=True
-        ).encode(
-            x=alt.X('x:Q'),
-            y=alt.Y('value:Q'),
-            strokeDash=alt.StrokeDash('key:N', legend=None)
-        )
+        max_y = max_x * 100
 
         main = alt.Chart(df.dropna()).transform_calculate(
             tests_per_million=alt.datum.cumulative_molecular_tests / self.POPULATION_MILLIONS,
             cases_per_million=alt.datum.cumulative_confirmed_cases / self.POPULATION_MILLIONS,
             positive_rate=alt.datum.cumulative_confirmed_cases / alt.datum.cumulative_molecular_tests
         ).mark_line(point=True).encode(
-            y=alt.Y('tests_per_million:Q', scale=alt.Scale(domain=[0, max_x * 100]),
+            y=alt.Y('tests_per_million:Q', scale=alt.Scale(domain=[0, max_y]),
                     title='Total de pruebas por millón de habitantes'),
             x=alt.X('cases_per_million:Q', scale=alt.Scale(domain=[0, max_x]),
                     title='Total de casos confirmados por millón de habitantes'),
@@ -299,6 +284,41 @@ class CumulativeTestsVsCases(charts.AbstractChart):
                                  title='Tasa de positividad')]
         )
 
-        return (reference + main).properties(
-            width=570, height=570
+        return (self.make_ref_chart(max_x) + main).properties(
+            width=540, height=540
         )
+
+    def make_ref_chart(self, max_x):
+        max_y = max_x * 100
+        df = pd.DataFrame(
+            [{'x': 0, 'key': 'point_five_pct', 'y': 0.0, 'positivity': 0.005},
+             {'x': max_y * 0.005, 'key': 'point_five_pct', 'y': max_y, 'positivity': 0.005},
+             {'x': 0, 'key': 'one_pct', 'y': 0.0, 'positivity': 0.01},
+             {'x': max_x, 'key': 'one_pct', 'y': max_y, 'positivity': 0.01},
+             {'x': 0, 'key': 'two_pct', 'y': 0.0, 'positivity': 0.02},
+             {'x': max_x, 'key': 'two_pct', 'y': max_x / 0.02, 'positivity': 0.02},
+             {'x': 0, 'key': 'five_pct', 'y': 0.0, 'positivity': 0.05},
+             {'x': max_x, 'key': 'five_pct', 'y': max_x / 0.05, 'positivity': 0.05}])
+
+        lines = alt.Chart(df).mark_line(
+            color='grey', strokeWidth=0.5, clip=True, strokeDash=[6, 4]
+        ).encode(
+            x=alt.X('x:Q'),
+            y=alt.Y('y:Q'),
+            detail='key:N'
+        )
+
+        text = alt.Chart(df).transform_filter(
+            alt.datum.x > 0
+        ).mark_text(
+            color='grey',
+            align='left',
+            baseline='middle',
+            size=14, dx=4, dy=-8
+        ).encode(
+            x=alt.X('x:Q'),
+            y=alt.Y('y:Q'),
+            text=alt.Text('positivity:Q', format='.1%')
+        )
+
+        return lines + text
