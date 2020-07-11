@@ -176,12 +176,17 @@ COMMENT ON TABLE hospitalizations IS
 
 CREATE TABLE canonical_municipal_names (
     name TEXT NOT NULL,
+    popest2019 INTEGER,
     PRIMARY KEY (name)
 );
 
 COMMENT ON TABLE canonical_municipal_names IS
 'A list of the canonical form of municipal names, meant to be used in constraints
 to catch mispelled names in the municipal tables.';
+
+COMMENT ON COLUMN canonical_municipal_names.popest2019 IS
+'Estimated population as of July 1, 2019 according the US Census Bureau''s
+Population Estimates Program.';
 
 
 CREATE TABLE municipal (
@@ -954,6 +959,7 @@ ORDER BY bulletin_date, datum_date;
 CREATE VIEW products.municipal_map AS
 SELECT
 	municipality,
+	popest2019,
 	bulletin_date,
 	new_confirmed_cases,
 	new_7day_confirmed_cases,
@@ -971,4 +977,6 @@ SELECT
 			END
 		AS pct_increase_7day
 FROM municipal_agg ma
+INNER JOIN canonical_municipal_names cmn
+    ON cmn.name = ma.municipality
 ORDER BY municipality, bulletin_date;
