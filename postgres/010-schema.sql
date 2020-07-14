@@ -849,13 +849,18 @@ WITH prdoh AS (
 			b.bulletin_date,
 			b.bulletin_date - lag(b.bulletin_date) OVER bulletin
 				AS days,
-			b.cumulative_molecular_tests,
-			b.cumulative_positive_molecular_tests,
-			a.cumulative_confirmed_cases,
-			b.new_molecular_tests,
-			b.new_positive_molecular_tests,
+			b.cumulative_molecular_tests
+				AS cumulative_tests,
+			b.cumulative_positive_molecular_tests
+				AS cumulative_positive_tests,
+			a.cumulative_confirmed_cases
+				AS cumulative_cases,
+			b.new_molecular_tests
+				AS new_tests,
+			b.new_positive_molecular_tests
+				AS new_positive_tests,
 		    a.cumulative_confirmed_cases - lag(a.cumulative_confirmed_cases) OVER bulletin
-		        AS new_confirmed_cases
+		        AS new_cases
 		FROM bioportal b
 		INNER JOIN announcement a
 			USING (bulletin_date)
@@ -863,24 +868,61 @@ WITH prdoh AS (
 	)
 	SELECT
 		bulletin_date,
-		'Salud' AS source,
+		'Salud (moleculares)' AS source,
 		days AS days_since_last_report,
-		cumulative_molecular_tests,
-		cumulative_positive_molecular_tests,
-		cumulative_confirmed_cases,
-		new_molecular_tests / days
+		cumulative_tests,
+		cumulative_positive_tests,
+		cumulative_cases,
+		new_tests / days
 			AS smoothed_daily_tests,
-		new_positive_molecular_tests / days
-			AS smoothed_daily_positive_molecular_tests,
-		new_confirmed_cases / days
-			AS smoothed_daily_confirmed_cases
+		new_positive_tests / days
+			AS smoothed_daily_positive_tests,
+		new_cases / days
+			AS smoothed_daily_cases
+	FROM bio_raw
+), serological AS (
+	WITH bio_raw AS (
+		SELECT
+			b.bulletin_date,
+			b.bulletin_date - lag(b.bulletin_date) OVER bulletin
+				AS days,
+			b.cumulative_serological_tests
+				AS cumulative_tests,
+			b.cumulative_positive_serological_tests
+				AS cumulative_positive_tests,
+			a.cumulative_probable_cases
+				AS cumulative_cases,
+			b.new_serological_tests
+				AS new_tests,
+			b.new_positive_serological_tests
+				AS new_positive_tests,
+		    a.cumulative_probable_cases - lag(a.cumulative_probable_cases) OVER bulletin
+		        AS new_cases
+		FROM bioportal b
+		INNER JOIN announcement a
+			USING (bulletin_date)
+		WINDOW bulletin AS (ORDER BY b.bulletin_date)
+	)
+	SELECT
+		bulletin_date,
+		'Salud (serológicas)' AS source,
+		days AS days_since_last_report,
+		cumulative_tests,
+		cumulative_positive_tests,
+		cumulative_cases,
+		new_tests / days
+			AS smoothed_daily_tests,
+		new_positive_tests / days
+			AS smoothed_daily_positive_tests,
+		new_cases / days
+			AS smoothed_daily_cases
 	FROM bio_raw
 ), prpht AS (
 	WITH weekly_cumulatives AS (
 		SELECT
 			dates.bulletin_date :: date bulletin_date,
-			sum(delta_molecular_tests) cumulative_molecular_tests,
-			sum(delta_positive_molecular_tests) cumulative_positive_molecular_tests
+			sum(delta_molecular_tests) cumulative_tests,
+			sum(delta_positive_molecular_tests) cumulative_positive_tests
 		FROM generate_series(date '2020-03-29',
 		   					 date '2020-06-28',
 		   					 INTERVAL '7 day')
@@ -892,35 +934,37 @@ WITH prdoh AS (
 	), weekly_deltas AS (
 		SELECT
 			bulletin_date,
-			cumulative_molecular_tests,
-			cumulative_molecular_tests
-				- lag(cumulative_molecular_tests) OVER prev
-				AS delta_molecular_tests,
-			cumulative_positive_molecular_tests,
-			cumulative_positive_molecular_tests
-				- lag(cumulative_positive_molecular_tests) OVER prev
-				AS delta_positive_molecular_tests
+			cumulative_tests,
+			cumulative_tests
+				- lag(cumulative_tests) OVER prev
+				AS delta_tests,
+			cumulative_positive_tests,
+			cumulative_positive_tests
+				- lag(cumulative_positive_tests) OVER prev
+				AS delta_positive_tests
 		FROM weekly_cumulatives
 		WINDOW prev AS (ORDER BY bulletin_date)
 	)
 	SELECT
 		bulletin_date,
-		'PRPHT' source,
+		'PRPHT (moleculares)' source,
 		7 AS days_since_last_report,
-		cumulative_molecular_tests,
-		cumulative_positive_molecular_tests,
+		cumulative_tests,
+		cumulative_positive_tests,
 		-- We omit this because it's not comparable with PRPHT data
-		NULL::BIGINT cumulative_confirmed_cases,
-		delta_molecular_tests / 7.0
+		NULL::BIGINT cumulative_cases,
+		delta_tests / 7.0
 			AS smoothed_daily_tests,
-		delta_positive_molecular_tests / 7.0
-			AS smoothed_daily_positive_molecular_tests,
+		delta_positive_tests / 7.0
+			AS smoothed_daily_positive_tests,
 		-- We omit this because it's not comparable with PRPHT data
 		NULL::BIGINT smoothed_daily_confirmed_cases
 	FROM weekly_deltas wd
 	WINDOW prev AS (ORDER BY bulletin_date)
 )
 SELECT * FROM prdoh
+UNION
+SELECT * FROM serological
 UNION
 SELECT * FROM prpht
 ORDER BY bulletin_date, source;
