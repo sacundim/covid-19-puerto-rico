@@ -133,6 +133,10 @@ class TestsBySampleDate(charts.AbstractChart):
 
 
 class AbstractPositiveRate(charts.AbstractChart):
+    ORDER = ['Salud (moleculares)',
+             'Salud (serológicas)',
+             'PRPHT (moleculares)']
+
     def make_chart(self, df):
         lines = alt.Chart(df.dropna()).mark_line(
             point=True
@@ -140,16 +144,16 @@ class AbstractPositiveRate(charts.AbstractChart):
             x=alt.X('bulletin_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('value:Q', title=None, axis=alt.Axis(format='.2%')),
-            color=alt.Color('Fuente:N', legend=alt.Legend(orient='top', title=None, offset=-14)),
+            color=alt.Color('Fuente:N', sort=self.ORDER,
+                            legend=alt.Legend(orient='top', title=None, offset=0)),
             tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                      alt.Tooltip('value:Q', format=".2%", title='Tasa de positividad')]
         )
 
         return lines.properties(
-            width=600, height=150
+            width=575, height=150
         ).facet(
-            columns=1,
-            facet=alt.Facet('variable:N', title=None)
+            row=alt.Row('variable:N', title=None)
         ).resolve_scale(
             y='independent'
         )
@@ -165,10 +169,10 @@ class NewPositiveRate(AbstractPositiveRate):
         query = select([
             table.c.source.label('Fuente'),
             table.c.bulletin_date,
-            (table.c.smoothed_daily_positive_molecular_tests / table.c.smoothed_daily_tests)\
-                .label('Moleculares positivas / total'),
-            (table.c.smoothed_daily_confirmed_cases / table.c.smoothed_daily_tests)\
-                .label('Casos confirmados / Moleculares total')
+            (table.c.smoothed_daily_positive_tests / table.c.smoothed_daily_tests)\
+                .label('Positivas / pruebas'),
+            (table.c.smoothed_daily_cases / table.c.smoothed_daily_tests)\
+                .label('Casos / pruebas')
         ])
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
         return pd.melt(df, ['Fuente', 'bulletin_date'])
@@ -181,12 +185,12 @@ class CumulativePositiveRate(AbstractPositiveRate):
         query = select([
             table.c.source.label('Fuente'),
             table.c.bulletin_date,
-            (cast(table.c.cumulative_positive_molecular_tests, DOUBLE_PRECISION)
-                / table.c.cumulative_molecular_tests)\
-                .label('Moleculares positivas / pruebas'),
-            (cast(table.c.cumulative_confirmed_cases, DOUBLE_PRECISION)
-                  / table.c.cumulative_molecular_tests)\
-                .label('Casos confirmados / pruebas')
+            (cast(table.c.cumulative_positive_tests, DOUBLE_PRECISION)
+                / table.c.cumulative_tests)\
+                .label('Positivas / pruebas'),
+            (cast(table.c.cumulative_cases, DOUBLE_PRECISION)
+                  / table.c.cumulative_tests)\
+                .label('Casos / pruebas')
         ])
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
         return pd.melt(df, ['Fuente', 'bulletin_date'])
@@ -197,6 +201,9 @@ class AbstractPerCapitaChart(charts.AbstractChart):
     POPULATION = 3_193_694
     POPULATION_THOUSANDS = POPULATION / 1_000.0
     POPULATION_MILLIONS = POPULATION / 1_000_000.0
+    ORDER = ['Salud (moleculares)',
+             'Salud (serológicas)',
+             'PRPHT (moleculares)']
 
     def make_chart(self, df):
         return alt.Chart(df.dropna()).transform_calculate(
@@ -207,7 +214,8 @@ class AbstractPerCapitaChart(charts.AbstractChart):
             x=alt.X('bulletin_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('per_thousand:Q', title=None),
-            color=alt.Color('Fuente:N', legend=alt.Legend(orient='top', title=None)),
+            color=alt.Color('Fuente:N', sort=self.ORDER,
+                            legend=alt.Legend(orient='top', title=None)),
             tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                      alt.Tooltip('per_thousand:Q', format=".2f",
                                  title='Pruebas por mil habitantes')]
@@ -237,13 +245,15 @@ class CumulativeTestsPerCapita(AbstractPerCapitaChart):
         query = select([
             table.c.source.label('Fuente'),
             table.c.bulletin_date,
-            table.c.cumulative_molecular_tests.label('value')
+            table.c.cumulative_tests.label('value')
         ])
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
 
 
 class CumulativeTestsVsCases(charts.AbstractChart):
     POPULATION_MILLIONS = 3.193_694
+    ORDER = ['Salud (moleculares)',
+             'Salud (serológicas)']
 
     def fetch_data(self, connection):
         table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
@@ -251,8 +261,8 @@ class CumulativeTestsVsCases(charts.AbstractChart):
         query = select([
             table.c.bulletin_date,
             table.c.source.label('Fuente'),
-            table.c.cumulative_molecular_tests,
-            table.c.cumulative_confirmed_cases
+            table.c.cumulative_tests,
+            table.c.cumulative_cases
         ])
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
 
@@ -260,20 +270,20 @@ class CumulativeTestsVsCases(charts.AbstractChart):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
 
     def make_chart(self, df):
-        max_x = 1_000
-        max_y = max_x * 100
+        max_x, max_y = 2_600, 100_000
 
         main = alt.Chart(df.dropna()).transform_calculate(
-            tests_per_million=alt.datum.cumulative_molecular_tests / self.POPULATION_MILLIONS,
-            cases_per_million=alt.datum.cumulative_confirmed_cases / self.POPULATION_MILLIONS,
-            positive_rate=alt.datum.cumulative_confirmed_cases / alt.datum.cumulative_molecular_tests
+            tests_per_million=alt.datum.cumulative_tests / self.POPULATION_MILLIONS,
+            cases_per_million=alt.datum.cumulative_cases / self.POPULATION_MILLIONS,
+            positive_rate=alt.datum.cumulative_cases / alt.datum.cumulative_tests
         ).mark_line(point=True).encode(
             y=alt.Y('tests_per_million:Q', scale=alt.Scale(domain=[0, max_y]),
                     title='Total de pruebas por millón de habitantes'),
             x=alt.X('cases_per_million:Q', scale=alt.Scale(domain=[0, max_x]),
-                    title='Total de casos confirmados por millón de habitantes'),
+                    title='Total de casos por millón de habitantes'),
             order=alt.Order('bulletin_date:T'),
-            color=alt.Color('Fuente:N', legend=alt.Legend(orient='top', title=None)),
+            color=alt.Color('Fuente:N', sort=self.ORDER,
+                            legend=alt.Legend(orient='top', title=None, offset=25)),
             tooltip=[alt.Tooltip('yearmonthdate(bulletin_date):T', title='Fecha de boletín'),
                      alt.Tooltip('Fuente:N'),
                      alt.Tooltip('tests_per_million:Q', format=",d",
@@ -284,19 +294,20 @@ class CumulativeTestsVsCases(charts.AbstractChart):
                                  title='Tasa de positividad')]
         )
 
-        return (self.make_ref_chart(max_x) + main).properties(
-            width=540, height=540
+        return (self.make_ref_chart(max_x, max_y) + main).properties(
+            width=540, height=216
         )
 
-    def make_ref_chart(self, max_x):
-        max_y = max_x * 100
+    def make_ref_chart(self, max_x, max_y):
         df = pd.DataFrame(
+            # These are more hardcoded than they look, they are bound
+            # to landscape aspect ratios
             [{'x': 0, 'key': 'point_five_pct', 'y': 0.0, 'positivity': 0.005},
              {'x': max_y * 0.005, 'key': 'point_five_pct', 'y': max_y, 'positivity': 0.005},
              {'x': 0, 'key': 'one_pct', 'y': 0.0, 'positivity': 0.01},
-             {'x': max_x, 'key': 'one_pct', 'y': max_y, 'positivity': 0.01},
+             {'x': max_y * 0.01, 'key': 'one_pct', 'y': max_y, 'positivity': 0.01},
              {'x': 0, 'key': 'two_pct', 'y': 0.0, 'positivity': 0.02},
-             {'x': max_x, 'key': 'two_pct', 'y': max_x / 0.02, 'positivity': 0.02},
+             {'x': max_y * 0.02, 'key': 'two_pct', 'y': max_y, 'positivity': 0.02},
              {'x': 0, 'key': 'five_pct', 'y': 0.0, 'positivity': 0.05},
              {'x': max_x, 'key': 'five_pct', 'y': max_x / 0.05, 'positivity': 0.05}])
 
