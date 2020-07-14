@@ -783,23 +783,38 @@ class Hospitalizations(AbstractChart):
             table.c['Fajardo'],
             table.c['Mayagüez'],
             table.c['Metro'],
-            table.c['Ponce']
+            table.c['Ponce'],
+            table.c['Total']
         ])
         df = pd.read_sql_query(query, connection, parse_dates=['datum_date'])
         return pd.melt(df, ['datum_date'])
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['datum_date'] <= pd.to_datetime(bulletin_date)]
+        return df.loc[df['datum_date'] <= pd.to_datetime(bulletin_date + datetime.timedelta(days=1))]
 
     def make_chart(self, df):
-        return alt.Chart(df).transform_joinaggregate(
+        base = alt.Chart(df).encode(
+            x=alt.X('datum_date:T', title='Fecha'),
+            y=alt.Y('value:Q', title='Hospitalizados')
+        )
+
+        total = base.transform_filter(
+            alt.datum['variable'] == 'Total'
+        ).mark_area(color='lightgrey', fillOpacity=0.85).encode(
+            tooltip=[
+                alt.Tooltip('datum_date:T', title='Fecha'),
+                alt.Tooltip('value:Q', title='Hospitalizados (total)'),
+            ]
+        )
+
+        regions = base.transform_filter(
+            alt.datum['variable'] != 'Total'
+        ).transform_joinaggregate(
             groupby=['datum_date'],
             total='sum(value)'
         ).mark_area(
-            fillOpacity=0.825, tooltip=True
+            fillOpacity=0.85
         ).encode(
-            x=alt.X('datum_date:T', title='Fecha'),
-            y=alt.Y('value:Q', title='Hospitalizados'),
             color=alt.Color('variable:N', title='Región',
                             legend=alt.Legend(orient='top')),
             tooltip=[
@@ -808,6 +823,8 @@ class Hospitalizations(AbstractChart):
                 alt.Tooltip('value:Q', title='Hospitalizados (región)'),
                 alt.Tooltip('total:Q', title='Hospitalizados (total)'),
             ]
-        ).properties(
+        )
+
+        return (total + regions).properties(
             width=575, height=300
         )
