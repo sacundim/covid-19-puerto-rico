@@ -591,40 +591,27 @@ $$ LANGUAGE SQL;
 CREATE VIEW products.lateness_daily AS
 SELECT
     bulletin_date,
-
-    safediv(sum(lateness_confirmed_cases), sum(delta_confirmed_cases))
-        AS confirmed_cases_total,
     safediv(sum(lateness_confirmed_cases) FILTER (WHERE lateness_confirmed_cases > 0),
             sum(delta_confirmed_cases) FILTER (WHERE delta_confirmed_cases > 0))
         AS confirmed_cases_additions,
-    -safediv(sum(lateness_confirmed_cases) FILTER (WHERE lateness_confirmed_cases < 0),
-             sum(delta_confirmed_cases) FILTER (WHERE delta_confirmed_cases < 0))
-         AS confirmed_cases_removals,
-
-    safediv(sum(lateness_probable_cases), sum(delta_probable_cases))
-        AS probable_cases_total,
     safediv(sum(lateness_probable_cases) FILTER (WHERE lateness_probable_cases > 0),
             sum(delta_probable_cases) FILTER (WHERE delta_probable_cases > 0))
         AS probable_cases_additions,
-    -safediv(sum(lateness_probable_cases) FILTER (WHERE lateness_probable_cases < 0),
-             sum(delta_probable_cases) FILTER (WHERE delta_probable_cases < 0))
-         AS probable_cases_removals,
-
     -- There is a very weird (nondeterminism?) bug in PRDoH's deaths data processing
     -- that causes weird back-and-forth revisions to the same six dates up to 2020-04-18,
     -- so we just filter those out.
-    safediv(sum(lateness_deaths) FILTER (WHERE datum_date > '2020-04-18'),
-            sum(delta_deaths) FILTER (WHERE datum_date > '2020-04-18'))
-        AS deaths_total,
     safediv(sum(lateness_deaths) FILTER (WHERE lateness_deaths > 0 AND datum_date > '2020-04-18'),
             sum(delta_deaths) FILTER (WHERE delta_deaths > 0 AND datum_date > '2020-04-18'))
-        AS deaths_additions,
-    -safediv(sum(lateness_deaths) FILTER (WHERE lateness_deaths < 0 AND datum_date > '2020-04-18'),
-             sum(delta_deaths) FILTER (WHERE delta_deaths < 0 AND datum_date > '2020-04-18'))
-         AS deaths_removals
+        AS deaths_additions
 FROM bitemporal_agg
 -- We exclude the earliest bulletin date because it's artificially late
-WHERE bulletin_date > (SELECT min(bulletin_date) FROM bitemporal_agg)
+WHERE bulletin_date > (
+    SELECT min(bulletin_date)
+    FROM bitemporal_agg
+    WHERE delta_confirmed_cases IS NOT NULL
+    AND delta_probable_cases IS NOT NULL
+    AND delta_deaths IS NOT NULL
+)
 GROUP BY bulletin_date;
 
 COMMENT ON VIEW products.lateness_daily IS
@@ -642,104 +629,50 @@ WITH min_date AS (
 ), bulletin_sums AS (
 	SELECT
 		ba.bulletin_date,
-
-		sum(lateness_confirmed_cases) lateness_confirmed_cases,
-		sum(delta_confirmed_cases) delta_confirmed_cases,
 		sum(lateness_confirmed_cases)
 			FILTER (WHERE lateness_confirmed_cases > 0)
 			AS lateness_added_confirmed_cases,
 		sum(delta_confirmed_cases)
 			FILTER (WHERE delta_confirmed_cases > 0)
 			AS delta_added_confirmed_cases,
-		sum(lateness_confirmed_cases)
-			FILTER (WHERE lateness_confirmed_cases < 0)
-			AS lateness_removed_confirmed_cases,
-		sum(delta_confirmed_cases)
-			FILTER (WHERE delta_confirmed_cases < 0)
-			AS delta_removed_confirmed_cases,
-
-		sum(lateness_probable_cases) lateness_probable_cases,
-		sum(delta_probable_cases) delta_probable_cases,
 		sum(lateness_probable_cases)
 			FILTER (WHERE lateness_probable_cases > 0)
 			AS lateness_added_probable_cases,
 		sum(delta_probable_cases)
 			FILTER (WHERE delta_probable_cases > 0)
 			AS delta_added_probable_cases,
-		sum(lateness_probable_cases)
-			FILTER (WHERE lateness_probable_cases < 0)
-			AS lateness_removed_probable_cases,
-		sum(delta_probable_cases)
-			FILTER (WHERE delta_probable_cases < 0)
-			AS delta_removed_probable_cases,
-
         -- There is a very weird (nondeterminism?) bug in PRDoH's deaths data processing
         -- that causes weird back-and-forth revisions to the same six dates up to 2020-04-18,
         -- so we just filter those out.
-		sum(lateness_deaths) FILTER (WHERE datum_date > '2020-04-18') lateness_deaths,
-		sum(delta_deaths) FILTER (WHERE datum_date > '2020-04-18') delta_deaths,
 		sum(lateness_deaths)
 			FILTER (WHERE lateness_deaths > 0 AND datum_date > '2020-04-18')
 			AS lateness_added_deaths,
 		sum(delta_deaths)
 			FILTER (WHERE delta_deaths > 0 AND datum_date > '2020-04-18')
-			AS delta_added_deaths,
-		sum(lateness_deaths)
-			FILTER (WHERE lateness_deaths < 0 AND datum_date > '2020-04-18')
-			AS lateness_removed_deaths,
-		sum(delta_deaths)
-			FILTER (WHERE delta_deaths < 0 AND datum_date > '2020-04-18')
-			AS delta_removed_deaths
+			AS delta_added_deaths
 	FROM bitemporal_agg ba, min_date md
 	WHERE ba.bulletin_date > md.bulletin_date
 	GROUP BY ba.bulletin_date
 ), windowed_sums AS (
 	SELECT
 		bulletin_date,
-
-        safediv(SUM(lateness_confirmed_cases) OVER bulletin,
-	        	SUM(delta_confirmed_cases) OVER bulletin)
-	        AS confirmed_cases_total,
         safediv(SUM(lateness_added_confirmed_cases) OVER bulletin,
 	        	SUM(delta_added_confirmed_cases) OVER bulletin)
 	        AS confirmed_cases_additions,
-		safediv(SUM(lateness_removed_confirmed_cases) OVER bulletin,
-	        	SUM(delta_removed_confirmed_cases) OVER bulletin)
-	        AS confirmed_cases_removals,
-
-        safediv(SUM(lateness_probable_cases) OVER bulletin,
-	        	SUM(delta_probable_cases) OVER bulletin)
-	        AS probable_cases_total,
         safediv(SUM(lateness_added_probable_cases) OVER bulletin,
 	        	SUM(delta_added_probable_cases) OVER bulletin)
 	        AS probable_cases_additions,
-		safediv(SUM(lateness_removed_confirmed_cases) OVER bulletin,
-	        	SUM(delta_removed_confirmed_cases) OVER bulletin)
-	        AS probable_cases_removals,
-
-        safediv(SUM(lateness_deaths) OVER bulletin,
-	        	SUM(delta_deaths) OVER bulletin)
-	        AS deaths_total,
         safediv(SUM(lateness_added_deaths) OVER bulletin,
 	        	SUM(delta_added_deaths) OVER bulletin)
-	        AS deaths_additions,
-		safediv(SUM(lateness_removed_deaths) OVER bulletin,
-	        	SUM(delta_removed_deaths) OVER bulletin)
-	        AS deaths_removals
+	        AS deaths_additions
 	FROM bulletin_sums bs
 	WINDOW bulletin AS (ORDER BY bulletin_date ROWS 6 PRECEDING)
 )
 SELECT
 	ws.bulletin_date,
-	confirmed_cases_total,
 	confirmed_cases_additions,
-	-confirmed_cases_removals confirmed_cases_removals,
-	probable_cases_total,
 	probable_cases_additions,
-	-probable_cases_removals probable_cases_removals,
-	deaths_total,
-	deaths_additions,
-	-deaths_removals deaths_removals
+	deaths_additions
 FROM windowed_sums ws, min_date m
 WHERE ws.bulletin_date >= m.bulletin_date + INTERVAL '7' DAY
 ORDER BY bulletin_date;
