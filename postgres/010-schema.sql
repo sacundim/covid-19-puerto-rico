@@ -892,7 +892,7 @@ INNER JOIN canonical_municipal_names cmn
 ORDER BY municipality, bulletin_date;
 
 
-CREATE VIEW product.bitemporal_datum_lateness_agg AS
+CREATE VIEW products.bitemporal_datum_lateness_agg AS
 SELECT
 	datum_date,
 	bulletin_date,
@@ -934,7 +934,7 @@ WINDOW bulletins AS (
 )
 ORDER BY datum_date, bulletin_date;
 
-COMMENT ON VIEW product.bitemporal_datum_lateness_agg IS
+COMMENT ON VIEW products.bitemporal_datum_lateness_agg IS
 'Aggregation of deltas and lateness over datum_date, used for analyzing
 lateness not in term of how late each bulletin''s data was, but rather
 how long data for a given datum_date took to be reported. (Which changes
