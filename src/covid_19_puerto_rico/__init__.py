@@ -45,6 +45,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        charts.Doubling(engine, args.output_dir, output_formats),
         charts.Hospitalizations(engine, args.output_dir, output_formats),
         molecular.CumulativeTestsVsCases(engine, args.output_dir, output_formats),
         charts.BulletinChartMismatch(engine, args.output_dir, output_formats),

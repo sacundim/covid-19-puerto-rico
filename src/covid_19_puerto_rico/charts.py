@@ -340,13 +340,19 @@ class Lateness7Day(AbstractLateness):
 
 class Doubling(AbstractChart):
     def make_chart(self, df):
-        return alt.Chart(df.dropna()).mark_line(clip=True).encode(
+        return alt.Chart(df.dropna()).mark_line(
+            clip=True, point='transparent'
+        ).encode(
             x=alt.X('datum_date:T',
                     title='Fecha del evento',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('value', title=None,
                     scale=alt.Scale(type='log', domain=(1, 128))),
-            color=alt.Color('variable', legend=None)
+            color=alt.Color('variable', legend=None),
+            tooltip=[alt.Tooltip('variable:N', title='Variable'),
+                     alt.Tooltip('datum_date:T', title='Fecha de muestra o muerte'),
+                     alt.Tooltip('window_size_days:O', title='Ancho de ventana (días)'),
+                     alt.Tooltip('value:Q', format='.1f', title='Tiempo de duplicación (días)')]
         ).properties(
             width=175,
             height=150
