@@ -305,6 +305,7 @@ COMMENT ON VIEW bitemporal_agg IS
   minus previous bulletin_date''s value for previous datum_date;
 - Lateness score: Delta * (bulletin_date - datum_date).';
 
+
 CREATE VIEW bioportal_bitemporal_agg AS
 SELECT
     bulletin_date,
@@ -889,3 +890,52 @@ FROM municipal_agg ma
 INNER JOIN canonical_municipal_names cmn
     ON cmn.name = ma.municipality
 ORDER BY municipality, bulletin_date;
+
+
+CREATE VIEW product.bitemporal_datum_lateness_agg AS
+SELECT
+	datum_date,
+	bulletin_date,
+	bulletin_date - datum_date days_before_bulletin,
+	sum(delta_confirmed_cases)
+		FILTER (WHERE delta_confirmed_cases > 0)
+		OVER bulletins
+		AS delta_confirmed_cases,
+	sum(lateness_confirmed_cases)
+		FILTER (WHERE lateness_confirmed_cases > 0)
+		OVER bulletins
+		AS lateness_confirmed_cases,
+	sum(delta_probable_cases)
+		FILTER (WHERE delta_probable_cases > 0)
+		OVER bulletins
+		AS delta_probable_cases,
+	sum(lateness_probable_cases)
+		FILTER (WHERE lateness_probable_cases > 0)
+		OVER bulletins
+		AS lateness_probable_cases,
+    -- There is a very weird (nondeterminism?) bug in PRDoH's deaths data processing
+    -- that causes weird back-and-forth revisions to the same six dates up to 2020-04-18,
+    -- so we just filter those out.
+	sum(delta_deaths)
+		FILTER (WHERE delta_deaths > 0 AND datum_date > '2020-04-18')
+		OVER bulletins
+		AS delta_deaths,
+	sum(lateness_deaths)
+		FILTER (WHERE lateness_deaths > 0 AND datum_date > '2020-04-18')
+		OVER bulletins
+		AS lateness_deaths
+FROM bitemporal_agg ba
+-- This is the earliest bulletin from which it makes sense to do this analysis.
+-- Which we exclude because it's artificially late.
+WHERE bulletin_date > '2020-04-24'
+WINDOW bulletins AS (
+	PARTITION BY datum_date
+	ORDER BY bulletin_date
+)
+ORDER BY datum_date, bulletin_date;
+
+COMMENT ON VIEW product.bitemporal_datum_lateness_agg IS
+'Aggregation of deltas and lateness over datum_date, used for analyzing
+lateness not in term of how late each bulletin''s data was, but rather
+how long data for a given datum_date took to be reported. (Which changes
+with each successive bulletin_date.)';
