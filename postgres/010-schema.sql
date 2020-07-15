@@ -144,17 +144,24 @@ COMMENT ON TABLE bioportal IS
 'Weekly (?) report on number of test results counted by the Department of Health.
 Publication began with 2020-05-21 report.';
 
-
-CREATE TABLE bioportal_bitemporal (
-    bulletin_date DATE NOT NULL,
+CREATE TABLE bioportal_tests (
+    id BIGINT NOT NULL,
     datum_date DATE NOT NULL,
-    positive_molecular_tests INTEGER,
-    molecular_tests INTEGER,
-    PRIMARY KEY (bulletin_date, datum_date)
+    bulletin_date DATE NOT NULL,
+    municipality TEXT,
+    positive BOOLEAN NOT NULL,
+    PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE bioportal_bitemporal IS
-'Very irregularly published charts on number of tests by sample date.';
+CREATE VIEW bioportal_bitemporal AS
+SELECT
+    datum_date,
+    bulletin_date,
+    count(*) positive_molecular_tests,
+    count(*) FILTER (WHERE positive)
+        AS molecular_tests
+FROM bioportal_tests
+GROUP BY datum_date, bulletin_date;
 
 
 CREATE TABLE hospitalizations (
@@ -464,7 +471,6 @@ WINDOW previous AS (
 	PARTITION BY laboratory ORDER BY bulletin_date ROWS 1 PRECEDING
 )
 ORDER BY laboratory, bulletin_date;
-
 
 
 -------------------------------------------------------------------------------
@@ -836,7 +842,7 @@ SELECT * FROM prpht
 ORDER BY bulletin_date, source;
 
 
-CREATE VIEW products.tests_by_sample_date AS
+CREATE VIEW products.tests_by_datum_date AS
 SELECT
 	bulletin_date,
 	datum_date,
@@ -852,7 +858,7 @@ SELECT
 		AS cumulative_daily_tests_per_thousand
 FROM bitemporal_agg cases
 INNER JOIN bioportal_bitemporal_agg tests
-	USING (bulletin_date, datum_date)
+    USING (bulletin_date, datum_date)
 WINDOW
 	cumulative AS (
 		PARTITION BY bulletin_date
