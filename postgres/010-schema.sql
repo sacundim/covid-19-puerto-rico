@@ -556,7 +556,6 @@ SELECT
 	announcement.cumulative_deaths AS announced_deaths,
 	announcement.cumulative_certified_deaths AS announced_certified_deaths,
 	announcement.cumulative_confirmed_deaths AS announced_confirmed_deaths,
-	ba.cumulative_confirmed_and_probable_cases AS confirmed_and_probable_cases,
 	ba.cumulative_confirmed_cases AS confirmed_cases,
 	ba.cumulative_probable_cases AS probable_cases,
 	ba.cumulative_deaths AS deaths
@@ -576,7 +575,6 @@ CREATE VIEW products.daily_deltas AS
 SELECT
     bulletin_date,
 	datum_date,
-	delta_confirmed_and_probable_cases,
 	delta_confirmed_cases,
 	delta_probable_cases,
 	delta_deaths
@@ -593,20 +591,6 @@ $$ LANGUAGE SQL;
 CREATE VIEW products.lateness_daily AS
 SELECT
     bulletin_date,
-
-    safediv(sum(lateness_confirmed_and_probable_cases),
-            sum(delta_confirmed_and_probable_cases))
-        AS confirmed_and_probable_cases_total,
-    safediv(sum(lateness_confirmed_and_probable_cases)
-                FILTER (WHERE lateness_confirmed_and_probable_cases > 0),
-            sum(delta_confirmed_and_probable_cases)
-                FILTER (WHERE delta_confirmed_and_probable_cases > 0))
-        AS confirmed_and_probable_cases_additions,
-    -safediv(sum(lateness_confirmed_and_probable_cases)
-                 FILTER (WHERE lateness_confirmed_and_probable_cases < 0),
-             sum(delta_confirmed_and_probable_cases)
-                 FILTER (WHERE delta_confirmed_and_probable_cases < 0))
-         AS confirmed_and_probable_cases_removals,
 
     safediv(sum(lateness_confirmed_cases), sum(delta_confirmed_cases))
         AS confirmed_cases_total,
@@ -652,28 +636,12 @@ CREATE VIEW products.lateness_7day AS
 WITH min_date AS (
 	SELECT min(bulletin_date) bulletin_date
 	FROM bitemporal
-	WHERE confirmed_and_probable_cases IS NOT NULL
-	AND confirmed_cases IS NOT NULL
+	WHERE confirmed_cases IS NOT NULL
 	AND probable_cases IS NOT NULL
 	AND deaths IS NOT NULL
 ), bulletin_sums AS (
 	SELECT
 		ba.bulletin_date,
-
-		sum(lateness_confirmed_and_probable_cases) lateness_confirmed_and_probable_cases,
-		sum(delta_confirmed_and_probable_cases) delta_confirmed_and_probable_cases,
-		sum(lateness_confirmed_and_probable_cases)
-			FILTER (WHERE lateness_confirmed_and_probable_cases > 0)
-			AS lateness_added_confirmed_and_probable_cases,
-		sum(delta_confirmed_and_probable_cases)
-			FILTER (WHERE delta_confirmed_and_probable_cases > 0)
-			AS delta_added_confirmed_and_probable_cases,
-		sum(lateness_confirmed_and_probable_cases)
-			FILTER (WHERE lateness_confirmed_and_probable_cases < 0)
-			AS lateness_removed_confirmed_and_probable_cases,
-		sum(delta_confirmed_and_probable_cases)
-			FILTER (WHERE delta_confirmed_and_probable_cases < 0)
-			AS delta_removed_confirmed_and_probable_cases,
 
 		sum(lateness_confirmed_cases) lateness_confirmed_cases,
 		sum(delta_confirmed_cases) delta_confirmed_cases,
@@ -729,16 +697,6 @@ WITH min_date AS (
 	SELECT
 		bulletin_date,
 
-		safediv(SUM(lateness_confirmed_and_probable_cases) OVER bulletin,
-	        	SUM(delta_confirmed_and_probable_cases) OVER bulletin)
-	        AS confirmed_and_probable_cases_total,
-        safediv(SUM(lateness_added_confirmed_and_probable_cases) OVER bulletin,
-	        	SUM(delta_added_confirmed_and_probable_cases) OVER bulletin)
-	        AS confirmed_and_probable_cases_additions,
-		safediv(SUM(lateness_removed_confirmed_and_probable_cases) OVER bulletin,
-	        	SUM(delta_removed_confirmed_and_probable_cases) OVER bulletin)
-	        AS confirmed_and_probable_cases_removals,
-
         safediv(SUM(lateness_confirmed_cases) OVER bulletin,
 	        	SUM(delta_confirmed_cases) OVER bulletin)
 	        AS confirmed_cases_total,
@@ -773,9 +731,6 @@ WITH min_date AS (
 )
 SELECT
 	ws.bulletin_date,
-	confirmed_and_probable_cases_total,
-	confirmed_and_probable_cases_additions,
-	-confirmed_and_probable_cases_removals confirmed_and_probable_cases_removals,
 	confirmed_cases_total,
 	confirmed_cases_additions,
 	-confirmed_cases_removals confirmed_cases_removals,
@@ -800,10 +755,6 @@ SELECT
     datum_date,
     window_size.days window_size_days,
     CAST(window_size.days AS NUMERIC)
-    	/ NULLIF(safe_log2(cumulative_confirmed_and_probable_cases)
-    				- safe_log2(LAG(cumulative_confirmed_and_probable_cases, window_size.days) OVER datum), 0)
-    	AS cumulative_confirmed_and_probable_cases,
-    CAST(window_size.days AS NUMERIC)
     	/ NULLIF(safe_log2(cumulative_confirmed_cases) - safe_log2(LAG(cumulative_confirmed_cases, window_size.days) OVER datum), 0)
     	AS cumulative_confirmed_cases,
     CAST(window_size.days AS NUMERIC)
@@ -821,25 +772,6 @@ WINDOW datum AS (
 COMMENT ON VIEW products.doubling_times IS
 'How long it took values to double, expressed in fractional days.
 Computed over windows of 7, 14 and 21 days.';
-
-
-CREATE VIEW products.animations AS
-SELECT
-    bulletin_date,
-    datum_date,
-    COALESCE(confirmed_cases, MAX(confirmed_cases) OVER bulletin) confirmed_cases,
-    COALESCE(probable_cases, MAX(probable_cases) OVER bulletin) probable_cases,
-    COALESCE(confirmed_and_probable_cases,
-             MAX(confirmed_and_probable_cases) OVER bulletin) cases,
-	COALESCE(deaths, MAX(deaths) OVER bulletin) deaths,
-    announced_confirmed_cases,
-    announced_probable_cases,
-    announced_cases,
-	announced_deaths
-FROM products.cumulative_data
-WHERE (SELECT min(bulletin_date) FROM bitemporal_agg) <= datum_date
-AND datum_date <= bulletin_date
-WINDOW bulletin AS (PARTITION BY bulletin_date ROWS UNBOUNDED PRECEDING);
 
 
 CREATE VIEW products.tests_by_bulletin_date AS
