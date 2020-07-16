@@ -130,3 +130,8 @@ requiere Docker y Docker Compose. Desde este directorio:
 A Robby Cortés (@RobbyCortes en Twitter) y Angélica Serrano-Román
 (@angelicaserran0) que diligentemente publican los boletines del
 Departamento de Salud todas las mañanas.
+
+A Danilo Pérez por muchas sugerencias valiosas.
+
+Al Fideicomiso de Salud de Puerto Rico y al Prof. Rafael Irizarry
+por facilitar datos sobre pruebas moleculares en Puerto Rico.
