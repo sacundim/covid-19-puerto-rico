@@ -144,18 +144,69 @@ COMMENT ON TABLE bioportal IS
 'Weekly (?) report on number of test results counted by the Department of Health.
 Publication began with 2020-05-21 report.';
 
-
-CREATE TABLE bioportal_bitemporal (
-    bulletin_date DATE NOT NULL,
+CREATE TABLE bioportal_tests (
+    id BIGINT NOT NULL,
     datum_date DATE NOT NULL,
-    positive_molecular_tests INTEGER,
-    molecular_tests INTEGER,
-    PRIMARY KEY (bulletin_date, datum_date)
+    bulletin_date DATE NOT NULL,
+    created_at TIMESTAMP,
+    municipality TEXT,
+    positive BOOLEAN NOT NULL,
+    PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE bioportal_bitemporal IS
-'Very irregularly published charts on number of tests by sample date.';
+CREATE VIEW bioportal_bitemporal AS
+SELECT
+    datum_date,
+    bulletin_date,
+    count(*) molecular_tests,
+    count(*) FILTER (WHERE positive)
+        AS positive_molecular_tests
+FROM bioportal_tests
+GROUP BY datum_date, bulletin_date;
 
+CREATE VIEW bioportal_bitemporal_agg AS
+WITH bulletin_dates AS (
+	SELECT DISTINCT bulletin_date
+	FROM bioportal_tests
+), dates AS (
+	SELECT DISTINCT datum_date
+	FROM bioportal_tests
+	WHERE '2020-03-01' <= datum_date
+	AND datum_date <= '2020-12-01'
+	UNION
+	SELECT DISTINCT datum_date
+	FROM bitemporal
+), grouped AS (
+	SELECT
+		bulletin_dates.bulletin_date,
+		dates.datum_date,
+		sum(molecular_tests)
+			AS molecular_tests,
+		sum(positive_molecular_tests)
+			AS positive_molecular_tests
+	FROM bulletin_dates
+	INNER JOIN dates
+		ON dates.datum_date <= bulletin_dates.bulletin_date
+	LEFT OUTER JOIN bioportal_bitemporal tests
+		ON tests.datum_date = dates.datum_date
+		AND tests.bulletin_date <= bulletin_dates.bulletin_date
+	GROUP BY dates.datum_date, bulletin_dates.bulletin_date
+	ORDER BY bulletin_dates.bulletin_date, dates.datum_date
+)
+SELECT
+	bulletin_date,
+	datum_date,
+	molecular_tests,
+	positive_molecular_tests,
+	sum(molecular_tests) OVER cumulative
+		AS cumulative_molecular_tests,
+	sum(positive_molecular_tests) OVER cumulative
+		AS cumulative_positive_molecular_tests
+FROM grouped
+WINDOW cumulative AS (
+	PARTITION BY bulletin_date
+	ORDER BY datum_date
+);
 
 CREATE TABLE hospitalizations (
     datum_date DATE,
@@ -306,32 +357,6 @@ COMMENT ON VIEW bitemporal_agg IS
 - Lateness score: Delta * (bulletin_date - datum_date).';
 
 
-CREATE VIEW bioportal_bitemporal_agg AS
-SELECT
-    bulletin_date,
-    datum_date,
-
-    molecular_tests,
-    sum(molecular_tests) OVER bulletin
-        AS cumulative_molecular_tests,
-    molecular_tests - coalesce(lag(molecular_tests) OVER datum, 0)
-        AS delta_molecular_tests,
-    (molecular_tests - coalesce(lag(molecular_tests) OVER datum, 0))
-        * (bulletin_date - datum_date) AS lateness_molecular_tests,
-
-    positive_molecular_tests,
-    sum(positive_molecular_tests) OVER bulletin
-        AS cumulative_positive_molecular_tests,
-    positive_molecular_tests - coalesce(lag(positive_molecular_tests) OVER datum, 0)
-        AS delta_positive_molecular_tests,
-    (positive_molecular_tests - coalesce(lag(positive_molecular_tests) OVER datum, 0))
-        * (bulletin_date - datum_date) AS lateness_positive_molecular_tests
-FROM bioportal_bitemporal
-WINDOW
-    bulletin AS (PARTITION BY bulletin_date ORDER BY datum_date),
-    datum AS (PARTITION BY datum_date ORDER BY bulletin_date);
-
-
 CREATE VIEW announcement_consolidated AS
 SELECT
     bulletin_date,
@@ -464,7 +489,6 @@ WINDOW previous AS (
 	PARTITION BY laboratory ORDER BY bulletin_date ROWS 1 PRECEDING
 )
 ORDER BY laboratory, bulletin_date;
-
 
 
 -------------------------------------------------------------------------------
@@ -708,163 +732,32 @@ COMMENT ON VIEW products.doubling_times IS
 Computed over windows of 7, 14 and 21 days.';
 
 
-CREATE VIEW products.tests_by_bulletin_date AS
-WITH prdoh AS (
-	WITH bio_raw AS (
-		SELECT
-			b.bulletin_date,
-			b.bulletin_date - lag(b.bulletin_date) OVER bulletin
-				AS days,
-			b.cumulative_molecular_tests
-				AS cumulative_tests,
-			b.cumulative_positive_molecular_tests
-				AS cumulative_positive_tests,
-			a.cumulative_confirmed_cases
-				AS cumulative_cases,
-			b.new_molecular_tests
-				AS new_tests,
-			b.new_positive_molecular_tests
-				AS new_positive_tests,
-		    a.cumulative_confirmed_cases - lag(a.cumulative_confirmed_cases) OVER bulletin
-		        AS new_cases
-		FROM bioportal b
-		INNER JOIN announcement a
-			USING (bulletin_date)
-		WINDOW bulletin AS (ORDER BY b.bulletin_date)
-	)
-	SELECT
-		bulletin_date,
-		'Salud (moleculares)' AS source,
-		days AS days_since_last_report,
-		cumulative_tests,
-		cumulative_positive_tests,
-		cumulative_cases,
-		new_tests / days
-			AS smoothed_daily_tests,
-		new_positive_tests / days
-			AS smoothed_daily_positive_tests,
-		new_cases / days
-			AS smoothed_daily_cases
-	FROM bio_raw
-), serological AS (
-	WITH bio_raw AS (
-		SELECT
-			b.bulletin_date,
-			b.bulletin_date - lag(b.bulletin_date) OVER bulletin
-				AS days,
-			b.cumulative_serological_tests
-				AS cumulative_tests,
-			b.cumulative_positive_serological_tests
-				AS cumulative_positive_tests,
-			a.cumulative_probable_cases
-				AS cumulative_cases,
-			b.new_serological_tests
-				AS new_tests,
-			b.new_positive_serological_tests
-				AS new_positive_tests,
-		    a.cumulative_probable_cases - lag(a.cumulative_probable_cases) OVER bulletin
-		        AS new_cases
-		FROM bioportal b
-		INNER JOIN announcement a
-			USING (bulletin_date)
-		WINDOW bulletin AS (ORDER BY b.bulletin_date)
-	)
-	SELECT
-		bulletin_date,
-		'Salud (serológicas)' AS source,
-		days AS days_since_last_report,
-		cumulative_tests,
-		cumulative_positive_tests,
-		cumulative_cases,
-		new_tests / days
-			AS smoothed_daily_tests,
-		new_positive_tests / days
-			AS smoothed_daily_positive_tests,
-		new_cases / days
-			AS smoothed_daily_cases
-	FROM bio_raw
-), prpht AS (
-	WITH weekly_cumulatives AS (
-		SELECT
-			dates.bulletin_date :: date bulletin_date,
-			sum(delta_molecular_tests) cumulative_tests,
-			sum(delta_positive_molecular_tests) cumulative_positive_tests
-		FROM generate_series(date '2020-03-29',
-		   					 date '2020-06-28',
-		   					 INTERVAL '7 day')
-				AS dates (bulletin_date)
-		INNER JOIN prpht_molecular_deltas pmd
-			ON pmd.bulletin_date <= dates.bulletin_date
-		GROUP BY dates.bulletin_date
-		ORDER BY dates.bulletin_date
-	), weekly_deltas AS (
-		SELECT
-			bulletin_date,
-			cumulative_tests,
-			cumulative_tests
-				- lag(cumulative_tests) OVER prev
-				AS delta_tests,
-			cumulative_positive_tests,
-			cumulative_positive_tests
-				- lag(cumulative_positive_tests) OVER prev
-				AS delta_positive_tests
-		FROM weekly_cumulatives
-		WINDOW prev AS (ORDER BY bulletin_date)
-	)
-	SELECT
-		bulletin_date,
-		'PRPHT (moleculares)' source,
-		7 AS days_since_last_report,
-		cumulative_tests,
-		cumulative_positive_tests,
-		-- We omit this because it's not comparable with PRPHT data
-		NULL::BIGINT cumulative_cases,
-		delta_tests / 7.0
-			AS smoothed_daily_tests,
-		delta_positive_tests / 7.0
-			AS smoothed_daily_positive_tests,
-		-- We omit this because it's not comparable with PRPHT data
-		NULL::BIGINT smoothed_daily_confirmed_cases
-	FROM weekly_deltas wd
-	WINDOW prev AS (ORDER BY bulletin_date)
-)
-SELECT * FROM prdoh
-UNION
-SELECT * FROM serological
-UNION
-SELECT * FROM prpht
-ORDER BY bulletin_date, source;
-
-
-CREATE VIEW products.tests_by_sample_date AS
+CREATE VIEW products.tests_by_datum_date AS
 SELECT
 	bulletin_date,
 	datum_date,
-	CAST(sum(tests.molecular_tests) OVER seven AS DOUBLE PRECISION)
-		/ sum(cases.confirmed_cases) OVER seven
-		AS new_tests_per_confirmed_case,
-	CAST(sum(tests.molecular_tests) OVER cumulative AS DOUBLE PRECISION)
-		/ sum(cases.confirmed_cases) OVER cumulative
-		AS cumulative_tests_per_confirmed_case,
-	(sum(tests.molecular_tests) OVER seven / 3193.694) / 7.0
-		AS new_daily_tests_per_thousand,
-	(sum(tests.molecular_tests) OVER cumulative / 3193.694)
-		AS cumulative_daily_tests_per_thousand
-FROM bitemporal_agg cases
-INNER JOIN bioportal_bitemporal_agg tests
+	'Salud (moleculares)' source,
+	cumulative_molecular_tests AS cumulative_tests,
+	cumulative_positive_molecular_tests AS cumulative_positive_tests,
+	cumulative_confirmed_cases AS cumulative_cases,
+	sum(molecular_tests) OVER seven / 7.0
+		AS smoothed_daily_tests,
+	sum(positive_molecular_tests) OVER seven / 7.0
+		AS smoothed_daily_positive_tests,
+	(cumulative_confirmed_cases
+		- LAG(cumulative_confirmed_cases, 7, 0::bigint) OVER seven)
+		/ 7.0
+		AS smoothed_daily_cases
+FROM bioportal_bitemporal_agg tests
+INNER JOIN bitemporal_agg cases
 	USING (bulletin_date, datum_date)
-WINDOW
-	cumulative AS (
-		PARTITION BY bulletin_date
-		ORDER BY datum_date
-	),
-	seven AS (
-		PARTITION BY bulletin_date
-		ORDER BY datum_date
-		RANGE BETWEEN '6 days' PRECEDING AND CURRENT ROW
-	)
+WHERE bulletin_date > '2020-04-24'
+WINDOW seven AS (
+	PARTITION BY bulletin_date
+	ORDER BY datum_date
+	RANGE '6 days' PRECEDING
+)
 ORDER BY bulletin_date, datum_date;
-
 
 CREATE VIEW products.municipal_map AS
 SELECT
