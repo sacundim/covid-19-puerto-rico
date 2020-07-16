@@ -148,6 +148,7 @@ CREATE TABLE bioportal_tests (
     id BIGINT NOT NULL,
     datum_date DATE NOT NULL,
     bulletin_date DATE NOT NULL,
+    created_at TIMESTAMP,
     municipality TEXT,
     positive BOOLEAN NOT NULL,
     PRIMARY KEY (id)

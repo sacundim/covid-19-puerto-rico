@@ -43,20 +43,53 @@ FROM '/data/raw/bioportal.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 INSERT INTO bioportal_tests
+WITH cleaner AS (
+    SELECT
+        id,
+
+        CASE
+            WHEN collectedDate >= '2020-01-01'
+            THEN collectedDate
+            -- Suggested by @rafalab. He uses two days as the value and says
+            -- that's the average, but my spot check says 2.8 days. I use the
+            -- createdAt instead of reportedDate though.
+            ELSE date(createdAt) - INTERVAL '3 day'
+        END AS datum_date,
+
+        CASE
+            WHEN reportedDate >= '2020-03-13'
+            THEN reportedDate
+            ELSE date(createdAt)
+        END AS bulletin_date,
+
+        createdAt created_at,
+
+        CASE patientCity
+            WHEN 'Rio Grande' THEN 'Río Grande'
+            ELSE patientCity
+        END AS municipality,
+
+        COALESCE(result, '') LIKE '%Positive%'
+            AS positive
+    FROM bioportal_raw
+    WHERE testType = 'Molecular'
+)
 SELECT
     id,
-    collectedDate AS datum_date,
-    reportedDate AS bulletin_date,
-    CASE patientCity
-        WHEN 'Rio Grande' THEN 'Río Grande'
-        ELSE patientCity
-    END AS municipality,
-    COALESCE(result, '') LIKE '%Positive%'
-        AS positive
-FROM bioportal_raw
-WHERE collectedDate >= '2020-01-01'
-AND reportedDate >= '2020-03-13'
-AND testType = 'Molecular';
+    CASE
+        WHEN bulletin_date < datum_date
+        THEN date(created_at) - INTERVAL '3 day'
+        ELSE datum_date
+    END AS datum_date,
+    CASE
+        WHEN bulletin_date < datum_date
+        THEN date(created_at)
+        ELSE bulletin_date
+    END AS bulletin_date,
+    created_at,
+    municipality,
+    positive
+FROM cleaner;
 
 CREATE INDEX ON bioportal_tests (datum_date, bulletin_date, municipality, positive);
 CREATE INDEX ON bioportal_tests (datum_date, municipality, positive);
