@@ -4,10 +4,9 @@
 #
 
 import altair as alt
-import datetime
 import pandas as pd
 import sqlalchemy
-from sqlalchemy import cast
+from sqlalchemy import cast, and_
 from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION
 from sqlalchemy.sql import select
 from . import charts
@@ -15,7 +14,9 @@ from . import charts
 
 class DailyMissingTests(charts.AbstractChart):
     def make_chart(self, df):
-        return alt.Chart(df).mark_bar().encode(
+        return alt.Chart(df).transform_calculate(
+            difference=alt.datum.positive_molecular_tests - alt.datum.confirmed_cases
+        ).mark_bar().encode(
             x=alt.X('yearmonthdate(datum_date):T',
                     title='Fecha de toma de muestra',
                     axis=alt.Axis(format='%d/%m')),
@@ -25,32 +26,46 @@ class DailyMissingTests(charts.AbstractChart):
                 alt.value('orange'),
                 alt.value('teal')
             ),
-            tooltip=['datum_date', 'difference:Q']
+            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de toma de muestra'),
+                     alt.Tooltip('positive_molecular_tests:Q', title='Pruebas positivas'),
+                     alt.Tooltip('confirmed_cases:Q', title='Casos confirmados'),
+                     alt.Tooltip('difference:Q', title='Positivos menos confirmados')]
         ).properties(
             width=575, height=265
         )
 
     def fetch_data(self, connection):
         cases = sqlalchemy.Table('bitemporal', self.metadata, autoload=True)
-        tests = sqlalchemy.Table('bioportal_bitemporal', self.metadata, autoload=True)
+        tests = sqlalchemy.Table('bioportal_bitemporal_agg', self.metadata, autoload=True)
         query = select([
             cases.c.bulletin_date,
             cases.c.datum_date,
+            tests.c.positive_molecular_tests,
+            cases.c.confirmed_cases,
             (tests.c.positive_molecular_tests - cases.c.confirmed_cases).label('difference')
         ]).select_from(
-            tests.outerjoin(cases, tests.c.datum_date == cases.c.datum_date)
-        ).where(tests.c.bulletin_date == datetime.date(year=2020, month=5, day=20))
+            tests.outerjoin(
+                cases,
+                and_(tests.c.datum_date == cases.c.datum_date,
+                     tests.c.bulletin_date == cases.c.bulletin_date))
+        )
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"])
 
 
 class CumulativeMissingTests(charts.AbstractChart):
     def make_chart(self, df):
-        return alt.Chart(df).mark_area(line=True, point=True).encode(
+        return alt.Chart(df).transform_calculate(
+            difference=alt.datum.cumulative_positive_molecular_tests \
+                        - alt.datum.cumulative_confirmed_cases
+        ).mark_area(opacity=0.8).encode(
             x=alt.X('yearmonthdate(datum_date):T',
                     title='Fecha de toma de muestra',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('difference:Q', title='Positivos menos confirmados'),
-            tooltip=['datum_date', 'difference:Q']
+            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de toma de muestra'),
+                     alt.Tooltip('cumulative_positive_molecular_tests:Q', title='Pruebas positivas'),
+                     alt.Tooltip('cumulative_confirmed_cases:Q', title='Casos confirmados'),
+                     alt.Tooltip('difference:Q', title='Positivos menos confirmados')]
         ).properties(
             width=575, height=265
         )
@@ -61,75 +76,15 @@ class CumulativeMissingTests(charts.AbstractChart):
         query = select([
             cases.c.bulletin_date,
             cases.c.datum_date,
-            (tests.c.cumulative_positive_molecular_tests - cases.c.cumulative_confirmed_cases)\
-                .label('difference')
+            tests.c.cumulative_positive_molecular_tests,
+            cases.c.cumulative_confirmed_cases
         ]).select_from(
-            tests.outerjoin(cases, tests.c.datum_date == cases.c.datum_date)
-        ).where(tests.c.bulletin_date == datetime.date(year=2020, month=5, day=20))
+            tests.outerjoin(
+                cases,
+                and_(tests.c.datum_date == cases.c.datum_date,
+                     tests.c.bulletin_date == cases.c.bulletin_date))
+        )
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"]).dropna()
-
-
-class TestsBySampleDate(charts.AbstractChart):
-    def make_chart(self, df):
-        data_date = alt.Chart(df).mark_text(baseline='middle').encode(
-            text=alt.Text('bulletin_date',
-                          type='temporal',
-                          aggregate='max',
-                          timeUnit='yearmonthdate',
-                          format='Datos hasta: %d de %B, %Y'),
-        ).properties(
-            width=575, height=40
-        )
-
-        sort_order = [
-            'Pruebas nuevas por caso confirmado',
-            'Pruebas acumuladas por caso confirmado (promedio 7 días)'
-            'Pruebas nuevas diarias por mil habitantes (promedio 7 días)',
-            'Pruebas acumuladas diarias por mil habitantes',
-        ]
-        trellis = alt.Chart(df).mark_line(point=True).encode(
-            x=alt.X('yearmonthdate(datum_date):T',
-                    title='Fecha de toma de muestra',
-                    axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('value:Q', title=None, scale=alt.Scale(type='linear')),
-            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
-                     alt.Tooltip('variable:N', title='Variable'),
-                     alt.Tooltip(field='value:Q', format=".2f", title='Pruebas')]
-        ).properties(
-            width=575, height=100
-        ).facet(
-            columns=1,
-            facet=alt.Facet('variable', title=None, sort=sort_order)
-        ).resolve_scale(
-            y='independent'
-        )
-
-        return alt.vconcat(data_date, trellis)
-
-    def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests_by_sample_date', self.metadata,
-                                 schema='products', autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.datum_date,
-            table.c.new_tests_per_confirmed_case,
-            table.c.cumulative_tests_per_confirmed_case,
-            table.c.new_daily_tests_per_thousand,
-            table.c.cumulative_daily_tests_per_thousand,
-        ])
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
-        df = df.rename(columns={
-            'new_tests_per_confirmed_case': 'Pruebas nuevas por caso confirmado  (promedio 7 días)',
-            'cumulative_tests_per_confirmed_case': 'Pruebas acumuladas por caso confirmado',
-            'new_daily_tests_per_thousand': 'Pruebas nuevas diarias por mil habitantes (promedio 7 días)',
-            'cumulative_daily_tests_per_thousand': 'Pruebas acumuladas diarias por mil habitantes',
-        })
-        return pd.melt(df, ['bulletin_date', 'datum_date'])
-
-    def filter_data(self, df, bulletin_date):
-        chopped = df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
-        max_date = chopped['bulletin_date'].max()
-        return df.loc[df['bulletin_date'] == max_date]
 
 
 class AbstractPositiveRate(charts.AbstractChart):
@@ -161,9 +116,6 @@ class AbstractPositiveRate(charts.AbstractChart):
         ).resolve_scale(
             y='shared'
         )
-
-    def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
 
 class NewPositiveRate(AbstractPositiveRate):
@@ -229,9 +181,6 @@ class AbstractPerCapitaChart(charts.AbstractChart):
             width=600, height=125
         )
 
-    def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
-
 
 class NewDailyTestsPerCapita(AbstractPerCapitaChart):
     def fetch_data(self, connection):
@@ -274,9 +223,6 @@ class CumulativeTestsVsCases(charts.AbstractChart):
             table.c.cumulative_cases
         ])
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
-
-    def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
     def make_chart(self, df):
         max_x, max_y = 2_600, 100_000
