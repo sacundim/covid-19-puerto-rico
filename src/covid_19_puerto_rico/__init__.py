@@ -46,7 +46,6 @@ def main():
 
     targets = [
         molecular.DailyMissingTests(engine, args.output_dir, output_formats),
-        molecular.CumulativeMissingTests(engine, args.output_dir, output_formats),
         charts.Doubling(engine, args.output_dir, output_formats),
         charts.Hospitalizations(engine, args.output_dir, output_formats),
         molecular.CumulativeTestsVsCases(engine, args.output_dir, output_formats),
