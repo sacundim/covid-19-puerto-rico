@@ -338,52 +338,6 @@ class Lateness7Day(AbstractLateness):
         return self.fetch_data_for_table(connection, table)
 
 
-class Doubling(AbstractChart):
-    def make_chart(self, df):
-        return alt.Chart(df.dropna()).mark_line(
-            clip=True, point='transparent'
-        ).encode(
-            x=alt.X('datum_date:T',
-                    title='Fecha del evento',
-                    axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('value', title=None,
-                    scale=alt.Scale(type='log', domain=(1, 128))),
-            color=alt.Color('variable', legend=None),
-            tooltip=[alt.Tooltip('variable:N', title='Variable'),
-                     alt.Tooltip('datum_date:T', title='Fecha de muestra o muerte'),
-                     alt.Tooltip('window_size_days:O', title='Ancho de ventana (días)'),
-                     alt.Tooltip('value:Q', format='.1f', title='Tiempo de duplicación (días)')]
-        ).properties(
-            width=175,
-            height=150
-
-        ).facet(
-            row=alt.Row('variable', title=None,
-                        sort=['Confirmados',
-                              'Probables',
-                              'Muertes']),
-            column=alt.Column('window_size_days:O', title='Ancho de ventana (días)')
-        )
-
-    def fetch_data(self, connection):
-        table = sqlalchemy.Table('doubling_times', self.metadata,
-                                 schema='products', autoload=True)
-        query = select([table.c.datum_date,
-                        table.c.bulletin_date,
-                        table.c.window_size_days,
-                        table.c.cumulative_confirmed_cases,
-                        table.c.cumulative_probable_cases,
-                        table.c.cumulative_deaths]
-        )
-        df = pd.read_sql_query(query, connection,
-                               parse_dates=["bulletin_date", "datum_date"])
-        df = df.rename(columns={
-            'cumulative_confirmed_cases': 'Confirmados',
-            'cumulative_probable_cases': 'Probables',
-            'cumulative_deaths': 'Muertes'
-        })
-        return pd.melt(df, ["bulletin_date", "datum_date", "window_size_days"])
-
 class CurrentDeltas(AbstractChart):
     def make_chart(self, df):
         base = alt.Chart(df).encode(
