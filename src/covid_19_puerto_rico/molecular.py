@@ -51,6 +51,11 @@ class DailyMissingTests(charts.AbstractChart):
         )
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"])
 
+    def filter_data(self, df, bulletin_date):
+        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
+        return df.loc[df['bulletin_date'] == effective_bulletin_date]
+
+
 
 class CumulativeMissingTests(charts.AbstractChart):
     def make_chart(self, df):
@@ -86,6 +91,10 @@ class CumulativeMissingTests(charts.AbstractChart):
         )
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"]).dropna()
 
+    def filter_data(self, df, bulletin_date):
+        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
+        return df.loc[df['bulletin_date'] == effective_bulletin_date]
+
 
 class AbstractPositiveRate(charts.AbstractChart):
     ORDER = ['Salud (moleculares)',
@@ -116,6 +125,10 @@ class AbstractPositiveRate(charts.AbstractChart):
         ).resolve_scale(
             y='shared'
         )
+
+    def filter_data(self, df, bulletin_date):
+        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
+        return df.loc[df['bulletin_date'] == effective_bulletin_date]
 
 
 class NewPositiveRate(AbstractPositiveRate):
@@ -181,6 +194,10 @@ class AbstractPerCapitaChart(charts.AbstractChart):
             width=600, height=125
         )
 
+    def filter_data(self, df, bulletin_date):
+        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
+        return df.loc[df['bulletin_date'] == effective_bulletin_date]
+
 
 class NewDailyTestsPerCapita(AbstractPerCapitaChart):
     def fetch_data(self, connection):
@@ -223,6 +240,10 @@ class CumulativeTestsVsCases(charts.AbstractChart):
             table.c.cumulative_cases
         ])
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
+
+    def filter_data(self, df, bulletin_date):
+        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
+        return df.loc[df['bulletin_date'] == effective_bulletin_date]
 
     def make_chart(self, df):
         max_x, max_y = 2_600, 100_000
