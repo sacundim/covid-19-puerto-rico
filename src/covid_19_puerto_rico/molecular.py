@@ -138,12 +138,16 @@ class AbstractPositiveRate(charts.AbstractChart):
              'PRPHT (moleculares)']
 
     def make_chart(self, df):
-        lines = alt.Chart(df.dropna()).mark_line(
+        lines = alt.Chart(df.dropna()).transform_filter(
+            alt.datum.value > 0.0
+        ).mark_line(
             point='transparent'
         ).encode(
             x=alt.X('datum_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('value:Q', title=None, axis=alt.Axis(format='.2%')),
+            y=alt.Y('value:Q', title=None,
+                    scale=alt.Scale(type='log'),
+                    axis=alt.Axis(format='.2%')),
             color=alt.Color('Fuente:N', sort=self.ORDER,
                             legend=alt.Legend(orient='top', title=None, offset=0)),
             tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
@@ -151,11 +155,11 @@ class AbstractPositiveRate(charts.AbstractChart):
         )
 
         return lines.properties(
-            width=575, height=150
+            width=550, height=150
         ).facet(
             row=alt.Row('variable:N', title=None)
         ).resolve_scale(
-            y='independent'
+            y='shared'
         )
 
     def filter_data(self, df, bulletin_date):
