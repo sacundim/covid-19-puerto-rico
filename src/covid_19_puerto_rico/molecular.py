@@ -139,14 +139,14 @@ class AbstractPositiveRate(charts.AbstractChart):
 
     def make_chart(self, df):
         lines = alt.Chart(df.dropna()).mark_line(
-            point=True
+            point='transparent'
         ).encode(
-            x=alt.X('bulletin_date:T', title='Puerto Rico',
+            x=alt.X('datum_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('value:Q', title=None, axis=alt.Axis(format='.2%')),
             color=alt.Color('Fuente:N', sort=self.ORDER,
                             legend=alt.Legend(orient='top', title=None, offset=0)),
-            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
                      alt.Tooltip('value:Q', format=".2%", title='Tasa de positividad')]
         )
 
@@ -159,32 +159,34 @@ class AbstractPositiveRate(charts.AbstractChart):
         )
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
 
 class NewPositiveRate(AbstractPositiveRate):
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
+        table = sqlalchemy.Table('tests_by_datum_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.source.label('Fuente'),
             table.c.bulletin_date,
+            table.c.datum_date,
             (table.c.smoothed_daily_positive_tests / table.c.smoothed_daily_tests)\
                 .label('Positivas / pruebas'),
             (table.c.smoothed_daily_cases / table.c.smoothed_daily_tests)\
                 .label('Casos / pruebas')
         ])
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
-        return pd.melt(df, ['Fuente', 'bulletin_date'])
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
+        return pd.melt(df, ['Fuente', 'bulletin_date', 'datum_date'])
 
 
 class CumulativePositiveRate(AbstractPositiveRate):
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
+        table = sqlalchemy.Table('tests_by_datum_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.source.label('Fuente'),
             table.c.bulletin_date,
+            table.c.datum_date,
             (cast(table.c.cumulative_positive_tests, DOUBLE_PRECISION)
                 / table.c.cumulative_tests)\
                 .label('Positivas / pruebas'),
@@ -192,8 +194,8 @@ class CumulativePositiveRate(AbstractPositiveRate):
                   / table.c.cumulative_tests)\
                 .label('Casos / pruebas')
         ])
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
-        return pd.melt(df, ['Fuente', 'bulletin_date'])
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
+        return pd.melt(df, ['Fuente', 'bulletin_date', 'datum_date'])
 
 
 
@@ -209,14 +211,14 @@ class AbstractPerCapitaChart(charts.AbstractChart):
         return alt.Chart(df.dropna()).transform_calculate(
             per_thousand=alt.datum.value / self.POPULATION_THOUSANDS
         ).mark_line(
-            point=True
+            point='transparent'
         ).encode(
-            x=alt.X('bulletin_date:T', title='Puerto Rico',
+            x=alt.X('datum_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('per_thousand:Q', title=None),
             color=alt.Color('Fuente:N', sort=self.ORDER,
                             legend=alt.Legend(orient='top', title=None)),
-            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
                      alt.Tooltip('per_thousand:Q', format=".2f",
                                  title='Pruebas por mil habitantes')]
         ).properties(
@@ -224,30 +226,32 @@ class AbstractPerCapitaChart(charts.AbstractChart):
         )
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
 
 class NewDailyTestsPerCapita(AbstractPerCapitaChart):
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
+        table = sqlalchemy.Table('tests_by_datum_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.source.label('Fuente'),
             table.c.bulletin_date,
+            table.c.datum_date,
             table.c.smoothed_daily_tests.label('value')
         ])
-        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
+        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"])
 
 class CumulativeTestsPerCapita(AbstractPerCapitaChart):
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
+        table = sqlalchemy.Table('tests_by_datum_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.source.label('Fuente'),
             table.c.bulletin_date,
+            table.c.datum_date,
             table.c.cumulative_tests.label('value')
         ])
-        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
+        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"])
 
 
 class CumulativeTestsVsCases(charts.AbstractChart):
@@ -256,18 +260,19 @@ class CumulativeTestsVsCases(charts.AbstractChart):
              'Salud (serológicas)']
 
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests_by_bulletin_date', self.metadata,
+        table = sqlalchemy.Table('tests_by_datum_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.bulletin_date,
+            table.c.datum_date,
             table.c.source.label('Fuente'),
             table.c.cumulative_tests,
             table.c.cumulative_cases
         ])
-        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
     def make_chart(self, df):
         max_x, max_y = 2_600, 100_000
@@ -276,15 +281,15 @@ class CumulativeTestsVsCases(charts.AbstractChart):
             tests_per_million=alt.datum.cumulative_tests / self.POPULATION_MILLIONS,
             cases_per_million=alt.datum.cumulative_cases / self.POPULATION_MILLIONS,
             positive_rate=alt.datum.cumulative_cases / alt.datum.cumulative_tests
-        ).mark_line(point=True).encode(
+        ).mark_line(point='transparent').encode(
             y=alt.Y('tests_per_million:Q', scale=alt.Scale(domain=[0, max_y]),
                     title='Total de pruebas por millón de habitantes'),
             x=alt.X('cases_per_million:Q', scale=alt.Scale(domain=[0, max_x]),
                     title='Total de casos por millón de habitantes'),
-            order=alt.Order('bulletin_date:T'),
+            order=alt.Order('datum_date:T'),
             color=alt.Color('Fuente:N', sort=self.ORDER,
                             legend=alt.Legend(orient='top', title=None, offset=25)),
-            tooltip=[alt.Tooltip('yearmonthdate(bulletin_date):T', title='Fecha de boletín'),
+            tooltip=[alt.Tooltip('yearmonthdate(datum_date):T', title='Fecha de muestra'),
                      alt.Tooltip('Fuente:N'),
                      alt.Tooltip('tests_per_million:Q', format=",d",
                                  title='Pruebas por millón de habitantes'),
