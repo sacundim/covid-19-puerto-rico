@@ -35,7 +35,6 @@
         <li><a href="#LatenessDaily_section">Rezago de datos de cada boletín</a></li>
         <li><a href="#Lateness7Day_section">Tendencia de rezago de datos</a></li>
         <li><a href="#WeekdayBias_section">Tendencias por día de semana</a></li>
-        <li><a href="#Doubling_section">Tiempos de duplicación de casos por fecha de evento</a></li>
         <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
         <li><a href="#Municipal_section">Historial de casos confirmados por municipio (fecha de boletín)</a></li>
@@ -262,25 +261,6 @@
         <li>Se excluyen también combinaciones que dan cero o negativo (que sí existen
             si se consideran todos los datos). Tales combinaciones aparecen en blanco.</li>
     </ul>
-</div>
-
-
-<div class="section" id="Doubling_section">
-    <h1>Tiempos de duplicación de casos por fecha de evento</h1>
-
-    <div id="Doubling" class="chart"></div>
-    <script type="text/javascript">
-      embedChart('Doubling', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Las tendencias de la velocidad a la que han crecido los casos, expresadas
-        en términos de tiempos de duplicación constante (duplicación cada dos días,
-        tres días, cuatro días, etc.), y por ventanas de anchos de 7, 14 y 21 días.</p>
-
-    <p>Esto es, para cada fecha, el ancho de ventana <i>n</i> dividido entre la subida del
-        logaritmo base dos entre el valor acumulado hace <i>n</i> días y esa fecha.</p>
 </div>
 
 
