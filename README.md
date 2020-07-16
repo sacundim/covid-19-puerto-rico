@@ -21,9 +21,9 @@ En el directorio [`assets/source_material/`](assets/source_material/)
 se recopilan imágenes de boletines y gráficas, según este esquema:
 
 * Archivos PDF originales de los informes en 
-  [`assets/source_materials/pdf/`](assets/source_materials/pdf/);
+  [`assets/source_material/pdf/`](assets/source_material/pdf/);
 * Archivos de imágenes extraídos de estos en directorios
-  fechados dentro de [`assets/source_materials/`](assets/source_materials/).
+  fechados dentro de [`assets/source_material/`](assets/source_material/).
 
 Una selección de datos de estos se ha copiado a mano a los archivos CSV 
 en el subdirectorio [`assets/data/`](assets/data/), que al momento consisten de:
