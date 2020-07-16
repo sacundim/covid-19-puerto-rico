@@ -246,7 +246,7 @@ class CumulativeTestsVsCases(charts.AbstractChart):
         return df.loc[df['bulletin_date'] == effective_bulletin_date]
 
     def make_chart(self, df):
-        max_x, max_y = 2_600, 100_000
+        max_x, max_y = 2_000, 100_000
 
         main = alt.Chart(df.dropna()).transform_calculate(
             tests_per_million=alt.datum.cumulative_tests / self.POPULATION_MILLIONS,
@@ -263,29 +263,32 @@ class CumulativeTestsVsCases(charts.AbstractChart):
             tooltip=[alt.Tooltip('yearmonthdate(datum_date):T', title='Fecha de muestra'),
                      alt.Tooltip('Fuente:N'),
                      alt.Tooltip('tests_per_million:Q', format=",d",
-                                 title='Pruebas por millón de habitantes'),
+                                 title='Pruebas por millón'),
                      alt.Tooltip('cases_per_million:Q', format=",d",
-                                 title='Casos por millón de habitantes'),
+                                 title='Casos por millón'),
                      alt.Tooltip('positive_rate:Q', format=".2%",
                                  title='Tasa de positividad')]
         )
 
         return (self.make_ref_chart(max_x, max_y) + main).properties(
-            width=540, height=216
+            width=525, height=300
         )
 
     def make_ref_chart(self, max_x, max_y):
+        def compute_points(name, positivity):
+            top_x = max_y * positivity
+            right_y = max_x / positivity
+            return [
+                {'x': 0, 'key': name, 'y': 0.0, 'positivity': positivity},
+                {'x': min(max_x, top_x), 'key': name, 'y': min(max_y, right_y), 'positivity': positivity}
+            ]
+
         df = pd.DataFrame(
-            # These are more hardcoded than they look, they are bound
-            # to landscape aspect ratios
-            [{'x': 0, 'key': 'point_five_pct', 'y': 0.0, 'positivity': 0.005},
-             {'x': max_y * 0.005, 'key': 'point_five_pct', 'y': max_y, 'positivity': 0.005},
-             {'x': 0, 'key': 'one_pct', 'y': 0.0, 'positivity': 0.01},
-             {'x': max_y * 0.01, 'key': 'one_pct', 'y': max_y, 'positivity': 0.01},
-             {'x': 0, 'key': 'two_pct', 'y': 0.0, 'positivity': 0.02},
-             {'x': max_y * 0.02, 'key': 'two_pct', 'y': max_y, 'positivity': 0.02},
-             {'x': 0, 'key': 'five_pct', 'y': 0.0, 'positivity': 0.05},
-             {'x': max_x, 'key': 'five_pct', 'y': max_x / 0.05, 'positivity': 0.05}])
+            compute_points('point_five_pct', 0.005) + \
+            compute_points('one_pct', 0.01) + \
+            compute_points('two_pct', 0.02) + \
+            compute_points('five_pct', 0.05)
+        )
 
         lines = alt.Chart(df).mark_line(
             color='grey', strokeWidth=0.5, clip=True, strokeDash=[6, 4]
