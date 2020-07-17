@@ -237,7 +237,9 @@ class CumulativeTestsVsCases(charts.AbstractChart):
             table.c.datum_date,
             table.c.source.label('Fuente'),
             table.c.cumulative_tests,
-            table.c.cumulative_cases
+            table.c.cumulative_cases,
+            table.c.smoothed_daily_tests,
+            table.c.smoothed_daily_cases
         ])
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
 
@@ -251,7 +253,14 @@ class CumulativeTestsVsCases(charts.AbstractChart):
         main = alt.Chart(df.dropna()).transform_calculate(
             tests_per_million=alt.datum.cumulative_tests / self.POPULATION_MILLIONS,
             cases_per_million=alt.datum.cumulative_cases / self.POPULATION_MILLIONS,
-            positive_rate=alt.datum.cumulative_cases / alt.datum.cumulative_tests
+            positive_rate=alt.datum.cumulative_cases / alt.datum.cumulative_tests,
+            smoothed_positive_rate=alt.datum.smoothed_daily_cases / alt.datum.smoothed_daily_tests,
+            # We don't use this yet because Altair 4.1.0 doesn't support this channel:
+#            angle=alt.expr.atan2(alt.datum.smoothed_daily_tests / max_y,
+#                                 alt.datum.smoothed_daily_cases / max_x) * 57.2958,
+            # Another one we're saving up for encodings in a future version of the chart:
+#            distance=alt.expr.sqrt(alt.expr.pow(alt.datum.smoothed_daily_tests, 2) +
+#                                   alt.expr.pow(alt.datum.smoothed_daily_cases, 2))
         ).mark_point().encode(
             y=alt.Y('tests_per_million:Q', scale=alt.Scale(domain=[0, max_y]),
                     title='Total de pruebas por millón de habitantes'),
@@ -267,7 +276,10 @@ class CumulativeTestsVsCases(charts.AbstractChart):
                      alt.Tooltip('cases_per_million:Q', format=",d",
                                  title='Casos por millón'),
                      alt.Tooltip('positive_rate:Q', format=".2%",
-                                 title='Tasa de positividad')]
+                                 title='Tasa de positividad (acumulada)'),
+                     alt.Tooltip('smoothed_positive_rate:Q', format=".2%",
+                                 title='Tasa de positividad (7 días, casos / pruebas)'),
+                     ]
         )
 
         return (self.make_ref_chart(max_x, max_y) + main).properties(
