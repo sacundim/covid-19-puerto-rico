@@ -14,6 +14,10 @@ COPY municipal
 FROM '/data/clean/Municipalities-molecular.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
+COPY age_groups_molecular
+FROM '/data/clean/AgeGroups-molecular.csv'
+    CSV ENCODING 'UTF-8' HEADER NULL '';
+
 COPY bioportal
 FROM '/data/clean/PuertoRico-bioportal.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
