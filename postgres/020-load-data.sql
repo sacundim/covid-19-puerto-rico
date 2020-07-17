@@ -1,29 +1,29 @@
 COPY announcement
-FROM '/data/PuertoRico-bulletin.csv'
+FROM '/data/clean/PuertoRico-bulletin.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY bitemporal
-FROM '/data/PuertoRico-bitemporal.csv'
+FROM '/data/clean/PuertoRico-bitemporal.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY canonical_municipal_names
-FROM '/data/Municipalities-canonical_names.csv'
+FROM '/data/clean/Municipalities-canonical_names.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY municipal
-FROM '/data/Municipalities-molecular.csv'
+FROM '/data/clean/Municipalities-molecular.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY bioportal
-FROM '/data/PuertoRico-bioportal.csv'
+FROM '/data/clean/PuertoRico-bioportal.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY hospitalizations
-FROM '/data/PuertoRico-hospitalizations.csv'
+FROM '/data/clean/PuertoRico-hospitalizations.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY prpht_molecular_raw
-FROM '/data/PRPHT-molecular.csv'
+FROM '/data/clean/PRPHT-molecular.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 ---------------------------------------------------------
