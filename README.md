@@ -26,16 +26,16 @@ se recopilan imágenes de boletines y gráficas, según este esquema:
   fechados dentro de [`assets/source_material/`](assets/source_material/).
 
 Una selección de datos de estos se ha copiado a mano a los archivos CSV 
-en el subdirectorio [`assets/data/`](assets/data/), que al momento consisten de:
+en el subdirectorio [`assets/data/`](assets/data/), que incluyen:
 
-* [`PuertoRico-bulletin.csv`](assets/data/PuertoRico-bulletin.csv), que
+* [`PuertoRico-bulletin.csv`](assets/data/clean/PuertoRico-bulletin.csv), que
   consiste de números de "anuncio" que se hacen todos los días.
   Estas son las cifras que más publicidad reciben.
-* [`PuertoRico-bitemporal.csv`](assets/data/PuertoRico-bitemporal.csv),
+* [`PuertoRico-bitemporal.csv`](assets/data/clean/PuertoRico-bitemporal.csv),
   que consiste de datos de gráficas que acompañan estos boletines
   y que atribuyen las muertes a la fecha en que en verdad sucedieron
   y los casos positivos a la fecha que se tomó la muestra.
-* [`PuertoRico-bioportal.csv`](assets/data/PuertoRico-bioportal.csv),
+* [`PuertoRico-bioportal.csv`](assets/data/clean/PuertoRico-bioportal.csv),
   que consiste de datos del informe sobre pruebas entradas al bioportal
   (que al momento no están en PDF).
 
