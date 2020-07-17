@@ -249,6 +249,20 @@ CREATE TABLE municipal (
     PRIMARY KEY (bulletin_date, municipality)
 );
 
+
+CREATE TABLE age_groups_molecular (
+    bulletin_date DATE NOT NULL,
+    age_range TEXT NOT NULL,
+    female INTEGER,
+    female_pct DOUBLE PRECISION,
+    male INTEGER,
+    male_pct DOUBLE PRECISION,
+    cases INTEGER,
+    cases_pct DOUBLE PRECISION,
+    PRIMARY KEY (bulletin_date, age_range)
+);
+
+
 CREATE TABLE prpht_molecular_raw (
     bulletin_date DATE NOT NULL,
     laboratory TEXT NOT NULL,
@@ -469,6 +483,24 @@ WINDOW seven_most_recent AS (
 	EXCLUDE CURRENT ROW
 )
 ORDER BY municipality, bulletin_date;
+
+
+CREATE VIEW age_groups_molecular_agg AS
+SELECT
+	bulletin_date,
+	age_range,
+	female AS cumulative_female,
+	female - lag(female) OVER prev AS new_female,
+	male AS cumulative_male,
+	male - lag(male) OVER prev AS new_male,
+	cases AS cumulative_cases,
+	cases - lag(cases) OVER prev AS new_cases
+FROM age_groups_molecular agm
+WINDOW prev AS (
+	PARTITION BY age_range
+	ORDER BY bulletin_date
+)
+ORDER BY bulletin_date, age_range;
 
 
 CREATE VIEW prpht_molecular_deltas AS
