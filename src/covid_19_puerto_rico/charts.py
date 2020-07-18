@@ -810,25 +810,19 @@ class AgeGroups(AbstractChart):
         return alt.Chart(df.dropna()).encode(
         ).transform_filter(
             alt.datum['age_range'] != 'Total'
-        ).transform_joinaggregate(
-            total='sum(smoothed_daily_cases)',
-            groupby=['bulletin_date']
-        ).transform_calculate(
-            pct="datum.smoothed_daily_cases / datum.total"
         ).mark_area().encode(
             x=alt.X('bulletin_date:T', title='Fecha de boletín'),
-            y=alt.Y('smoothed_daily_cases:Q', stack='normalize',
-                    axis=alt.Axis(labels=False, ticks=False),
-                    title='Casos nuevos (molecular, promedio 7 días)'),
-            color=alt.Color('age_range:N', title='Edad', sort=self.ORDER,
-                            legend=alt.Legend(orient='top', columns=5)),
+            y=alt.Y('smoothed_daily_cases:Q', title=None),
+            color=alt.Color('age_range:N', title='Edad', sort=self.ORDER, legend=None),
             tooltip=[
                 alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                 alt.Tooltip('age_range:N', title='Edad'),
                 alt.Tooltip('smoothed_daily_cases:Q', format='.1f',
-                            title='Casos nuevos (molecular, promedio 7 días)'),
-                alt.Tooltip('pct:Q', format='.1%', title='Porcentaje'),
+                            title='Casos nuevos (molecular, promedio 7 días)')
             ]
         ).properties(
-            width=600, height=320
+            width=275, height=75
+        ).facet(
+            columns=2,
+            facet=alt.Facet('age_range:N', title='Edad', sort=self.ORDER,)
         )
