@@ -36,6 +36,7 @@
         <li><a href="#Lateness7Day_section">Tendencia de rezago de datos</a></li>
         <li><a href="#WeekdayBias_section">Tendencias por día de semana</a></li>
         <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
+        <li><a href="#AgeGroups_section">Historial de casos por edad</a></li>
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
         <li><a href="#Municipal_section">Historial de casos confirmados por municipio (fecha de boletín)</a></li>
         <li><a href="#NewPositiveRate_section">Positividad (promedio 7 días)</a></li>
@@ -280,6 +281,20 @@
 
     <p>Estos datos regionales no sabemos si se publicarán regularmente, así que velar
         que esta gráfica pudiera volverse atrasada.</p>
+</div>
+
+
+<div class="section" id="AgeGroups_section">
+    <h1>Historial de casos por edad</h1>
+
+    <div id="AgeGroups"></div>
+    <script type="text/javascript">
+      embedChart('AgeGroups', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Historial de casos confirmados por molecular agrupados por edad.</p>
 </div>
 
 
