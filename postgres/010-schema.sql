@@ -815,7 +815,7 @@ SELECT
 	sum(delta_confirmed_cases)
 		FILTER (WHERE delta_confirmed_cases > 0)
 		OVER bulletins
-		AS delta_confirmed_cases,
+		AS cumulative_confirmed_cases,
 	sum(lateness_confirmed_cases)
 		FILTER (WHERE lateness_confirmed_cases > 0)
 		OVER bulletins
@@ -823,7 +823,7 @@ SELECT
 	sum(delta_probable_cases)
 		FILTER (WHERE delta_probable_cases > 0)
 		OVER bulletins
-		AS delta_probable_cases,
+		AS cumulative_probable_cases,
 	sum(lateness_probable_cases)
 		FILTER (WHERE lateness_probable_cases > 0)
 		OVER bulletins
@@ -834,7 +834,7 @@ SELECT
 	sum(delta_deaths)
 		FILTER (WHERE delta_deaths > 0 AND datum_date > '2020-04-18')
 		OVER bulletins
-		AS delta_deaths,
+		AS cumulative_deaths,
 	sum(lateness_deaths)
 		FILTER (WHERE lateness_deaths > 0 AND datum_date > '2020-04-18')
 		OVER bulletins
