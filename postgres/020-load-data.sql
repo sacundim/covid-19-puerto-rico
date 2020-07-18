@@ -35,7 +35,8 @@ FROM '/data/clean/PRPHT-molecular.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 ---------------------------------------------------------
-CREATE TEMPORARY TABLE bioportal_raw (
+DROP TABLE IF EXISTS bioportal_raw;
+CREATE TABLE bioportal_raw (
     collectedDate TEXT,
     reportedDate TEXT,
     ageRange TEXT,
