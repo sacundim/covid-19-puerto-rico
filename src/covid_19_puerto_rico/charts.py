@@ -195,6 +195,7 @@ class NewCases(AbstractChart):
                     scale=alt.Scale(type='symlog', domain=[0, max_value])),
             tooltip=[
                 alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
+                alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                 alt.Tooltip('variable:N', title='Variable'),
                 alt.Tooltip('value:Q', title='Valor crudo'),
                 alt.Tooltip('mean_value:Q', format='.1f', title='Promedio 7 días')]
@@ -205,6 +206,7 @@ class NewCases(AbstractChart):
                     scale=alt.Scale(type='symlog', domain=[0, max_value])),
             tooltip = [
                 alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
+                alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                 alt.Tooltip('variable:N', title='Variable'),
                 alt.Tooltip('mean_value:Q', format='.1f', title='Promedio 7 días')]
         )
@@ -347,7 +349,8 @@ class CurrentDeltas(AbstractChart):
             y=alt.Y('month(datum_date):O',
                     title=None, sort="descending",
                     axis=alt.Axis(format='%B')),
-            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra o muerte'),
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                     alt.Tooltip('datum_date:T', title='Fecha de muestra o muerte'),
                      alt.Tooltip('value:Q', title='Casos añadidos (o restados)')]
         )
 

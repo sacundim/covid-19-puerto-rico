@@ -26,7 +26,8 @@ class DailyMissingTests(charts.AbstractChart):
                 alt.value('orange'),
                 alt.value('teal')
             ),
-            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de toma de muestra'),
+            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
+                     alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('positive_molecular_tests:Q', title='Pruebas positivas'),
                      alt.Tooltip('confirmed_cases:Q', title='Casos confirmados'),
                      alt.Tooltip('difference:Q', title='Positivos menos confirmados')]
@@ -67,7 +68,8 @@ class CumulativeMissingTests(charts.AbstractChart):
                     title='Fecha de toma de muestra',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('difference:Q', title='Positivos menos confirmados'),
-            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de toma de muestra'),
+            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
+                     alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('cumulative_positive_molecular_tests:Q', title='Pruebas positivas'),
                      alt.Tooltip('cumulative_confirmed_cases:Q', title='Casos confirmados'),
                      alt.Tooltip('difference:Q', title='Positivos menos confirmados')]
@@ -115,6 +117,7 @@ class AbstractPositiveRate(charts.AbstractChart):
             color=alt.Color('Fuente:N', sort=self.ORDER,
                             legend=alt.Legend(orient='top', title=None, offset=0)),
             tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
+                     alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('value:Q', format=".2%", title='Tasa de positividad')]
         )
 
@@ -188,6 +191,7 @@ class AbstractPerCapitaChart(charts.AbstractChart):
             color=alt.Color('Fuente:N', sort=self.ORDER,
                             legend=alt.Legend(orient='top', title=None)),
             tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
+                     alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('per_thousand:Q', format=".2f",
                                  title='Pruebas por mil habitantes')]
         ).properties(
@@ -270,6 +274,7 @@ class CumulativeTestsVsCases(charts.AbstractChart):
             color=alt.Color('Fuente:N', sort=self.ORDER,
                             legend=alt.Legend(orient='top', title=None, offset=25)),
             tooltip=[alt.Tooltip('yearmonthdate(datum_date):T', title='Fecha de muestra'),
+                     alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('Fuente:N'),
                      alt.Tooltip('tests_per_million:Q', format=",d",
                                  title='Pruebas por millón'),
