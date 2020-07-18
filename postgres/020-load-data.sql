@@ -35,26 +35,37 @@ FROM '/data/clean/PRPHT-molecular.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 ---------------------------------------------------------
-CREATE TEMPORARY TABLE bioportal_raw (
-    id BIGINT NOT NULL,
-    collectedDate DATE,
-    reportedDate DATE,
+DROP TABLE IF EXISTS bioportal_raw;
+CREATE TABLE bioportal_raw (
+    collectedDate TEXT,
+    reportedDate TEXT,
     ageRange TEXT,
     testType TEXT,
     result TEXT,
     patientCity TEXT,
-    createdAt TIMESTAMP WITHOUT TIME ZONE
+    createdAt TEXT
 );
 
 COPY bioportal_raw
-FROM '/data/raw/bioportal.csv'
+FROM '/data/bioportal/minimal-info-unique-tests.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
-INSERT INTO bioportal_tests
-WITH cleaner AS (
-    SELECT
-        id,
 
+
+INSERT INTO bioportal_tests (datum_date, bulletin_date, created_at, municipality, positive)
+WITH with_date_format AS (
+    SELECT
+        to_date(collectedDate, 'MM/DD/YYYY') AS collectedDate,
+        to_date(reportedDate, 'MM/DD/YYYY') AS reportedDate,
+        ageRange,
+        testType,
+        result,
+        patientCity,
+        to_timestamp(createdAt, 'MM/DD/YYYY HH24:MI') AS createdAt
+    FROM bioportal_raw
+    WHERE testType = 'Molecular'
+), without_null_dates AS (
+    SELECT
         CASE
             WHEN collectedDate >= '2020-01-01'
             THEN collectedDate
@@ -79,11 +90,9 @@ WITH cleaner AS (
 
         COALESCE(result, '') LIKE '%Positive%'
             AS positive
-    FROM bioportal_raw
-    WHERE testType = 'Molecular'
+    FROM with_date_format
 )
 SELECT
-    id,
     CASE
         WHEN bulletin_date < datum_date
         THEN date(created_at) - INTERVAL '3 day'
@@ -97,7 +106,7 @@ SELECT
     created_at,
     municipality,
     positive
-FROM cleaner;
+FROM without_null_dates;
 
 CREATE INDEX ON bioportal_tests (datum_date, bulletin_date, municipality, positive);
 CREATE INDEX ON bioportal_tests (datum_date, municipality, positive);
