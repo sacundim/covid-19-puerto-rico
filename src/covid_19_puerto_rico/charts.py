@@ -798,7 +798,8 @@ class AgeGroups(AbstractChart):
         query = select([
             table.c.bulletin_date,
             table.c.age_range,
-            table.c.cumulative_cases
+            table.c.cumulative_cases,
+            table.c.smoothed_daily_cases
         ]).where(table.c.age_range != 'Total')
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
 
@@ -806,19 +807,28 @@ class AgeGroups(AbstractChart):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
 
     def make_chart(self, df):
-        return alt.Chart(df).encode(
+        return alt.Chart(df.dropna()).encode(
         ).transform_filter(
-            alt.datum['variable'] != 'Total'
+            alt.datum['age_range'] != 'Total'
+        ).transform_joinaggregate(
+            total='sum(smoothed_daily_cases)',
+            groupby=['bulletin_date']
+        ).transform_calculate(
+            pct="datum.smoothed_daily_cases / datum.total"
         ).mark_area().encode(
             x=alt.X('bulletin_date:T', title='Fecha de boletín'),
-            y=alt.Y('cumulative_cases:Q', title='Casos por molecular (acumulados)'),
+            y=alt.Y('smoothed_daily_cases:Q', stack='normalize',
+                    axis=alt.Axis(labels=False, ticks=False),
+                    title='Casos nuevos (molecular, promedio 7 días)'),
             color=alt.Color('age_range:N', title='Edad', sort=self.ORDER,
                             legend=alt.Legend(orient='top', columns=5)),
             tooltip=[
                 alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                 alt.Tooltip('age_range:N', title='Edad'),
-                alt.Tooltip('cumulative_cases:Q', title='Casos por molecular (acumulados)'),
+                alt.Tooltip('smoothed_daily_cases:Q', format='.1f',
+                            title='Casos nuevos (molecular, promedio 7 días)'),
+                alt.Tooltip('pct:Q', format='.1%', title='Porcentaje'),
             ]
         ).properties(
-            width=575, height=300
+            width=600, height=320
         )
