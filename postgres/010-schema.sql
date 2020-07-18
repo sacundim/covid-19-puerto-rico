@@ -145,7 +145,7 @@ COMMENT ON TABLE bioportal IS
 Publication began with 2020-05-21 report.';
 
 CREATE TABLE bioportal_tests (
-    id BIGINT NOT NULL,
+    id SERIAL,
     datum_date DATE NOT NULL,
     bulletin_date DATE NOT NULL,
     created_at TIMESTAMP,
