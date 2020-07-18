@@ -806,23 +806,48 @@ class AgeGroups(AbstractChart):
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
 
+    def population_data(self):
+        table = sqlalchemy.Table('age_groups_population', self.metadata, autoload=True)
+        query = select([
+            table.c.age_range,
+            table.c.total2019
+        ]).where(table.c.age_range != 'Total')
+        with self.engine.connect() as connection:
+            return pd.read_sql_query(query, connection)
+
     def make_chart(self, df):
+        population = self.population_data()
+
         return alt.Chart(df.dropna()).encode(
         ).transform_filter(
-            alt.datum['age_range'] != 'Total'
+            # We have to filter this out for the per capita chart.
+            alt.datum['age_range'] != 'No disponible'
+        ).transform_lookup(
+            lookup='age_range',
+            from_=alt.LookupData(data=population, key='age_range',
+                                 fields=['total2019'])
+        ).transform_calculate(
+            smoothed_daily_cases_1m=alt.expr.if_(
+                alt.expr.isNumber(alt.datum.total2019),
+                (alt.datum.smoothed_daily_cases * 1_000_000) / alt.datum.total2019,
+                None)
         ).mark_area().encode(
             x=alt.X('bulletin_date:T', title='Fecha de boletín'),
-            y=alt.Y('smoothed_daily_cases:Q', title=None),
+            y=alt.Y('smoothed_daily_cases_1m:Q', title=None),
             color=alt.Color('age_range:N', title='Edad', sort=self.ORDER, legend=None),
             tooltip=[
                 alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                 alt.Tooltip('age_range:N', title='Edad'),
                 alt.Tooltip('smoothed_daily_cases:Q', format='.1f',
-                            title='Casos nuevos (molecular, promedio 7 días)')
+                            title='Casos (7 días)'),
+                alt.Tooltip('smoothed_daily_cases_1m:Q', format='.1f',
+                            title='Casos (7 días, por millón)')
+
             ]
         ).properties(
-            width=275, height=75
+            width=300, height=75
         ).facet(
             columns=2,
-            facet=alt.Facet('age_range:N', title='Edad', sort=self.ORDER,)
+            facet=alt.Facet('age_range:N', sort=self.ORDER,
+                            title='Casos nuevos por edad (por millón de habitantes, promedio 7 días)')
         )
