@@ -788,3 +788,37 @@ class Hospitalizations(AbstractChart):
         return (total + regions).properties(
             width=575, height=300
         )
+
+class AgeGroups(AbstractChart):
+    ORDER = ['< 10', '10-19', '20-29', '30-39', '40-49',
+             '50-59', '60-69', '70-79', '≥ 80','No disponible']
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('age_groups_molecular_agg', self.metadata, autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.age_range,
+            table.c.cumulative_cases
+        ]).where(table.c.age_range != 'Total')
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df):
+        return alt.Chart(df).encode(
+        ).transform_filter(
+            alt.datum['variable'] != 'Total'
+        ).mark_area().encode(
+            x=alt.X('bulletin_date:T', title='Fecha de boletín'),
+            y=alt.Y('cumulative_cases:Q', title='Casos por molecular (acumulados)'),
+            color=alt.Color('age_range:N', title='Edad', sort=self.ORDER,
+                            legend=alt.Legend(orient='top', columns=5)),
+            tooltip=[
+                alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                alt.Tooltip('age_range:N', title='Edad'),
+                alt.Tooltip('cumulative_cases:Q', title='Casos por molecular (acumulados)'),
+            ]
+        ).properties(
+            width=575, height=300
+        )
