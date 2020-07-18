@@ -250,6 +250,19 @@ CREATE TABLE municipal (
 );
 
 
+CREATE TABLE age_groups_population (
+    age_range TEXT NOT NULL,
+    total2019 INTEGER NOT NULL,
+    female2019 INTEGER NOT NULL,
+    male2019 INTEGER NOT NULL,
+    PRIMARY KEY (age_range)
+);
+
+COMMENT ON TABLE age_groups_population IS
+'Populations for age groups in Puerto Rico, according to 2019 Census Bureau
+Population Estimates Program.';
+
+
 CREATE TABLE age_groups_molecular (
     bulletin_date DATE NOT NULL,
     age_range TEXT NOT NULL,
