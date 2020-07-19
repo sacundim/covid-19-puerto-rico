@@ -349,8 +349,8 @@ class CurrentDeltas(AbstractChart):
             y=alt.Y('month(datum_date):O',
                     title=None, sort="descending",
                     axis=alt.Axis(format='%B')),
-            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
-                     alt.Tooltip('datum_date:T', title='Fecha de muestra o muerte'),
+            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra o muerte'),
+                     alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                      alt.Tooltip('value:Q', title='Casos añadidos (o restados)')]
         )
 
@@ -406,8 +406,8 @@ class DailyDeltas(AbstractChart):
             y=alt.Y('yearmonthdate(bulletin_date):O',
                     title=None, sort="descending",
                     axis=alt.Axis(format='%d/%m')),
-            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
-                     alt.Tooltip('datum_date:T', title='Fecha de muestra o muerte'),
+            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra o muerte'),
+                     alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                      alt.Tooltip('value:Q', title='Casos añadidos (o restados)')]
         )
 
@@ -693,7 +693,8 @@ class MunicipalMap(AbstractChart):
                                             domain=alt.DomainUnionWith(unionWith=[0])),
                             legend=alt.Legend(orient='bottom', titleLimit=400,
                                               titleOrient='bottom', format=number_format)),
-            tooltip=[alt.Tooltip(field='properties.NAME', type='nominal', title='Municipio'),
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                     alt.Tooltip(field='properties.NAME', type='nominal', title='Municipio'),
                      alt.Tooltip(alt.repeat('column'),
                                  type='quantitative',
                                  format=number_format,
