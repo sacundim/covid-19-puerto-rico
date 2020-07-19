@@ -1,37 +1,37 @@
 COPY announcement
-FROM '/data/clean/PuertoRico-bulletin.csv'
+FROM '/data/cases/PuertoRico-bulletin.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY bitemporal
-FROM '/data/clean/PuertoRico-bitemporal.csv'
+FROM '/data/cases/PuertoRico-bitemporal.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY canonical_municipal_names
-FROM '/data/clean/Municipalities-canonical_names.csv'
+FROM '/data/cases/Municipalities-canonical_names.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY municipal
-FROM '/data/clean/Municipalities-molecular.csv'
+FROM '/data/cases/Municipalities-molecular.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY age_groups_molecular
-FROM '/data/clean/AgeGroups-molecular.csv'
+FROM '/data/cases/AgeGroups-molecular.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY age_groups_population
-FROM '/data/clean/AgeGroups-population.csv'
+FROM '/data/cases/AgeGroups-population.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY bioportal
-FROM '/data/clean/PuertoRico-bioportal.csv'
+FROM '/data/cases/PuertoRico-bioportal.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY hospitalizations
-FROM '/data/clean/PuertoRico-hospitalizations.csv'
+FROM '/data/cases/PuertoRico-hospitalizations.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY prpht_molecular_raw
-FROM '/data/clean/PRPHT-molecular.csv'
+FROM '/data/cases/PRPHT-molecular.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 ---------------------------------------------------------
