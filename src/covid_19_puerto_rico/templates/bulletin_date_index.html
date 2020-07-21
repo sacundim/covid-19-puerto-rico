@@ -39,8 +39,8 @@
         <li><a href="#AgeGroups_section">Casos por edad (per cápita, 7 días)</a></li>
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
         <li><a href="#Municipal_section">Historial de casos confirmados por municipio (fecha de boletín)</a></li>
-        <li><a href="#NewPositiveRate_section">Positividad (promedio 7 días)</a></li>
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas per cápita (promedio 7 días)</a></li>
+        <li><a href="#NewPositiveRate_section">Positividad (promedio 7 días)</a></li>
         <li><a href="#CumulativeTestsVsCases_section">Pruebas vs. casos (acumulado)</a></li>
         <li><a href="#DailyMissingTests_section">Pruebas duplicadas y perdidas diarias</a></li>
         <li><a href="#ConsecutiveBulletinMismatch_section">Descuadre de encabezado de boletín</a></li>
@@ -362,6 +362,32 @@
 </div>
 
 
+<div class="section" id="NewDailyTestsPerCapita_section">
+    <h1>Pruebas per cápita (promedio 7 días)</h1>
+
+    <div id="NewDailyTestsPerCapita"></div>
+    <script type="text/javascript">
+        embedChart('NewDailyTestsPerCapita', bulletin_date);
+    </script>
+
+    <div class="chart">
+        <iframe src="https://ourworldindata.org/grapher/daily-tests-per-thousand-people-smoothed-7-day?tab=map&year={{bulletin_date}}&time=2020-05-21..{{bulletin_date}}"
+                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>    </div>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Cuántas pruebas diarias (promedio de 7 días) se realizaron por fecha de toma de muestra,
+        por millar de población.  Se presenta una gráfica de <a href="https://ourworldindata.org/">Our
+            World in Data</a> para comparación.</p>
+
+    <h3>Advertencia</h3>
+
+    <p>Como esta gráfica es por fecha de toma de muestra, las cifras que da no son finales
+        porque pueden registrarse luego más resultados para las mismas fechas. Y especialmente,
+        <b>caídas súbitas al final de la curva muy probable no son reales</b>.</p>
+</div>
+
+
 <div class="section" id="NewPositiveRate_section">
     <h1>Positividad (promedio 7 días)</h1>
 
@@ -410,31 +436,6 @@
             de la curva no son fiables</b>, porque para las fechas más recientes se espera que se
             incorpore una mayor proporción de nuevos resultados.</li>
     </ol>
-</div>
-
-
-<div class="section" id="NewDailyTestsPerCapita_section">
-    <h1>Pruebas per cápita (promedio 7 días)</h1>
-
-    <div id="NewDailyTestsPerCapita"></div>
-    <script type="text/javascript">
-        embedChart('NewDailyTestsPerCapita', bulletin_date);
-    </script>
-
-    <div class="chart">
-        <iframe src="https://ourworldindata.org/grapher/daily-tests-per-thousand-people-smoothed-7-day?tab=map&year={{bulletin_date}}&time=2020-05-21..{{bulletin_date}}"
-                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>    </div>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Cuántas pruebas diarias (promedio de 7 días) se realizaron por fecha de toma de muestra,
-        por millar de población.  Se presenta una gráfica de Our World in Data para comparación.</p>
-
-    <h3>Advertencia</h3>
-
-    <p>Como esta gráfica es por fecha de toma de muestra, las cifras que da no son finales
-        porque pueden registrarse luego más resultados para las mismas fechas. Y especialmente,
-        <b>caídas súbitas al final de la curva lo más seguro no son reales</b>.</p>
 </div>
 
 
