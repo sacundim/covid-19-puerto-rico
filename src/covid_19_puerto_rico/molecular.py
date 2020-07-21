@@ -252,7 +252,7 @@ class CumulativeTestsVsCases(charts.AbstractChart):
         return df.loc[df['bulletin_date'] == effective_bulletin_date]
 
     def make_chart(self, df):
-        max_x, max_y = 1_200, 120_000
+        max_x, max_y = 1_400, 100_000
 
         main = alt.Chart(df.dropna()).transform_calculate(
             tests_per_million=alt.datum.cumulative_tests / self.POPULATION_MILLIONS,
@@ -288,7 +288,7 @@ class CumulativeTestsVsCases(charts.AbstractChart):
         )
 
         return (self.make_ref_chart(max_x, max_y) + main).properties(
-            width=525, height=525
+            width=525, height=375
         )
 
     def make_ref_chart(self, max_x, max_y):
