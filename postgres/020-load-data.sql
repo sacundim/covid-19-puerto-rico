@@ -52,7 +52,7 @@ FROM '/data/bioportal/minimal-info-unique-tests.csv'
 
 
 
-INSERT INTO bioportal_tests (datum_date, bulletin_date, created_at, municipality, positive)
+INSERT INTO bioportal_tests (datum_date, reported_date, bulletin_date, created_at, municipality, positive)
 WITH with_date_format AS (
     SELECT
         to_date(collectedDate, 'MM/DD/YYYY') AS collectedDate,
@@ -79,7 +79,13 @@ WITH with_date_format AS (
             WHEN reportedDate >= '2020-03-13'
             THEN reportedDate
             ELSE date(createdAt)
-        END AS bulletin_date,
+        END AS reported_date,
+
+        -- I have have opted to use the `createdAt` field as the `bulletin_date`
+        -- because I see a TON of retroactive additions to older `reportedAt`
+        -- values.  I've verified that `createdAt` is UTC time, Puerto Rico is UTC-4
+        date(createdAt - INTERVAL '4 hour')
+            AS bulletin_date,
 
         createdAt created_at,
 
@@ -99,10 +105,11 @@ SELECT
         ELSE datum_date
     END AS datum_date,
     CASE
-        WHEN bulletin_date < datum_date
+        WHEN reported_date < datum_date
         THEN date(created_at)
-        ELSE bulletin_date
-    END AS bulletin_date,
+        ELSE reported_date
+    END AS reported_date,
+    bulletin_date,
     created_at,
     municipality,
     positive

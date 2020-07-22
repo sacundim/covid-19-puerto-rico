@@ -147,6 +147,7 @@ Publication began with 2020-05-21 report.';
 CREATE TABLE bioportal_tests (
     id SERIAL,
     datum_date DATE NOT NULL,
+    reported_date DATE NOT NULL,
     bulletin_date DATE NOT NULL,
     created_at TIMESTAMP,
     municipality TEXT,
