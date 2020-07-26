@@ -4,12 +4,15 @@
 #
 
 import altair as alt
+import datetime
+import numpy as np
 import pandas as pd
 import sqlalchemy
 from sqlalchemy import cast, and_
 from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION
 from sqlalchemy.sql import select
 from . import charts
+from . import util
 
 
 class DailyMissingTests(charts.AbstractChart):
@@ -329,3 +332,156 @@ class CumulativeTestsVsCases(charts.AbstractChart):
         )
 
         return lines + text
+
+class MolecularDailyDeltas(charts.AbstractChart):
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('bioportal_bitemporal_agg', self.metadata, autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.datum_date,
+                        table.c.delta_molecular_tests.label('Pruebas'),
+                        table.c.delta_positive_molecular_tests.label('Positivas')]
+        )
+        df = pd.read_sql_query(query, connection,
+                               parse_dates=['bulletin_date', 'datum_date'])
+        return pd.melt(df, ['bulletin_date', 'datum_date'])
+
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=14))
+        until_date = pd.to_datetime(bulletin_date)
+        filtered = df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]\
+            .replace(0, np.nan).dropna()
+        return filtered
+
+    def make_chart(self, df):
+        base = alt.Chart(df).mark_rect().encode(
+            x=alt.X('yearmonthdate(datum_date):O',
+                    title='Fecha de toma de muestra', sort='descending',
+                    axis=alt.Axis(format='%d/%m')),
+            y=alt.Y('yearmonthdate(bulletin_date):O',
+                    title='Fecha de récord', sort='descending',
+                    axis=alt.Axis(format='%d/%m')),
+            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
+                     alt.Tooltip('bulletin_date:T', title='Fecha de récord en API'),
+                     alt.Tooltip('value:Q', title='Nuevas')]
+        )
+
+        heatmap = base.mark_rect().encode(
+            color=alt.Color('value:Q', title=None, legend=None,
+                            scale=alt.Scale(scheme="redgrey", domainMid=0,
+                                            # WORKAROUND: Set the domain manually to forcibly
+                                            # include zero or else we run into
+                                            # https://github.com/vega/vega-lite/issues/6544
+                                            domain=alt.DomainUnionWith(unionWith=[0])))
+        )
+
+        text = base.mark_text(fontSize=2.75).encode(
+            text=alt.Text('value:Q'),
+            color=util.heatmap_text_color(df, 'value')
+        )
+
+        return (heatmap + text).properties(
+            width=585, height=120
+        ).facet(
+            columns=1,
+            facet=alt.Facet('variable:N', title=None,
+                            sort=['Pruebas', 'Positivas'])
+        )
+
+class MolecularLatenessDaily(charts.AbstractChart):
+    SORT_ORDER = ['Pruebas', 'Positivas']
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('molecular_lateness', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.lateness_molecular_tests.label('Pruebas'),
+                        table.c.lateness_positive_molecular_tests.label('Positivas')]
+        )
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+        return pd.melt(df, ['bulletin_date'])
+
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=8))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]
+
+    def make_chart(self, df):
+        bars = alt.Chart(df).mark_bar().encode(
+            x=alt.X('value:Q', title='Rezago estimado (días)'),
+            y=alt.Y('variable:N', title=None, sort=self.SORT_ORDER, axis=None),
+            color=alt.Color('variable:N', sort=self.SORT_ORDER,
+                            legend=alt.Legend(orient='bottom', title=None)),
+            tooltip = [alt.Tooltip('bulletin_date:T', title='Fecha de récord'),
+                       alt.Tooltip('variable:N', title='Variable'),
+                       alt.Tooltip('value:Q', format=".1f", title='Rezago promedio')]
+        )
+
+        text = bars.mark_text(
+            align='right',
+            baseline='middle',
+            size=12,
+            dx=-5
+        ).encode(
+            text=alt.Text('value:Q', format='.1f'),
+            color = alt.value('white')
+        )
+
+        return (bars + text).properties(
+            width=300
+        ).facet(
+            columns=2,
+            facet=alt.Facet('bulletin_date:T', sort='descending',
+                            title='Fecha de récord')
+        )
+
+class MolecularLateness7Day(charts.AbstractChart):
+    SORT_ORDER = ['Pruebas', 'Positivas']
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('molecular_lateness', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.smoothed_lateness_molecular_tests.label('Pruebas'),
+            table.c.smoothed_lateness_positive_molecular_tests.label('Positivas')]
+        )
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+        return pd.melt(df, ['bulletin_date'])
+
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=15))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]
+
+    def make_chart(self, df):
+        lines = alt.Chart(df).mark_line(
+            strokeWidth=3,
+            point=alt.OverlayMarkDef(size=50)
+        ).encode(
+            x=alt.X('yearmonthdate(bulletin_date):O',
+                    title="Fecha de récord",
+                    axis=alt.Axis(format='%d/%m', titlePadding=10)),
+            y=alt.Y('value:Q', title=None),
+            color = alt.Color('variable', sort=self.SORT_ORDER, legend=None),
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de récord'),
+                     alt.Tooltip('variable:N', title='Variable'),
+                     alt.Tooltip('value:Q', format=".1f", title='Rezago promedio')]
+        )
+
+        text = lines.mark_text(
+            align='center',
+            baseline='line-top',
+            size=15,
+            dy=10
+        ).encode(
+            text=alt.Text('value:Q', format='.1f')
+        )
+
+        return (lines + text).properties(
+            width=575, height=37
+        ).facet(
+            row=alt.Row('variable', title=None, sort=self.SORT_ORDER)
+        )

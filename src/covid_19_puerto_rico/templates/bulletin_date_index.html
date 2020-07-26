@@ -40,6 +40,8 @@
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
         <li><a href="#Municipal_section">Historial de casos confirmados por municipio (fecha de boletín)</a></li>
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas per cápita (promedio 7 días)</a></li>
+        <li><a href="#MolecularDailyDeltas_section">Pruebas añadidas en Bioportal</a></li>
+        <li><a href="#MolecularLatenessDaily_section">Rezago de pruebas diario</a></li>
         <li><a href="#NewPositiveRate_section">Positividad (promedio 7 días)</a></li>
         <li><a href="#CumulativeTestsVsCases_section">Pruebas vs. casos (acumulado)</a></li>
         <li><a href="#DailyMissingTests_section">Pruebas duplicadas y perdidas diarias</a></li>
@@ -385,6 +387,75 @@
     <p>Como esta gráfica es por fecha de toma de muestra, las cifras que da no son finales
         porque pueden registrarse luego más resultados para las mismas fechas. Y especialmente,
         <b>caídas súbitas al final de la curva muy probable no son reales</b>.</p>
+</div>
+
+
+<div class="section" id="MolecularDailyDeltas_section">
+    <h1>Pruebas añadidas en Bioportal</h1>
+
+    <div id="MolecularDailyDeltas"></div>
+    <script type="text/javascript">
+        embedChart('MolecularDailyDeltas', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Cuántos resultados nuevos de fecha se reportaron en el API de Bioportal (el sistema
+        en línea de recibo de resultados de pruebas del Departamento de Salud de Puerto
+        Rico), por combinación de fecha de toma de muestra y fecha de creación del récord
+        en el API (campo <code>createdAt</code>).</p>
+
+    <p>El API de Bioportal de Salud presenta tres campos de fecha/tiempo para cada récord
+        de prueba individual:</p>
+
+    <dl>
+        <dt><code>collectedDate</code></dt>
+        <dd>Fecha de colección de muestra de prueba.</dd>
+
+        <dt><code>reportedDate</code></dt>
+        <dd>Se entiende por el nombre que es fecha que el laboratorio reportó la prueba
+            a Salud.</dd>
+
+        <dt><code>createdAt</code></dt>
+        <dd>Tiempo que el sistema computarizado graba como la fecha, hora y minuto que
+            creó el récord de base de dato para esa prueba.</dd>
+    </dl>
+
+    <p>Examen de los datos ha dado al momento a entender que el campo <code>reportedDate</code>
+        no es nada fiable, así que aquí se ha optado por usar el <code>createdAt</code> en vez.
+        Este campo está en horario UTC en los datos de fuente, pero aquí se ajusta a horario de
+        Puerto Rico (UTC-4).</p>
+</div>
+
+
+<div class="section" id="MolecularLatenessDaily_section">
+    <h1>Rezago de pruebas diario</h1>
+
+    <div id="MolecularLatenessDaily"></div>
+    <script type="text/javascript">
+        embedChart('MolecularLatenessDaily', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Tardanza promedio entre fecha de toma de muestra (<code>collectedDate</code>) y
+        fecha de récord (<code>createdAt</code>, ajustado a horario de Puerto Rico) en
+        el API de Bioportal, agrupado por la segunda.</p>
+</div>
+
+
+<div class="section" id="MolecularLateness7Day_section">
+    <h1>Tendencia de rezago de pruebas</h1>
+
+    <div id="MolecularLateness7Day"></div>
+    <script type="text/javascript">
+        embedChart('MolecularLateness7Day', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>El mismo análisis de rezago de datos de pruebas que la sección anterior, pero con
+        promedios de 7 días.</p>
 </div>
 
 
