@@ -197,6 +197,7 @@ WITH bulletin_dates AS (
 SELECT
 	bulletin_date,
 	datum_date,
+	bulletin_date - datum_date AS age,
 	molecular_tests,
 	positive_molecular_tests,
 	sum(molecular_tests) OVER cumulative
@@ -864,3 +865,43 @@ COMMENT ON VIEW products.bitemporal_datum_lateness_agg IS
 lateness not in term of how late each bulletin''s data was, but rather
 how long data for a given datum_date took to be reported. (Which changes
 with each successive bulletin_date.)';
+
+
+CREATE VIEW products.molecular_lateness AS
+WITH grouped AS (
+    SELECT
+        bulletin_date,
+        sum(delta_molecular_tests * age)
+            AS lateness_molecular_tests,
+        sum(delta_molecular_tests)
+            AS delta_molecular_tests,
+        sum(delta_positive_molecular_tests * age)
+            AS lateness_positive_molecular_tests,
+        sum(delta_positive_molecular_tests)
+            AS delta_positive_molecular_tests
+    FROM bioportal_bitemporal_agg
+    -- We exclude the earliest bulletin date because it's artificially late
+    WHERE bulletin_date > (
+        SELECT min(bulletin_date)
+        FROM bioportal_bitemporal_agg
+    )
+    GROUP BY bulletin_date
+)
+SELECT
+    bulletin_date,
+    safediv(lateness_molecular_tests, delta_molecular_tests)
+        AS lateness_molecular_tests,
+    safediv(lateness_positive_molecular_tests, delta_positive_molecular_tests)
+        AS lateness_positive_molecular_tests,
+    safediv(sum(lateness_molecular_tests) OVER seven,
+            sum(delta_molecular_tests) OVER seven)
+        AS smoothed_lateness_molecular_tests,
+    safediv(sum(lateness_positive_molecular_tests) OVER seven,
+            sum(delta_positive_molecular_tests) OVER seven)
+        AS smoothed_lateness_positive_molecular_tests
+FROM grouped
+WINDOW seven AS (
+	ORDER BY bulletin_date
+	RANGE '6 days' PRECEDING
+)
+ORDER BY bulletin_date DESC;

@@ -41,6 +41,7 @@
         <li><a href="#Municipal_section">Historial de casos confirmados por municipio (fecha de boletín)</a></li>
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas per cápita (promedio 7 días)</a></li>
         <li><a href="#MolecularDailyDeltas_section">Pruebas añadidas en Bioportal</a></li>
+        <li><a href="#MolecularLatenessDaily_section">Rezago de pruebas diario</a></li>
         <li><a href="#NewPositiveRate_section">Positividad (promedio 7 días)</a></li>
         <li><a href="#CumulativeTestsVsCases_section">Pruebas vs. casos (acumulado)</a></li>
         <li><a href="#DailyMissingTests_section">Pruebas duplicadas y perdidas diarias</a></li>
@@ -420,10 +421,40 @@
             creó el récord de base de dato para esa prueba.</dd>
     </dl>
 
-    <p>Examinación de los datos ha dado al momento a entender que el campo <code>reportedDate</code>
+    <p>Examen de los datos ha dado al momento a entender que el campo <code>reportedDate</code>
         no es nada fiable, así que aquí se ha optado por usar el <code>createdAt</code> en vez.
         Este campo está en horario UTC en los datos de fuente, pero aquí se ajusta a horario de
         Puerto Rico (UTC-4).</p>
+</div>
+
+
+<div class="section" id="MolecularLatenessDaily_section">
+    <h1>Rezago de pruebas diario</h1>
+
+    <div id="MolecularLatenessDaily"></div>
+    <script type="text/javascript">
+        embedChart('MolecularLatenessDaily', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Tardanza promedio entre fecha de toma de muestra (<code>collectedDate</code>) y
+        fecha de récord (<code>createdAt</code>) en el API de Bioportal, agrupado por
+        la segunda.</p>
+</div>
+
+
+<div class="section" id="MolecularLateness7Day_section">
+    <h1>Tendencia de rezago de pruebas</h1>
+
+    <div id="MolecularLateness7Day"></div>
+    <script type="text/javascript">
+        embedChart('MolecularLateness7Day', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>El mismo análisis de rezago de datos de pruebas, pero en ventanas de 7 días.</p>
 </div>
 
 
