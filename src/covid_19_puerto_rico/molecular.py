@@ -4,12 +4,15 @@
 #
 
 import altair as alt
+import datetime
+import numpy as np
 import pandas as pd
 import sqlalchemy
 from sqlalchemy import cast, and_
 from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION
 from sqlalchemy.sql import select
 from . import charts
+from . import util
 
 
 class DailyMissingTests(charts.AbstractChart):
@@ -329,3 +332,59 @@ class CumulativeTestsVsCases(charts.AbstractChart):
         )
 
         return lines + text
+
+class MolecularDailyDeltas(charts.AbstractChart):
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('bioportal_bitemporal_agg', self.metadata, autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.datum_date,
+                        table.c.delta_molecular_tests.label('Pruebas'),
+                        table.c.delta_positive_molecular_tests.label('Positivas')]
+        )
+        df = pd.read_sql_query(query, connection,
+                               parse_dates=['bulletin_date', 'datum_date'])
+        return pd.melt(df, ['bulletin_date', 'datum_date'])
+
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=14))
+        until_date = pd.to_datetime(bulletin_date)
+        filtered = df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]\
+            .replace(0, np.nan).dropna()
+        return filtered
+
+    def make_chart(self, df):
+        base = alt.Chart(df).mark_rect().encode(
+            x=alt.X('yearmonthdate(datum_date):O',
+                    title='Fecha de toma de muestra', sort='descending',
+                    axis=alt.Axis(format='%d/%m')),
+            y=alt.Y('yearmonthdate(bulletin_date):O',
+                    title='Fecha de récord', sort='descending',
+                    axis=alt.Axis(format='%d/%m')),
+            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
+                     alt.Tooltip('bulletin_date:T', title='Fecha de récord en API'),
+                     alt.Tooltip('value:Q', title='Nuevas')]
+        )
+
+        heatmap = base.mark_rect().encode(
+            color=alt.Color('value:Q', title=None, legend=None,
+                            scale=alt.Scale(scheme="redgrey", domainMid=0,
+                                            # WORKAROUND: Set the domain manually to forcibly
+                                            # include zero or else we run into
+                                            # https://github.com/vega/vega-lite/issues/6544
+                                            domain=alt.DomainUnionWith(unionWith=[0])))
+        )
+
+        text = base.mark_text(fontSize=2.75).encode(
+            text=alt.Text('value:Q'),
+            color=util.heatmap_text_color(df, 'value')
+        )
+
+        return (heatmap + text).properties(
+            width=585, height=120
+        ).facet(
+            columns=1,
+            facet=alt.Facet('variable:N', title=None,
+                            sort=['Pruebas', 'Positivas'])
+        )
+

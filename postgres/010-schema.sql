@@ -202,11 +202,20 @@ SELECT
 	sum(molecular_tests) OVER cumulative
 		AS cumulative_molecular_tests,
 	sum(positive_molecular_tests) OVER cumulative
-		AS cumulative_positive_molecular_tests
+		AS cumulative_positive_molecular_tests,
+	molecular_tests
+		- lag(molecular_tests, 1, 0 :: NUMERIC) OVER bulletin
+		AS delta_molecular_tests,
+	positive_molecular_tests
+		- lag(positive_molecular_tests, 1, 0 :: NUMERIC) OVER bulletin
+		AS delta_positive_molecular_tests
 FROM grouped
 WINDOW cumulative AS (
 	PARTITION BY bulletin_date
 	ORDER BY datum_date
+), bulletin AS (
+	PARTITION BY datum_date
+	ORDER BY bulletin_date
 );
 
 CREATE TABLE hospitalizations (
