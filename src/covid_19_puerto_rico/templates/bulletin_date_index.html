@@ -388,6 +388,44 @@
 </div>
 
 
+<div class="section" id="MolecularDailyDeltas_section">
+    <h1>Pruebas añadidas en Bioportal</h1>
+
+    <div id="MolecularDailyDeltas"></div>
+    <script type="text/javascript">
+        embedChart('MolecularDailyDeltas', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Cuántos resultados nuevos de fecha se reportaron en el API de Bioportal (el sistema
+        en línea de recibo de resultados de pruebas del Departamento de Salud de Puerto
+        Rico), por combinación de fecha de toma de muestra y fecha de creación del récord
+        en el API (campo <code>createdAt</code>).</p>
+
+    <p>El API de Bioportal de Salud presenta tres campos de fecha/tiempo para cada récord
+        de prueba individual:</p>
+
+    <dl>
+        <dt><code>collectedDate</code></dt>
+        <dd>Fecha de colección de muestra de prueba.</dd>
+
+        <dt><code>reportedDate</code></dt>
+        <dd>Se entiende por el nombre que es fecha que el laboratorio reportó la prueba
+            a Salud.</dd>
+
+        <dt><code>createdAt</code></dt>
+        <dd>Tiempo que el sistema computarizado graba como la fecha, hora y minuto que
+            creó el récord de base de dato para esa prueba.</dd>
+    </dl>
+
+    <p>Examinación de los datos ha dado al momento a entender que el campo <code>reportedDate</code>
+        no es nada fiable, así que aquí se ha optado por usar el <code>createdAt</code> en vez.
+        Este campo está en horario UTC en los datos de fuente, pero aquí se ajusta a horario de
+        Puerto Rico (UTC-4).</p>
+</div>
+
+
 <div class="section" id="NewPositiveRate_section">
     <h1>Positividad (promedio 7 días)</h1>
 
