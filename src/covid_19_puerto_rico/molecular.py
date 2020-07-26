@@ -388,3 +388,100 @@ class MolecularDailyDeltas(charts.AbstractChart):
                             sort=['Pruebas', 'Positivas'])
         )
 
+class MolecularLatenessDaily(charts.AbstractChart):
+    SORT_ORDER = ['Pruebas', 'Positivas']
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('molecular_lateness', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.lateness_molecular_tests.label('Pruebas'),
+                        table.c.lateness_positive_molecular_tests.label('Positivas')]
+        )
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+        return pd.melt(df, ['bulletin_date'])
+
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=8))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]
+
+    def make_chart(self, df):
+        bars = alt.Chart(df).mark_bar().encode(
+            x=alt.X('value:Q', title='Rezago estimado (días)'),
+            y=alt.Y('variable:N', title=None, sort=self.SORT_ORDER, axis=None),
+            color=alt.Color('variable:N', sort=self.SORT_ORDER,
+                            legend=alt.Legend(orient='bottom', title=None)),
+            tooltip = [alt.Tooltip('bulletin_date:T', title='Fecha de récord'),
+                       alt.Tooltip('variable:N', title='Variable'),
+                       alt.Tooltip('value:Q', format=".1f", title='Rezago promedio')]
+        )
+
+        text = bars.mark_text(
+            align='right',
+            baseline='middle',
+            size=12,
+            dx=-5
+        ).encode(
+            text=alt.Text('value:Q', format='.1f'),
+            color = alt.value('white')
+        )
+
+        return (bars + text).properties(
+            width=300
+        ).facet(
+            columns=2,
+            facet=alt.Facet('bulletin_date:T', sort='descending',
+                            title='Fecha de récord')
+        )
+
+class MolecularLateness7Day(charts.AbstractChart):
+    SORT_ORDER = ['Pruebas', 'Positivas']
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('molecular_lateness', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.smoothed_lateness_molecular_tests.label('Pruebas'),
+            table.c.smoothed_lateness_positive_molecular_tests.label('Positivas')]
+        )
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+        return pd.melt(df, ['bulletin_date'])
+
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=15))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]
+
+    def make_chart(self, df):
+        lines = alt.Chart(df).mark_line(
+            strokeWidth=3,
+            point=alt.OverlayMarkDef(size=50)
+        ).encode(
+            x=alt.X('yearmonthdate(bulletin_date):O',
+                    title="Fecha de récord",
+                    axis=alt.Axis(format='%d/%m', titlePadding=10)),
+            y=alt.Y('value:Q', title=None),
+            color = alt.Color('variable', sort=self.SORT_ORDER, legend=None),
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de récord'),
+                     alt.Tooltip('variable:N', title='Variable'),
+                     alt.Tooltip('value:Q', format=".1f", title='Rezago promedio')]
+        )
+
+        text = lines.mark_text(
+            align='center',
+            baseline='line-top',
+            size=15,
+            dy=10
+        ).encode(
+            text=alt.Text('value:Q', format='.1f')
+        )
+
+        return (lines + text).properties(
+            width=575, height=37
+        ).facet(
+            row=alt.Row('variable', title=None, sort=self.SORT_ORDER)
+        )
