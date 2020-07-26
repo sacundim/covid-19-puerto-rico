@@ -354,7 +354,14 @@ class MolecularDailyDeltas(charts.AbstractChart):
         return filtered
 
     def make_chart(self, df):
-        base = alt.Chart(df).mark_rect().encode(
+        base = alt.Chart(df).transform_joinaggregate(
+            groupby=['variable'],
+            min_value='min(value)',
+            max_value='max(value)',
+        ).transform_calculate(
+            lo_mid_value='min(0, datum.min_value / 2.0)',
+            hi_mid_value='max(0, datum.max_value / 2.0)'
+        ).mark_rect().encode(
             x=alt.X('yearmonthdate(datum_date):O',
                     title='Fecha de toma de muestra', sort='descending',
                     axis=alt.Axis(format='%d/%m')),
@@ -377,7 +384,10 @@ class MolecularDailyDeltas(charts.AbstractChart):
 
         text = base.mark_text(fontSize=2.75).encode(
             text=alt.Text('value:Q'),
-            color=util.heatmap_text_color(df, 'value')
+            color=alt.condition(
+                '(datum.lo_mid_value < datum.value) & (datum.value < datum.hi_mid_value)',
+                alt.value('black'),
+                alt.value('white'))
         )
 
         return (heatmap + text).properties(
@@ -386,7 +396,8 @@ class MolecularDailyDeltas(charts.AbstractChart):
             columns=1,
             facet=alt.Facet('variable:N', title=None,
                             sort=['Pruebas', 'Positivas'])
-        )
+        ).resolve_scale(color='independent')
+
 
 class MolecularLatenessDaily(charts.AbstractChart):
     SORT_ORDER = ['Pruebas', 'Positivas']
