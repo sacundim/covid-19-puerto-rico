@@ -329,9 +329,10 @@ class Lateness7Day(AbstractLateness):
         )
 
         return (lines + text).properties(
-            width=550, height=37
+            width=600, height=33
         ).facet(
-            row=alt.Row('variable', title=None, sort=sort_order)
+            columns=1,
+            facet=alt.Facet('variable', title=None, sort=sort_order)
         )
 
     def fetch_data(self, connection):
