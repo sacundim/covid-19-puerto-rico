@@ -333,6 +333,67 @@ class CumulativeTestsVsCases(charts.AbstractChart):
 
         return lines + text
 
+
+class MolecularCurrentDeltas(charts.AbstractChart):
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('bioportal_bitemporal_agg', self.metadata, autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.datum_date,
+                        table.c.delta_molecular_tests.label('Pruebas'),
+                        table.c.delta_positive_molecular_tests.label('Positivas')]
+        )
+        df = pd.read_sql_query(query, connection,
+                               parse_dates=['bulletin_date', 'datum_date'])
+        return pd.melt(df, ['bulletin_date', 'datum_date']).replace(0, np.NaN)
+
+    def make_chart(self, df):
+        base = alt.Chart(df).transform_joinaggregate(
+            groupby=['variable'],
+            min_value='min(value)',
+            max_value='max(value)',
+        ).transform_calculate(
+            lo_mid_value='min(0, datum.min_value / 2.0)',
+            hi_mid_value='max(0, datum.max_value / 2.0)'
+        ).encode(
+            x=alt.X('date(datum_date):O',
+                    title="Día del mes", sort="descending",
+                    axis=alt.Axis(format='%d')),
+            y=alt.Y('month(datum_date):O',
+                    title=None, sort="descending",
+                    axis=alt.Axis(format='%B')),
+            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
+                     alt.Tooltip('bulletin_date:T', title='Fecha de récord'),
+                     alt.Tooltip('value:Q', title='Nuevas')]
+        )
+
+        heatmap = base.mark_rect().encode(
+            color=alt.Color('value:Q', title=None, legend=None,
+                            scale=alt.Scale(scheme="redgrey", domainMid=0,
+                                            # WORKAROUND: Set the domain manually to forcibly
+                                            # include zero or else we run into
+                                            # https://github.com/vega/vega-lite/issues/6544
+                                            domain=alt.DomainUnionWith(unionWith=[0])))
+        )
+
+        text = base.transform_filter(
+            '(datum.value !== 0) & (datum.value !== null)'
+        ).mark_text(fontSize=7).encode(
+            text=alt.Text('value:Q'),
+            color=alt.condition(
+                '(datum.lo_mid_value < datum.value) & (datum.value < datum.hi_mid_value)',
+                alt.value('black'),
+                alt.value('white'))
+        )
+
+        return (heatmap + text).properties(
+            width=585, height=70
+        ).facet(
+            columns=1,
+            facet=alt.Facet('variable:N', title=None,
+                            sort=['Pruebas', 'Positivas'])
+        ).resolve_scale(color='independent')
+
+
 class MolecularDailyDeltas(charts.AbstractChart):
     def fetch_data(self, connection):
         table = sqlalchemy.Table('bioportal_bitemporal_agg', self.metadata, autoload=True)

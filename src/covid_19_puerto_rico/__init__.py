@@ -45,9 +45,10 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        molecular.MolecularCurrentDeltas(engine, args.output_dir, output_formats),
+        molecular.MolecularDailyDeltas(engine, args.output_dir, output_formats),
         molecular.MolecularLateness7Day(engine, args.output_dir, output_formats),
         molecular.MolecularLatenessDaily(engine, args.output_dir, output_formats),
-        molecular.MolecularDailyDeltas(engine, args.output_dir, output_formats),
         charts.AgeGroups(engine, args.output_dir, output_formats),
         molecular.DailyMissingTests(engine, args.output_dir, output_formats),
         charts.Hospitalizations(engine, args.output_dir, output_formats),
