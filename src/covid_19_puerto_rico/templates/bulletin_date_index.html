@@ -71,14 +71,14 @@
         <li>Promedios en ventanas de siete días que terminan en dicha fecha.</li>
     </ul>
 
-    <p>Las líneas sólidas representan los promedios.  Los círculos semitransparentes
-        son los números crudos de casos nuevos para cada fecha, a partir de los
-        cuales se calculan estos promedios.  Se usa promedio por ventana de siete
-        días para eliminar el efecto de los ciclos semanales.</p>
+    <p>Las líneas sólidas representan los promedios de los 7 días que desembocan
+        en esa fecha.  Las entrecortadas representan los valores que se obtienen solo
+        con datos de 7 días antes de la fecha de este informe.</p>
 
     <p><b>ADVERTENCIA:</b> Caídas súbitas al final de cada línea lo más probable
         no son reales, si no que más bien son artefactos de los rezagos—i.e., no
-        han se han incorporado datos para esas fechas.</p>
+        han se han incorporado datos para esas fechas.  Las líneas entrecortadas
+        de hecho tienden a ilustrar esto.</p>
 </div>
 
 
@@ -373,21 +373,30 @@
         embedChart('NewDailyTestsPerCapita', bulletin_date);
     </script>
 
-    <div class="chart">
-        <iframe src="https://ourworldindata.org/grapher/daily-tests-per-thousand-people-smoothed-7-day?tab=map&year={{bulletin_date}}&time=2020-05-21..{{bulletin_date}}"
-                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>    </div>
-
     <h3>¿Qué es esto?</h3>
 
     <p>Cuántas pruebas diarias (promedio de 7 días) se realizaron por fecha de toma de muestra,
-        por millar de población.  Se presenta una gráfica de <a href="https://ourworldindata.org/">Our
+        por millar de población.  La línea sólida es con datos hasta la fecha de este boletín;
+        la línea entrecortada es con datos solo hasta siete días antes de dicha fecha.
+        Se presenta una gráfica de <a href="https://ourworldindata.org/">Our
             World in Data</a> para comparación.</p>
 
     <h3>Advertencia</h3>
 
     <p>Como esta gráfica es por fecha de toma de muestra, las cifras que da no son finales
         porque pueden registrarse luego más resultados para las mismas fechas. Y especialmente,
-        <b>caídas súbitas al final de la curva muy probable no son reales</b>.</p>
+        <b>caídas súbitas al final de la curva muy probable no son reales</b>. La línea entrecortada,
+        que excluye los datos recibidos los 7 días más recientes, tiende a ilustrar este efecto.</p>
+
+    <h3>Comparación internacional</h3>
+
+    <p>Esta gráfica de <a href="https://ourworldindata.org/">Our World in Data</a> puede
+        ayudar a poner estas cifras en contexto internacional:</p>
+
+    <div class="chart">
+        <iframe src="https://ourworldindata.org/grapher/daily-tests-per-thousand-people-smoothed-7-day?tab=map&year={{bulletin_date}}&time=2020-03-15..{{bulletin_date}}"
+                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
+    </div>
 </div>
 
 
@@ -484,17 +493,12 @@
         embedChart('NewPositiveRate', bulletin_date);
     </script>
 
-    <div class="chart">
-        <iframe src="https://ourworldindata.org/grapher/positive-rate-daily-smoothed?tab=map&year={{bulletin_date}}&time=2020-05-21..{{bulletin_date}}"
-                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
-    </div>
-
     <h3>¿Qué es esto?</h3>
 
-    <p>La tasa de positividad por fecha de toma de muestra, según datos que ha compartido el
-        Departamento de Salud de Puerto Rico con el Fideicomiso de Salud Pública de Puerto Rico.
-        Se acompaña con gráfica de <a href="https://ourworldindata.org/">Our World in Data</a>
-        para poner estas cifras en contexto internacional.</p>
+    <p>La tasa de positividad por fecha de toma de muestra, según datos del API de Bioportal del
+        Departamento de Salud de Puerto Rico. Las líneas sólidas son con datos recibidos hasta la
+        fecha de boletín de este dashboard; las líneas entrecortadas excluyen los datos recibidos
+        durante las 7 fechas de boletín más recientes.</p>
 
     <p>Se calcula aquí la tasa de positividad de dos maneras distintas:</p>
 
@@ -524,6 +528,19 @@
             de la curva no son fiables</b>, porque para las fechas más recientes se espera que se
             incorpore una mayor proporción de nuevos resultados.</li>
     </ol>
+
+    <p>Las líneas entrecortadas, cuyo cálculo excluye los datos recibidos en los 7 días más
+        recientes, tienden a ilustrar estos efectos.</p>
+
+    <h3>Comparación internacional</h3>
+
+    <p>Esta gráfica de <a href="https://ourworldindata.org/">Our World in Data</a> puede
+        ayudar a poner estas cifras en contexto internacional:</p>
+
+    <div class="chart">
+        <iframe src="https://ourworldindata.org/grapher/positive-rate-daily-smoothed?tab=map&year={{bulletin_date}}&time=2020-03-15..{{bulletin_date}}"
+                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
+    </div>
 </div>
 
 
@@ -554,18 +571,21 @@
 
     <h3>Comparaciones internacionales</h3>
 
+    <p>Estas gráficas de <a href="https://ourworldindata.org/">Our World in Data</a> puede
+        ayudar a poner estas cifras en contexto internacional:</p>
+
     <div class="chart">
-        <iframe src="https://ourworldindata.org/grapher/covid-19-positive-rate-bar?tab=map&year={{bulletin_date}}&time=2020-05-21..{{bulletin_date}}"
+        <iframe src="https://ourworldindata.org/grapher/covid-19-positive-rate-bar?tab=map&year={{bulletin_date}}&time=2020-03-15..{{bulletin_date}}"
                 loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
     </div>
 
     <div class="chart">
-    <iframe src="https://ourworldindata.org/grapher/full-list-cumulative-total-tests-per-thousand-map?year={{bulletin_date}}&time=2020-05-21..{{bulletin_date}}"
+    <iframe src="https://ourworldindata.org/grapher/full-list-cumulative-total-tests-per-thousand-map?year={{bulletin_date}}&time=2020-03-15..{{bulletin_date}}"
             loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
     </div>
 
     <div class="chart">
-        <iframe src="https://ourworldindata.org/grapher/covid-19-tests-vs-cases-per-million-positivity-comparisons?xScale=linear&yScale=linear&time=2020-04-26..{{next_date}}"
+        <iframe src="https://ourworldindata.org/grapher/covid-19-tests-vs-cases-per-million-positivity-comparisons?xScale=linear&yScale=linear&time=2020-03-15..{{next_date}}"
                 loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
     </div>
 </div>

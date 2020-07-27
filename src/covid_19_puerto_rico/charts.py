@@ -185,34 +185,27 @@ class NewCases(AbstractChart):
         base = alt.Chart(df.dropna()).transform_window(
             frame=[-6, 0],
             mean_value='mean(value)',
-            groupby=['variable']
+            groupby=['variable', 'bulletin_date']
         ).encode(
             x=alt.X('yearmonthdate(datum_date):T', title=None,
-                    axis=alt.Axis(format='%d/%m'))
-        )
-
-        scatter = base.mark_point(opacity=0.5, clip=True).encode(
-            y=alt.Y('value:Q', title=None,
-                    scale=alt.Scale(type='symlog', domain=[0, max_value])),
-            tooltip=[
-                alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
-                alt.Tooltip('bulletin_date:T', title='Datos hasta'),
-                alt.Tooltip('variable:N', title='Variable'),
-                alt.Tooltip('value:Q', title='Valor crudo'),
-                alt.Tooltip('mean_value:Q', format='.1f', title='Promedio 7 días')]
-        )
-
-        average = base.mark_line(strokeWidth=3, point='transparent').encode(
-            y=alt.Y('mean_value:Q', title=None,
-                    scale=alt.Scale(type='symlog', domain=[0, max_value])),
-            tooltip = [
+                    axis=alt.Axis(format='%d/%m')),
+            y = alt.Y('mean_value:Q', title=None, scale=alt.Scale(type='symlog')),
+                tooltip = [
                 alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
                 alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                 alt.Tooltip('variable:N', title='Variable'),
                 alt.Tooltip('mean_value:Q', format='.1f', title='Promedio 7 días')]
         )
 
-        return (average + scatter).encode(
+        average = base.transform_filter(
+            alt.datum.bulletin_date == util.altair_date_expr(bulletin_date)
+        ).mark_line(strokeWidth=3, point='transparent')
+
+        week_ago = base.transform_filter(
+            alt.datum.bulletin_date == util.altair_date_expr(bulletin_date - datetime.timedelta(days=7))
+        ).mark_line(strokeDash=[6, 4], point='transparent')
+
+        return (week_ago + average).encode(
             color=alt.Color('variable', title=None,
                             legend=alt.Legend(orient="top", labelLimit=250),
                             sort=['Confirmados',
@@ -237,6 +230,11 @@ class NewCases(AbstractChart):
             'deaths': 'Muertes'
         })
         return pd.melt(df, ["bulletin_date", "datum_date"])
+
+    def filter_data(self, df, bulletin_date):
+        week_ago = bulletin_date - datetime.timedelta(days=7)
+        return df.loc[(df['bulletin_date'] == pd.to_datetime(bulletin_date))
+                      | (df['bulletin_date'] == pd.to_datetime(week_ago))]
 
 
 class AbstractLateness(AbstractChart):
