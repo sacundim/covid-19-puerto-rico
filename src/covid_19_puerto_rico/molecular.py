@@ -113,7 +113,7 @@ class NewDailyTestsPerCapita(charts.AbstractChart):
         ).mark_line(
             point='transparent'
         ).encode(
-            x=alt.X('datum_date:T', title='Puerto Rico',
+            x=alt.X('datum_date:T', title='Fecha de toma de muestra',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('per_thousand:Q', title='Pruebas (por 1K)'),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
