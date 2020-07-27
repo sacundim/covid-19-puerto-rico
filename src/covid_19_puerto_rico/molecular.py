@@ -174,13 +174,9 @@ class CumulativePositiveRate(AbstractPositiveRate):
 
 
 
-class AbstractPerCapitaChart(charts.AbstractChart):
+class NewDailyTestsPerCapita(charts.AbstractChart):
     POPULATION = 3_193_694
     POPULATION_THOUSANDS = POPULATION / 1_000.0
-    POPULATION_MILLIONS = POPULATION / 1_000_000.0
-    ORDER = ['Salud (moleculares)',
-             'Salud (serológicas)',
-             'PRPHT (moleculares)']
 
     def make_chart(self, df):
         return alt.Chart(df.dropna()).transform_calculate(
@@ -190,43 +186,27 @@ class AbstractPerCapitaChart(charts.AbstractChart):
         ).encode(
             x=alt.X('datum_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('per_thousand:Q', title=None),
-            color=alt.Color('Fuente:N', sort=self.ORDER,
-                            legend=alt.Legend(orient='top', title=None)),
+            y=alt.Y('per_thousand:Q', title='Pruebas (por 1K)'),
             tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
+                     alt.Tooltip('value:Q', format=".1f", title='Pruebas (promedio 7 días)'),
                      alt.Tooltip('per_thousand:Q', format=".2f",
                                  title='Pruebas por mil habitantes')]
         ).properties(
-            width=600, height=125
+            width=585, height=150
         )
 
     def filter_data(self, df, bulletin_date):
         effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
         return df.loc[df['bulletin_date'] == effective_bulletin_date]
 
-
-class NewDailyTestsPerCapita(AbstractPerCapitaChart):
     def fetch_data(self, connection):
         table = sqlalchemy.Table('tests_by_datum_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
-            table.c.source.label('Fuente'),
             table.c.bulletin_date,
             table.c.datum_date,
             table.c.smoothed_daily_tests.label('value')
-        ])
-        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"])
-
-class CumulativeTestsPerCapita(AbstractPerCapitaChart):
-    def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests_by_datum_date', self.metadata,
-                                 schema='products', autoload=True)
-        query = select([
-            table.c.source.label('Fuente'),
-            table.c.bulletin_date,
-            table.c.datum_date,
-            table.c.cumulative_tests.label('value')
         ])
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"])
 
