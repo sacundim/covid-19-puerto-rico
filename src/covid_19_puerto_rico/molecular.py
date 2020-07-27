@@ -74,16 +74,23 @@ class NewPositiveRate(charts.AbstractChart):
                     axis=alt.Axis(format='%')),
             color=alt.Color('variable:N', sort=self.SORT_ORDER,
                             legend=alt.Legend(orient='top', title=None)),
+            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending',
+                                      legend=alt.Legend(orient='top',
+                                                        title='Datos hasta',
+                                                        titleOrient='left',
+                                                        symbolType='stroke')),
             tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('value:Q', format=".2%", title='Tasa de positividad')]
         ).properties(
-            width=550, height=250
+            width=585, height=250
         )
 
     def filter_data(self, df, bulletin_date):
         effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
-        return df.loc[df['bulletin_date'] == effective_bulletin_date]
+        week_ago = effective_bulletin_date - datetime.timedelta(days=7)
+        return df.loc[(df['bulletin_date'] == effective_bulletin_date)
+                      | ((df['bulletin_date'] == week_ago))]
 
     def fetch_data(self, connection):
         table = sqlalchemy.Table('tests_by_datum_date', self.metadata,
@@ -113,18 +120,21 @@ class NewDailyTestsPerCapita(charts.AbstractChart):
             x=alt.X('datum_date:T', title='Puerto Rico',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('per_thousand:Q', title='Pruebas (por 1K)'),
+            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
             tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('value:Q', format=".1f", title='Pruebas (promedio 7 días)'),
                      alt.Tooltip('per_thousand:Q', format=".2f",
                                  title='Pruebas por mil habitantes')]
         ).properties(
-            width=585, height=150
+            width=585, height=250
         )
 
     def filter_data(self, df, bulletin_date):
         effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
-        return df.loc[df['bulletin_date'] == effective_bulletin_date]
+        week_ago = effective_bulletin_date - datetime.timedelta(days=7)
+        return df.loc[(df['bulletin_date'] == effective_bulletin_date)
+                      | ((df['bulletin_date'] == week_ago))]
 
     def fetch_data(self, connection):
         table = sqlalchemy.Table('tests_by_datum_date', self.metadata,
