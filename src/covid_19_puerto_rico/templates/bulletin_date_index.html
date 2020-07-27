@@ -40,8 +40,10 @@
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
         <li><a href="#Municipal_section">Historial de casos confirmados por municipio (fecha de boletín)</a></li>
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas per cápita (promedio 7 días)</a></li>
-        <li><a href="#MolecularDailyDeltas_section">Pruebas añadidas en Bioportal</a></li>
+        <li><a href="#MolecularCurrentDeltas_section">Pruebas añadidas a Bioportal</a></li>
+        <li><a href="#MolecularDailyDeltas_section">Historial de pruebas en Bioportal</a></li>
         <li><a href="#MolecularLatenessDaily_section">Rezago de pruebas diario</a></li>
+        <li><a href="#MolecularLateness7Day_section">Tendencia de rezago de pruebas</a></li>
         <li><a href="#NewPositiveRate_section">Positividad (promedio 7 días)</a></li>
         <li><a href="#CumulativeTestsVsCases_section">Pruebas vs. casos (acumulado)</a></li>
         <li><a href="#DailyMissingTests_section">Pruebas duplicadas y perdidas diarias</a></li>
@@ -390,12 +392,12 @@
 </div>
 
 
-<div class="section" id="MolecularDailyDeltas_section">
-    <h1>Pruebas añadidas en Bioportal</h1>
+<div class="section" id="MolecularCurrentDeltas_section">
+    <h1>Pruebas añadidas a Bioportal</h1>
 
-    <div id="MolecularDailyDeltas"></div>
+    <div id="MolecularCurrentDeltas"></div>
     <script type="text/javascript">
-        embedChart('MolecularDailyDeltas', bulletin_date);
+        embedChart('MolecularCurrentDeltas', bulletin_date);
     </script>
 
     <h3>¿Qué es esto?</h3>
@@ -425,6 +427,22 @@
         no es nada fiable, así que aquí se ha optado por usar el <code>createdAt</code> en vez.
         Este campo está en horario UTC en los datos de fuente, pero aquí se ajusta a horario de
         Puerto Rico (UTC-4).</p>
+</div>
+
+
+<div class="section" id="MolecularDailyDeltas_section">
+    <h1>Historial de pruebas en Bioportal</h1>
+
+    <div id="MolecularDailyDeltas"></div>
+    <script type="text/javascript">
+        embedChart('MolecularDailyDeltas', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>El mismo análisis que la gráfica anterior, pero en forma de historial para muchas fechas
+        recientes.  Se puede apuntar a cada celda de la gráfica para que aparezca un indicador
+        con los valores de esta en tamaño legible.</p>
 </div>
 
 
