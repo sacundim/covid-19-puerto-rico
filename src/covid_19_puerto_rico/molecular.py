@@ -1,6 +1,6 @@
 #################################################################################
 #
-# Charts about molecular test data from 2020-05-20, which have their own logic
+# Charts about molecular test data, which have their own logic
 #
 
 import altair as alt
@@ -8,11 +8,9 @@ import datetime
 import numpy as np
 import pandas as pd
 import sqlalchemy
-from sqlalchemy import cast, and_
-from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION
+from sqlalchemy import and_
 from sqlalchemy.sql import select
 from . import charts
-from . import util
 
 
 class DailyMissingTests(charts.AbstractChart):
