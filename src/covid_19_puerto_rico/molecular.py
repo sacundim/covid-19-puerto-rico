@@ -74,11 +74,7 @@ class NewPositiveRate(charts.AbstractChart):
                     axis=alt.Axis(format='%')),
             color=alt.Color('variable:N', sort=self.SORT_ORDER,
                             legend=alt.Legend(orient='top', title=None)),
-            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending',
-                                      legend=alt.Legend(orient='top',
-                                                        title='Datos hasta',
-                                                        titleOrient='left',
-                                                        symbolType='stroke')),
+            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
             tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('value:Q', format=".2%", title='Tasa de positividad')]
