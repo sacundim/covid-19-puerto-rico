@@ -60,8 +60,6 @@ def main():
         molecular.CumulativeTestsPerCapita(engine, args.output_dir, output_formats),
         charts.MunicipalMap(engine, args.output_dir, output_formats),
         charts.Municipal(engine, args.output_dir, output_formats),
-        molecular.CumulativeMissingTests(engine, args.output_dir, output_formats),
-        molecular.DailyMissingTests(engine, args.output_dir, output_formats),
         charts.CurrentDeltas(engine, args.output_dir, output_formats),
         charts.WeekdayBias(engine, args.output_dir, output_formats),
         charts.NewCases(engine, args.output_dir, output_formats),
