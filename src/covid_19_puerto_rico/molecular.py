@@ -101,77 +101,46 @@ class CumulativeMissingTests(charts.AbstractChart):
         return df.loc[df['bulletin_date'] == effective_bulletin_date]
 
 
-class AbstractPositiveRate(charts.AbstractChart):
-    ORDER = ['Salud (moleculares)',
-             'Salud (serológicas)',
-             'PRPHT (moleculares)']
+class NewPositiveRate(charts.AbstractChart):
+    SORT_ORDER = ['Positivas ÷ pruebas', 'Casos ÷ pruebas']
 
     def make_chart(self, df):
-        lines = alt.Chart(df.dropna()).transform_filter(
+        return alt.Chart(df.dropna()).transform_filter(
             alt.datum.value > 0.0
         ).mark_line(
             point='transparent'
         ).encode(
-            x=alt.X('datum_date:T', title='Puerto Rico',
+            x=alt.X('datum_date:T', title='Fecha de muestra',
                     axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('value:Q', title=None,
+            y=alt.Y('value:Q', title='Positividad',
                     scale=alt.Scale(type='log'),
-                    axis=alt.Axis(format='.2%')),
-            color=alt.Color('Fuente:N', sort=self.ORDER,
-                            legend=alt.Legend(orient='top', title=None, offset=0)),
+                    axis=alt.Axis(format='%')),
+            color=alt.Color('variable:N', sort=self.SORT_ORDER,
+                            legend=alt.Legend(orient='top', title=None)),
             tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('value:Q', format=".2%", title='Tasa de positividad')]
-        )
-
-        return lines.properties(
-            width=550, height=150
-        ).facet(
-            row=alt.Row('variable:N', title=None)
-        ).resolve_scale(
-            y='shared'
+        ).properties(
+            width=550, height=250
         )
 
     def filter_data(self, df, bulletin_date):
         effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
         return df.loc[df['bulletin_date'] == effective_bulletin_date]
 
-
-class NewPositiveRate(AbstractPositiveRate):
     def fetch_data(self, connection):
         table = sqlalchemy.Table('tests_by_datum_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
-            table.c.source.label('Fuente'),
             table.c.bulletin_date,
             table.c.datum_date,
             (table.c.smoothed_daily_positive_tests / table.c.smoothed_daily_tests)\
-                .label('Positivas / pruebas'),
+                .label('Positivas ÷ pruebas'),
             (table.c.smoothed_daily_cases / table.c.smoothed_daily_tests)\
-                .label('Casos / pruebas')
+                .label('Casos ÷ pruebas')
         ])
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
-        return pd.melt(df, ['Fuente', 'bulletin_date', 'datum_date'])
-
-
-class CumulativePositiveRate(AbstractPositiveRate):
-    def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests_by_datum_date', self.metadata,
-                                 schema='products', autoload=True)
-        query = select([
-            table.c.source.label('Fuente'),
-            table.c.bulletin_date,
-            table.c.datum_date,
-            (cast(table.c.cumulative_positive_tests, DOUBLE_PRECISION)
-                / table.c.cumulative_tests)\
-                .label('Positivas / pruebas'),
-            (cast(table.c.cumulative_cases, DOUBLE_PRECISION)
-                  / table.c.cumulative_tests)\
-                .label('Casos / pruebas')
-        ])
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
-        return pd.melt(df, ['Fuente', 'bulletin_date', 'datum_date'])
-
+        return pd.melt(df, ['bulletin_date', 'datum_date'])
 
 
 class NewDailyTestsPerCapita(charts.AbstractChart):
