@@ -14,7 +14,7 @@ from . import charts
 
 
 class DailyMissingTests(charts.AbstractChart):
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         return alt.Chart(df).transform_calculate(
             difference=alt.datum.positive_molecular_tests - alt.datum.confirmed_cases
         ).mark_bar().encode(
@@ -60,7 +60,7 @@ class DailyMissingTests(charts.AbstractChart):
 
 
 class CumulativeMissingTests(charts.AbstractChart):
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         return alt.Chart(df).transform_calculate(
             difference=alt.datum.cumulative_positive_molecular_tests \
                         - alt.datum.cumulative_confirmed_cases
@@ -102,7 +102,7 @@ class CumulativeMissingTests(charts.AbstractChart):
 class NewPositiveRate(charts.AbstractChart):
     SORT_ORDER = ['Positivas ÷ pruebas', 'Casos ÷ pruebas']
 
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         return alt.Chart(df.dropna()).transform_filter(
             alt.datum.value > 0.0
         ).mark_line(
@@ -145,7 +145,7 @@ class NewDailyTestsPerCapita(charts.AbstractChart):
     POPULATION = 3_193_694
     POPULATION_THOUSANDS = POPULATION / 1_000.0
 
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         return alt.Chart(df.dropna()).transform_calculate(
             per_thousand=alt.datum.value / self.POPULATION_THOUSANDS
         ).mark_line(
@@ -200,7 +200,7 @@ class CumulativeTestsVsCases(charts.AbstractChart):
         effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
         return df.loc[df['bulletin_date'] == effective_bulletin_date]
 
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         max_x, max_y = 2_000, 140_000
 
         main = alt.Chart(df.dropna()).transform_calculate(
@@ -293,7 +293,7 @@ class MolecularCurrentDeltas(charts.AbstractChart):
                                parse_dates=['bulletin_date', 'datum_date'])
         return pd.melt(df, ['bulletin_date', 'datum_date']).replace(0, np.NaN)
 
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).transform_joinaggregate(
             groupby=['variable'],
             min_value='min(value)',
@@ -361,7 +361,7 @@ class MolecularDailyDeltas(charts.AbstractChart):
             .replace(0, np.nan).dropna()
         return filtered
 
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).transform_joinaggregate(
             groupby=['variable'],
             min_value='min(value)',
@@ -426,7 +426,7 @@ class MolecularLatenessDaily(charts.AbstractChart):
         return df.loc[(since_date < df['bulletin_date'])
                       & (df['bulletin_date'] <= until_date)]
 
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         bars = alt.Chart(df).mark_bar().encode(
             x=alt.X('value:Q', title='Rezago estimado (días)'),
             y=alt.Y('variable:N', title=None, sort=self.SORT_ORDER, axis=None),
@@ -475,7 +475,7 @@ class MolecularLateness7Day(charts.AbstractChart):
         return df.loc[(since_date < df['bulletin_date'])
                       & (df['bulletin_date'] <= until_date)]
 
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         lines = alt.Chart(df).mark_line(
             strokeWidth=3,
             point=alt.OverlayMarkDef(size=50)
