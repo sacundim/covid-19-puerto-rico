@@ -45,6 +45,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        charts.NewCases(engine, args.output_dir, output_formats),
         molecular.MolecularCurrentDeltas(engine, args.output_dir, output_formats),
         molecular.MolecularDailyDeltas(engine, args.output_dir, output_formats),
         molecular.MolecularLateness7Day(engine, args.output_dir, output_formats),
@@ -61,7 +62,6 @@ def main():
         charts.Municipal(engine, args.output_dir, output_formats),
         charts.CurrentDeltas(engine, args.output_dir, output_formats),
         charts.WeekdayBias(engine, args.output_dir, output_formats),
-        charts.NewCases(engine, args.output_dir, output_formats),
         charts.DailyDeltas(engine, args.output_dir, output_formats),
         charts.LatenessDaily(engine, args.output_dir, output_formats),
 

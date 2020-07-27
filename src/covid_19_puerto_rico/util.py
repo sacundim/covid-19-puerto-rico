@@ -57,6 +57,8 @@ def describe_frame(df):
     df.info(buf=buf)
     return buf.getvalue()
 
+def altair_date_expr(date):
+    return alt.expr.toDate(f'{date.isoformat()}T00:00:00')
 
 def get_json_resource(filename):
     text = importlib.resources.read_text(resources, filename)
