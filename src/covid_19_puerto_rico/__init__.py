@@ -57,7 +57,6 @@ def main():
         charts.ConsecutiveBulletinMismatch(engine, args.output_dir, output_formats),
         molecular.NewPositiveRate(engine, args.output_dir, output_formats),
         molecular.NewDailyTestsPerCapita(engine, args.output_dir, output_formats),
-        molecular.CumulativeTestsPerCapita(engine, args.output_dir, output_formats),
         charts.MunicipalMap(engine, args.output_dir, output_formats),
         charts.Municipal(engine, args.output_dir, output_formats),
         charts.CurrentDeltas(engine, args.output_dir, output_formats),
