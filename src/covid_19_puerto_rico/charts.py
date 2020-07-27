@@ -31,12 +31,13 @@ class AbstractChart(ABC):
     def render_bulletin_date(self, df, bulletin_date):
         bulletin_dir = Path(f'{self.output_dir}/{bulletin_date}')
         bulletin_dir.mkdir(exist_ok=True)
-        util.save_chart(self.make_chart(self.filter_data(df, bulletin_date)),
+        filtered = self.filter_data(df, bulletin_date)
+        util.save_chart(self.make_chart(filtered, bulletin_date),
                         f"{bulletin_dir}/{bulletin_date}_{self.name}",
                         self.output_formats)
 
     @abstractmethod
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         pass
 
     @abstractmethod
@@ -53,7 +54,7 @@ class AbstractMismatchChart(AbstractChart):
         until = pd.to_datetime(bulletin_date)
         return df.loc[df['bulletin_date'] <= until]
 
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).encode(
             x=alt.X('date(bulletin_date):O',
                     title="Día del mes", sort="descending",
@@ -135,7 +136,7 @@ class BulletinChartMismatch(AbstractMismatchChart):
 
 
 class Cumulative(AbstractChart):
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         return alt.Chart(df).mark_line(point=True).encode(
             x=alt.X('yearmonthdate(datum_date):T', title=None,
                     axis=alt.Axis(format='%d/%m')),
@@ -178,7 +179,7 @@ class Cumulative(AbstractChart):
 
 
 class NewCases(AbstractChart):
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         max_value = df['value'].max()
 
         base = alt.Chart(df.dropna()).transform_window(
@@ -262,7 +263,7 @@ class AbstractLateness(AbstractChart):
 
 
 class LatenessDaily(AbstractLateness):
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         sort_order = ['Confirmados',
                       'Probables',
                       'Muertes']
@@ -301,7 +302,7 @@ class LatenessDaily(AbstractLateness):
 
 
 class Lateness7Day(AbstractLateness):
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         sort_order = ['Confirmados',
                       'Probables',
                       'Muertes']
@@ -341,7 +342,7 @@ class Lateness7Day(AbstractLateness):
 
 
 class CurrentDeltas(AbstractChart):
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).encode(
             x=alt.X('date(datum_date):O',
                     title="Día del mes", sort="descending",
@@ -398,7 +399,7 @@ class CurrentDeltas(AbstractChart):
 
 
 class DailyDeltas(AbstractChart):
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).mark_rect().encode(
             x=alt.X('yearmonthdate(datum_date):O',
                     title="Fecha evento", sort="descending",
@@ -463,7 +464,7 @@ class DailyDeltas(AbstractChart):
 
 
 class WeekdayBias(AbstractChart):
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         confirmed = self.one_variable(df, 'Confirmados', 'Día muestra', 'oranges')
         probable = self.one_variable(df, 'Probables', 'Día muestra', 'reds')
         deaths = self.one_variable(df, 'Muertes', 'Día muerte', 'teals')
@@ -590,7 +591,7 @@ class Municipal(AbstractChart):
     GRAYS = ('#dadada', '#ababab', '#717171')
     DOMAIN=[0, 6]
 
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).transform_impute(
             impute='new_confirmed_cases',
             groupby=['Municipio'],
@@ -658,7 +659,7 @@ class Municipal(AbstractChart):
 
 
 class MunicipalMap(AbstractChart):
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         left_half = self.make_half_chart(
             df, 'd', 'Casos',
             ['Casos nuevos (último boletín)',
@@ -755,7 +756,7 @@ class Hospitalizations(AbstractChart):
     def filter_data(self, df, bulletin_date):
         return df.loc[df['datum_date'] <= pd.to_datetime(bulletin_date + datetime.timedelta(days=1))]
 
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).encode(
             x=alt.X('datum_date:T', title='Fecha'),
             y=alt.Y('value:Q', title='Hospitalizados')
@@ -818,7 +819,7 @@ class AgeGroups(AbstractChart):
         with self.engine.connect() as connection:
             return pd.read_sql_query(query, connection)
 
-    def make_chart(self, df):
+    def make_chart(self, df, bulletin_date):
         population = self.population_data()
 
         return alt.Chart(df.dropna()).encode(
