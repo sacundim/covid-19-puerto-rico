@@ -58,47 +58,6 @@ class DailyMissingTests(charts.AbstractChart):
         return df.loc[df['bulletin_date'] == effective_bulletin_date]
 
 
-
-class CumulativeMissingTests(charts.AbstractChart):
-    def make_chart(self, df, bulletin_date):
-        return alt.Chart(df).transform_calculate(
-            difference=alt.datum.cumulative_positive_molecular_tests \
-                        - alt.datum.cumulative_confirmed_cases
-        ).mark_area(opacity=0.8).encode(
-            x=alt.X('yearmonthdate(datum_date):T',
-                    title='Fecha de toma de muestra',
-                    axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('difference:Q', title='Positivos menos confirmados'),
-            tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra'),
-                     alt.Tooltip('bulletin_date:T', title='Datos hasta'),
-                     alt.Tooltip('cumulative_positive_molecular_tests:Q', title='Pruebas positivas'),
-                     alt.Tooltip('cumulative_confirmed_cases:Q', title='Casos confirmados'),
-                     alt.Tooltip('difference:Q', title='Positivos menos confirmados')]
-        ).properties(
-            width=575, height=265
-        )
-
-    def fetch_data(self, connection):
-        cases = sqlalchemy.Table('bitemporal_agg', self.metadata, autoload=True)
-        tests = sqlalchemy.Table('bioportal_bitemporal_agg', self.metadata, autoload=True)
-        query = select([
-            cases.c.bulletin_date,
-            cases.c.datum_date,
-            tests.c.cumulative_positive_molecular_tests,
-            cases.c.cumulative_confirmed_cases
-        ]).select_from(
-            tests.outerjoin(
-                cases,
-                and_(tests.c.datum_date == cases.c.datum_date,
-                     tests.c.bulletin_date == cases.c.bulletin_date))
-        )
-        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"]).dropna()
-
-    def filter_data(self, df, bulletin_date):
-        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
-        return df.loc[df['bulletin_date'] == effective_bulletin_date]
-
-
 class NewPositiveRate(charts.AbstractChart):
     SORT_ORDER = ['Positivas ÷ pruebas', 'Casos ÷ pruebas']
 
