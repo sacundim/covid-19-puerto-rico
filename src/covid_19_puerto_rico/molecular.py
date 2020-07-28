@@ -145,8 +145,6 @@ class NewDailyTestsPerCapita(charts.AbstractChart):
 
 class CumulativeTestsVsCases(charts.AbstractChart):
     POPULATION_MILLIONS = 3.193_694
-    ORDER = ['Salud (moleculares)',
-             'Salud (serológicas)']
 
     def fetch_data(self, connection):
         table = sqlalchemy.Table('tests_by_datum_date', self.metadata,
