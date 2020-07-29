@@ -254,12 +254,6 @@ class AbstractLateness(AbstractChart):
         })
         return pd.melt(df, "bulletin_date")
 
-    def filter_data(self, df, bulletin_date):
-        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=8))
-        until_date = pd.to_datetime(bulletin_date)
-        return df.loc[(since_date < df['bulletin_date'])
-                      & (df['bulletin_date'] <= until_date)]
-
 
 class LatenessDaily(AbstractLateness):
     def make_chart(self, df, bulletin_date):
@@ -298,6 +292,12 @@ class LatenessDaily(AbstractLateness):
         table = sqlalchemy.Table('lateness_daily', self.metadata,
                                  schema='products', autoload=True)
         return self.fetch_data_for_table(connection, table)
+
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=8))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]
 
 
 class Lateness7Day(AbstractLateness):
@@ -339,6 +339,12 @@ class Lateness7Day(AbstractLateness):
         table = sqlalchemy.Table('lateness_7day', self.metadata,
                                  schema='products', autoload=True)
         return self.fetch_data_for_table(connection, table)
+
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=15))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]
 
 
 class CurrentDeltas(AbstractChart):
