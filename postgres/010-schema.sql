@@ -151,6 +151,7 @@ CREATE TABLE bioportal_tests (
     created_date DATE NOT NULL,
     created_at TIMESTAMP,
     municipality TEXT,
+    raw_result TEXT,
     positive BOOLEAN NOT NULL,
     PRIMARY KEY (id)
 );

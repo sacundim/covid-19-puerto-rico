@@ -53,7 +53,7 @@ FROM '/data/bioportal/minimal-info-unique-tests.csv'
 
 
 INSERT INTO bioportal_tests (
-    collected_date, reported_date, created_date, created_at, municipality, positive
+    collected_date, reported_date, created_date, created_at, municipality, raw_result, positive
 )
 WITH with_date_format AS (
     SELECT
@@ -97,6 +97,7 @@ WITH with_date_format AS (
             ELSE patientCity
         END AS municipality,
 
+        result AS raw_result,
         COALESCE(result, '') LIKE '%Positive%'
             AS positive
     FROM with_date_format
@@ -117,6 +118,7 @@ SELECT
     created_date,
     created_at,
     municipality,
+    raw_result,
     positive
 FROM without_null_dates;
 
