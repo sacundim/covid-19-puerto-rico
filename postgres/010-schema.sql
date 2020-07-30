@@ -146,9 +146,9 @@ Publication began with 2020-05-21 report.';
 
 CREATE TABLE bioportal_tests (
     id SERIAL,
-    datum_date DATE NOT NULL,
+    collected_date DATE NOT NULL,
     reported_date DATE NOT NULL,
-    bulletin_date DATE NOT NULL,
+    created_date DATE NOT NULL,
     created_at TIMESTAMP,
     municipality TEXT,
     positive BOOLEAN NOT NULL,
@@ -157,47 +157,46 @@ CREATE TABLE bioportal_tests (
 
 CREATE VIEW bioportal_bitemporal AS
 SELECT
-    datum_date,
-    bulletin_date,
+    collected_date,
+    created_date,
     count(*) molecular_tests,
     count(*) FILTER (WHERE positive)
         AS positive_molecular_tests
 FROM bioportal_tests
-GROUP BY datum_date, bulletin_date;
+GROUP BY collected_date, created_date;
 
 CREATE VIEW bioportal_bitemporal_agg AS
-WITH bulletin_dates AS (
-	SELECT DISTINCT bulletin_date
+WITH created_dates AS (
+	SELECT DISTINCT created_date
 	FROM bioportal_tests
 ), dates AS (
-	SELECT DISTINCT datum_date
+	SELECT DISTINCT collected_date
 	FROM bioportal_tests
-	WHERE '2020-03-01' <= datum_date
-	AND datum_date <= '2020-12-01'
+	WHERE '2020-03-01' <= collected_date
+	AND collected_date <= '2020-12-01'
 	UNION
-	SELECT DISTINCT datum_date
+	SELECT DISTINCT datum_date AS collected_date
 	FROM bitemporal
 ), grouped AS (
 	SELECT
-		bulletin_dates.bulletin_date,
-		dates.datum_date,
+		created_dates.created_date,
+		dates.collected_date,
 		sum(molecular_tests)
 			AS molecular_tests,
 		sum(positive_molecular_tests)
 			AS positive_molecular_tests
-	FROM bulletin_dates
+	FROM created_dates
 	INNER JOIN dates
-		ON dates.datum_date <= bulletin_dates.bulletin_date
+		ON dates.collected_date <= created_dates.created_date
 	LEFT OUTER JOIN bioportal_bitemporal tests
-		ON tests.datum_date = dates.datum_date
-		AND tests.bulletin_date <= bulletin_dates.bulletin_date
-	GROUP BY dates.datum_date, bulletin_dates.bulletin_date
-	ORDER BY bulletin_dates.bulletin_date, dates.datum_date
+		ON tests.collected_date = dates.collected_date
+		AND tests.created_date <= created_dates.created_date
+	GROUP BY dates.collected_date, created_dates.created_date
 )
 SELECT
-	bulletin_date,
-	datum_date,
-	bulletin_date - datum_date AS age,
+	created_date,
+	collected_date,
+	created_date - collected_date AS age,
 	molecular_tests,
 	positive_molecular_tests,
 	sum(molecular_tests) OVER cumulative
@@ -212,11 +211,11 @@ SELECT
 		AS delta_positive_molecular_tests
 FROM grouped
 WINDOW cumulative AS (
-	PARTITION BY bulletin_date
-	ORDER BY datum_date
+	PARTITION BY created_date
+	ORDER BY collected_date
 ), bulletin AS (
-	PARTITION BY datum_date
-	ORDER BY bulletin_date
+	PARTITION BY collected_date
+	ORDER BY created_date
 );
 
 CREATE TABLE hospitalizations (
@@ -765,10 +764,10 @@ COMMENT ON VIEW products.lateness_7day IS
 `bitemporal_agg` view.  Averages over 7-day windows';
 
 
-CREATE VIEW products.tests_by_datum_date AS
+CREATE VIEW products.tests_by_collected_date AS
 SELECT
-	bulletin_date,
-	datum_date,
+	created_date,
+	collected_date,
 	'Salud (moleculares)' source,
 	cumulative_molecular_tests AS cumulative_tests,
 	cumulative_positive_molecular_tests AS cumulative_positive_tests,
@@ -783,14 +782,15 @@ SELECT
 		AS smoothed_daily_cases
 FROM bioportal_bitemporal_agg tests
 INNER JOIN bitemporal_agg cases
-	USING (bulletin_date, datum_date)
-WHERE bulletin_date > '2020-04-24'
+	ON cases.bulletin_date = tests.created_date
+	AND cases.datum_date = tests.collected_date
+WHERE created_date > '2020-04-24'
 WINDOW seven AS (
-	PARTITION BY bulletin_date
-	ORDER BY datum_date
+	PARTITION BY created_date
+	ORDER BY collected_date
 	RANGE '6 days' PRECEDING
 )
-ORDER BY bulletin_date, datum_date;
+ORDER BY created_date, collected_date;
 
 CREATE VIEW products.municipal_map AS
 SELECT
@@ -870,7 +870,7 @@ with each successive bulletin_date.)';
 CREATE VIEW products.molecular_lateness AS
 WITH grouped AS (
     SELECT
-        bulletin_date,
+        created_date,
         sum(delta_molecular_tests * age)
             AS lateness_molecular_tests,
         sum(delta_molecular_tests)
@@ -881,14 +881,14 @@ WITH grouped AS (
             AS delta_positive_molecular_tests
     FROM bioportal_bitemporal_agg
     -- We exclude the earliest bulletin date because it's artificially late
-    WHERE bulletin_date > (
-        SELECT min(bulletin_date)
+    WHERE created_date > (
+        SELECT min(created_date)
         FROM bioportal_bitemporal_agg
     )
-    GROUP BY bulletin_date
+    GROUP BY created_date
 )
 SELECT
-    bulletin_date,
+    created_date,
     safediv(lateness_molecular_tests, delta_molecular_tests)
         AS lateness_molecular_tests,
     safediv(lateness_positive_molecular_tests, delta_positive_molecular_tests)
@@ -901,7 +901,7 @@ SELECT
         AS smoothed_lateness_positive_molecular_tests
 FROM grouped
 WINDOW seven AS (
-	ORDER BY bulletin_date
+	ORDER BY created_date
 	RANGE '6 days' PRECEDING
 )
-ORDER BY bulletin_date DESC;
+ORDER BY created_date DESC;

@@ -52,7 +52,9 @@ FROM '/data/bioportal/minimal-info-unique-tests.csv'
 
 
 
-INSERT INTO bioportal_tests (datum_date, reported_date, bulletin_date, created_at, municipality, positive)
+INSERT INTO bioportal_tests (
+    collected_date, reported_date, created_date, created_at, municipality, positive
+)
 WITH with_date_format AS (
     SELECT
         to_date(collectedDate, 'MM/DD/YYYY') AS collectedDate,
@@ -73,7 +75,7 @@ WITH with_date_format AS (
             -- that's the average, but my spot check says 2.8 days. I use the
             -- createdAt instead of reportedDate though.
             ELSE date(createdAt) - INTERVAL '3 day'
-        END AS datum_date,
+        END AS collected_date,
 
         CASE
             WHEN reportedDate >= '2020-03-13'
@@ -81,11 +83,12 @@ WITH with_date_format AS (
             ELSE date(createdAt)
         END AS reported_date,
 
-        -- I have have opted to use the `createdAt` field as the `bulletin_date`
-        -- because I see a TON of retroactive additions to older `reportedAt`
-        -- values.  I've verified that `createdAt` is UTC time, Puerto Rico is UTC-4
+        -- I have have opted to use the `createdAt` field as the grouping field
+        -- for daily data deltas because I see a TON of weird additions to older
+        -- or newer `reportedAt`  values.  I've verified that `createdAt` is UTC
+        -- time, Puerto Rico is UTC-4
         date(createdAt - INTERVAL '4 hour')
-            AS bulletin_date,
+            AS created_date,
 
         createdAt created_at,
 
@@ -100,21 +103,23 @@ WITH with_date_format AS (
 )
 SELECT
     CASE
-        WHEN bulletin_date < datum_date
-        THEN date(created_at) - INTERVAL '3 day'
-        ELSE datum_date
-    END AS datum_date,
+        WHEN created_date < collected_date
+        THEN created_date - INTERVAL '3 day'
+        ELSE collected_date
+    END AS collected_date,
+
     CASE
-        WHEN reported_date < datum_date
-        THEN date(created_at)
+        WHEN reported_date < collected_date
+        THEN created_date
         ELSE reported_date
     END AS reported_date,
-    bulletin_date,
+
+    created_date,
     created_at,
     municipality,
     positive
 FROM without_null_dates;
 
-CREATE INDEX ON bioportal_tests (datum_date, bulletin_date, municipality, positive);
-CREATE INDEX ON bioportal_tests (datum_date, municipality, positive);
-CREATE INDEX ON bioportal_tests (bulletin_date, municipality, positive);
+CREATE INDEX ON bioportal_tests (collected_date, created_date, municipality, positive);
+CREATE INDEX ON bioportal_tests (collected_date, municipality, positive);
+CREATE INDEX ON bioportal_tests (created_date, municipality, positive);
