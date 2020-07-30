@@ -45,6 +45,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        molecular.CumulativeTestsVsCases(engine, args.output_dir, output_formats),
         charts.NewCases(engine, args.output_dir, output_formats),
         molecular.MolecularCurrentDeltas(engine, args.output_dir, output_formats),
         molecular.MolecularDailyDeltas(engine, args.output_dir, output_formats),
@@ -52,7 +53,6 @@ def main():
         molecular.MolecularLatenessDaily(engine, args.output_dir, output_formats),
         charts.AgeGroups(engine, args.output_dir, output_formats),
         charts.Hospitalizations(engine, args.output_dir, output_formats),
-        molecular.CumulativeTestsVsCases(engine, args.output_dir, output_formats),
         charts.BulletinChartMismatch(engine, args.output_dir, output_formats),
         charts.ConsecutiveBulletinMismatch(engine, args.output_dir, output_formats),
         molecular.NewPositiveRate(engine, args.output_dir, output_formats),

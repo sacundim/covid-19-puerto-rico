@@ -113,8 +113,7 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
             table.c.collected_date,
             table.c.cumulative_tests,
             table.c.cumulative_cases,
-            table.c.smoothed_daily_tests,
-            table.c.smoothed_daily_cases
+            table.c.cumulative_positive_tests
         ])
         return pd.read_sql_query(query, connection, parse_dates=['created_date', 'collected_date'])
 
@@ -128,8 +127,7 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
         main = alt.Chart(df.dropna()).transform_calculate(
             tests_per_million=alt.datum.cumulative_tests / self.POPULATION_MILLIONS,
             cases_per_million=alt.datum.cumulative_cases / self.POPULATION_MILLIONS,
-            positive_rate=alt.datum.cumulative_cases / alt.datum.cumulative_tests,
-            smoothed_positive_rate=alt.datum.smoothed_daily_cases / alt.datum.smoothed_daily_tests,
+            case_positive_rate=alt.datum.cumulative_cases / alt.datum.cumulative_tests,
             # We don't use this yet because Altair 4.1.0 doesn't support this channel:
 #            angle=alt.expr.atan2(alt.datum.smoothed_daily_tests / max_y,
 #                                 alt.datum.smoothed_daily_cases / max_x) * 57.2958,
@@ -152,10 +150,8 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
                                  title='Pruebas por millón'),
                      alt.Tooltip('cases_per_million:Q', format=",d",
                                  title='Casos por millón'),
-                     alt.Tooltip('positive_rate:Q', format=".2%",
-                                 title='Tasa de positividad (acumulada)'),
-                     alt.Tooltip('smoothed_positive_rate:Q', format=".2%",
-                                 title='Tasa de positividad (7 días, casos / pruebas)'),
+                     alt.Tooltip('case_positive_rate:Q', format=".2%",
+                                 title='Tasa de positividad (acumulada)')
                      ]
         )
 
@@ -176,8 +172,9 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
             compute_points('point_five_pct', 0.005) + \
             compute_points('one_pct', 0.01) + \
             compute_points('two_pct', 0.02) + \
-            compute_points('five_pct', 0.05)
-        )
+            compute_points('five_pct', 0.05) + \
+            compute_points('ten_pct', 0.10)
+            )
 
         lines = alt.Chart(df).mark_line(
             color='grey', strokeWidth=0.5, clip=True, strokeDash=[6, 4]
