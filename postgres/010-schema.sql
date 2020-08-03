@@ -906,3 +906,102 @@ WINDOW seven AS (
 	RANGE '6 days' PRECEDING
 )
 ORDER BY created_date DESC;
+
+
+CREATE VIEW products.california_monitoring AS
+WITH case_rate AS (
+	WITH averages AS (
+		SELECT
+			datum_date,
+			bulletin_date,
+			sum(confirmed_cases) OVER datum
+				/ 31.93694
+				AS confirmed_cases
+		FROM bitemporal b
+		WINDOW datum AS (
+			PARTITION BY bulletin_date
+			ORDER BY datum_date
+			RANGE '13 days' PRECEDING
+		)
+	)
+	SELECT
+		datum_date + 3 AS date,
+		confirmed_cases
+	FROM averages
+	WHERE bulletin_date = datum_date
+), positive_rate AS (
+	WITH dailies AS (
+		SELECT
+			collected_date,
+			count(*) FILTER (WHERE positive)
+				AS positives,
+			count(*) AS tests
+		FROM bioportal_tests
+		GROUP BY collected_date
+	), seven_day AS (
+		SELECT
+			collected_date,
+			sum(tests) OVER collected :: DOUBLE PRECISION
+				/ 7.0
+				AS daily_tests,
+			sum(positives) OVER collected
+				/ sum(tests) OVER collected :: DOUBLE PRECISION
+				AS positive_rate
+		FROM dailies
+		WINDOW collected AS (
+			ORDER BY collected_date
+			RANGE '6 days' PRECEDING
+		)
+	)
+	SELECT
+		collected_date + 7 AS date,
+		daily_tests / 31.93694
+			AS daily_tests,
+		positive_rate AS positive_rate
+	FROM seven_day
+), hospitalizations AS (
+	WITH base AS (
+		SELECT
+			datum_date,
+			sum("Total") OVER three / 3.0
+				AS hospitalizations,
+			(sum("Total") OVER six - sum("Total") OVER three) / 3.0
+				AS previous
+		FROM hospitalizations hd
+		WINDOW three AS (
+			ORDER BY datum_date
+			RANGE '2 days' PRECEDING
+		), six AS (
+			ORDER BY datum_date
+			RANGE '5 days' PRECEDING
+		)
+	)
+	SELECT
+		datum_date date,
+		hospitalizations,
+		safediv(hospitalizations, previous) - 1.0
+			AS increase
+	FROM base
+)
+SELECT
+	date AS date,
+	daily_tests,
+	confirmed_cases AS case_rate,
+	positive_rate AS positivity,
+	hospitalizations,
+	hospitalizations.increase
+		AS hospitalizations_increase,
+	confirmed_cases > 100
+		OR (confirmed_cases > 25 AND positive_rate > 0.08)
+		OR (hospitalizations.increase > 0.1)
+		AS on_list
+FROM case_rate
+INNER JOIN positive_rate
+	USING (date)
+INNER JOIN hospitalizations
+	USING (date)
+ORDER BY date DESC;
+
+COMMENT ON VIEW products.california_monitoring IS
+'A what-if scenario that calculates California county monitoring list
+metrics with Puerto Rico data.';
