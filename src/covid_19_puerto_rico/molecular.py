@@ -156,7 +156,7 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
         )
 
         return (self.make_ref_chart(max_x, max_y) + main).properties(
-            width=525, height=307
+            width=525, height=280
         )
 
     def make_ref_chart(self, max_x, max_y):
