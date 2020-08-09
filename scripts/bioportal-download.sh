@@ -19,3 +19,4 @@ echo "Converting to csv..."
     > "${TMP}/${basename}.csv"
 
 echo "Wrote output to ${TMP}/${basename}.csv"
+wc -l "${TMP}/${basename}.csv"
