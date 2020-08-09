@@ -46,6 +46,7 @@
         <li><a href="#Municipal_section">Historial de casos confirmados por municipio (fecha de boletín)</a></li>
         <li><a href="#ConsecutiveBulletinMismatch_section">Descuadre de encabezado de boletín</a></li>
         <li><a href="#BulletinChartMismatch_section">Descuadre de boletín y gráficas</a></li>
+        <li><a href="#Revisions_section">Revisiones</a></li>
         <li><a href="#Terminology_section">Terminología</a></li>
         <li><a href="#Sources_section">Datos fuente para {{ bulletin_date }}</a></li>
     </ul>
@@ -152,38 +153,12 @@
         en esos datos, no se puede esperar que estos rezagos estimados
         sean los valores exactos que calcularíamos si tuvieramos mejor datos.</p>
 
-    <h3>Revisión 3 de julio del 2020</h3>
+    <h3>Revisiones</h3>
 
-    <p>Para el cálculo del rezago de muertes, se adoptron dos cambios:</p>
-
-    <ol>
-        <li>El mismo cambio de procedimento descrito abajo para el 5 de junio respecto
-            a los casos confirmados y probables, que consiste en ignorar las restas;</li>
-        <li>Excluir del cálculo de rezago de muertes todas las fechas hasta el 18 de abril
-            (incluído), por adolecer estas de repetidos errores por parte de Salud.</li>
-    </ol>
-
-    <h3>Revisión 5 de junio del 2020</h3>
-
-    <p>El método de cálculo de esta gráfica se revisó el 5 de junio y se aplicó
-        el cambio retroactivamente a fechas anteriores.  Antes de esa revisión,
-        las fechas con números negativos se incorporaban en los totales, cosa que
-        tendía a rebajar el estimado.  Esto se hacía por entenderse que:</p>
-
-    <ol>
-        <li>Muchas de las restas correspondían no a casos nuevos sino a revisiones
-            de fecha de casos conocidos;</li>
-        <li>Las fechas en que aparecen sumas o ceros probablemente son resultado
-            también en muchos casos de una combinación de sumas y restas, así que
-            excluir las fechas que esos totales dan negativo en realidad no excluye
-            todas las restas.</li>
-    </ol>
-
-    <p>Se abandonó este procedimiento porque hubo boletines que claramente violaron
-        el primer supuesto de manera tan crasa que daban estimado de rezago negativo.
-        Después de la revisión sólo las sumas se toman en cuenta para calcular los
-        rezagos de pruebas.  El rezago de muertes sin embargo aun se calcula mediante
-        el criterio original.</p>
+    <ul>
+        <li><a href="#Revisions_2020-07-03">3 de julio del 2020</a></li>
+        <li><a href="#Revisions_2020-06-05">5 de junio del 2020</a></li>
+    </ul>
 </div>
 
 
@@ -217,10 +192,12 @@
         la cifra más reciente y la anterior son calculadas a partir de ventanas
         de siete días que coinciden en seis de estos.</p>
 
-    <h3>Revisiones 3 de julio y 5 de junio del 2020</h3>
+    <h3>Revisiones</h3>
 
-    <p>Esta gráfica se revisó retroactivamente de las misma manera descritas arriba
-        para la gráfica de rezagos diarios.</p>
+    <ul>
+        <li><a href="#Revisions_2020-07-03">3 de julio del 2020</a></li>
+        <li><a href="#Revisions_2020-06-05">5 de junio del 2020</a></li>
+    </ul>
 </div>
 
 
@@ -256,6 +233,13 @@
         <iframe src="https://ourworldindata.org/grapher/daily-tests-per-thousand-people-smoothed-7-day?tab=map&year={{bulletin_date}}&time=2020-03-15..{{bulletin_date}}"
                 loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
     </div>
+
+    <h3>Revisiones</h3>
+
+    <ul>
+        <li>El cálculo de las líneas entrecortadas se ve afectado por la
+            <a href="#Revisions_2020-08-08">revisión del 8 de agosto del 2020</a>.</li>
+    </ul>
 </div>
 
 
@@ -315,6 +299,13 @@
         <iframe src="https://ourworldindata.org/grapher/positive-rate-daily-smoothed?tab=map&year={{bulletin_date}}&time=2020-03-15..{{bulletin_date}}"
                 loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
     </div>
+
+    <h3>Revisiones</h3>
+
+    <ul>
+        <li>El cálculo de las líneas entrecortadas se ve afectado por la
+            <a href="#Revisions_2020-08-08">revisión del 8 de agosto del 2020</a>.</li>
+    </ul>
 </div>
 
 
@@ -396,10 +387,23 @@
             creó el récord de base de dato para esa prueba.</dd>
     </dl>
 
-    <p>Examen de los datos ha dado al momento a entender que el campo <code>reportedDate</code>
-        no es nada fiable, así que aquí se ha optado por usar el <code>createdAt</code> en vez.
-        Este campo está en horario UTC en los datos de fuente, pero aquí se ajusta a horario de
-        Puerto Rico (UTC-4).</p>
+    <p>Examen de los datos ha dado al momento a entender que ninguno de los campos es del todo
+        fiable, pero el <code>reportedDate</code> lo es más que el <code>createdAt</code>, y por
+        eso se opta por usar el anterior. Sin embargo no parece haber un campo o combinación de
+        estos que permitan reproducir fielmente, a partir de los resultados descargados en una
+        ocasión, lo que hubieran dado los cálculos en ocasiones pasadas.</p>
+
+    <p>Muchos récords sin embargo muestran un <code>collectedDate</code> más tardío que
+        <code>reportedDate</code>, y en este caso se ha optado en imputarles que se recogieron
+        3 días antes que el <code>reportedDate</code>, a partir de un análisis de la tardanza
+        promedio en toda la base de datos.</p>
+
+    <h3>Revisiones</h3>
+
+    <ul>
+        <li>La adjudicación de pruebas a fechas de reporte se vio fuertemente cambiada por
+            la <a href="#Revisions_2020-08-08">revisión del 8 de agosto del 2020</a>.</li>
+    </ul>
 </div>
 
 
@@ -416,6 +420,13 @@
     <p>El mismo análisis que la gráfica anterior, pero en forma de historial para muchas fechas
         recientes.  Se puede apuntar a cada celda de la gráfica para que aparezca un indicador
         con los valores de esta en tamaño legible.</p>
+
+    <h3>Revisiones</h3>
+
+    <ul>
+        <li>La adjudicación de pruebas a fechas de reporte se vio fuertemente cambiada por
+            la <a href="#Revisions_2020-08-08">revisión del 8 de agosto del 2020</a>.</li>
+    </ul>
 </div>
 
 
@@ -432,6 +443,15 @@
     <p>Tardanza promedio entre fecha de toma de muestra (<code>collectedDate</code>) y
         fecha de récord (<code>createdAt</code>, ajustado a horario de Puerto Rico) en
         el API de Bioportal, agrupado por la segunda.</p>
+
+    <h3>Revisiones</h3>
+
+    <ul>
+        <li>La adjudicación de pruebas a fechas de reporte, y por tanto los rezagos calculados,
+            se vieron fuertemente cambiados por la <a href="#Revisions_2020-08-08">revisión
+                del 8 de agosto del 2020</a>. El cálculo anterior se teme que inflaba mucho
+            los rezagos estimados.</li>
+    </ul>
 </div>
 
 
@@ -447,6 +467,15 @@
 
     <p>El mismo análisis de rezago de datos de pruebas que la sección anterior, pero con
         promedios de 7 días.</p>
+
+    <h3>Revisiones</h3>
+
+    <ul>
+        <li>La adjudicación de pruebas a fechas de reporte, y por tanto los rezagos calculados,
+            se vieron fuertemente cambiados por la <a href="#Revisions_2020-08-08">revisión
+                del 8 de agosto del 2020</a>. El cálculo anterior se teme que inflaba mucho
+            los rezagos estimados.</li>
+    </ul>
 </div>
 
 
@@ -652,6 +681,85 @@
         copiado correctamente los datos.</p>
 </div>
 
+
+<div class="section" id="Revisions_section">
+    <h1>Revisiones</h1>
+
+    <h3 id="Revisions_2020-08-08">Revisión 8 de agosto del 2020</h3>
+
+    <p>Antes de esta fecha se usaba el campo <code>createdAt</code> como la fecha de reporte
+        de los resultados de pruebas descargados del API de Bioportal, porque el autor de este
+        análisis inicialmente juzgó poco fiable el campo <code>reportedDate</code> dado a que
+        para muchísimas pruebas exhibe valores más tardíos tanto que <code>collectedDate</code>
+        que como <code>createdAt</code>. En "arroz y habichuelas":</p>
+
+    <ul>
+        <li>Un montón de récords del API de resultados pruebas de Salud dicen, literalmente,
+            que se reportaron más tarde que lo que se tomó la muestra o que lo que el API de
+            Salud dice que se creó récord.</li>
+    </ul>
+
+    <p>Análisis más a fondo ha llevado al autor a revisar este supuesto y asignarle más
+        fiabilidad al campo <code>reportedDate</code> que al <code>createdAt</code>, aunque
+        aún queda claro por qué este segundo sería tan poco fiable.  Por eso se ha cambiado
+        a usar <code>reportedDate</code> como el campo de fecha de datos.</p>
+
+    <p>Este dashboard recalcula todos los datos retroactivamente para cada fecha de boletín,
+        así que este cambio quiere decir que los cambios diarios entre fechas anteriores a
+        esta revisión se han recalculado para reflejar esto, y así mismo los rezagos de pruebas,
+        que bajo la nueva definición que aquí se adopta dan cifras mucho menores que bajo la
+        definición anterior.</p>
+
+    <p>Del análisis de los datos se espera que este cambio mejore bastante el que reportes
+        en fechas más tardías logren reproducir los valores calculados con datos de pruebas
+        dispoibles solo hasta fechas pasadas, pero el autor ha logrado constatarse que esta
+        reproducibilidad no se puede lograr 100% usando los datos de una sola descarga del
+        API de Salud, porque no se provee ni un identificador único para cada prueba que
+        permita detectar revisiones a su récord (que sí parecen haber), ni un campo de
+        tiempo que aumente monotónicamente que permita segregar los récords respecto al
+        tiempo de descarga de manera reproducible.  <em>Caveat emptor</em>.</p>
+
+    <p>Cabe mencionar que en el repositorio de GitHub de este reporte hay
+    <a href="https://github.com/sacundim/covid-19-puerto-rico/commits/master/assets/data/bioportal/minimal-info-unique-tests.csv">
+        un historial completo de todas las descargas que se han usado en esta página</a>
+        (convertidos de JSON a CSV), que como último recurso se pueden usar para lograr
+        tal reproducibilidad, pero a costa de multiplicar enormemente el volumen de datos usado para
+        generar este análisis.  Al momento el autor juzga que esta vía no amerita el costo.</p>
+
+
+    <h3 id="Revisions_2020-07-03">Revisión 3 de julio del 2020</h3>
+
+    <p>Para el cálculo del rezago de muertes, se adoptron dos cambios:</p>
+
+    <ol>
+        <li>El mismo cambio de procedimento descrito abajo para el 5 de junio respecto
+            a los casos confirmados y probables, que consiste en ignorar las restas;</li>
+        <li>Excluir del cálculo de rezago de muertes todas las fechas hasta el 18 de abril
+            (incluído), por adolecer estas de repetidos errores por parte de Salud.</li>
+    </ol>
+
+    <h3 id="Revisions_2020-06-05">Revisión 5 de junio del 2020</h3>
+
+    <p>El método de cálculo de esta gráfica se revisó el 5 de junio y se aplicó
+        el cambio retroactivamente a fechas anteriores.  Antes de esa revisión,
+        las fechas con números negativos se incorporaban en los totales, cosa que
+        tendía a rebajar el estimado.  Esto se hacía por entenderse que:</p>
+
+    <ol>
+        <li>Muchas de las restas correspondían no a casos nuevos sino a revisiones
+            de fecha de casos conocidos;</li>
+        <li>Las fechas en que aparecen sumas o ceros probablemente son resultado
+            también en muchos casos de una combinación de sumas y restas, así que
+            excluir las fechas que esos totales dan negativo en realidad no excluye
+            todas las restas.</li>
+    </ol>
+
+    <p>Se abandonó este procedimiento porque hubo boletines que claramente violaron
+        el primer supuesto de manera tan crasa que daban estimado de rezago negativo.
+        Después de la revisión sólo las sumas se toman en cuenta para calcular los
+        rezagos de pruebas.  El rezago de muertes sin embargo aun se calcula mediante
+        el criterio original.</p>
+</div>
 
 <div class="section" id="Terminology_section">
     <h1>Terminología</h1>
