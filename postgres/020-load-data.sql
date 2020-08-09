@@ -72,15 +72,14 @@ WITH with_date_format AS (
             WHEN collectedDate >= '2020-01-01'
             THEN collectedDate
             -- Suggested by @rafalab. He uses two days as the value and says
-            -- that's the average, but my spot check says 2.8 days. I use the
-            -- createdAt instead of reportedDate though.
-            ELSE date(createdAt) - INTERVAL '3 day'
+            -- that's the average, but my spot check says 2.8 days.
+            ELSE date(reportedDate) - INTERVAL '3 day'
         END AS collected_date,
 
         CASE
             WHEN reportedDate >= '2020-03-13'
             THEN reportedDate
-            ELSE date(createdAt)
+            ELSE date(createdAt - INTERVAL '4 hour')
         END AS reported_date,
 
         -- I have have opted to use the `createdAt` field as the grouping field
