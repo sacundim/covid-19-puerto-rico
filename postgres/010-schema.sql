@@ -144,30 +144,69 @@ COMMENT ON TABLE bioportal IS
 'Weekly (?) report on number of test results counted by the Department of Health.
 Publication began with 2020-05-21 report.';
 
-CREATE TABLE bioportal_tests (
+CREATE UNLOGGED TABLE bioportal_tests (
     id SERIAL,
-    collected_date DATE NOT NULL,
-    reported_date DATE NOT NULL,
-    created_date DATE NOT NULL,
+    downloaded_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    raw_collected_date DATE,
+    raw_reported_date DATE,
     created_at TIMESTAMP,
+
+    collected_date DATE NOT NULL
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN raw_collected_date >= '2020-01-01'
+                THEN raw_collected_date
+                WHEN raw_reported_date >= '2020-03-13'
+                -- Suggested by @rafalab. He uses two days as the value and says
+                -- that's the average, but my spot check says 2.8 days.
+                THEN raw_reported_date - 3
+                ELSE date(created_at - INTERVAL '4 hour') - 3
+            END
+        ) STORED,
+    reported_date DATE NOT NULL
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN raw_reported_date >= '2020-03-13'
+                THEN raw_reported_date
+                ELSE date(created_at - INTERVAL '4 hour')
+            END
+        ) STORED,
+    created_date DATE NOT NULL
+        GENERATED ALWAYS AS (
+            date(created_at - INTERVAL '4 hour')
+        ) STORED,
+    downloaded_date DATE NOT NULL
+        GENERATED ALWAYS AS (
+            date(downloaded_at - INTERVAL '4 hour')
+        ) STORED,
+
+    patient_id UUID,
+    age_range TEXT,
     municipality TEXT,
-    raw_result TEXT,
-    positive BOOLEAN NOT NULL,
+    result TEXT,
+    positive BOOLEAN NOT NULL
+        GENERATED ALWAYS AS (
+            COALESCE(result, '') LIKE '%Positive%'
+        ) STORED,
     PRIMARY KEY (id)
 );
 
 CREATE VIEW bioportal_bitemporal AS
 SELECT
+    downloaded_at,
     collected_date,
     reported_date,
     count(*) molecular_tests,
     count(*) FILTER (WHERE positive)
         AS positive_molecular_tests
 FROM bioportal_tests
-GROUP BY collected_date, reported_date;
+GROUP BY downloaded_at, collected_date, reported_date;
 
 CREATE VIEW bioportal_bitemporal_agg AS
-WITH reported_dates AS (
+WITH downloads AS (
+    SELECT DISTINCT downloaded_at
+    FROM bioportal_tests
+), reported_dates AS (
 	SELECT DISTINCT reported_date
 	FROM bioportal_tests
 ), dates AS (
@@ -180,21 +219,25 @@ WITH reported_dates AS (
 	FROM bitemporal
 ), grouped AS (
 	SELECT
+	    downloads.downloaded_at,
 		reported_dates.reported_date,
 		dates.collected_date,
 		sum(molecular_tests)
 			AS molecular_tests,
 		sum(positive_molecular_tests)
 			AS positive_molecular_tests
-	FROM reported_dates
+	FROM downloads
+	INNER JOIN reported_dates
+	    ON reported_dates.reported_date < downloads.downloaded_at - INTERVAL '4 hour'
 	INNER JOIN dates
 		ON dates.collected_date <= reported_dates.reported_date
 	LEFT OUTER JOIN bioportal_bitemporal tests
 		ON tests.collected_date = dates.collected_date
 		AND tests.reported_date <= reported_dates.reported_date
-	GROUP BY dates.collected_date, reported_dates.reported_date
+	GROUP BY downloads.downloaded_at, dates.collected_date, reported_dates.reported_date
 )
 SELECT
+	downloaded_at,
 	reported_date,
 	collected_date,
 	reported_date - collected_date AS age,
@@ -212,12 +255,13 @@ SELECT
 		AS delta_positive_molecular_tests
 FROM grouped
 WINDOW cumulative AS (
-	PARTITION BY reported_date
+	PARTITION BY downloaded_at, reported_date
 	ORDER BY collected_date
 ), bulletin AS (
-	PARTITION BY collected_date
+	PARTITION BY downloaded_at, collected_date
 	ORDER BY reported_date
-);
+)
+ORDER BY downloaded_at DESC, reported_date DESC, collected_date;
 
 CREATE TABLE hospitalizations (
     datum_date DATE,
@@ -767,6 +811,7 @@ COMMENT ON VIEW products.lateness_7day IS
 
 CREATE VIEW products.tests_by_collected_date AS
 SELECT
+    downloaded_at,
 	reported_date,
 	collected_date,
 	'Salud (moleculares)' source,
@@ -787,11 +832,11 @@ INNER JOIN bitemporal_agg cases
 	AND cases.datum_date = tests.collected_date
 WHERE reported_date > '2020-04-24'
 WINDOW seven AS (
-	PARTITION BY reported_date
+	PARTITION BY downloaded_at, reported_date
 	ORDER BY collected_date
 	RANGE '6 days' PRECEDING
 )
-ORDER BY reported_date, collected_date;
+ORDER BY downloaded_at DESC, reported_date, collected_date;
 
 CREATE VIEW products.municipal_map AS
 SELECT
@@ -871,6 +916,7 @@ with each successive bulletin_date.)';
 CREATE VIEW products.molecular_lateness AS
 WITH grouped AS (
     SELECT
+        downloaded_at,
         reported_date,
         sum(delta_molecular_tests * age)
             AS lateness_molecular_tests,
@@ -886,9 +932,10 @@ WITH grouped AS (
         SELECT min(reported_date)
         FROM bioportal_bitemporal_agg
     )
-    GROUP BY reported_date
+    GROUP BY downloaded_at, reported_date
 )
 SELECT
+    downloaded_at,
     reported_date,
     safediv(lateness_molecular_tests, delta_molecular_tests)
         AS lateness_molecular_tests,
@@ -902,106 +949,8 @@ SELECT
         AS smoothed_lateness_positive_molecular_tests
 FROM grouped
 WINDOW seven AS (
+    PARTITION BY downloaded_at
 	ORDER BY reported_date
 	RANGE '6 days' PRECEDING
 )
-ORDER BY reported_date DESC;
-
-
-CREATE VIEW products.california_monitoring AS
-WITH case_rate AS (
-	WITH averages AS (
-		SELECT
-			datum_date,
-			bulletin_date,
-			sum(confirmed_cases) OVER datum
-				/ 31.93694
-				AS confirmed_cases
-		FROM bitemporal b
-		WINDOW datum AS (
-			PARTITION BY bulletin_date
-			ORDER BY datum_date
-			RANGE '13 days' PRECEDING
-		)
-	)
-	SELECT
-		datum_date + 3 AS date,
-		confirmed_cases
-	FROM averages
-	WHERE bulletin_date = datum_date
-), positive_rate AS (
-	WITH dailies AS (
-		SELECT
-			collected_date,
-			count(*) FILTER (WHERE positive)
-				AS positives,
-			count(*) AS tests
-		FROM bioportal_tests
-		GROUP BY collected_date
-	), seven_day AS (
-		SELECT
-			collected_date,
-			sum(tests) OVER collected :: DOUBLE PRECISION
-				/ 7.0
-				AS daily_tests,
-			sum(positives) OVER collected
-				/ sum(tests) OVER collected :: DOUBLE PRECISION
-				AS positive_rate
-		FROM dailies
-		WINDOW collected AS (
-			ORDER BY collected_date
-			RANGE '6 days' PRECEDING
-		)
-	)
-	SELECT
-		collected_date + 7 AS date,
-		daily_tests / 31.93694
-			AS daily_tests,
-		positive_rate AS positive_rate
-	FROM seven_day
-), hospitalizations AS (
-	WITH base AS (
-		SELECT
-			datum_date,
-			sum("Total") OVER three / 3.0
-				AS hospitalizations,
-			(sum("Total") OVER six - sum("Total") OVER three) / 3.0
-				AS previous
-		FROM hospitalizations hd
-		WINDOW three AS (
-			ORDER BY datum_date
-			RANGE '2 days' PRECEDING
-		), six AS (
-			ORDER BY datum_date
-			RANGE '5 days' PRECEDING
-		)
-	)
-	SELECT
-		datum_date date,
-		hospitalizations,
-		safediv(hospitalizations, previous) - 1.0
-			AS increase
-	FROM base
-)
-SELECT
-	date AS date,
-	daily_tests,
-	confirmed_cases AS case_rate,
-	positive_rate AS positivity,
-	hospitalizations,
-	hospitalizations.increase
-		AS hospitalizations_increase,
-	confirmed_cases > 100
-		OR (confirmed_cases > 25 AND positive_rate > 0.08)
-		OR (hospitalizations.increase > 0.1)
-		AS on_list
-FROM case_rate
-INNER JOIN positive_rate
-	USING (date)
-INNER JOIN hospitalizations
-	USING (date)
-ORDER BY date DESC;
-
-COMMENT ON VIEW products.california_monitoring IS
-'A what-if scenario that calculates California county monitoring list
-metrics with Puerto Rico data.';
+ORDER BY downloaded_at DESC, reported_date DESC;
