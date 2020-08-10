@@ -4,7 +4,7 @@ set -e
 
 ENDPOINT="https://bioportal.salud.gov.pr/api/administration/reports/minimal-info-unique-tests"
 timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-basename="minimal-info-unique-tests_${timestamp}"
+basename="minimal-info-unique-tests_V2_${timestamp}"
 
 HERE="$(dirname $0)"
 TMP="$(dirname $0)/../tmp"

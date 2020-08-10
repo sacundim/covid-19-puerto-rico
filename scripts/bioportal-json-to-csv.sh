@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
 ENDPOINT="https://bioportal.salud.gov.pr/api/administration/reports/minimal-info-unique-tests"
-file="${1:?"No argument file given"}"
+downloadedAt="${1:?"No downloadedAt argument given"}"
+file="${2:?"No argument file given"}"
 
-echo 'collectedDate,reportedDate,ageRange,testType,result,patientCity,createdAt'
+
+echo 'downloadedAt,patientId,collectedDate,reportedDate,ageRange,testType,result,patientCity,createdAt'
 cat "${file}" \
-    | jq -r '.[] | [.collectedDate, .reportedDate, .ageRange, .testType, .result, .patientCity, .createdAt] | @csv' \
-    | sort
+    | jq -r '.[] | [.patientId, .collectedDate, .reportedDate, .ageRange, .testType, .result, .patientCity, .createdAt] | @csv' \
+    | sed -e "s/^/${downloadedAt},/"
