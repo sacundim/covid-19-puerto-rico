@@ -193,20 +193,17 @@ CREATE UNLOGGED TABLE bioportal_tests (
 
 CREATE VIEW bioportal_bitemporal AS
 SELECT
-    downloaded_at,
     collected_date,
     reported_date,
     count(*) molecular_tests,
     count(*) FILTER (WHERE positive)
         AS positive_molecular_tests
 FROM bioportal_tests
-GROUP BY downloaded_at, collected_date, reported_date;
+WHERE downloaded_at = (SELECT max(downloaded_at) FROM bioportal_tests)
+GROUP BY collected_date, reported_date;
 
 CREATE VIEW bioportal_bitemporal_agg AS
-WITH downloads AS (
-    SELECT DISTINCT downloaded_at
-    FROM bioportal_tests
-), reported_dates AS (
+WITH reported_dates AS (
 	SELECT DISTINCT reported_date
 	FROM bioportal_tests
 ), dates AS (
@@ -219,25 +216,21 @@ WITH downloads AS (
 	FROM bitemporal
 ), grouped AS (
 	SELECT
-	    downloads.downloaded_at,
 		reported_dates.reported_date,
 		dates.collected_date,
 		sum(molecular_tests)
 			AS molecular_tests,
 		sum(positive_molecular_tests)
 			AS positive_molecular_tests
-	FROM downloads
-	INNER JOIN reported_dates
-	    ON reported_dates.reported_date < downloads.downloaded_at - INTERVAL '4 hour'
+	FROM reported_dates
 	INNER JOIN dates
 		ON dates.collected_date <= reported_dates.reported_date
 	LEFT OUTER JOIN bioportal_bitemporal tests
 		ON tests.collected_date = dates.collected_date
 		AND tests.reported_date <= reported_dates.reported_date
-	GROUP BY downloads.downloaded_at, dates.collected_date, reported_dates.reported_date
+	GROUP BY dates.collected_date, reported_dates.reported_date
 )
 SELECT
-	downloaded_at,
 	reported_date,
 	collected_date,
 	reported_date - collected_date AS age,
@@ -255,13 +248,13 @@ SELECT
 		AS delta_positive_molecular_tests
 FROM grouped
 WINDOW cumulative AS (
-	PARTITION BY downloaded_at, reported_date
+	PARTITION BY reported_date
 	ORDER BY collected_date
 ), bulletin AS (
-	PARTITION BY downloaded_at, collected_date
+	PARTITION BY collected_date
 	ORDER BY reported_date
 )
-ORDER BY downloaded_at DESC, reported_date DESC, collected_date;
+ORDER BY reported_date DESC, collected_date;
 
 CREATE TABLE hospitalizations (
     datum_date DATE,
@@ -811,7 +804,6 @@ COMMENT ON VIEW products.lateness_7day IS
 
 CREATE VIEW products.tests_by_collected_date AS
 SELECT
-    downloaded_at,
 	reported_date,
 	collected_date,
 	'Salud (moleculares)' source,
@@ -832,11 +824,11 @@ INNER JOIN bitemporal_agg cases
 	AND cases.datum_date = tests.collected_date
 WHERE reported_date > '2020-04-24'
 WINDOW seven AS (
-	PARTITION BY downloaded_at, reported_date
+	PARTITION BY reported_date
 	ORDER BY collected_date
 	RANGE '6 days' PRECEDING
 )
-ORDER BY downloaded_at DESC, reported_date, collected_date;
+ORDER BY reported_date, collected_date;
 
 CREATE VIEW products.municipal_map AS
 SELECT
@@ -916,7 +908,6 @@ with each successive bulletin_date.)';
 CREATE VIEW products.molecular_lateness AS
 WITH grouped AS (
     SELECT
-        downloaded_at,
         reported_date,
         sum(delta_molecular_tests * age)
             AS lateness_molecular_tests,
@@ -932,10 +923,9 @@ WITH grouped AS (
         SELECT min(reported_date)
         FROM bioportal_bitemporal_agg
     )
-    GROUP BY downloaded_at, reported_date
+    GROUP BY reported_date
 )
 SELECT
-    downloaded_at,
     reported_date,
     safediv(lateness_molecular_tests, delta_molecular_tests)
         AS lateness_molecular_tests,
@@ -949,8 +939,7 @@ SELECT
         AS smoothed_lateness_positive_molecular_tests
 FROM grouped
 WINDOW seven AS (
-    PARTITION BY downloaded_at
 	ORDER BY reported_date
 	RANGE '6 days' PRECEDING
 )
-ORDER BY downloaded_at DESC, reported_date DESC;
+ORDER BY reported_date DESC;
