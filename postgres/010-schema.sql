@@ -183,6 +183,7 @@ CREATE UNLOGGED TABLE bioportal_tests (
     patient_id UUID,
     age_range TEXT,
     municipality TEXT,
+    test_type TEXT,
     result TEXT,
     positive BOOLEAN NOT NULL
         GENERATED ALWAYS AS (
@@ -199,17 +200,20 @@ SELECT
     count(*) FILTER (WHERE positive)
         AS positive_molecular_tests
 FROM bioportal_tests
-WHERE downloaded_at = (SELECT max(downloaded_at) FROM bioportal_tests)
+WHERE test_type = 'Molecular'
+AND downloaded_at = (SELECT max(downloaded_at) FROM bioportal_tests)
 GROUP BY collected_date, reported_date;
 
 CREATE VIEW bioportal_bitemporal_agg AS
 WITH reported_dates AS (
 	SELECT DISTINCT reported_date
 	FROM bioportal_tests
+	WHERE test_type = 'Molecular'
 ), dates AS (
 	SELECT DISTINCT collected_date
 	FROM bioportal_tests
-	WHERE '2020-03-01' <= collected_date
+	WHERE test_type = 'Molecular'
+	AND '2020-03-01' <= collected_date
 	AND collected_date <= '2020-12-01'
 	UNION
 	SELECT DISTINCT datum_date AS collected_date
