@@ -26,7 +26,7 @@ FROM PROGRAM 'for file in $(ls /data/bioportal/v2/minimal-info-unique-tests_V2_*
 
 INSERT INTO bioportal_tests (
     downloaded_at, raw_collected_date, raw_reported_date, created_at,
-    patient_id, age_range, municipality, result
+    patient_id, age_range, municipality, test_type, result
 )
 SELECT
     downloadedAt AS downloaded_at,
@@ -39,10 +39,10 @@ SELECT
     WHEN 'Rio Grande' THEN 'Río Grande'
     ELSE patientCity
     END AS municipality,
+    testType AS test_type,
     result
-FROM bioportal_raw
-WHERE testType = 'Molecular';
+FROM bioportal_raw;
 
-CREATE INDEX ON bioportal_tests (downloaded_at, reported_date, collected_date, positive);
-CREATE INDEX ON bioportal_tests (downloaded_at, collected_date, reported_date, positive);
+CREATE INDEX ON bioportal_tests (downloaded_at, reported_date, collected_date, test_type, positive);
+CREATE INDEX ON bioportal_tests (downloaded_at, collected_date, reported_date, test_type, positive);
 CREATE INDEX ON bioportal_tests (downloaded_at, patient_id);
