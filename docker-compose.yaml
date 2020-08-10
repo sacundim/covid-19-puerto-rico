@@ -3,6 +3,7 @@ version: '3.1'
 services:
   db:
     image: library/postgres:12-alpine
+    command: -c fsync=off -c full_page_writes=off
     environment:
       POSTGRES_PASSWORD: password
     volumes:
