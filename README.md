@@ -93,7 +93,12 @@ contraseña `password`.
 
 Para destruir la base de datos:
 
-    docker-compose down
+    docker-compose down -v
+
+Importante usar la opción `-v` aquí porque si no, Docker no destruye el volumen
+de datos que corresponde a la base de datos, que ocupa varios gigaoctetos.  De
+olvidársele esto se pueden borrar *con mucho cuidado* con `docker volume rm`
+o **con mayor cuidado aún** con `docker volume prune`.
 
 Para entender las vistas que se ofrecen de los datos, se puede
 consultar el código que define el esquema o los metadatos de
