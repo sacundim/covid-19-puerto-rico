@@ -427,7 +427,7 @@ class DailyDeltas(AbstractChart):
                                             domain=alt.DomainUnionWith(unionWith=[0])))
         )
 
-        text = base.mark_text(fontSize=4).encode(
+        text = base.mark_text(fontSize=2.75).encode(
             text=alt.Text('value:Q'),
             color=util.heatmap_text_color(df, 'value')
         )
