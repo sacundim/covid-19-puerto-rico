@@ -122,7 +122,7 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
         return df.loc[df['reported_date'] == effective_reported_date]
 
     def make_chart(self, df, reported_date):
-        max_x, max_y = 4_000, 140_000
+        max_x, max_y = 5_000, 160_000
 
         main = alt.Chart(df.dropna()).transform_calculate(
             tests_per_million=alt.datum.cumulative_tests / self.POPULATION_MILLIONS,
@@ -155,8 +155,9 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
                      ]
         )
 
+        width = 525
         return (self.make_ref_chart(max_x, max_y) + main).properties(
-            width=525, height=407
+            width=width, height=width / ((max_x / 2) / (max_y / 100))
         )
 
     def make_ref_chart(self, max_x, max_y):
