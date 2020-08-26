@@ -45,4 +45,3 @@ FROM bioportal_raw;
 
 CREATE INDEX ON bioportal_tests (downloaded_at, reported_date, collected_date, test_type, positive);
 CREATE INDEX ON bioportal_tests (downloaded_at, collected_date, reported_date, test_type, positive);
-CREATE INDEX ON bioportal_tests (downloaded_at, patient_id);
