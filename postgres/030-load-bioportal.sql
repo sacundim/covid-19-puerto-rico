@@ -43,5 +43,5 @@ SELECT
     result
 FROM bioportal_raw;
 
-CREATE INDEX ON bioportal_tests (downloaded_at, reported_date, collected_date, test_type, positive);
-CREATE INDEX ON bioportal_tests (downloaded_at, collected_date, reported_date, test_type, positive);
+CREATE INDEX ON bioportal_tests (downloaded_at, test_type, reported_date, collected_date, positive);
+CREATE INDEX ON bioportal_tests (downloaded_at, test_type, collected_date, reported_date, positive);
