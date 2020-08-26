@@ -196,22 +196,23 @@ CREATE VIEW bioportal_bitemporal AS
 SELECT
     collected_date,
     reported_date,
+    test_type,
     count(*) molecular_tests,
     count(*) FILTER (WHERE positive)
         AS positive_molecular_tests
 FROM bioportal_tests
 WHERE test_type = 'Molecular'
 AND downloaded_at = (SELECT max(downloaded_at) FROM bioportal_tests)
-GROUP BY collected_date, reported_date;
+GROUP BY collected_date, reported_date, test_type;
 
 CREATE VIEW bioportal_bitemporal_agg AS
 WITH reported_dates AS (
 	SELECT DISTINCT reported_date
-	FROM bioportal_tests
+	FROM bioportal_bitemporal
 	WHERE test_type = 'Molecular'
 ), dates AS (
 	SELECT DISTINCT collected_date
-	FROM bioportal_tests
+	FROM bioportal_bitemporal
 	WHERE test_type = 'Molecular'
 	AND '2020-03-01' <= collected_date
 	AND collected_date <= '2020-12-01'
@@ -232,6 +233,7 @@ WITH reported_dates AS (
 	LEFT OUTER JOIN bioportal_bitemporal tests
 		ON tests.collected_date = dates.collected_date
 		AND tests.reported_date <= reported_dates.reported_date
+    WHERE test_type = 'Molecular'
 	GROUP BY dates.collected_date, reported_dates.reported_date
 )
 SELECT
