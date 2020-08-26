@@ -5,6 +5,7 @@ FROM '/data/cases/PuertoRico-bulletin.csv'
 COPY bitemporal
 FROM '/data/cases/PuertoRico-bitemporal.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
+ANALYZE VERBOSE bitemporal;
 
 COPY canonical_municipal_names
 FROM '/data/cases/Municipalities-canonical_names.csv'
