@@ -43,6 +43,7 @@ SELECT
     result
 FROM bioportal_raw;
 
+SET maintenance_work_mem='1GB';
 CREATE INDEX ON bioportal_tests (downloaded_at, test_type, reported_date, collected_date, positive);
 CREATE INDEX ON bioportal_tests (downloaded_at, test_type, collected_date, reported_date, positive);
 
