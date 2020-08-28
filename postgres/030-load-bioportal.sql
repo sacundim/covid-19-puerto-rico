@@ -27,7 +27,7 @@ COPY bioportal_tests (
 FROM PROGRAM 'for file in $(ls /data/bioportal/v2/minimal-info-unique-tests_V2_*.csv.bz2); do (cat "${file}" |bunzip2 |tail -n+2); done'
     CSV ENCODING 'UTF-8' NULL '';
 
-SET maintenance_work_mem='1GB';
+SET maintenance_work_mem='2GB';
 CREATE INDEX ON bioportal_tests (downloaded_at, test_type, reported_date, collected_date, positive);
 CREATE INDEX ON bioportal_tests (downloaded_at, test_type, collected_date, reported_date, positive);
 
