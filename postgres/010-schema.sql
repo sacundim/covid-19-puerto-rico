@@ -182,7 +182,16 @@ CREATE UNLOGGED TABLE bioportal_tests (
 
     patient_id UUID,
     age_range TEXT,
-    municipality TEXT,
+
+    raw_municipality TEXT,
+    municipality TEXT
+        GENERATED ALWAYS AS (
+                CASE raw_municipality
+                WHEN 'Rio Grande' THEN 'Río Grande'
+                ELSE raw_municipality
+                END
+        ) STORED,
+
     test_type TEXT,
     result TEXT,
     positive BOOLEAN NOT NULL
