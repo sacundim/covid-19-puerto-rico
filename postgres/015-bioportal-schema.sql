@@ -200,6 +200,54 @@ WINDOW seven AS (
 	RANGE '6 days' PRECEDING
 );
 
+CREATE VIEW products.positive_rates AS
+SELECT
+	molecular.test_type,
+	molecular.bulletin_date,
+	collected_date,
+	molecular.smoothed_daily_tests,
+	molecular.smoothed_daily_positive_tests,
+	(cumulative_confirmed_cases
+		- LAG(cumulative_confirmed_cases, 7, 0::bigint) OVER seven)
+		/ 7.0
+		AS smoothed_daily_cases
+FROM bioportal_collected_agg molecular
+INNER JOIN bitemporal_agg cases
+	ON cases.bulletin_date = molecular.bulletin_date
+	AND cases.datum_date = molecular.collected_date
+WHERE molecular.test_type = 'Molecular'
+AND molecular.bulletin_date > '2020-04-24'
+WINDOW seven AS (
+	PARTITION BY molecular.bulletin_date
+	ORDER BY collected_date
+	RANGE '6 days' PRECEDING
+)
+
+UNION
+
+SELECT
+	serological.test_type,
+	serological.bulletin_date,
+	collected_date,
+	serological.smoothed_daily_tests,
+	serological.smoothed_daily_positive_tests,
+	(cumulative_probable_cases
+		- LAG(cumulative_probable_cases, 7, 0::bigint) OVER seven)
+		/ 7.0
+		AS smoothed_daily_cases
+FROM bioportal_collected_agg serological
+INNER JOIN bitemporal_agg cases
+	ON cases.bulletin_date = serological.bulletin_date
+	AND cases.datum_date = serological.collected_date
+WHERE serological.test_type = 'Serological'
+AND serological.bulletin_date > '2020-04-24'
+WINDOW seven AS (
+	PARTITION BY serological.bulletin_date
+	ORDER BY collected_date
+	RANGE '6 days' PRECEDING
+);
+
+
 CREATE VIEW products.molecular_tests_vs_confirmed_cases AS
 SELECT
 	tests.bulletin_date,
