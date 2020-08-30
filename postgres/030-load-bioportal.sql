@@ -48,3 +48,10 @@ CREATE INDEX ON bioportal_collected_agg (
     test_type, bulletin_date, collected_date
 );
 ANALYZE VERBOSE bioportal_collected_agg;
+
+
+REFRESH MATERIALIZED VIEW bioportal_reported_agg;
+CREATE INDEX ON bioportal_reported_agg (
+    test_type, bulletin_date, reported_date
+);
+ANALYZE VERBOSE bioportal_reported_agg;

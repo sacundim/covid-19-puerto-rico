@@ -48,7 +48,7 @@ class NewPositiveRate(AbstractMolecularChart):
                       | ((df['bulletin_date'] == week_ago))]
 
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests_by_collected_date', self.metadata,
+        table = sqlalchemy.Table('molecular_tests_vs_confirmed_cases', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.bulletin_date,
@@ -65,6 +65,8 @@ class NewPositiveRate(AbstractMolecularChart):
 class NewDailyTestsPerCapita(AbstractMolecularChart):
     POPULATION = 3_193_694
     POPULATION_THOUSANDS = POPULATION / 1_000.0
+    TEST_TYPE_SORT_ORDER = ['Molecular', 'Serological', 'Antigens']
+    DATE_TYPE_SORT_ORDER = ['Fecha de muestra', 'Fecha de reporte']
 
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df.dropna()).transform_calculate(
@@ -72,17 +74,24 @@ class NewDailyTestsPerCapita(AbstractMolecularChart):
         ).mark_line(
             point='transparent'
         ).encode(
-            x=alt.X('collected_date:T', title='Fecha de toma de muestra',
+            x=alt.X('date:T', title=None,
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('per_thousand:Q', title='Pruebas (por 1K)'),
+            color=alt.Color('test_type:N', title='Tipo de prueba:', sort=self.TEST_TYPE_SORT_ORDER,
+                            legend=alt.Legend(orient='bottom', titleOrient='left')),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
-            tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
+            tooltip=[alt.Tooltip('test_type:N', title='Tipo de prueba'),
+                     alt.Tooltip('date:T', title='Fecha'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
-                     alt.Tooltip('value:Q', format=".1f", title='Pruebas (promedio 7 días)'),
+                     alt.Tooltip('value:Q', format=",.1f", title='Pruebas (promedio 7 días)'),
                      alt.Tooltip('per_thousand:Q', format=".2f",
                                  title='Pruebas por mil habitantes')]
         ).properties(
-            width=585, height=250
+            width=585, height=150
+        ).facet(
+            columns=1,
+            facet=alt.Facet('date_type:N', title=None,
+                            sort=self.DATE_TYPE_SORT_ORDER)
         )
 
     def filter_data(self, df, bulletin_date):
@@ -92,21 +101,23 @@ class NewDailyTestsPerCapita(AbstractMolecularChart):
                       | ((df['bulletin_date'] == week_ago))]
 
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests_by_collected_date', self.metadata,
+        table = sqlalchemy.Table('new_daily_tests', self.metadata,
                                  schema='products', autoload=True)
         query = select([
+            table.c.date_type,
+            table.c.test_type,
             table.c.bulletin_date,
-            table.c.collected_date,
+            table.c.date,
             table.c.smoothed_daily_tests.label('value')
         ])
-        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "collected_date"])
+        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "date"])
 
 
 class CumulativeTestsVsCases(AbstractMolecularChart):
     POPULATION_MILLIONS = 3.193_694
 
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('tests_by_collected_date', self.metadata,
+        table = sqlalchemy.Table('molecular_tests_vs_confirmed_cases', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.bulletin_date,

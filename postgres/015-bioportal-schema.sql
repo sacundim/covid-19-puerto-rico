@@ -124,10 +124,83 @@ WINDOW cumulative AS (
 	RANGE '6 day' PRECEDING
 );
 
+CREATE MATERIALIZED VIEW bioportal_reported_agg AS
+SELECT
+	test_type,
+	bulletin_date,
+	reported_date,
+	bulletin_date - reported_date
+		AS collected_age,
+	sum(tests) AS tests,
+	sum(sum(tests)) OVER seven / 7.0
+		AS smoothed_daily_tests,
+	sum(sum(tests)) OVER cumulative
+		AS cumulative_tests,
+	sum(delta_tests) AS delta_tests,
+	sum(positive_tests) AS positive_tests,
+	sum(sum(positive_tests)) OVER seven / 7.0
+		AS smoothed_daily_positive_tests,
+	sum(sum(positive_tests)) OVER cumulative
+		AS cumulative_positive_tests,
+	sum(delta_positive_tests) AS delta_positive_tests
+FROM bioportal_tritemporal_deltas
+GROUP BY test_type, bulletin_date, reported_date
+WINDOW cumulative AS (
+	PARTITION BY test_type, bulletin_date
+	ORDER BY reported_date
+), seven AS (
+	PARTITION BY test_type, bulletin_date
+	ORDER BY reported_date
+	RANGE '6 day' PRECEDING
+);
+
 
 -----------------------------------------------------------------------------
 
+CREATE VIEW products.new_daily_tests AS
+SELECT
+    'Fecha de muestra' AS date_type,
+    test_type,
+    bulletin_date,
+    collected_date AS date,
+    smoothed_daily_tests
+FROM bioportal_collected_agg
+UNION
+SELECT
+    'Fecha de reporte' AS date_type,
+    test_type,
+    bulletin_date,
+    reported_date AS date,
+    smoothed_daily_tests
+FROM bioportal_reported_agg;
+
 CREATE VIEW products.tests_by_collected_date AS
+SELECT
+	tests.bulletin_date,
+	collected_date,
+	cumulative_tests,
+	cumulative_positive_tests,
+	cumulative_confirmed_cases
+	    AS cumulative_cases,
+	smoothed_daily_tests,
+	smoothed_daily_positive_tests,
+	(cumulative_confirmed_cases
+		- LAG(cumulative_confirmed_cases, 7, 0::bigint) OVER seven)
+		/ 7.0
+		AS smoothed_daily_cases
+FROM bioportal_collected_agg tests
+INNER JOIN bitemporal_agg cases
+	ON cases.bulletin_date = tests.bulletin_date
+	AND cases.datum_date = tests.collected_date
+WHERE tests.bulletin_date > '2020-04-24'
+AND test_type = 'Molecular'
+WINDOW seven AS (
+	PARTITION BY tests.bulletin_date
+	ORDER BY collected_date
+	RANGE '6 days' PRECEDING
+);
+
+CREATE VIEW products.molecular_tests_vs_confirmed_cases AS
 SELECT
 	tests.bulletin_date,
 	collected_date,
