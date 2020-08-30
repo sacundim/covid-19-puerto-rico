@@ -13,14 +13,14 @@ from . import charts
 
 
 class AbstractMolecularChart(charts.AbstractChart):
-    def filter_data(self, df, reported_date):
-        return df.loc[df['reported_date'] == pd.to_datetime(reported_date)]
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
 
 class NewPositiveRate(AbstractMolecularChart):
     SORT_ORDER = ['Positivas ÷ pruebas', 'Casos ÷ pruebas']
 
-    def make_chart(self, df, reported_date):
+    def make_chart(self, df, bulletin_date):
         return alt.Chart(df.dropna()).transform_filter(
             alt.datum.value > 0.0
         ).mark_line(
@@ -33,40 +33,40 @@ class NewPositiveRate(AbstractMolecularChart):
                     axis=alt.Axis(format='%')),
             color=alt.Color('variable:N', sort=self.SORT_ORDER,
                             legend=alt.Legend(orient='top', title=None)),
-            strokeDash=alt.StrokeDash('reported_date:T', sort='descending', legend=None),
+            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
             tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
-                     alt.Tooltip('reported_date:T', title='Datos hasta'),
+                     alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('value:Q', format=".2%", title='Tasa de positividad')]
         ).properties(
             width=585, height=250
         )
 
-    def filter_data(self, df, reported_date):
-        effective_reported_date = min(df['reported_date'].max(), pd.to_datetime(reported_date))
-        week_ago = effective_reported_date - datetime.timedelta(days=7)
-        return df.loc[(df['reported_date'] == effective_reported_date)
-                      | ((df['reported_date'] == week_ago))]
+    def filter_data(self, df, bulletin_date):
+        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
+        week_ago = effective_bulletin_date - datetime.timedelta(days=7)
+        return df.loc[(df['bulletin_date'] == effective_bulletin_date)
+                      | ((df['bulletin_date'] == week_ago))]
 
     def fetch_data(self, connection):
         table = sqlalchemy.Table('tests_by_collected_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
-            table.c.reported_date,
+            table.c.bulletin_date,
             table.c.collected_date,
             (table.c.smoothed_daily_positive_tests / table.c.smoothed_daily_tests)\
                 .label('Positivas ÷ pruebas'),
             (table.c.smoothed_daily_cases / table.c.smoothed_daily_tests)\
                 .label('Casos ÷ pruebas')
         ])
-        df = pd.read_sql_query(query, connection, parse_dates=['reported_date', 'collected_date'])
-        return pd.melt(df, ['reported_date', 'collected_date'])
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
+        return pd.melt(df, ['bulletin_date', 'collected_date'])
 
 
 class NewDailyTestsPerCapita(AbstractMolecularChart):
     POPULATION = 3_193_694
     POPULATION_THOUSANDS = POPULATION / 1_000.0
 
-    def make_chart(self, df, reported_date):
+    def make_chart(self, df, bulletin_date):
         return alt.Chart(df.dropna()).transform_calculate(
             per_thousand=alt.datum.value / self.POPULATION_THOUSANDS
         ).mark_line(
@@ -75,9 +75,9 @@ class NewDailyTestsPerCapita(AbstractMolecularChart):
             x=alt.X('collected_date:T', title='Fecha de toma de muestra',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('per_thousand:Q', title='Pruebas (por 1K)'),
-            strokeDash=alt.StrokeDash('reported_date:T', sort='descending', legend=None),
+            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
             tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
-                     alt.Tooltip('reported_date:T', title='Datos hasta'),
+                     alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('value:Q', format=".1f", title='Pruebas (promedio 7 días)'),
                      alt.Tooltip('per_thousand:Q', format=".2f",
                                  title='Pruebas por mil habitantes')]
@@ -85,21 +85,21 @@ class NewDailyTestsPerCapita(AbstractMolecularChart):
             width=585, height=250
         )
 
-    def filter_data(self, df, reported_date):
-        effective_reported_date = min(df['reported_date'].max(), pd.to_datetime(reported_date))
-        week_ago = effective_reported_date - datetime.timedelta(days=7)
-        return df.loc[(df['reported_date'] == effective_reported_date)
-                      | ((df['reported_date'] == week_ago))]
+    def filter_data(self, df, bulletin_date):
+        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
+        week_ago = effective_bulletin_date - datetime.timedelta(days=7)
+        return df.loc[(df['bulletin_date'] == effective_bulletin_date)
+                      | ((df['bulletin_date'] == week_ago))]
 
     def fetch_data(self, connection):
         table = sqlalchemy.Table('tests_by_collected_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
-            table.c.reported_date,
+            table.c.bulletin_date,
             table.c.collected_date,
             table.c.smoothed_daily_tests.label('value')
         ])
-        return pd.read_sql_query(query, connection, parse_dates=["reported_date", "collected_date"])
+        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "collected_date"])
 
 
 class CumulativeTestsVsCases(AbstractMolecularChart):
@@ -109,19 +109,19 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
         table = sqlalchemy.Table('tests_by_collected_date', self.metadata,
                                  schema='products', autoload=True)
         query = select([
-            table.c.reported_date,
+            table.c.bulletin_date,
             table.c.collected_date,
             table.c.cumulative_tests,
             table.c.cumulative_cases,
             table.c.cumulative_positive_tests
         ])
-        return pd.read_sql_query(query, connection, parse_dates=['reported_date', 'collected_date'])
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
 
-    def filter_data(self, df, reported_date):
-        effective_reported_date = min(df['reported_date'].max(), pd.to_datetime(reported_date))
-        return df.loc[df['reported_date'] == effective_reported_date]
+    def filter_data(self, df, bulletin_date):
+        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
+        return df.loc[df['bulletin_date'] == effective_bulletin_date]
 
-    def make_chart(self, df, reported_date):
+    def make_chart(self, df, bulletin_date):
         max_x, max_y = 5_000, 160_000
 
         main = alt.Chart(df.dropna()).transform_calculate(
@@ -141,7 +141,7 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
                     title='Total de casos por millón de habitantes'),
             order=alt.Order('collected_date:T'),
             tooltip=[alt.Tooltip('yearmonthdate(collected_date):T', title='Fecha de muestra'),
-                     alt.Tooltip('reported_date:T', title='Datos hasta'),
+                     alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('cumulative_tests:Q', format=",d",
                                  title='Pruebas moleculares'),
                      alt.Tooltip('cumulative_cases:Q', format=",d",
@@ -203,17 +203,17 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
 
 class MolecularCurrentDeltas(AbstractMolecularChart):
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('bioportal_bitemporal_agg', self.metadata, autoload=True)
-        query = select([table.c.reported_date,
+        table = sqlalchemy.Table('bioportal_collected_agg', self.metadata, autoload=True)
+        query = select([table.c.bulletin_date,
                         table.c.collected_date,
-                        table.c.delta_molecular_tests.label('Pruebas'),
-                        table.c.delta_positive_molecular_tests.label('Positivas')]
-        )
+                        table.c.delta_tests.label('Pruebas'),
+                        table.c.delta_positive_tests.label('Positivas')]
+        ).where(table.c.test_type == 'Molecular')
         df = pd.read_sql_query(query, connection,
-                               parse_dates=['reported_date', 'collected_date'])
-        return pd.melt(df, ['reported_date', 'collected_date']).replace(0, np.NaN)
+                               parse_dates=['bulletin_date', 'collected_date'])
+        return pd.melt(df, ['bulletin_date', 'collected_date']).replace(0, np.NaN)
 
-    def make_chart(self, df, reported_date):
+    def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).transform_joinaggregate(
             groupby=['variable'],
             min_value='min(value)',
@@ -229,7 +229,7 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
                     title=None, sort="descending",
                     axis=alt.Axis(format='%B')),
             tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
-                     alt.Tooltip('reported_date:T', title='Fecha de récord'),
+                     alt.Tooltip('bulletin_date:T', title='Fecha de récord'),
                      alt.Tooltip('value:Q', title='Nuevas')]
         )
 
@@ -263,25 +263,25 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
 
 class MolecularDailyDeltas(AbstractMolecularChart):
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('bioportal_bitemporal_agg', self.metadata, autoload=True)
-        query = select([table.c.reported_date,
+        table = sqlalchemy.Table('bioportal_collected_agg', self.metadata, autoload=True)
+        query = select([table.c.bulletin_date,
                         table.c.collected_date,
-                        table.c.delta_molecular_tests.label('Pruebas'),
-                        table.c.delta_positive_molecular_tests.label('Positivas')]
-        )
+                        table.c.delta_tests.label('Pruebas'),
+                        table.c.delta_positive_tests.label('Positivas')]
+        ).where(table.c.test_type == 'Molecular')
         df = pd.read_sql_query(query, connection,
-                               parse_dates=['reported_date', 'collected_date'])
-        return pd.melt(df, ['reported_date', 'collected_date'])
+                               parse_dates=['bulletin_date', 'collected_date'])
+        return pd.melt(df, ['bulletin_date', 'collected_date'])
 
-    def filter_data(self, df, reported_date):
-        since_date = pd.to_datetime(reported_date - datetime.timedelta(days=14))
-        until_date = pd.to_datetime(reported_date)
-        filtered = df.loc[(since_date < df['reported_date'])
-                      & (df['reported_date'] <= until_date)]\
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=14))
+        until_date = pd.to_datetime(bulletin_date)
+        filtered = df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]\
             .replace(0, np.nan).dropna()
         return filtered
 
-    def make_chart(self, df, reported_date):
+    def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).transform_joinaggregate(
             groupby=['variable'],
             min_value='min(value)',
@@ -293,11 +293,11 @@ class MolecularDailyDeltas(AbstractMolecularChart):
             x=alt.X('yearmonthdate(collected_date):O',
                     title='Fecha de toma de muestra', sort='descending',
                     axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('yearmonthdate(reported_date):O',
+            y=alt.Y('yearmonthdate(bulletin_date):O',
                     title='Fecha de récord', sort='descending',
                     axis=alt.Axis(format='%d/%m')),
             tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
-                     alt.Tooltip('reported_date:T', title='Fecha de récord en API'),
+                     alt.Tooltip('bulletin_date:T', title='Fecha de récord en API'),
                      alt.Tooltip('value:Q', title='Nuevas')]
         )
 
@@ -333,26 +333,26 @@ class MolecularLatenessDaily(AbstractMolecularChart):
     def fetch_data(self, connection):
         table = sqlalchemy.Table('molecular_lateness', self.metadata,
                                  schema='products', autoload=True)
-        query = select([table.c.reported_date,
-                        table.c.lateness_molecular_tests.label('Pruebas'),
-                        table.c.lateness_positive_molecular_tests.label('Positivas')]
-        )
-        df = pd.read_sql_query(query, connection, parse_dates=['reported_date'])
-        return pd.melt(df, ['reported_date'])
+        query = select([table.c.bulletin_date,
+                        table.c.lateness_tests.label('Pruebas'),
+                        table.c.lateness_positive_tests.label('Positivas')]
+        ).where(table.c.test_type == 'Molecular')
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+        return pd.melt(df, ['bulletin_date'])
 
-    def filter_data(self, df, reported_date):
-        since_date = pd.to_datetime(reported_date - datetime.timedelta(days=8))
-        until_date = pd.to_datetime(reported_date)
-        return df.loc[(since_date < df['reported_date'])
-                      & (df['reported_date'] <= until_date)]
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=8))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]
 
-    def make_chart(self, df, reported_date):
+    def make_chart(self, df, bulletin_date):
         bars = alt.Chart(df).mark_bar().encode(
             x=alt.X('value:Q', title='Rezago estimado (días)'),
             y=alt.Y('variable:N', title=None, sort=self.SORT_ORDER, axis=None),
             color=alt.Color('variable:N', sort=self.SORT_ORDER,
                             legend=alt.Legend(orient='bottom', title=None)),
-            tooltip = [alt.Tooltip('reported_date:T', title='Fecha de récord'),
+            tooltip = [alt.Tooltip('bulletin_date:T', title='Fecha de récord'),
                        alt.Tooltip('variable:N', title='Variable'),
                        alt.Tooltip('value:Q', format=".1f", title='Rezago promedio')]
         )
@@ -371,7 +371,7 @@ class MolecularLatenessDaily(AbstractMolecularChart):
             width=300
         ).facet(
             columns=2,
-            facet=alt.Facet('reported_date:T', sort='descending',
+            facet=alt.Facet('bulletin_date:T', sort='descending',
                             title='Fecha de récord')
         )
 
@@ -382,30 +382,30 @@ class MolecularLateness7Day(AbstractMolecularChart):
         table = sqlalchemy.Table('molecular_lateness', self.metadata,
                                  schema='products', autoload=True)
         query = select([
-            table.c.reported_date,
-            table.c.smoothed_lateness_molecular_tests.label('Pruebas'),
-            table.c.smoothed_lateness_positive_molecular_tests.label('Positivas')]
-        )
-        df = pd.read_sql_query(query, connection, parse_dates=['reported_date'])
-        return pd.melt(df, ['reported_date'])
+            table.c.bulletin_date,
+            table.c.smoothed_lateness_tests.label('Pruebas'),
+            table.c.smoothed_lateness_positive_tests.label('Positivas')]
+        ).where(table.c.test_type == 'Molecular')
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+        return pd.melt(df, ['bulletin_date'])
 
-    def filter_data(self, df, reported_date):
-        since_date = pd.to_datetime(reported_date - datetime.timedelta(days=15))
-        until_date = pd.to_datetime(reported_date)
-        return df.loc[(since_date < df['reported_date'])
-                      & (df['reported_date'] <= until_date)]
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=15))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]
 
-    def make_chart(self, df, reported_date):
+    def make_chart(self, df, bulletin_date):
         lines = alt.Chart(df).mark_line(
             strokeWidth=3,
             point=alt.OverlayMarkDef(size=50)
         ).encode(
-            x=alt.X('yearmonthdate(reported_date):O',
+            x=alt.X('yearmonthdate(bulletin_date):O',
                     title="Fecha de récord",
                     axis=alt.Axis(format='%d/%m', titlePadding=10)),
             y=alt.Y('value:Q', title=None),
             color = alt.Color('variable', sort=self.SORT_ORDER, legend=None),
-            tooltip=[alt.Tooltip('reported_date:T', title='Fecha de récord'),
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de récord'),
                      alt.Tooltip('variable:N', title='Variable'),
                      alt.Tooltip('value:Q', format=".1f", title='Rezago promedio')]
         )
