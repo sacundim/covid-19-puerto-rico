@@ -1,6 +1,11 @@
 CREATE UNLOGGED TABLE bioportal_tests (
     id SERIAL,
     downloaded_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    bulletin_date DATE NOT NULL
+        GENERATED ALWAYS AS (
+            date(downloaded_at - INTERVAL '4 hour') - 1
+        ) STORED,
+
     raw_collected_date DATE,
     raw_reported_date DATE,
     created_at TIMESTAMP,
@@ -54,17 +59,19 @@ CREATE UNLOGGED TABLE bioportal_tests (
 
 CREATE MATERIALIZED VIEW bioportal_tritemporal_counts AS
 SELECT
-	downloaded_at,
 	test_type,
-	date(downloaded_at - INTERVAL '4 hour') - 1
-		AS bulletin_date,
+	bulletin_date,
 	reported_date,
 	collected_date,
 	count(*) tests,
 	count(*) FILTER (WHERE positive)
 		AS positive_tests
 FROM bioportal_tests
-GROUP BY downloaded_at, test_type, collected_date, reported_date;
+WHERE '2020-03-01' <= collected_date
+AND collected_date <= bulletin_date
+AND '2020-03-01' <= reported_date
+AND reported_date <= bulletin_date
+GROUP BY test_type, bulletin_date, collected_date, reported_date;
 
 
 CREATE MATERIALIZED VIEW bioportal_tritemporal_deltas AS
@@ -80,6 +87,8 @@ SELECT
 	positive_tests - COALESCE(lag(positive_tests) OVER bulletin, 0)
 		AS delta_positive_tests
 FROM bioportal_tritemporal_counts
+WHERE collected_date <= bulletin_date
+AND reported_date <= bulletin_date
 WINDOW bulletin AS (
 	PARTITION BY test_type, collected_date, reported_date
 	ORDER BY bulletin_date
