@@ -24,3 +24,6 @@ echo "$(date): Wrote output to ${CSV_PATH}"
 
 LINE_COUNT="$(cat "${CSV_PATH}" |bunzip2 |tail -n+2 |wc -l)"
 echo "$(date): Line count: ${LINE_COUNT}"
+
+echo "$(date): Compressing downloaded json..."
+bzip2 -9 "${JSON_PATH}"
