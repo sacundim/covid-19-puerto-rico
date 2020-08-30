@@ -211,18 +211,19 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Cuántas pruebas diarias (promedio de 7 días) se realizaron por fecha de toma de muestra,
-        por millar de población.  La línea sólida es con datos hasta la fecha de este boletín;
-        la línea entrecortada es con datos solo hasta siete días antes de dicha fecha.
-        Se presenta una gráfica de <a href="https://ourworldindata.org/">Our
-            World in Data</a> para comparación.</p>
+    <p>Cuántas pruebas diarias (promedio de 7 días) se realizaron por millar de población,
+        tanto por fecha de toma de muestra como fecha de "reporte" (<code>reportedDate</code>,
+        que se entiende la fecha en que el laboratorio obtuvo el resultado).  Las líneas sólidas
+        son con datos hasta la fecha de este boletín; las líneas entrecortadas son con datos solo
+        hasta siete días antes de dicha fecha. Se presenta una gráfica de
+        <a href="https://ourworldindata.org/">Our World in Data</a> para comparación.</p>
 
     <h3>Advertencia</h3>
 
-    <p>Como esta gráfica es por fecha de toma de muestra, las cifras que da no son finales
-        porque pueden registrarse luego más resultados para las mismas fechas. Y especialmente,
-        <b>caídas súbitas al final de la curva muy probable no son reales</b>. La línea entrecortada,
-        que excluye los datos recibidos los 7 días más recientes, tiende a ilustrar este efecto.</p>
+    <p>Las curvas no son finales porque pueden aún recibirse más datos para las fechas que
+        representan. Y especialmente, <b>caídas súbitas al final de la curva muy probable no son
+            reales</b>. La línea entrecortada, que excluye los datos recibidos los 7 días más
+        recientes, tiende a ilustrar este efecto.</p>
 
     <h3>Comparación internacional</h3>
 
@@ -238,7 +239,8 @@
 
     <ul>
         <li>El cálculo de las líneas entrecortadas se ve afectado por la
-            <a href="#Revisions_2020-08-08">revisión del 8 de agosto del 2020</a>.</li>
+            <a href="#Revisions_2020-08-30">revisión del 30 de agosto del 2020</a> y
+            otras anteriores.</li>
     </ul>
 </div>
 
@@ -262,8 +264,9 @@
 
     <ol>
         <li>Número de pruebas positivas dividido entre número total de pruebas;</li>
-        <li>Número de casos únicos confirmados (tomado de los informes regulares de Salud)
-            dividido entre número total de pruebas.</li>
+        <li>Número de casos únicos (tomado de los informes regulares de Salud)
+            dividido entre número total de pruebas. Las pruebas moleculares se comparan
+            con los casos confirmados, las serológicas con los probables.</li>
     </ol>
 
     <p>La segunda de estas se entiende que es una división un tanto de "chinas con botellas"
@@ -304,7 +307,8 @@
 
     <ul>
         <li>El cálculo de las líneas entrecortadas se ve afectado por la
-            <a href="#Revisions_2020-08-08">revisión del 8 de agosto del 2020</a>.</li>
+            <a href="#Revisions_2020-08-30">revisión del 30 de agosto del 2020</a> y
+            otras anteriores.</li>
     </ul>
 </div>
 
@@ -319,10 +323,10 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Otra forma de visualizar la positividad: trazando el número de pruebas acumuladas
-        en el eje vertical y los casos confirmados acumulados en el horizontal. Las líneas
-        entrecortadas brindan una referencia de cómo se traduce a positividad acumulada (que
-        vale advertir, no es lo mismo que positividad promedio de 7 días).</p>
+    <p>Otra forma de visualizar la positividad: trazando el número de pruebas moleculares
+        acumuladas en el eje vertical y los casos confirmados acumulados en el horizontal.
+        Las líneas entrecortadas brindan una referencia de cómo se traduce a positividad
+        acumulada (que vale advertir, no es lo mismo que positividad promedio de 7 días).</p>
 
     <p>Curvas que se mueven hacia arriba son buenas; curvas que se mueven a la derecha son
         malas. Giros súbitos justo al final de la curva no son fiables porque probablemente
@@ -366,10 +370,10 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Cuántos resultados nuevos de fecha se reportaron en el API de Bioportal (el sistema
+    <p>Cuántos resultados nuevos por fecha se reportaron en el API de Bioportal (el sistema
         en línea de recibo de resultados de pruebas del Departamento de Salud de Puerto
-        Rico), por combinación de fecha de toma de muestra y fecha de creación del récord
-        en el API (campo <code>createdAt</code>).</p>
+        Rico), por combinación de fecha de toma de muestra y fecha que el autor de esta página
+        descargó el récord en el API.</p>
 
     <p>El API de Bioportal de Salud presenta tres campos de fecha/tiempo para cada récord
         de prueba individual:</p>
@@ -379,30 +383,34 @@
         <dd>Fecha de colección de muestra de prueba.</dd>
 
         <dt><code>reportedDate</code></dt>
-        <dd>Se entiende por el nombre que es fecha que el laboratorio reportó la prueba
-            a Salud.</dd>
+        <dd>Se entiende a partir de conversaciones con fuentes que es la fecha en que el
+            laboratorio advino en conocimiento del resultado de la prueba.</dd>
 
         <dt><code>createdAt</code></dt>
         <dd>Tiempo que el sistema computarizado graba como la fecha, hora y minuto que
-            creó el récord de base de dato para esa prueba.</dd>
+            creó el récord de base de dato para esa prueba.  Este campo se observa que puede
+            caer tanto antes or después que el <code>reportedDate</code>.</dd>
     </dl>
 
-    <p>Examen de los datos ha dado al momento a entender que ninguno de los campos es del todo
-        fiable, pero que el <code>reportedDate</code> lo es más que el <code>createdAt</code>, y
-        por eso se opta por usar el anterior. Sin embargo no parece haber un campo o combinación
-        de estos que permitan reproducir fielmente, a partir de los resultados descargados en una
-        ocasión, lo que hubieran dado los cálculos en ocasiones pasadas.</p>
+    <p>Examen de los datos y conversaciones con gente que conoce los sistemas del Departamento
+        de Salud han dado a entender que ninguno de los campos ni por si ni en combinación con
+        los otros permiten adjudicar cuándo fue que el resultado de la prueba se comunicó a Salud.
+        Por esto el autor de esta página ha optado, en el proceso diario de descarga de los
+        datos del API, grabar la fecha y hora en que realizó tal descarga, anotar todos los récords
+        con esta, y usar una fecha sintética calculada a partir de esto como la fecha imputada en
+        que Salud advino en conocimiento del resultado de la prueba.</p>
 
-    <p>Muchos récords sin embargo muestran un <code>collectedDate</code> más tardío que
-        <code>reportedDate</code>, y en este caso se ha optado en imputarles que se recogieron
-        3 días antes que el <code>reportedDate</code>, a partir de un análisis de la tardanza
-        promedio en toda la base de datos.</p>
+    <p>Aún con todo esto, muchos récords sin embargo muestran un <code>collectedDate</code> más
+        tardío que su <code>reportedDate</code>, y en este caso se ha optado en imputarles que se
+        recogieron 3 días antes que el <code>reportedDate</code>, a partir de un análisis de la
+        tardanza promedio en toda la base de datos.</p>
 
     <h3>Revisiones</h3>
 
     <ul>
         <li>La adjudicación de pruebas a fechas de reporte se vio fuertemente cambiada por
-            la <a href="#Revisions_2020-08-08">revisión del 8 de agosto del 2020</a>.</li>
+            la <a href="#Revisions_2020-08-30">revisión del 30 de agosto del 2020</a>, y otras
+            anteriores.</li>
     </ul>
 </div>
 
@@ -425,7 +433,8 @@
 
     <ul>
         <li>La adjudicación de pruebas a fechas de reporte se vio fuertemente cambiada por
-            la <a href="#Revisions_2020-08-08">revisión del 8 de agosto del 2020</a>.</li>
+            la <a href="#Revisions_2020-08-30">revisión del 30 de agosto del 2020</a>, y otras
+            anteriores.</li>
     </ul>
 </div>
 
@@ -440,17 +449,17 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Tardanza promedio entre fecha de toma de muestra (<code>collectedDate</code>) y
-        fecha de récord (<code>reportedDate</code>) en el API de Bioportal, agrupado por
-        la segunda.</p>
+    <p>Tardanza promedio entre fecha de toma de muestra (<code>collectedDate</code>) en el
+        API de Bioportal y fecha de datos, agrupado por la segunda. Esta fecha de datos
+        es estimada a partir de la fecha y hora en que el autor de este informe realiza sus
+        descargas diarias de datos de Bioportal.</p>
 
     <h3>Revisiones</h3>
 
     <ul>
         <li>La adjudicación de pruebas a fechas de reporte, y por tanto los rezagos calculados,
-            se vieron fuertemente cambiados por la <a href="#Revisions_2020-08-08">revisión
-                del 8 de agosto del 2020</a>. El cálculo anterior se teme que inflaba mucho
-            los rezagos estimados.</li>
+            se vieron fuertemente cambiados por la <a href="#Revisions_2020-08-30">revisión
+                del 30 de agosto del 2020</a> y otras anteriores.</li>
     </ul>
 </div>
 
@@ -472,9 +481,8 @@
 
     <ul>
         <li>La adjudicación de pruebas a fechas de reporte, y por tanto los rezagos calculados,
-            se vieron fuertemente cambiados por la <a href="#Revisions_2020-08-08">revisión
-                del 8 de agosto del 2020</a>. El cálculo anterior se teme que inflaba mucho
-            los rezagos estimados.</li>
+            se vieron fuertemente cambiados por la <a href="#Revisions_2020-08-30">revisión
+                del 30 de agosto del 2020</a> y otras anteriores.</li>
     </ul>
 </div>
 
@@ -684,6 +692,43 @@
 
 <div class="section" id="Revisions_section">
     <h1>Revisiones</h1>
+
+    <h3 id="Revisions_2020-08-30">Revisión 30 de agosto del 2020</h3>
+
+    <p>Desde esta fecha esta página adoptó un nuevo, mejorado método de reproducibilidad
+        de datos y adjudicación de fecha de datos a Bioportal.  El método consiste de:</p>
+
+    <ol>
+        <li>Registrar la fecha y hora (en UTC) de cada descarga que hacemos del API de
+            Bioportal, en un campo <code>downloadedAt</code> que le añadimos a cada récord;</li>
+        <li>Hacer "check-in" de cada tal archivo (en formato CSV) al repositorio de Github;</li>
+        <li>Generar un campo de <code>bulletin_date</code> sintético a partir de (a) convertir
+            el valor de <code>downloadedAt</code> a horario de Puerto Rico, (b) truncarle los
+            campos de hora para quedarnos solo con la fecha, y (c) restarle un día;</li>
+        <li>Usar este campo <code>bulletin_date</code> para calcular los cambios de dato de
+            día a día.</li>
+    </ol>
+
+    <p>La desventaja de este método es que cuáles récords terminan adjudicándose a cúal
+        <code>bulletin_date</code> resulta ser un artefactor de cuándo el autor de esta
+        página realiza su descarga matutina de Bioportal.</p>
+
+    <p>La ventaja del método es que las alternativas son mucho más peores.  Ninguno de los
+        campos disponibles en las descargas en realidad permite ordenar los récords de manera
+        fiable respecto a cuándo se marcó el resultado.  Tras conversaciones con fuentes de
+        entero crédito:</p>
+
+    <ul>
+        <li>El campo <code>createdAt</code> adolece del problema que muchos récords de resultado
+            de prueba se crean en Bioportal antes de que se conozca el resultado.  Los usuarios
+            entran los detalles básicos de la prueba y guardan el formulario sin completarlo,
+            y luego lo completan días después cuando se conoce el resultado.  Y en tales casos,
+            el <code>createdAt</code> recoge una fecha anterior a la del resultado.</li>
+        <li>El campo <code>reportedAt</code> se supone que recoja la fecha en que el laboratorio
+            advino en conocimiento del resultado, pero hay tardanzas aleatorias de 1-5 días entre
+            esta fecha y cuándo aparece el récord en las descargas del API.</li>
+    </ul>
+
 
     <h3 id="Revisions_2020-08-08">Revisión 8 de agosto del 2020</h3>
 

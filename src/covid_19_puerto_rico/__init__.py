@@ -22,7 +22,7 @@ def process_arguments():
     parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat,
                         help='Bulletin date to generate charts for. Default: most recent in DB.')
     parser.add_argument('--earliest-date', type=datetime.date.fromisoformat,
-                        default=datetime.date(2020, 7, 1),
+                        default=datetime.date(2020, 7, 18),
                         help='Earliest date to generate website for. Has a sensible built-in default.')
     parser.add_argument('--no-svg', action='store_false', dest='svg',
                         help="Switch turn off the svg files (which is a bit slow)")
@@ -45,6 +45,8 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        molecular.NewPositiveRate(engine, args.output_dir, output_formats),
+        molecular.NewDailyTestsPerCapita(engine, args.output_dir, output_formats),
         molecular.CumulativeTestsVsCases(engine, args.output_dir, output_formats),
         charts.NewCases(engine, args.output_dir, output_formats),
         molecular.MolecularCurrentDeltas(engine, args.output_dir, output_formats),
@@ -55,8 +57,6 @@ def main():
         charts.Hospitalizations(engine, args.output_dir, output_formats),
         charts.BulletinChartMismatch(engine, args.output_dir, output_formats),
         charts.ConsecutiveBulletinMismatch(engine, args.output_dir, output_formats),
-        molecular.NewPositiveRate(engine, args.output_dir, output_formats),
-        molecular.NewDailyTestsPerCapita(engine, args.output_dir, output_formats),
         charts.MunicipalMap(engine, args.output_dir, output_formats),
         charts.Municipal(engine, args.output_dir, output_formats),
         charts.CurrentDeltas(engine, args.output_dir, output_formats),
