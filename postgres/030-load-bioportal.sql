@@ -30,5 +30,22 @@ FROM PROGRAM 'for file in $(ls /data/bioportal/v2/minimal-info-unique-tests_V2_*
 SET maintenance_work_mem='2GB';
 CREATE INDEX ON bioportal_tests (downloaded_at, test_type, reported_date, collected_date, positive);
 CREATE INDEX ON bioportal_tests (downloaded_at, test_type, collected_date, reported_date, positive);
-
 ANALYZE VERBOSE bioportal_tests;
+
+REFRESH MATERIALIZED VIEW bioportal_tritemporal_counts;
+CREATE INDEX ON bioportal_tritemporal_counts (
+    test_type, collected_date, bulletin_date
+);
+ANALYZE VERBOSE bioportal_tritemporal_counts;
+
+REFRESH MATERIALIZED VIEW bioportal_tritemporal_deltas;
+CREATE INDEX ON bioportal_tritemporal_deltas (
+    test_type, bulletin_date, collected_date
+);
+ANALYZE VERBOSE bioportal_tritemporal_deltas;
+
+REFRESH MATERIALIZED VIEW bioportal_collected_agg;
+CREATE INDEX ON bioportal_collected_agg (
+    test_type, bulletin_date, collected_date
+);
+ANALYZE VERBOSE bioportal_collected_agg;
