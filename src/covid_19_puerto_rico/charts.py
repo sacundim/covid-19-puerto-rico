@@ -187,10 +187,10 @@ class NewCases(AbstractChart):
             mean_value='mean(value)',
             groupby=['variable', 'bulletin_date']
         ).encode(
-            x=alt.X('yearmonthdate(datum_date):T', title='Fecha de toma de muestra',
+            x=alt.X('yearmonthdate(datum_date):T', title='Fecha de muestra o deceso',
                     axis=alt.Axis(format='%d/%m')),
             y = alt.Y('mean_value:Q', title='Casos nuevos (promedio 7 días)',
-                      scale=alt.Scale(type='symlog')),
+                      scale=alt.Scale(type='log')),
                 tooltip = [
                 alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
                 alt.Tooltip('bulletin_date:T', title='Datos hasta'),
@@ -213,7 +213,7 @@ class NewCases(AbstractChart):
                                   'Probables',
                                   'Muertes'])
         ).properties(
-            width=580, height=400
+            width=590, height=400
         )
 
     def fetch_data(self, connection):
