@@ -51,6 +51,8 @@ class Website:
             bulletin_dates=sorted(date_range, reverse=True),
             bulletin_date=bulletin_date,
             previous_date=previous_date,
+            bulletin_month=bulletin_date.strftime('%Y-%m'),
+            previous_date_month=previous_date.strftime('%Y-%m'),
             next_date=next_date)\
             .dump(output_index_html)
 
