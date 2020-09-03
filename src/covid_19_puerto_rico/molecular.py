@@ -41,7 +41,7 @@ class NewPositiveRate(AbstractMolecularChart):
                      alt.Tooltip('variable:N', title='Método de cálculo'),
                      alt.Tooltip('value:Q', format=".2%", title='Tasa de positividad')]
         ).properties(
-            width=585, height=150
+            width=580, height=150
         ).facet(
             columns=1,
             facet=alt.Facet('test_type:N', title=None)
@@ -140,7 +140,7 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
         return df.loc[df['bulletin_date'] == effective_bulletin_date]
 
     def make_chart(self, df, bulletin_date):
-        max_x, max_y = 5_000, 160_000
+        max_x, max_y = 6_000, 180_000
 
         main = alt.Chart(df.dropna()).transform_calculate(
             tests_per_million=alt.datum.cumulative_tests / self.POPULATION_MILLIONS,
@@ -271,7 +271,7 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
         )
 
         return (heatmap + text).properties(
-            width=585, height=70
+            width=580, height=70
         ).facet(
             columns=1,
             facet=alt.Facet('variable:N', title=None,
@@ -337,7 +337,7 @@ class MolecularDailyDeltas(AbstractMolecularChart):
         )
 
         return (heatmap + text).properties(
-            width=585, height=120
+            width=580, height=120
         ).facet(
             columns=1,
             facet=alt.Facet('variable:N', title=None,

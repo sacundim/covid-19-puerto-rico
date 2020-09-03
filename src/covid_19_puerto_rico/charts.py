@@ -80,12 +80,13 @@ class AbstractMismatchChart(AbstractChart):
         )
 
         return (heatmap + text).properties(
-            width=585, height=70
+            width=575, height=70
         ).facet(
-            row=alt.Row('variable', title=None,
-                        sort=['Confirmados',
-                              'Probables',
-                              'Muertes'])
+            columns=1,
+            facet=alt.Facet('variable', title=None,
+                            sort=['Confirmados',
+                                  'Probables',
+                                  'Muertes'])
         )
 
 
@@ -180,8 +181,6 @@ class Cumulative(AbstractChart):
 
 class NewCases(AbstractChart):
     def make_chart(self, df, bulletin_date):
-        max_value = df['value'].max()
-
         base = alt.Chart(df.dropna()).transform_window(
             frame=[-6, 0],
             mean_value='mean(value)',
@@ -213,7 +212,7 @@ class NewCases(AbstractChart):
                                   'Probables',
                                   'Muertes'])
         ).properties(
-            width=590, height=400
+            width=585, height=400
         )
 
     def fetch_data(self, connection):
@@ -376,12 +375,13 @@ class CurrentDeltas(AbstractChart):
         ).transform_filter("(datum.value !== 0) & (datum.value !== null)")
 
         return (heatmap + text).properties(
-            width=585, height=70
+            width=580, height=70
         ).facet(
-            row=alt.Row('variable', title=None,
-                        sort=['Confirmados',
-                              'Probables',
-                              'Muertes'])
+            columns=1,
+            facet=alt.Facet('variable', title=None,
+                            sort=['Confirmados',
+                                  'Probables',
+                                  'Muertes'])
         )
 
     def fetch_data(self, connection):
@@ -435,10 +435,11 @@ class DailyDeltas(AbstractChart):
         return (heatmap + text).properties(
             width=585, height=120
         ).facet(
-            row=alt.Row('variable', title=None,
-                        sort=['Confirmados',
-                              'Probables',
-                              'Muertes'])
+            columns=1,
+            facet=alt.Facet('variable', title=None,
+                            sort=['Confirmados',
+                                  'Probables',
+                                  'Muertes'])
         )
 
     def fetch_data(self, connection):
@@ -482,7 +483,7 @@ class WeekdayBias(AbstractChart):
                           timeUnit='yearmonthdate',
                           format='Datos hasta: %A %d de %B, %Y'),
         ).properties(
-            width=350, height=40
+            width=330, height=40
         )
 
         row1 = alt.hconcat(confirmed, probable, spacing=20).resolve_scale(
@@ -530,7 +531,7 @@ class WeekdayBias(AbstractChart):
                      alt.Tooltip('value:Q', aggregate='sum', title='Casos')]
         )
 
-        heatmap_size = 160
+        heatmap_size = 150
         histogram_size = 40
         return alt.vconcat(
             top.properties(
