@@ -800,6 +800,48 @@ class Hospitalizations(AbstractChart):
             width=575, height=300
         )
 
+class HospitalizationsCovid19Tracking(AbstractChart):
+    """A hospitalizations chart based on the Covid !9 Tracking Project API"""
+
+    API_URL = 'https://api.covidtracking.com/v1/states/pr/daily.csv'
+
+    def fetch_data(self, connection):
+        def parse_date(n):
+            """Parse Covid19Tracking's weird numeric dates to Pandas timestamp"""
+            return pd.Timestamp(year=n // 10_000,
+                                month=(n // 100) % 100,
+                                day=n % 100)
+
+        logging.info("Fetching hospitalizations data from: %s", self.API_URL)
+        raw = pd.read_csv(self.API_URL)
+        df = raw[['date', 'hospitalizedCurrently', 'inIcuCurrently', 'onVentilatorCurrently']]
+        df['date'] = df['date'].apply(parse_date)
+        df = df.rename(columns={
+            'hospitalizedCurrently': 'Hospitalizados',
+            'inIcuCurrently': 'Cuidado intensivo',
+            'onVentilatorCurrently': 'Ventilador'
+        })
+        return pd.melt(df, ['date']).dropna()
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['date'] <= pd.to_datetime(bulletin_date + datetime.timedelta(days=1))]
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df).mark_line(point='transparent').encode(
+            x=alt.X('date:T', title='Fecha'),
+            y=alt.Y('value:Q', title=None),
+            color=alt.Color('variable:N', title=None, legend=alt.Legend(orient='top')),
+            tooltip=[
+                alt.Tooltip('date:T', title='Fecha'),
+                alt.Tooltip('variable:N', title='Variable'),
+                alt.Tooltip('value:Q', title='Valor')
+            ]
+
+        ).properties(
+            width=575, height=300
+        )
+
+
 class AgeGroups(AbstractChart):
     ORDER = ['< 10', '10-19', '20-29', '30-39', '40-49',
              '50-59', '60-69', '70-79', '≥ 80','No disponible']
