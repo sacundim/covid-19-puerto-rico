@@ -829,7 +829,7 @@ class HospitalizationsCovid19Tracking(AbstractChart):
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df).mark_line(point='transparent').encode(
             x=alt.X('date:T', title='Fecha'),
-            y=alt.Y('value:Q', title=None),
+            y=alt.Y('value:Q', title=None, scale=alt.Scale(type='log')),
             color=alt.Color('variable:N', title=None, legend=alt.Legend(orient='top')),
             tooltip=[
                 alt.Tooltip('date:T', title='Fecha'),
