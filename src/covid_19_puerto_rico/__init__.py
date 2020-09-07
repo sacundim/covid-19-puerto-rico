@@ -45,6 +45,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        charts.HospitalizationsCovid19Tracking(engine, args.output_dir, output_formats),
         molecular.NewPositiveRate(engine, args.output_dir, output_formats),
         molecular.NewDailyTestsPerCapita(engine, args.output_dir, output_formats),
         molecular.CumulativeTestsVsCases(engine, args.output_dir, output_formats),
@@ -54,7 +55,6 @@ def main():
         molecular.MolecularLateness7Day(engine, args.output_dir, output_formats),
         molecular.MolecularLatenessDaily(engine, args.output_dir, output_formats),
         charts.AgeGroups(engine, args.output_dir, output_formats),
-        charts.Hospitalizations(engine, args.output_dir, output_formats),
         charts.BulletinChartMismatch(engine, args.output_dir, output_formats),
         charts.ConsecutiveBulletinMismatch(engine, args.output_dir, output_formats),
         charts.MunicipalMap(engine, args.output_dir, output_formats),
