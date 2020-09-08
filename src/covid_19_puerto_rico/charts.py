@@ -804,6 +804,7 @@ class HospitalizationsCovid19Tracking(AbstractChart):
     """A hospitalizations chart based on the Covid !9 Tracking Project API"""
 
     API_URL = 'https://api.covidtracking.com/v1/states/pr/daily.csv'
+    SORT_ORDER = ['Hospitalizados', 'Cuidado intensivo', 'Ventilador']
 
     def fetch_data(self, connection):
         def parse_date(n):
@@ -835,7 +836,9 @@ class HospitalizationsCovid19Tracking(AbstractChart):
         ).mark_line(point='transparent').encode(
             x=alt.X('date:T', title='Fecha'),
             y=alt.Y('mean_value:Q', title='Promedio 7 días', scale=alt.Scale(type='log')),
-            color=alt.Color('variable:N', title=None, legend=alt.Legend(orient='top')),
+            color=alt.Color('variable:N', title=None,
+                            sort=self.SORT_ORDER,
+                            legend=alt.Legend(orient='top')),
             tooltip=[
                 alt.Tooltip('date:T', title='Fecha'),
                 alt.Tooltip('variable:N', title='Variable'),
