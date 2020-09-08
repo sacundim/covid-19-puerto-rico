@@ -830,12 +830,12 @@ class HospitalizationsCovid19Tracking(AbstractChart):
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df).transform_window(
             sort=[{'field': 'date'}],
-            frame=[-6, 0],
+            frame=[-2, 0],
             mean_value='mean(value)',
             groupby=['variable']
         ).mark_line(point='transparent').encode(
             x=alt.X('date:T', title='Fecha'),
-            y=alt.Y('mean_value:Q', title='Promedio 7 días', scale=alt.Scale(type='log')),
+            y=alt.Y('mean_value:Q', title='Promedio 3 días', scale=alt.Scale(type='log')),
             color=alt.Color('variable:N', title=None,
                             sort=self.SORT_ORDER,
                             legend=alt.Legend(orient='top')),
@@ -843,7 +843,7 @@ class HospitalizationsCovid19Tracking(AbstractChart):
                 alt.Tooltip('date:T', title='Fecha'),
                 alt.Tooltip('variable:N', title='Variable'),
                 alt.Tooltip('value:Q', title='Valor'),
-                alt.Tooltip('mean_value:Q', title='Promedio 7 días', format='.1f')
+                alt.Tooltip('mean_value:Q', title='Promedio 3 días', format='.1f')
             ]
         ).properties(
             width=575, height=300
