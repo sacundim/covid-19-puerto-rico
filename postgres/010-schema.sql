@@ -257,17 +257,7 @@ CREATE VIEW bitemporal_agg AS
 SELECT
     bulletin_date,
     datum_date,
-
-    confirmed_and_probable_cases,
-    sum(confirmed_and_probable_cases) OVER bulletin
-        AS cumulative_confirmed_and_probable_cases,
-    COALESCE(confirmed_and_probable_cases, 0)
-    		- COALESCE(lag(confirmed_and_probable_cases) OVER datum, 0)
-        AS delta_confirmed_and_probable_cases,
-    (COALESCE(confirmed_and_probable_cases, 0)
-    		- COALESCE(lag(confirmed_and_probable_cases) OVER datum, 0))
-        * (bulletin_date - datum_date)
-        AS lateness_confirmed_and_probable_cases,
+    bulletin_date - datum_date AS age,
 
     confirmed_cases,
     sum(confirmed_cases) OVER bulletin
@@ -597,21 +587,43 @@ RETURNS DOUBLE PRECISION AS $$
     SELECT cast(n AS DOUBLE PRECISION) / nullif(m, 0);
 $$ LANGUAGE SQL;
 
+-- Calculating population standard deviation from pre-aggregated count,
+-- sum and sum of squares.  See: https://math.stackexchange.com/a/1853685/78028
+CREATE FUNCTION aggdev(count NUMERIC, sum NUMERIC, sumsq NUMERIC)
+RETURNS DOUBLE PRECISION AS $$
+    SELECT sqrt((sumsq :: DOUBLE PRECISION / count) - (sum :: DOUBLE PRECISION / count)^2);
+$$ LANGUAGE SQL;
+
 CREATE VIEW products.lateness_daily AS
 SELECT
     bulletin_date,
-    safediv(sum(lateness_confirmed_cases) FILTER (WHERE lateness_confirmed_cases > 0),
+    safediv(sum(delta_confirmed_cases * age) FILTER (WHERE delta_confirmed_cases > 0),
             sum(delta_confirmed_cases) FILTER (WHERE delta_confirmed_cases > 0))
         AS confirmed_cases_additions,
-    safediv(sum(lateness_probable_cases) FILTER (WHERE lateness_probable_cases > 0),
+    aggdev(sum(delta_confirmed_cases) FILTER (WHERE delta_confirmed_cases > 0),
+    	   sum(delta_confirmed_cases * age) FILTER (WHERE delta_confirmed_cases > 0),
+    	   sum(delta_confirmed_cases * age * age) FILTER (WHERE delta_confirmed_cases > 0))
+        AS confirmed_cases_additions_stddev,
+
+    safediv(sum(delta_probable_cases * age) FILTER (WHERE delta_probable_cases > 0),
             sum(delta_probable_cases) FILTER (WHERE delta_probable_cases > 0))
         AS probable_cases_additions,
+    aggdev(sum(delta_probable_cases) FILTER (WHERE delta_probable_cases > 0),
+    	   sum(delta_probable_cases * age) FILTER (WHERE delta_probable_cases > 0),
+    	   sum(delta_probable_cases * age * age) FILTER (WHERE delta_probable_cases > 0))
+        AS probable_cases_additions_stddev,
+
     -- There is a very weird (nondeterminism?) bug in PRDoH's deaths data processing
     -- that causes weird back-and-forth revisions to the same six dates up to 2020-04-18,
     -- so we just filter those out.
-    safediv(sum(lateness_deaths) FILTER (WHERE lateness_deaths > 0 AND datum_date > '2020-04-18'),
+    safediv(sum(delta_deaths * age) FILTER (WHERE delta_deaths > 0 AND datum_date > '2020-04-18'),
             sum(delta_deaths) FILTER (WHERE delta_deaths > 0 AND datum_date > '2020-04-18'))
-        AS deaths_additions
+        AS deaths_additions,
+    aggdev(sum(delta_deaths) FILTER (WHERE delta_deaths > 0 AND datum_date > '2020-04-18'),
+    	   sum(delta_deaths * age) FILTER (WHERE delta_deaths > 0 AND datum_date > '2020-04-18'),
+    	   sum(delta_deaths * age * age) FILTER (WHERE delta_deaths > 0 AND datum_date > '2020-04-18'))
+        AS deaths_additions_stddev
+
 FROM bitemporal_agg
 -- We exclude the earliest bulletin date because it's artificially late
 WHERE bulletin_date > (
@@ -635,56 +647,60 @@ WITH min_date AS (
 	WHERE confirmed_cases IS NOT NULL
 	AND probable_cases IS NOT NULL
 	AND deaths IS NOT NULL
-), bulletin_sums AS (
+), windowed_aggregates AS (
 	SELECT
 		ba.bulletin_date,
-		sum(lateness_confirmed_cases)
-			FILTER (WHERE lateness_confirmed_cases > 0)
-			AS lateness_added_confirmed_cases,
-		sum(delta_confirmed_cases)
-			FILTER (WHERE delta_confirmed_cases > 0)
-			AS delta_added_confirmed_cases,
-		sum(lateness_probable_cases)
-			FILTER (WHERE lateness_probable_cases > 0)
-			AS lateness_added_probable_cases,
-		sum(delta_probable_cases)
-			FILTER (WHERE delta_probable_cases > 0)
-			AS delta_added_probable_cases,
-        -- There is a very weird (nondeterminism?) bug in PRDoH's deaths data processing
-        -- that causes weird back-and-forth revisions to the same six dates up to 2020-04-18,
-        -- so we just filter those out.
-		sum(lateness_deaths)
-			FILTER (WHERE lateness_deaths > 0 AND datum_date > '2020-04-18')
-			AS lateness_added_deaths,
-		sum(delta_deaths)
-			FILTER (WHERE delta_deaths > 0 AND datum_date > '2020-04-18')
-			AS delta_added_deaths
+		sum(sum(delta_confirmed_cases)
+			FILTER (WHERE delta_confirmed_cases > 0)) OVER bulletin
+			AS count_confirmed_cases,
+		sum(sum(delta_confirmed_cases * age)
+			FILTER (WHERE delta_confirmed_cases > 0)) OVER bulletin
+			AS sum_age_confirmed_cases,
+		sum(sum(delta_confirmed_cases * age * age)
+			FILTER (WHERE delta_confirmed_cases > 0)) OVER bulletin
+			AS sumsq_age_confirmed_cases,
+		sum(sum(delta_probable_cases)
+			FILTER (WHERE delta_probable_cases > 0)) OVER bulletin
+			AS count_probable_cases,
+		sum(sum(delta_probable_cases * age)
+			FILTER (WHERE delta_probable_cases > 0)) OVER bulletin
+			AS sum_age_probable_cases,
+		sum(sum(delta_probable_cases * age * age)
+			FILTER (WHERE delta_probable_cases > 0)) OVER bulletin
+			AS sumsq_age_probable_cases,
+		sum(sum(delta_deaths)
+			FILTER (WHERE delta_deaths > 0)) OVER bulletin
+			AS count_deaths,
+		sum(sum(delta_deaths * age)
+			FILTER (WHERE delta_deaths > 0)) OVER bulletin
+			AS sum_age_deaths,
+		sum(sum(delta_deaths * age * age)
+			FILTER (WHERE delta_deaths > 0)) OVER bulletin
+			AS sumsq_age_deaths
 	FROM bitemporal_agg ba, min_date md
 	WHERE ba.bulletin_date > md.bulletin_date
 	GROUP BY ba.bulletin_date
-), windowed_sums AS (
-	SELECT
-		bulletin_date,
-        safediv(SUM(lateness_added_confirmed_cases) OVER bulletin,
-	        	SUM(delta_added_confirmed_cases) OVER bulletin)
-	        AS confirmed_cases_additions,
-        safediv(SUM(lateness_added_probable_cases) OVER bulletin,
-	        	SUM(delta_added_probable_cases) OVER bulletin)
-	        AS probable_cases_additions,
-        safediv(SUM(lateness_added_deaths) OVER bulletin,
-	        	SUM(delta_added_deaths) OVER bulletin)
-	        AS deaths_additions
-	FROM bulletin_sums bs
-	WINDOW bulletin AS (ORDER BY bulletin_date ROWS 6 PRECEDING)
+	WINDOW bulletin AS (
+		ORDER BY ba.bulletin_date RANGE '6 day' PRECEDING
+	)
 )
 SELECT
-	ws.bulletin_date,
-	confirmed_cases_additions,
-	probable_cases_additions,
-	deaths_additions
-FROM windowed_sums ws, min_date m
-WHERE ws.bulletin_date >= m.bulletin_date + INTERVAL '7' DAY
-ORDER BY bulletin_date;
+	wa.bulletin_date,
+	safediv(sum_age_confirmed_cases, count_confirmed_cases)
+		AS confirmed_cases_additions,
+	aggdev(count_confirmed_cases, sum_age_confirmed_cases, sumsq_age_confirmed_cases)
+		AS confirmed_cases_additions_stdev,
+	safediv(sum_age_probable_cases, count_probable_cases)
+		AS probable_cases_additions,
+	aggdev(count_probable_cases, sum_age_probable_cases, sumsq_age_probable_cases)
+		AS probable_cases_additions_stdev,
+	safediv(sum_age_deaths, count_deaths)
+		AS deaths_additions,
+	aggdev(count_deaths, sum_age_deaths, sumsq_age_deaths)
+		AS deaths_additions_stdev
+FROM windowed_aggregates wa, min_date m
+WHERE wa.bulletin_date >= m.bulletin_date + INTERVAL '7' DAY
+ORDER BY wa.bulletin_date DESC;
 
 COMMENT ON VIEW products.lateness_7day IS
 'An estimate of how late on average new data is, based on the
