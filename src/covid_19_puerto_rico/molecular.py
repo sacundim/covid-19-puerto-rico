@@ -442,3 +442,45 @@ class MolecularLateness7Day(AbstractMolecularChart):
         ).facet(
             row=alt.Row('variable', title=None, sort=self.SORT_ORDER)
         )
+
+
+class TestingLoad(AbstractMolecularChart):
+    SORT_ORDER = ['Positivas duplicadas', 'Negativas + casos']
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('testing_load', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.collected_date,
+            table.c.tests,
+            table.c.duplicate_positives]
+        )
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
+
+    def make_chart(self, df, bulletin_date):
+        base = alt.Chart(df).transform_calculate(
+            productive=alt.datum.tests - alt.datum.duplicate_positives
+        ).encode(
+            x=alt.X('collected_date:T', title='Fecha de muestra'),
+            tooltip=[
+                alt.Tooltip('bulletin_date:T', title='Fecha de datos'),
+                alt.Tooltip('collected_date:T', title='Fecha de muestra'),
+                alt.Tooltip('tests:Q', format='.1f', title='Muestras tomadas'),
+                alt.Tooltip('duplicate_positives:Q', format='.1f', title='Positivas duplicadas'),
+                alt.Tooltip('productive:Q', format='.1f', title='Negativas + casos nuevos')
+            ]
+        )
+
+        all = base.mark_area(color='red').encode(
+            y=alt.Y('tests:Q', title='Pruebas (promedio 7 días)'),
+            y2=alt.Y2('productive:Q')
+        )
+
+        productive = base.mark_area(color='lightgrey').encode(
+            y=alt.Y('productive:Q')
+        )
+
+        return (all + productive).properties(
+            width=575, height=350
+        )
