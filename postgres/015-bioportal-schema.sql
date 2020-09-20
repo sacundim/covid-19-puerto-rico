@@ -297,3 +297,28 @@ WINDOW seven AS (
 	ORDER BY bulletin_date
 	RANGE '6 days' PRECEDING
 );
+
+
+CREATE VIEW products.testing_load AS
+SELECT
+	bca.bulletin_date,
+	bca.collected_date,
+	avg(bca.tests) OVER collected AS tests,
+	avg(bca.tests - bca.positive_tests)
+		OVER collected
+		AS negatives,
+	avg(COALESCE(b.confirmed_cases, 0))
+		OVER collected
+		AS new_cases,
+	avg(bca.positive_tests - COALESCE(b.confirmed_cases, 0))
+		OVER collected
+		AS duplicate_positives
+FROM bioportal_collected_agg bca
+INNER JOIN bitemporal b
+	ON b.bulletin_date = bca.bulletin_date
+	AND b.datum_date = bca.collected_date
+WHERE test_type = 'Molecular'
+WINDOW collected AS (
+	PARTITION BY test_type, bca.bulletin_date
+	ORDER BY collected_date RANGE '6 day' PRECEDING
+);
