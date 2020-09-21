@@ -33,6 +33,7 @@
         <li><a href="#DailyDeltas_section">Cambios entre boletines recientes</a></li>
         <li><a href="#LatenessDaily_section">Rezago de datos de cada boletín</a></li>
         <li><a href="#Lateness7Day_section">Tendencia de rezago de datos</a></li>
+        <li><a href="#LatenessTiers_section">Historial de rezagos por renglones</a></li>
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas per cápita (promedio 7 días)</a></li>
         <li><a href="#TestingLoad_section">Carga de pruebas de seguimiento</a></li>
         <li><a href="#NewPositiveRate_section">Positividad (promedio 7 días)</a></li>
@@ -215,6 +216,28 @@
         <li><a href="#Revisions_2020-07-03">3 de julio del 2020</a></li>
         <li><a href="#Revisions_2020-06-05">5 de junio del 2020</a></li>
     </ul>
+</div>
+
+
+<div class="section" id="LatenessTiers_section">
+    <h1>Historial de rezagos por renglones</h1>
+
+    <div id="LatenessTiers" class="chart"></div>
+    <script type="text/javascript">
+      embedChart('LatenessTiers', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Una gráfica de dos paneles que muestra promedios de siete días de casos confirmados
+        nuevos, por fecha de boletín (¡no de muestra!), divididos en renglones de rezago
+        (tiempo entre toma de muestra e incorporación en el conteo).  El panel superior muestra
+        los volúmenes absolutos; el panel inferior es los mismos datos, pero en porcentajes.</p>
+
+    <p>La forma de la curva superior se parece una gráfica de casos nuevos por fecha que se
+        incorporan al conteo, pero <strong>alerta</strong>, no cuenta muchas <em>restas</em> de
+        casos al conteo (porque las restas dañan los estimados de rezagos, hacen que den negativo).
+        Por esto la curva es en realidad más alta que los números verdaderos de casos confirmados.</p>
 </div>
 
 
