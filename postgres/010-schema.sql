@@ -213,47 +213,7 @@ CREATE TABLE age_groups_molecular (
 );
 
 
-CREATE TABLE prpht_molecular_raw (
-    bulletin_date DATE NOT NULL,
-    laboratory TEXT NOT NULL,
-    cumulative_molecular_tests INTEGER,
-    cumulative_positive_molecular_tests INTEGER,
-    new_molecular_tests INTEGER,
-    new_positive_molecular_tests INTEGER,
-    current_molecular_capacity_per_week INTEGER,
-    PRIMARY KEY (bulletin_date, laboratory)
-);
-
-CREATE OR REPLACE VIEW prpht_molecular_cleaned AS
-SELECT
-	bulletin_date,
-	laboratory,
-	bulletin_date - lag(bulletin_date) OVER previous
-		AS days_since_last,
-	COALESCE(cumulative_positive_molecular_tests,
-		     LAG(cumulative_positive_molecular_tests) OVER previous + new_positive_molecular_tests,
-		     SUM(new_positive_molecular_tests) OVER previous)
-		AS cumulative_positive_molecular_tests,
-	COALESCE(new_positive_molecular_tests,
-	         cumulative_positive_molecular_tests - LAG(cumulative_positive_molecular_tests) OVER previous,
-	         0)
-	    AS new_positive_molecular_tests,
-	COALESCE(cumulative_molecular_tests,
-		     LAG(cumulative_molecular_tests) OVER previous + new_molecular_tests,
-		     SUM(new_molecular_tests) OVER previous)
-		AS cumulative_molecular_tests,
-	COALESCE(new_molecular_tests,
-	         cumulative_molecular_tests - LAG(cumulative_molecular_tests) OVER previous,
-	         0)
-	    AS new_molecular_tests
-FROM prpht_molecular_raw
-WINDOW previous AS (
-	PARTITION BY laboratory ORDER BY bulletin_date ROWS UNBOUNDED PRECEDING
-)
-ORDER BY laboratory, bulletin_date;
-
-
-CREATE VIEW bitemporal_agg AS
+CREATE MATERIALIZED VIEW bitemporal_agg AS
 SELECT
     bulletin_date,
     datum_date,
@@ -265,10 +225,6 @@ SELECT
     COALESCE(confirmed_cases, 0)
         - COALESCE(lag(confirmed_cases) OVER datum, 0)
         AS delta_confirmed_cases,
-    (COALESCE(confirmed_cases, 0)
-        - COALESCE(lag(confirmed_cases) OVER datum, 0))
-        * (bulletin_date - datum_date)
-        AS lateness_confirmed_cases,
 
     probable_cases,
     sum(probable_cases) OVER bulletin
@@ -276,21 +232,13 @@ SELECT
     COALESCE(probable_cases, 0)
         - COALESCE(lag(probable_cases) OVER datum, 0)
         AS delta_probable_cases,
-    (COALESCE(probable_cases, 0)
-        - COALESCE(lag(probable_cases) OVER datum, 0))
-        * (bulletin_date - datum_date)
-        AS lateness_probable_cases,
 
     deaths,
     sum(deaths) OVER bulletin
         AS cumulative_deaths,
     COALESCE(deaths, 0)
         - COALESCE(lag(deaths) OVER datum, 0)
-        AS delta_deaths,
-    (COALESCE(deaths, 0)
-        - COALESCE(lag(deaths) OVER datum, 0))
-        * (bulletin_date - datum_date)
-        AS lateness_deaths
+        AS delta_deaths
 FROM bitemporal
 WINDOW bulletin AS (
 	PARTITION BY bulletin_date
@@ -302,13 +250,12 @@ WINDOW bulletin AS (
 )
 ORDER BY bulletin_date DESC, datum_date ASC;
 
-COMMENT ON VIEW bitemporal_agg IS
+COMMENT ON MATERIALIZED VIEW bitemporal_agg IS
 'Useful aggregations/windows over the bitemporal table:
 
 - Cumulative: Cumulative sums, partitioned by bulletin date;
 - Delta: Current bulletin_date''s value for current datum_date
-  minus previous bulletin_date''s value for previous datum_date;
-- Lateness score: Delta * (bulletin_date - datum_date).';
+  minus previous bulletin_date''s value for previous datum_date.';
 
 
 CREATE VIEW announcement_consolidated AS
@@ -444,25 +391,6 @@ WINDOW seven AS (
 	RANGE BETWEEN '6 days' PRECEDING AND CURRENT ROW
 )
 ORDER BY bulletin_date, age_range;
-
-CREATE VIEW prpht_molecular_deltas AS
-SELECT
-	laboratory,
-	bulletin_date,
-	days_since_last,
-	cumulative_molecular_tests,
-	cumulative_molecular_tests
-		- LAG(cumulative_molecular_tests, 1, 0::BIGINT) OVER previous
-		AS delta_molecular_tests,
-	cumulative_positive_molecular_tests,
-	cumulative_positive_molecular_tests
-		- LAG(cumulative_positive_molecular_tests, 1, 0::BIGINT) OVER previous
-		AS delta_positive_molecular_tests
-FROM prpht_molecular_cleaned
-WINDOW previous AS (
-	PARTITION BY laboratory ORDER BY bulletin_date ROWS 1 PRECEDING
-)
-ORDER BY laboratory, bulletin_date;
 
 
 -------------------------------------------------------------------------------
@@ -733,55 +661,6 @@ INNER JOIN canonical_municipal_names cmn
 ORDER BY municipality, bulletin_date;
 
 
-CREATE VIEW products.bitemporal_datum_lateness_agg AS
-SELECT
-	datum_date,
-	bulletin_date,
-	bulletin_date - datum_date days_before_bulletin,
-	sum(delta_confirmed_cases)
-		FILTER (WHERE delta_confirmed_cases > 0)
-		OVER bulletins
-		AS cumulative_confirmed_cases,
-	sum(lateness_confirmed_cases)
-		FILTER (WHERE lateness_confirmed_cases > 0)
-		OVER bulletins
-		AS lateness_confirmed_cases,
-	sum(delta_probable_cases)
-		FILTER (WHERE delta_probable_cases > 0)
-		OVER bulletins
-		AS cumulative_probable_cases,
-	sum(lateness_probable_cases)
-		FILTER (WHERE lateness_probable_cases > 0)
-		OVER bulletins
-		AS lateness_probable_cases,
-    -- There is a very weird (nondeterminism?) bug in PRDoH's deaths data processing
-    -- that causes weird back-and-forth revisions to the same six dates up to 2020-04-18,
-    -- so we just filter those out.
-	sum(delta_deaths)
-		FILTER (WHERE delta_deaths > 0 AND datum_date > '2020-04-18')
-		OVER bulletins
-		AS cumulative_deaths,
-	sum(lateness_deaths)
-		FILTER (WHERE lateness_deaths > 0 AND datum_date > '2020-04-18')
-		OVER bulletins
-		AS lateness_deaths
-FROM bitemporal_agg ba
--- This is the earliest bulletin from which it makes sense to do this analysis.
--- Which we exclude because it's artificially late.
-WHERE bulletin_date > '2020-04-24'
-WINDOW bulletins AS (
-	PARTITION BY datum_date
-	ORDER BY bulletin_date
-)
-ORDER BY datum_date, bulletin_date;
-
-COMMENT ON VIEW products.bitemporal_datum_lateness_agg IS
-'Aggregation of deltas and lateness over datum_date, used for analyzing
-lateness not in term of how late each bulletin''s data was, but rather
-how long data for a given datum_date took to be reported. (Which changes
-with each successive bulletin_date.)';
-
-
 CREATE VIEW products.lateness_tiers_smoothed AS
 WITH min_date AS (
 	SELECT min(bulletin_date) min_bulletin_date
@@ -793,8 +672,9 @@ WITH min_date AS (
 	SELECT
 		bulletin_date,
 		count(*) OVER bulletin AS window_days,
-		sum(sum(delta_confirmed_cases))
-			OVER bulletin
+		sum(sum(delta_confirmed_cases) FILTER (
+			WHERE delta_confirmed_cases > 0
+		)) OVER bulletin
 			AS count,
 		sum(sum(delta_confirmed_cases) FILTER (
 			WHERE delta_confirmed_cases > 0 AND age <= 7
