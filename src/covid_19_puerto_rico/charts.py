@@ -912,3 +912,52 @@ class AgeGroups(AbstractChart):
             facet=alt.Facet('age_range:N', sort=self.ORDER,
                             title='Casos nuevos por edad (por millón de habitantes, promedio 7 días)')
         )
+
+class LatenessTiers(AbstractChart):
+    SORT_ORDER = ['≤ 7 días', '≤ 14 días', '> 14 días']
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('lateness_tiers_smoothed', self.metadata,
+                                 schema='products', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            (table.c.count_one_week / 7.0).label('≤ 7 días'),
+            (table.c.count_two_week / 7.0).label('≤ 14 días'),
+            (table.c.count_useless / 7.0).label('> 14 días')
+        ])
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+        return pd.melt(df, ['bulletin_date'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df, bulletin_date):
+        base = alt.Chart(df).transform_joinaggregate(
+            groupby=['bulletin_date'],
+            total='sum(value)'
+        ).mark_area(opacity=0.85).encode(
+            color=alt.Color('variable:N', title='Renglón', sort=self.SORT_ORDER,
+                            legend=alt.Legend(orient='top', titleOrient='left', offset=5)),
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                     alt.Tooltip('variable:N', title='Renglón'),
+                     alt.Tooltip('value:Q', format=".1f", title='Casos en renglón'),
+                     alt.Tooltip('total:Q', format=".1f", title='Casos total'),]
+        )
+
+        absolute = base.encode(
+            x=alt.X('bulletin_date:T', title=None, axis=alt.Axis(ticks=False, labels=False)),
+            y=alt.Y('value:Q', title='Casos confirmados (promedio 7 días)',
+                    axis=alt.Axis(labelExpr="if(datum.value > 0, datum.label, '')")),
+        ).properties(
+            width=575, height=275
+        )
+
+        normalized = base.encode(
+            x=alt.X('bulletin_date:T', title='Fecha de boletín'),
+            y=alt.Y('value:Q', stack='normalize', title='% renglón',
+                    axis=alt.Axis(format='%', labelExpr="if(datum.value < 1.0, datum.label, '')"))
+        ).properties(
+            width=575, height=75
+        )
+
+        return alt.vconcat(absolute, normalized, spacing=5)

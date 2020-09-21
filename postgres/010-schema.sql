@@ -792,6 +792,7 @@ WITH min_date AS (
 ), windowed_aggregates AS (
 	SELECT
 		bulletin_date,
+		count(*) OVER bulletin AS window_days,
 		sum(sum(delta_confirmed_cases))
 			OVER bulletin
 			AS count,
@@ -822,15 +823,15 @@ WITH min_date AS (
 		sum(sum(delta_confirmed_cases) FILTER (
 			WHERE delta_confirmed_cases > 0 AND age > 14
 		)) OVER bulletin
-			AS count_useless_cases,
+			AS count_useless,
 		sum(sum(delta_confirmed_cases * age) FILTER (
 			WHERE delta_confirmed_cases > 0 AND age > 14
 		)) OVER bulletin
-			AS sum_age_useless_cases,
+			AS sum_age_useless,
 		sum(sum(delta_confirmed_cases * age * age) FILTER (
 			WHERE delta_confirmed_cases > 0 AND age > 14
 		)) OVER bulletin
-			AS sumsq_age_useless_cases
+			AS sumsq_age_useless
 	FROM bitemporal_agg b
 	INNER JOIN min_date
 		ON bulletin_date > min_bulletin_date
@@ -841,6 +842,7 @@ WITH min_date AS (
 )
 SELECT
 	wa.bulletin_date,
+	window_days,
 	count,
 	count_one_week,
 	count_one_week :: DOUBLE PRECISION / count
@@ -856,12 +858,12 @@ SELECT
 		AS two_week_lag_mean,
 	aggdev(count_two_week, sum_age_two_week, sumsq_age_two_week)
 		AS two_week_lag_stddev,
-	count_useless_cases,
-	count_useless_cases :: DOUBLE PRECISION / count
+	count_useless,
+	count_useless :: DOUBLE PRECISION / count
 		AS useless_pct,
-	safediv(sum_age_useless_cases, count_useless_cases)
+	safediv(sum_age_useless, count_useless)
 		AS useless_lag_mean,
-	aggdev(count_useless_cases, sum_age_useless_cases, sumsq_age_useless_cases)
+	aggdev(count_useless, sum_age_useless, sumsq_age_useless)
 		AS useless_lag_stddev
 FROM windowed_aggregates wa
 INNER JOIN min_date md
