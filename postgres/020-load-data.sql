@@ -6,6 +6,8 @@ COPY bitemporal
 FROM '/data/cases/PuertoRico-bitemporal.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 ANALYZE VERBOSE bitemporal;
+REFRESH MATERIALIZED VIEW bitemporal_agg;
+ANALYZE VERBOSE bitemporal_agg;
 
 COPY canonical_municipal_names
 FROM '/data/cases/Municipalities-canonical_names.csv'
@@ -29,8 +31,4 @@ FROM '/data/cases/PuertoRico-bioportal.csv'
 
 COPY hospitalizations
 FROM '/data/cases/PuertoRico-hospitalizations.csv'
-    CSV ENCODING 'UTF-8' HEADER NULL '';
-
-COPY prpht_molecular_raw
-FROM '/data/cases/PRPHT-molecular.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
