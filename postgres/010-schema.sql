@@ -780,3 +780,90 @@ COMMENT ON VIEW products.bitemporal_datum_lateness_agg IS
 lateness not in term of how late each bulletin''s data was, but rather
 how long data for a given datum_date took to be reported. (Which changes
 with each successive bulletin_date.)';
+
+
+CREATE VIEW products.lateness_tiers_smoothed AS
+WITH min_date AS (
+	SELECT min(bulletin_date) min_bulletin_date
+	FROM bitemporal
+	WHERE confirmed_cases IS NOT NULL
+	AND probable_cases IS NOT NULL
+	AND deaths IS NOT NULL
+), windowed_aggregates AS (
+	SELECT
+		bulletin_date,
+		sum(sum(delta_confirmed_cases))
+			OVER bulletin
+			AS count,
+		sum(sum(delta_confirmed_cases) FILTER (
+			WHERE delta_confirmed_cases > 0 AND age <= 7
+		)) OVER bulletin
+			AS count_one_week,
+		sum(sum(delta_confirmed_cases * age) FILTER (
+			WHERE delta_confirmed_cases > 0 AND age <= 7
+		)) OVER bulletin
+			AS sum_age_one_week,
+		sum(sum(delta_confirmed_cases * age * age) FILTER (
+			WHERE delta_confirmed_cases > 0 AND age <= 7
+		)) OVER bulletin
+			AS sumsq_age_one_week,
+		sum(sum(delta_confirmed_cases) FILTER (
+			WHERE delta_confirmed_cases > 0 AND 7 < age AND age <= 14
+		)) OVER bulletin
+			AS count_two_week,
+		sum(sum(delta_confirmed_cases * age) FILTER (
+			WHERE delta_confirmed_cases > 0 AND 7 < age AND age <= 14
+		)) OVER bulletin
+			AS sum_age_two_week,
+		sum(sum(delta_confirmed_cases * age * age) FILTER (
+			WHERE delta_confirmed_cases > 0 AND 7 < age AND age <= 14
+		)) OVER bulletin
+			AS sumsq_age_two_week,
+		sum(sum(delta_confirmed_cases) FILTER (
+			WHERE delta_confirmed_cases > 0 AND age > 14
+		)) OVER bulletin
+			AS count_useless_cases,
+		sum(sum(delta_confirmed_cases * age) FILTER (
+			WHERE delta_confirmed_cases > 0 AND age > 14
+		)) OVER bulletin
+			AS sum_age_useless_cases,
+		sum(sum(delta_confirmed_cases * age * age) FILTER (
+			WHERE delta_confirmed_cases > 0 AND age > 14
+		)) OVER bulletin
+			AS sumsq_age_useless_cases
+	FROM bitemporal_agg b
+	INNER JOIN min_date
+		ON bulletin_date > min_bulletin_date
+	GROUP BY bulletin_date
+	WINDOW bulletin AS (
+		ORDER BY bulletin_date RANGE '6 day' PRECEDING
+	)
+)
+SELECT
+	wa.bulletin_date,
+	count,
+	count_one_week,
+	count_one_week :: DOUBLE PRECISION / count
+		AS one_week_pct,
+	safediv(sum_age_one_week, count_one_week)
+		AS one_week_lag_mean,
+	aggdev(count_one_week, sum_age_one_week, sumsq_age_one_week)
+		AS one_week_lag_stddev,
+	count_two_week,
+	count_two_week :: DOUBLE PRECISION / count
+		AS two_week_pct,
+	safediv(sum_age_two_week, count_two_week)
+		AS two_week_lag_mean,
+	aggdev(count_two_week, sum_age_two_week, sumsq_age_two_week)
+		AS two_week_lag_stddev,
+	count_useless_cases,
+	count_useless_cases :: DOUBLE PRECISION / count
+		AS useless_pct,
+	safediv(sum_age_useless_cases, count_useless_cases)
+		AS useless_lag_mean,
+	aggdev(count_useless_cases, sum_age_useless_cases, sumsq_age_useless_cases)
+		AS useless_lag_stddev
+FROM windowed_aggregates wa
+INNER JOIN min_date md
+	ON bulletin_date >= min_bulletin_date + 7
+ORDER BY bulletin_date DESC;
