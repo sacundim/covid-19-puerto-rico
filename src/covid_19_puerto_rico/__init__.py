@@ -45,6 +45,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        charts.LatenessTiers(engine, args.output_dir, output_formats),
         molecular.TestingLoad(engine, args.output_dir, output_formats),
         charts.HospitalizationsCovid19Tracking(engine, args.output_dir, output_formats),
         molecular.NewPositiveRate(engine, args.output_dir, output_formats),
