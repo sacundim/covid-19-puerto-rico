@@ -2,28 +2,41 @@
 
 set -e
 
-ENDPOINT="https://bioportal.salud.gov.pr/api/administration/reports/minimal-info-unique-tests"
+CASES_ENDPOINT="https://bioportal.salud.gov.pr/api/administration/reports/orders/minimal-info"
+TESTS_ENDPOINT="https://bioportal.salud.gov.pr/api/administration/reports/minimal-info-unique-tests"
 timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-basename="minimal-info-unique-tests_V2_${timestamp}"
+cases_basename="minimal-info_${timestamp}"
+tests_basename="minimal-info-unique-tests_V2_${timestamp}"
 
 HERE="$(dirname $0)"
 REPO_ROOT="${HERE}/.."
 TMP="${REPO_ROOT}/tmp"
-JSON_PATH="${REPO_ROOT}/tmp/${basename}.json"
-CSV_PATH="${REPO_ROOT}/assets/data/bioportal/v2/${basename}.csv.bz2"
+OUTPUT_DIR="${REPO_ROOT}/assets/data/bioportal"
+TESTS_DIR="${OUTPUT_DIR}/v2"
+CASES_DIR="${TMP}/cases/csv_v1"
 
-time wget \
-    --output-document="${JSON_PATH}" \
-    "${ENDPOINT}"
 
-echo "$(date): Converting to csv..."
-"${HERE}"/bioportal-json-to-csv.sh "${timestamp}" "${JSON_PATH}" \
+echo "$(date): Fetching from tests endpoint..."
+time curl "${TESTS_ENDPOINT}" \
+  | bzip2 -9 \
+  > "${TMP}/tests/json_v2/${tests_basename}.json.bz2"
+
+echo "$(date): Fetching from cases endpoint..."
+time curl "${CASES_ENDPOINT}" \
+  | bzip2 -9 \
+  > "${TMP}/cases/json_v1/${cases_basename}.json.bz2"
+
+
+echo "$(date): Converting tests to csv..."
+"${HERE}"/bioportal-tests-to-csv.sh "${timestamp}" "${TMP}/${tests_basename}.json" \
     | bzip2 -9 \
-    > "${CSV_PATH}"
-echo "$(date): Wrote output to ${CSV_PATH}"
+    > "${TESTS_DIR}/${tests_basename}.csv.bz2"
+echo "$(date): Wrote output to ${TESTS_DIR}/${tests_basename}.csv.bz2"
 
-LINE_COUNT="$(cat "${CSV_PATH}" |bunzip2 |tail -n+2 |wc -l)"
-echo "$(date): Line count: ${LINE_COUNT}"
+echo "$(date): Converting cases to csv..."
+mkdir -p ${CASES_DIR}
+"${HERE}"/bioportal-cases-to-csv.sh "${timestamp}" "${TMP}/${cases_basename}.json" \
+    | bzip2 -9 \
+    > "${CASES_DIR}/${cases_basename}.csv.bz2"
+echo "$(date): Wrote output to ${CASES_DIR}/${cases_basename}.csv.bz2"
 
-echo "$(date): Compressing downloaded json..."
-bzip2 -9 "${JSON_PATH}"
