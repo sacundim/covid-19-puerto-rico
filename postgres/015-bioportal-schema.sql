@@ -174,32 +174,6 @@ SELECT
     smoothed_daily_tests
 FROM bioportal_reported_agg;
 
-CREATE VIEW products.tests_by_collected_date AS
-SELECT
-	tests.bulletin_date,
-	collected_date,
-	cumulative_tests,
-	cumulative_positive_tests,
-	cumulative_confirmed_cases
-	    AS cumulative_cases,
-	smoothed_daily_tests,
-	smoothed_daily_positive_tests,
-	(cumulative_confirmed_cases
-		- LAG(cumulative_confirmed_cases, 7, 0::bigint) OVER seven)
-		/ 7.0
-		AS smoothed_daily_cases
-FROM bioportal_collected_agg tests
-INNER JOIN bitemporal_agg cases
-	ON cases.bulletin_date = tests.bulletin_date
-	AND cases.datum_date = tests.collected_date
-WHERE tests.bulletin_date > '2020-04-24'
-AND test_type = 'Molecular'
-WINDOW seven AS (
-	PARTITION BY tests.bulletin_date
-	ORDER BY collected_date
-	RANGE '6 days' PRECEDING
-);
-
 CREATE VIEW products.positive_rates AS
 SELECT
 	molecular.test_type,
