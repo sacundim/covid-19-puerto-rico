@@ -124,14 +124,12 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
     POPULATION_MILLIONS = 3.193_694
 
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('molecular_tests_vs_confirmed_cases', self.metadata,
-                                 schema='products', autoload=True)
+        table = sqlalchemy.Table('molecular_tests_vs_confirmed_cases', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.collected_date,
             table.c.cumulative_tests,
-            table.c.cumulative_cases,
-            table.c.cumulative_positive_tests
+            table.c.cumulative_cases
         ])
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
 

@@ -23,6 +23,7 @@ DOCKER_IMAGE="${DOCKER_IMAGE:=covid-19-puerto-rico}"
 # this variable:
 DOCKER_NETWORK="${DOCKER_NETWORK:-covid-19-puerto-rico_default}"
 
+
 cd "$(dirname $0)"/..
 ./scripts/build-docker-image.sh
 
@@ -30,9 +31,12 @@ rm -rf output/*
 
 time docker run --rm \
   --network="${DOCKER_NETWORK}" \
+  -v ~/.aws:/awsconfig:ro \
   -v "$(pwd)"/config:/config:ro \
   -v "$(pwd)"/assets:/assets:ro \
   -v "$(pwd)"/output:/output:rw \
+  --env AWS_CONFIG_FILE=/awsconfig/config \
+  --env AWS_SHARED_CREDENTIALS_FILE=/awsconfig/credentials \
   "${DOCKER_IMAGE}" \
     --config-file /config/docker.toml \
     --assets-dir /assets \
