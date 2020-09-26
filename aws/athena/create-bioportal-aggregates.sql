@@ -2,9 +2,7 @@
 -- Create some useful aggregates off the big tables.
 --
 
-CREATE TABLE bioportal_tritemporal_counts WITH (
-    external_location = 's3://covid-19-puerto-rico/bioportal-aggregates/bioportal_tritemporal_counts/'
-) AS
+CREATE TABLE covid_pr_etl.bioportal_tritemporal_counts AS
 SELECT
 	test_type,
 	bulletin_date,
@@ -13,7 +11,7 @@ SELECT
 	count(*) tests,
 	count(*) FILTER (WHERE positive)
 		AS positive_tests
-FROM bioportal_tests
+FROM covid_pr_etl.bioportal_tests
 WHERE DATE '2020-03-01' <= collected_date
 AND collected_date <= bulletin_date
 AND DATE '2020-03-01' <= reported_date
@@ -21,9 +19,7 @@ AND reported_date <= bulletin_date
 GROUP BY test_type, bulletin_date, collected_date, reported_date;
 
 
-CREATE TABLE bioportal_tritemporal_deltas WITH (
-    external_location = 's3://covid-19-puerto-rico/bioportal-aggregates/bioportal_tritemporal_deltas/'
-) AS
+CREATE TABLE covid_pr_etl.bioportal_tritemporal_deltas AS
 SELECT
 	test_type,
 	bulletin_date,
@@ -39,14 +35,12 @@ SELECT
         PARTITION BY test_type, collected_date, reported_date
 	    ORDER BY bulletin_date
     ), 0) AS delta_positive_tests
-FROM bioportal_tritemporal_counts
+FROM covid_pr_etl.bioportal_tritemporal_counts
 WHERE collected_date <= bulletin_date
 AND reported_date <= bulletin_date;
 
 
-CREATE TABLE bioportal_collected_agg WITH (
-    external_location = 's3://covid-19-puerto-rico/bioportal-aggregates/bioportal_collected_agg/'
-) AS
+CREATE TABLE covid_pr_etl.bioportal_collected_agg AS
 SELECT
 	test_type,
 	bulletin_date,
@@ -65,12 +59,10 @@ SELECT
         ORDER BY collected_date
     ) AS cumulative_positive_tests,
 	sum(delta_positive_tests) AS delta_positive_tests
-FROM bioportal_tritemporal_deltas
+FROM covid_pr_etl.bioportal_tritemporal_deltas
 GROUP BY test_type, bulletin_date, collected_date;
 
-CREATE TABLE bioportal_reported_agg WITH (
-    external_location = 's3://covid-19-puerto-rico/bioportal-aggregates/bioportal_reported_agg/'
-) AS
+CREATE TABLE covid_pr_etl.bioportal_reported_agg AS
 SELECT
 	test_type,
 	bulletin_date,
@@ -89,5 +81,5 @@ SELECT
         ORDER BY reported_date
     ) AS cumulative_positive_tests,
 	sum(delta_positive_tests) AS delta_positive_tests
-FROM bioportal_tritemporal_deltas
+FROM covid_pr_etl.bioportal_tritemporal_deltas
 GROUP BY test_type, bulletin_date, reported_date;

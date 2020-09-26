@@ -2,35 +2,57 @@
 -- Create the basic schema for Bioportal data.
 --
 
-CREATE EXTERNAL TABLE tests_csv_v1 (
-    downloadedAt STRING,
-    collectedDate STRING,
-    reportedDate STRING,
-    ageRange STRING,
-    testType STRING,
-    result STRING,
-    patientCity STRING,
-    createdAt STRING
-) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-LOCATION 's3://covid-19-puerto-rico/bioportal-archive/tests/csv_v1/';
+CREATE TABLE covid_pr_etl.bulletin_cases AS
+WITH cleaned AS (
+    SELECT
+        from_iso8601_date(bulletin_date) AS bulletin_date,
+        from_iso8601_date(datum_date) AS datum_date,
+        CAST(nullif(confirmed_cases, '') AS INTEGER) AS confirmed_cases,
+        CAST(nullif(probable_cases, '') AS INTEGER) AS probable_cases,
+        CAST(nullif(deaths, '') AS INTEGER) AS deaths
+    FROM covid_pr_sources.bulletin_cases_csv
+)
+SELECT
+    bulletin_date,
+    datum_date,
+	date_diff('day', datum_date, bulletin_date)
+		AS age,
 
-CREATE EXTERNAL TABLE tests_csv_v2 (
-    downloadedAt STRING,
-    patientId STRING,
-    collectedDate STRING,
-    reportedDate STRING,
-    ageRange STRING,
-    testType STRING,
-    result STRING,
-    patientCity STRING,
-    createdAt STRING
-) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-LOCATION 's3://covid-19-puerto-rico/bioportal-archive/tests/csv_v2/';
+    confirmed_cases,
+    sum(confirmed_cases) OVER (
+        PARTITION BY bulletin_date
+        ORDER BY datum_date
+    ) AS cumulative_confirmed_cases,
+    COALESCE(confirmed_cases, 0)
+        - COALESCE(lag(confirmed_cases) OVER (
+            PARTITION BY datum_date
+            ORDER BY bulletin_date
+        ), 0) AS delta_confirmed_cases,
 
+    probable_cases,
+    sum(probable_cases) OVER (
+        PARTITION BY bulletin_date
+        ORDER BY datum_date
+    ) AS cumulative_probable_cases,
+    COALESCE(probable_cases, 0)
+        - COALESCE(lag(probable_cases) OVER (
+            PARTITION BY datum_date
+            ORDER BY bulletin_date
+        ), 0) AS delta_probable_cases,
 
-CREATE TABLE bioportal_tests WITH (
-    external_location = 's3://covid-19-puerto-rico/bioportal/bioportal_tests/'
-) AS
+    deaths,
+    sum(deaths) OVER (
+        PARTITION BY bulletin_date
+        ORDER BY datum_date
+    ) AS cumulative_deaths,
+    COALESCE(deaths, 0)
+        - COALESCE(lag(deaths) OVER (
+            PARTITION BY datum_date
+            ORDER BY bulletin_date
+        ), 0) AS delta_deaths
+FROM cleaned;
+
+CREATE TABLE covid_pr_etl.bioportal_tests AS
 WITH tests_csv_union AS (
     SELECT
         downloadedAt,
@@ -42,9 +64,7 @@ WITH tests_csv_union AS (
         result,
         patientCity,
         createdAt
-    FROM tests_csv_v1
-    -- Hive stuff is profoundly stupid. It doesn't know how to skip the header row.
-    WHERE downloadedAt != 'downloadedAt'
+    FROM covid_pr_sources.tests_csv_v1
     UNION ALL
     SELECT
         downloadedAt,
@@ -56,8 +76,7 @@ WITH tests_csv_union AS (
         result,
         patientCity,
         createdAt
-    FROM tests_csv_v2
-    WHERE downloadedAt != 'downloadedAt'
+    FROM covid_pr_sources.tests_csv_v2
 ), first_clean AS (
     SELECT
         CAST(from_iso8601_timestamp(downloadedAt) AS TIMESTAMP)
@@ -99,3 +118,39 @@ SELECT
         ELSE date(created_at - INTERVAL '4' HOUR)
     END AS reported_date
 FROM first_clean;
+
+
+SELECT
+    bulletin_date,
+    datum_date,
+    bulletin_date - datum_date AS age,
+
+    confirmed_cases,
+    sum(confirmed_cases) OVER bulletin
+        AS cumulative_confirmed_cases,
+    COALESCE(confirmed_cases, 0)
+        - COALESCE(lag(confirmed_cases) OVER datum, 0)
+        AS delta_confirmed_cases,
+
+    probable_cases,
+    sum(probable_cases) OVER bulletin
+        AS cumulative_probable_cases,
+    COALESCE(probable_cases, 0)
+        - COALESCE(lag(probable_cases) OVER datum, 0)
+        AS delta_probable_cases,
+
+    deaths,
+    sum(deaths) OVER bulletin
+        AS cumulative_deaths,
+    COALESCE(deaths, 0)
+        - COALESCE(lag(deaths) OVER datum, 0)
+        AS delta_deaths
+FROM bitemporal
+WINDOW bulletin AS (
+	PARTITION BY bulletin_date
+	ORDER BY datum_date
+), datum AS (
+	PARTITION BY datum_date
+	ORDER BY bulletin_date
+	RANGE '1 day' PRECEDING
+)
