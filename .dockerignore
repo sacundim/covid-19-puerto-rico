@@ -4,4 +4,5 @@
 assets/
 dist/
 output/
+s3-bucket-sync/
 tmp/
