@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 downloadedAt="${1:?"No downloadedAt argument given"}"
 file="${2:?"No argument file given"}"
 
