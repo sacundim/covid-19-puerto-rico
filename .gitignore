@@ -4,6 +4,7 @@
 *.pyc
 dist/
 output/
+s3-bucket-sync/
 tmp/
 .DS_Store
 geckodriver.log
