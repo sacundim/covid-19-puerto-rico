@@ -458,6 +458,10 @@ class TestingLoad(AbstractMolecularChart):
         )
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
 
+    def filter_data(self, df, bulletin_date):
+        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
+        return df.loc[df['bulletin_date'] == effective_bulletin_date]
+
     def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).transform_calculate(
             productive=alt.datum.tests - alt.datum.duplicate_positives
