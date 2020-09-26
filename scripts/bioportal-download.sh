@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
+set -o pipefail
 
 CASES_ENDPOINT="https://bioportal.salud.gov.pr/api/administration/reports/orders/minimal-info"
 TESTS_ENDPOINT="https://bioportal.salud.gov.pr/api/administration/reports/minimal-info-unique-tests"
@@ -20,13 +21,13 @@ OUTPUT_DIR="${REPO_ROOT}/assets/data/bioportal"
 
 
 echo "$(date): Fetching from tests endpoint..."
-time curl "${TESTS_ENDPOINT}" \
+time wget -O - "${TESTS_ENDPOINT}" \
   | bzip2 -9 \
   > "${TESTS_JSON}"
 echo "$(date): Downloaded to ${TESTS_JSON}"
 
 echo "$(date): Fetching from cases endpoint..."
-time curl "${CASES_ENDPOINT}" \
+time wget -O - "${CASES_ENDPOINT}" \
   | bzip2 -9 \
   > "${CASES_JSON}"
 echo "$(date): Downloaded to ${CASES_JSON}"
