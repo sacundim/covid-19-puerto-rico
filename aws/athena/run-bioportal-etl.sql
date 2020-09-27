@@ -4,6 +4,8 @@
 -- Rebuild the whole schema from scratch from the raw CSV tables.
 --
 
+DROP VIEW IF EXISTS covid_pr_etl.new_daily_tests;
+DROP VIEW IF EXISTS covid_pr_etl.positive_rates;
 DROP VIEW IF EXISTS covid_pr_etl.molecular_tests_vs_confirmed_cases;
 
 DROP TABLE IF EXISTS covid_pr_etl.bioportal_tritemporal_counts;
@@ -245,3 +247,77 @@ INNER JOIN covid_pr_etl.bulletin_cases cases
 WHERE tests.bulletin_date > DATE '2020-04-24'
 AND test_type = 'Molecular'
 ORDER BY tests.bulletin_date DESC, tests.collected_date DESC;
+
+
+CREATE VIEW covid_pr_etl.new_daily_tests AS
+SELECT
+    'Fecha de muestra' AS date_type,
+    test_type,
+    bulletin_date,
+    collected_date AS date,
+    (cumulative_tests - lag(cumulative_tests, 7) OVER (
+		PARTITION BY test_type, bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_tests
+FROM covid_pr_etl.bioportal_collected_agg
+UNION
+SELECT
+    'Fecha de reporte' AS date_type,
+    test_type,
+    bulletin_date,
+    reported_date AS date,
+    (cumulative_tests - lag(cumulative_tests, 7) OVER (
+		PARTITION BY test_type, bulletin_date
+		ORDER BY reported_date
+	)) / 7.0 AS smoothed_daily_tests
+FROM covid_pr_etl.bioportal_reported_agg
+ORDER BY bulletin_date DESC, date DESC, test_type, date_type;
+
+
+CREATE VIEW covid_pr_etl.positive_rates AS
+SELECT
+	molecular.test_type,
+	molecular.bulletin_date,
+	collected_date,
+	(molecular.cumulative_tests - lag(molecular.cumulative_tests, 7) OVER (
+		PARTITION BY molecular.test_type, molecular.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_tests,
+	(molecular.cumulative_positive_tests - lag(molecular.cumulative_positive_tests, 7) OVER (
+		PARTITION BY molecular.test_type, molecular.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_positive_tests,
+	(cases.cumulative_confirmed_cases - lag(cases.cumulative_confirmed_cases, 7) OVER (
+		PARTITION BY molecular.test_type, molecular.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_cases
+FROM covid_pr_etl.bioportal_collected_agg molecular
+INNER JOIN covid_pr_etl.bulletin_cases cases
+	ON cases.bulletin_date = molecular.bulletin_date
+	AND cases.datum_date = molecular.collected_date
+WHERE molecular.test_type = 'Molecular'
+AND molecular.bulletin_date > DATE '2020-04-24'
+UNION ALL
+SELECT
+	serological.test_type,
+	serological.bulletin_date,
+	collected_date,
+	(serological.cumulative_tests - lag(serological.cumulative_tests, 7) OVER (
+		PARTITION BY serological.test_type, serological.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_tests,
+	(serological.cumulative_positive_tests - lag(serological.cumulative_positive_tests, 7) OVER (
+		PARTITION BY serological.test_type, serological.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_positive_tests,
+	(cases.cumulative_confirmed_cases - lag(cases.cumulative_confirmed_cases, 7) OVER (
+		PARTITION BY serological.test_type, serological.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_cases
+FROM covid_pr_etl.bioportal_collected_agg serological
+INNER JOIN covid_pr_etl.bulletin_cases cases
+	ON cases.bulletin_date = serological.bulletin_date
+	AND cases.datum_date = serological.collected_date
+WHERE serological.test_type = 'Serological'
+AND serological.bulletin_date > DATE '2020-04-24'
+ORDER BY test_type, bulletin_date DESC, collected_date DESC;

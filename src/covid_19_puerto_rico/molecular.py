@@ -54,8 +54,7 @@ class NewPositiveRate(AbstractMolecularChart):
                       | ((df['bulletin_date'] == week_ago))]
 
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('positive_rates', self.metadata,
-                                 schema='products', autoload=True)
+        table = sqlalchemy.Table('positive_rates', self.metadata, autoload=True)
         query = select([
             table.c.test_type,
             table.c.bulletin_date,
@@ -108,8 +107,7 @@ class NewDailyTestsPerCapita(AbstractMolecularChart):
                       | ((df['bulletin_date'] == week_ago))]
 
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('new_daily_tests', self.metadata,
-                                 schema='products', autoload=True)
+        table = sqlalchemy.Table('new_daily_tests', self.metadata, autoload=True)
         query = select([
             table.c.date_type,
             table.c.test_type,
