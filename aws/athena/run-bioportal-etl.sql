@@ -365,6 +365,7 @@ INNER JOIN (VALUES (0, 3, '0-3'),
 				   (14, NULL, '> 14')) AS ranges (lo, hi, tier)
 	ON ranges.lo <= collected_age
 	AND collected_age <= COALESCE(ranges.hi, 2147483647)
-WHERE bulletin_date > DATE '2020-04-24'
+WHERE test_type = 'Molecular'
+AND bulletin_date >= DATE '2020-07-18'
 GROUP BY bulletin_date, ranges.lo, ranges.hi, ranges.tier
 ORDER BY bulletin_date DESC, ranges.lo ASC;
