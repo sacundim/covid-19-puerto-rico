@@ -40,8 +40,7 @@
         <li><a href="#CumulativeTestsVsCases_section">Pruebas vs. casos (acumulado)</a></li>
         <li><a href="#MolecularCurrentDeltas_section">Pruebas añadidas a Bioportal</a></li>
         <li><a href="#MolecularDailyDeltas_section">Historial de pruebas en Bioportal</a></li>
-        <li><a href="#MolecularLatenessDaily_section">Rezago de pruebas diario</a></li>
-        <li><a href="#MolecularLateness7Day_section">Tendencia de rezago de pruebas</a></li>
+        <li><a href="#MolecularLatenessTiers_section">Rezagos de resultados de pruebas moleculares</a></li>
         <li><a href="#WeekdayBias_section">Tendencias por día de semana</a></li>
         <li><a href="#AgeGroups_section">Casos por edad (per cápita, 7 días)</a></li>
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
@@ -513,43 +512,21 @@
 </div>
 
 
-<div class="section" id="MolecularLatenessDaily_section">
-    <h1>Rezago de pruebas diario</h1>
+<div class="section" id="MolecularLatenessTiers_section">
+    <h1>Rezagos de resultados de pruebas moleculares</h1>
 
-    <div id="MolecularLatenessDaily"></div>
+    <div id="MolecularLatenessTiers"></div>
     <script type="text/javascript">
-        embedChart('MolecularLatenessDaily', bulletin_date);
+        embedChart('MolecularLatenessTiers', bulletin_date);
     </script>
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Tardanza promedio entre fecha de toma de muestra (<code>collectedDate</code>) de pruebas
-        moleculares y fecha en que apareció entre los datos del API de Bioportal, agrupado por la
-        segunda. Esta fecha de datos es estimada a partir de la fecha y hora en que el autor de
-        este informe realiza sus descargas diarias de datos de Bioportal.</p>
-
-    <h3>Revisiones</h3>
-
-    <ul>
-        <li>La adjudicación de pruebas a fechas de reporte, y por tanto los rezagos calculados,
-            se vieron fuertemente cambiados por la <a href="#Revisions_2020-08-30">revisión
-                del 30 de agosto del 2020</a> y otras anteriores.</li>
-    </ul>
-</div>
-
-
-<div class="section" id="MolecularLateness7Day_section">
-    <h1>Tendencia de rezago de pruebas</h1>
-
-    <div id="MolecularLateness7Day"></div>
-    <script type="text/javascript">
-        embedChart('MolecularLateness7Day', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>El mismo análisis de rezago de datos de pruebas moleculares que la sección anterior,
-        pero con promedios de 7 días.</p>
+    <p>Promedios de siete días de rezagos estimados entre toma de muestra y aparición de récord
+        del resultado en Bioportal, agrupando los resultados por la fecha estimada en que se
+        recibieron.  Estas fechas se estiman a partir de la fecha y hora en que el autor de
+        este informe realiza sus descargas diarias de datos de Bioportal.  El panel superior muestra
+        los volúmenes absolutos; el panel inferior es los mismos datos, pero en porcentajes.</p>
 
     <h3>Revisiones</h3>
 

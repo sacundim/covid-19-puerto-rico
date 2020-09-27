@@ -7,6 +7,7 @@ import json
 import logging
 import sqlalchemy
 import toml
+from urllib.parse import quote_plus
 
 from . import resources
 
@@ -15,15 +16,24 @@ def make_date_range(start, end):
     return [start + datetime.timedelta(n)
             for n in range(int((end - start).days) + 1)]
 
-def create_db(args):
+def create_postgres_engine(args):
     config = {
         'drivername': 'postgres',
         'port': 5432
     }
     toml_dict = toml.load(args.config_file)
-    config.update(toml_dict['database'])
+    config.update(toml_dict['postgres'])
     url = sqlalchemy.engine.url.URL(**config)
     return sqlalchemy.create_engine(url)
+
+def create_athena_engine(args):
+    conn_str = "awsathena+rest://:@athena.{region_name}.amazonaws.com:443/{schema_name}?s3_staging_dir={s3_staging_dir}"
+    toml_dict = toml.load(args.config_file)
+    config = (toml_dict['athena'])
+    return sqlalchemy.create_engine(conn_str.format(
+        region_name=config['region_name'],
+        schema_name=config['schema_name'],
+        s3_staging_dir=quote_plus(config['s3_staging_dir'])))
 
 def save_chart(chart, basename, formats):
     for format in formats:

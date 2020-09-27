@@ -9,5 +9,5 @@ file="${2:?"No argument file given"}"
 echo 'downloadedAt,patientId,collectedDate,reportedDate,ageRange,testType,result,region,createdAt'
 cat "${file}" \
     | bunzip2 \
-    | jq -r '.[] | [.patientId, .collectedDate, .reportedDate, .ageRange, .testType, .result, .region, .createdAt] | @csv' \
+    | jq -e -r '.[] | [.patientId, .collectedDate, .reportedDate, .ageRange, .testType, .result, .region, .createdAt] | @csv' \
     | sed -e "s/^/${downloadedAt},/"
