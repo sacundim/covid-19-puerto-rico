@@ -140,25 +140,6 @@ SELECT
 FROM first_clean;
 
 
-CREATE TABLE covid_pr_etl.bioportal_cases AS
-SELECT
-    CAST(from_iso8601_timestamp(downloadedAt) AS TIMESTAMP)
-        AS downloaded_at,
-    CAST(from_iso8601_timestamp(downloadedAt) AS DATE) - INTERVAL '1' DAY
-        AS bulletin_date,
-    CAST(date_parse(nullif(collectedDate, ''), '%m/%d/%Y') AS DATE)
-        AS raw_collected_date,
-    CAST(date_parse(nullif(reportedDate, ''), '%m/%d/%Y') AS DATE)
-        AS raw_reported_date,
-    date_parse(createdAt, '%m/%d/%Y %H:%i') AS created_at,
-    nullif(patientId, '') AS patient_id,
-    nullif(ageRange, '') AS age_range,
-    region,
-    testType AS test_type,
-    result,
-    COALESCE(result, '') LIKE '%Positive%' AS positive
-FROM covid_pr_sources.cases_csv_v1;
-
 ----------------------------------------------------------
 ----------------------------------------------------------
 --
