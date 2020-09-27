@@ -483,3 +483,68 @@ class TestingLoad(AbstractMolecularChart):
         return (all + productive).properties(
             width=575, height=350
         )
+
+class MolecularLatenessTiers(AbstractMolecularChart):
+    SORT_ORDER = ['≤ 7 días', '≤ 14 días', '> 14 días']
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('molecular_lateness_tiers', self.metadata, autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.tier,
+            table.c.tier_order,
+            table.c.count
+        ])
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df, bulletin_date):
+        max_y = df.groupby(['bulletin_date'])['count'].sum()\
+            .rolling(7).mean().max()
+
+        base = alt.Chart(df).transform_joinaggregate(
+            groupby=['bulletin_date'],
+            total='sum(count)'
+        ).transform_window(
+            groupby=['tier'],
+            sort=[{'field': 'bulletin_date'}],
+            frame=[-6, 0],
+            mean_count='mean(count)',
+            mean_total='mean(total)'
+        ).transform_calculate(
+            percent=alt.datum.count / alt.datum.total,
+            mean_percent=alt.datum.mean_count / alt.datum.mean_total
+        ).mark_area(opacity=0.85).encode(
+            color=alt.Color('tier:N', title='Renglón (días)', sort=self.SORT_ORDER,
+                            legend=alt.Legend(orient='top', titleOrient='left', offset=5),
+                            scale=alt.Scale(scheme='redyellowgreen', reverse=True)),
+            order=alt.Order('tier_order:O'),
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                     alt.Tooltip('tier:N', title='Renglón'),
+                     alt.Tooltip('count:Q', format=",d", title='Resultados en renglón (crudo)'),
+                     alt.Tooltip('total:Q', format=",d", title='Total (crudo)'),
+                     alt.Tooltip('mean_count:Q', format=".1f", title='Resultados en renglón (promedio 7)'),
+                     alt.Tooltip('mean_total:Q', format=".1f", title='Total (promedio 7)'),
+                     alt.Tooltip('mean_percent:Q', format=".1%", title='% de total (promedio 7)')]
+        )
+
+        absolute = base.encode(
+            x=alt.X('bulletin_date:T', title=None, axis=alt.Axis(ticks=False, labels=False)),
+            y=alt.Y('mean_count:Q', title='Resultados moleculares (promedio 7 días)',
+                    scale=alt.Scale(domain=[0, max_y]),
+                    axis=alt.Axis(labelExpr="if(datum.value > 0, datum.label, '')")),
+        ).properties(
+            width=575, height=275
+        )
+
+        normalized = base.encode(
+            x=alt.X('bulletin_date:T', title='Fecha de boletín'),
+            y=alt.Y('mean_count:Q', stack='normalize', title='% renglón',
+                    axis=alt.Axis(format='%', labelExpr="if(datum.value < 1.0, datum.label, '')"))
+        ).properties(
+            width=575, height=75
+        )
+
+        return alt.vconcat(absolute, normalized, spacing=5)

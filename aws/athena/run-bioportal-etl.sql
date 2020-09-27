@@ -4,6 +4,7 @@
 -- Rebuild the whole schema from scratch from the raw CSV tables.
 --
 
+DROP VIEW IF EXISTS covid_pr_etl.molecular_lateness_tiers;
 DROP VIEW IF EXISTS covid_pr_etl.testing_load;
 DROP VIEW IF EXISTS covid_pr_etl.new_daily_tests;
 DROP VIEW IF EXISTS covid_pr_etl.positive_rates;
@@ -345,3 +346,25 @@ INNER JOIN covid_pr_etl.bulletin_cases b
 	AND b.datum_date = bca.collected_date
 WHERE test_type = 'Molecular'
 ORDER BY bca.bulletin_date DESC, bca.collected_date DESC;
+
+CREATE VIEW covid_pr_etl.molecular_lateness_tiers AS
+SELECT
+	bulletin_date,
+	ranges.tier,
+	ranges.lo AS tier_order,
+	COALESCE(sum(delta_tests) FILTER (
+		WHERE delta_tests > 0
+	), 0) AS count,
+	COALESCE(sum(delta_positive_tests) FILTER (
+		WHERE delta_positive_tests > 0
+	), 0) AS positive
+FROM covid_pr_etl.bioportal_collected_agg
+INNER JOIN (VALUES (0, 3, '0-3'),
+				   (4, 7, '4-7'),
+				   (8, 14, '8-14'),
+				   (14, NULL, '> 14')) AS ranges (lo, hi, tier)
+	ON ranges.lo <= collected_age
+	AND collected_age <= COALESCE(ranges.hi, 2147483647)
+WHERE bulletin_date > DATE '2020-04-24'
+GROUP BY bulletin_date, ranges.lo, ranges.hi, ranges.tier
+ORDER BY bulletin_date DESC, ranges.lo ASC;

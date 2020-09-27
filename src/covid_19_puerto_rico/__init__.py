@@ -46,6 +46,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        molecular.MolecularLatenessTiers(athena, args.output_dir, output_formats),
         molecular.TestingLoad(athena, args.output_dir, output_formats),
         molecular.MolecularCurrentDeltas(athena, args.output_dir, output_formats),
         molecular.MolecularDailyDeltas(athena, args.output_dir, output_formats),
@@ -55,8 +56,6 @@ def main():
         charts.LatenessTiers(postgres, args.output_dir, output_formats),
         charts.HospitalizationsCovid19Tracking(postgres, args.output_dir, output_formats),
         charts.NewCases(postgres, args.output_dir, output_formats),
-        molecular.MolecularLateness7Day(postgres, args.output_dir, output_formats),
-        molecular.MolecularLatenessDaily(postgres, args.output_dir, output_formats),
         charts.AgeGroups(postgres, args.output_dir, output_formats),
         charts.BulletinChartMismatch(postgres, args.output_dir, output_formats),
         charts.ConsecutiveBulletinMismatch(postgres, args.output_dir, output_formats),
