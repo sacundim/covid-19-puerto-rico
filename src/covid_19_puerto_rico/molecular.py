@@ -444,8 +444,7 @@ class TestingLoad(AbstractMolecularChart):
     SORT_ORDER = ['Positivas duplicadas', 'Negativas + casos']
 
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('testing_load', self.metadata,
-                                 schema='products', autoload=True)
+        table = sqlalchemy.Table('testing_load', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.collected_date,
