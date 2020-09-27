@@ -1,7 +1,7 @@
 FROM python:3.7-slim AS base
 
 FROM base AS poetry
-RUN pip install poetry==1.0.5
+RUN pip install poetry==1.0.10
 
 
 FROM poetry AS requirements
