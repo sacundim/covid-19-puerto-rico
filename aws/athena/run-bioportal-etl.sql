@@ -4,6 +4,7 @@
 -- Rebuild the whole schema from scratch from the raw CSV tables.
 --
 
+DROP VIEW IF EXISTS covid_pr_etl.testing_load;
 DROP VIEW IF EXISTS covid_pr_etl.new_daily_tests;
 DROP VIEW IF EXISTS covid_pr_etl.positive_rates;
 DROP VIEW IF EXISTS covid_pr_etl.molecular_tests_vs_confirmed_cases;
@@ -321,3 +322,26 @@ INNER JOIN covid_pr_etl.bulletin_cases cases
 WHERE serological.test_type = 'Serological'
 AND serological.bulletin_date > DATE '2020-04-24'
 ORDER BY test_type, bulletin_date DESC, collected_date DESC;
+
+
+CREATE VIEW covid_pr_etl.testing_load AS
+SELECT
+	bca.bulletin_date,
+	bca.collected_date,
+	(bca.cumulative_tests - lag(bca.cumulative_tests, 7) OVER (
+		PARTITION BY test_type, bca.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS tests,
+	((bca.cumulative_positive_tests - lag(bca.cumulative_positive_tests, 7) OVER (
+		PARTITION BY test_type, bca.bulletin_date
+		ORDER BY collected_date
+	)) - COALESCE(b.cumulative_confirmed_cases - lag(b.cumulative_confirmed_cases, 7) OVER (
+		PARTITION BY test_type, bca.bulletin_date
+		ORDER BY collected_date
+	), 0)) / 7.0 AS duplicate_positives
+FROM covid_pr_etl.bioportal_collected_agg bca
+INNER JOIN covid_pr_etl.bulletin_cases b
+	ON b.bulletin_date = bca.bulletin_date
+	AND b.datum_date = bca.collected_date
+WHERE test_type = 'Molecular'
+ORDER BY bca.bulletin_date DESC, bca.collected_date DESC;
