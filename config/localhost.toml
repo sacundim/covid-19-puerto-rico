@@ -1,7 +1,12 @@
-[database]
+[postgres]
 drivername = "postgres"
 host = "localhost"
 port = "5432"
 database = "postgres"
 username = "postgres"
 password = "password"
+
+[athena]
+region_name = "us-west-2"
+schema_name = "covid_pr_etl"
+s3_staging_dir = "s3://covid-19-puerto-rico-athena/"

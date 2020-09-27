@@ -35,8 +35,9 @@ def main():
     args = process_arguments()
     logging.info("output-dir is %s", args.output_dir)
 
-    engine = util.create_db(args)
-    bulletin_date = compute_bulletin_date(args, engine)
+    postgres = util.create_postgres_engine(args)
+    athena = util.create_athena_engine(args)
+    bulletin_date = compute_bulletin_date(args, postgres)
     logging.info('Using bulletin date of %s', bulletin_date)
 
     if args.svg:
@@ -45,29 +46,28 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
-        charts.LatenessTiers(engine, args.output_dir, output_formats),
-        molecular.TestingLoad(engine, args.output_dir, output_formats),
-        charts.HospitalizationsCovid19Tracking(engine, args.output_dir, output_formats),
-        molecular.NewPositiveRate(engine, args.output_dir, output_formats),
-        molecular.NewDailyTestsPerCapita(engine, args.output_dir, output_formats),
-        molecular.CumulativeTestsVsCases(engine, args.output_dir, output_formats),
-        charts.NewCases(engine, args.output_dir, output_formats),
-        molecular.MolecularCurrentDeltas(engine, args.output_dir, output_formats),
-        molecular.MolecularDailyDeltas(engine, args.output_dir, output_formats),
-        molecular.MolecularLateness7Day(engine, args.output_dir, output_formats),
-        molecular.MolecularLatenessDaily(engine, args.output_dir, output_formats),
-        charts.AgeGroups(engine, args.output_dir, output_formats),
-        charts.BulletinChartMismatch(engine, args.output_dir, output_formats),
-        charts.ConsecutiveBulletinMismatch(engine, args.output_dir, output_formats),
-        charts.MunicipalMap(engine, args.output_dir, output_formats),
-        charts.Municipal(engine, args.output_dir, output_formats),
-        charts.CurrentDeltas(engine, args.output_dir, output_formats),
-        charts.WeekdayBias(engine, args.output_dir, output_formats),
-        charts.DailyDeltas(engine, args.output_dir, output_formats),
-        charts.LatenessDaily(engine, args.output_dir, output_formats),
+        molecular.MolecularLatenessTiers(athena, args.output_dir, output_formats),
+        molecular.TestingLoad(athena, args.output_dir, output_formats),
+        molecular.MolecularCurrentDeltas(athena, args.output_dir, output_formats),
+        molecular.MolecularDailyDeltas(athena, args.output_dir, output_formats),
+        molecular.NewDailyTestsPerCapita(athena, args.output_dir, output_formats),
+        molecular.NewPositiveRate(athena, args.output_dir, output_formats),
+        molecular.CumulativeTestsVsCases(athena, args.output_dir, output_formats),
+        charts.LatenessTiers(postgres, args.output_dir, output_formats),
+        charts.HospitalizationsCovid19Tracking(postgres, args.output_dir, output_formats),
+        charts.NewCases(postgres, args.output_dir, output_formats),
+        charts.AgeGroups(postgres, args.output_dir, output_formats),
+        charts.BulletinChartMismatch(postgres, args.output_dir, output_formats),
+        charts.ConsecutiveBulletinMismatch(postgres, args.output_dir, output_formats),
+        charts.MunicipalMap(postgres, args.output_dir, output_formats),
+        charts.Municipal(postgres, args.output_dir, output_formats),
+        charts.CurrentDeltas(postgres, args.output_dir, output_formats),
+        charts.WeekdayBias(postgres, args.output_dir, output_formats),
+        charts.DailyDeltas(postgres, args.output_dir, output_formats),
+        charts.LatenessDaily(postgres, args.output_dir, output_formats),
 
         # We always generate png for this because they're our Twitter cards
-        charts.Lateness7Day(engine, args.output_dir, frozenset(['json', 'svg', 'png']))
+        charts.Lateness7Day(postgres, args.output_dir, frozenset(['json', 'svg', 'png']))
     ]
     if args.website:
         site = website.Website(args)
