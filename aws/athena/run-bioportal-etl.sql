@@ -4,20 +4,6 @@
 -- Rebuild the whole schema from scratch from the raw CSV tables.
 --
 
-DROP VIEW IF EXISTS covid_pr_etl.molecular_lateness_tiers;
-DROP VIEW IF EXISTS covid_pr_etl.testing_load;
-DROP VIEW IF EXISTS covid_pr_etl.new_daily_tests;
-DROP VIEW IF EXISTS covid_pr_etl.positive_rates;
-DROP VIEW IF EXISTS covid_pr_etl.molecular_tests_vs_confirmed_cases;
-
-DROP TABLE IF EXISTS covid_pr_etl.bioportal_tritemporal_counts;
-DROP TABLE IF EXISTS covid_pr_etl.bioportal_tritemporal_deltas;
-DROP TABLE IF EXISTS covid_pr_etl.bioportal_collected_agg;
-DROP TABLE IF EXISTS covid_pr_etl.bioportal_reported_agg;
-
-DROP TABLE IF EXISTS covid_pr_etl.bulletin_cases;
-DROP TABLE IF EXISTS covid_pr_etl.bioportal_tests;
-
 
 ----------------------------------------------------------
 ----------------------------------------------------------
@@ -25,7 +11,12 @@ DROP TABLE IF EXISTS covid_pr_etl.bioportal_tests;
 -- The big core tables with disaggregated clean data.
 --
 
-CREATE TABLE covid_pr_etl.bulletin_cases AS
+DROP TABLE IF EXISTS covid_pr_etl.bulletin_cases;
+CREATE TABLE covid_pr_etl.bulletin_cases WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
 WITH cleaned AS (
     SELECT
         from_iso8601_date(bulletin_date) AS bulletin_date,
@@ -72,7 +63,13 @@ SELECT
         ), 0) AS delta_deaths
 FROM cleaned;
 
-CREATE TABLE covid_pr_etl.bioportal_tests AS
+
+DROP TABLE IF EXISTS covid_pr_etl.bioportal_tests;
+CREATE TABLE covid_pr_etl.bioportal_tests WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 4
+) AS
 WITH tests_csv_union AS (
     SELECT
         downloadedAt,
@@ -146,7 +143,12 @@ FROM first_clean;
 -- Aggregates off which we run most of our analyses.
 --
 
-CREATE TABLE covid_pr_etl.bioportal_tritemporal_counts AS
+DROP TABLE IF EXISTS covid_pr_etl.bioportal_tritemporal_counts;
+CREATE TABLE covid_pr_etl.bioportal_tritemporal_counts WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
 SELECT
 	test_type,
 	bulletin_date,
@@ -163,6 +165,7 @@ AND reported_date <= bulletin_date
 GROUP BY test_type, bulletin_date, collected_date, reported_date;
 
 
+DROP TABLE IF EXISTS covid_pr_etl.bioportal_tritemporal_deltas;
 CREATE TABLE covid_pr_etl.bioportal_tritemporal_deltas AS
 SELECT
 	test_type,
@@ -184,7 +187,12 @@ WHERE collected_date <= bulletin_date
 AND reported_date <= bulletin_date;
 
 
-CREATE TABLE covid_pr_etl.bioportal_collected_agg AS
+DROP TABLE IF EXISTS covid_pr_etl.bioportal_collected_agg;
+CREATE TABLE covid_pr_etl.bioportal_collected_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
 SELECT
 	test_type,
 	bulletin_date,
@@ -206,7 +214,13 @@ SELECT
 FROM covid_pr_etl.bioportal_tritemporal_deltas
 GROUP BY test_type, bulletin_date, collected_date;
 
-CREATE TABLE covid_pr_etl.bioportal_reported_agg AS
+
+DROP TABLE IF EXISTS covid_pr_etl.bioportal_reported_agg;
+CREATE TABLE covid_pr_etl.bioportal_reported_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
 SELECT
 	test_type,
 	bulletin_date,
@@ -235,7 +249,7 @@ GROUP BY test_type, bulletin_date, reported_date;
 -- Views to serve the dashboard.
 --
 
-CREATE VIEW covid_pr_etl.molecular_tests_vs_confirmed_cases AS
+CREATE OR REPLACE VIEW covid_pr_etl.molecular_tests_vs_confirmed_cases AS
 SELECT
 	tests.bulletin_date,
 	collected_date,
@@ -251,7 +265,7 @@ AND test_type = 'Molecular'
 ORDER BY tests.bulletin_date DESC, tests.collected_date DESC;
 
 
-CREATE VIEW covid_pr_etl.new_daily_tests AS
+CREATE OR REPLACE VIEW covid_pr_etl.new_daily_tests AS
 SELECT
     'Fecha de muestra' AS date_type,
     test_type,
@@ -276,7 +290,7 @@ FROM covid_pr_etl.bioportal_reported_agg
 ORDER BY bulletin_date DESC, date DESC, test_type, date_type;
 
 
-CREATE VIEW covid_pr_etl.positive_rates AS
+CREATE OR REPLACE VIEW covid_pr_etl.positive_rates AS
 SELECT
 	molecular.test_type,
 	molecular.bulletin_date,
@@ -325,7 +339,7 @@ AND serological.bulletin_date > DATE '2020-04-24'
 ORDER BY test_type, bulletin_date DESC, collected_date DESC;
 
 
-CREATE VIEW covid_pr_etl.testing_load AS
+CREATE OR REPLACE VIEW covid_pr_etl.testing_load AS
 SELECT
 	bca.bulletin_date,
 	bca.collected_date,
@@ -347,7 +361,7 @@ INNER JOIN covid_pr_etl.bulletin_cases b
 WHERE test_type = 'Molecular'
 ORDER BY bca.bulletin_date DESC, bca.collected_date DESC;
 
-CREATE VIEW covid_pr_etl.molecular_lateness_tiers AS
+CREATE OR REPLACE VIEW covid_pr_etl.molecular_lateness_tiers AS
 SELECT
 	bulletin_date,
 	ranges.tier,
