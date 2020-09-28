@@ -768,3 +768,57 @@ FROM windowed_aggregates wa
 INNER JOIN min_date md
 	ON bulletin_date >= min_bulletin_date + 7
 ORDER BY bulletin_date DESC;
+
+
+CREATE VIEW products.covimetro AS
+WITH means AS (
+	SELECT
+		bulletin_date,
+		datum_date,
+		confirmed_cases,
+		(7 * sum(confirmed_cases) OVER newer
+			+ 6 * lag(confirmed_cases, 2) OVER current
+			+ 5 * lag(confirmed_cases, 1) OVER current
+			+ 4 * confirmed_cases
+			+ 3 * lead(confirmed_cases, 1) OVER current
+			+ 2 * lead(confirmed_cases, 2) OVER current
+			+ lead(confirmed_cases, 3) OVER current)
+			/ 7.0
+			AS numerator,
+		(7 * sum(confirmed_cases) OVER older
+			+ 6 * lag(confirmed_cases, 3) OVER current
+			+ 5 * lag(confirmed_cases, 2) OVER current
+			+ 4 * lag(confirmed_cases, 1) OVER current
+			+ 3 * confirmed_cases
+			+ 2 * lead(confirmed_cases, 1) OVER current
+			+ lead(confirmed_cases, 2) OVER current)
+			/ 7.0
+			AS denominator
+	FROM bitemporal
+	WINDOW newer AS (
+		PARTITION BY bulletin_date
+		ORDER BY datum_date
+		RANGE BETWEEN '60 day' PRECEDING
+			      AND '3 day' PRECEDING
+	), older AS (
+		PARTITION BY bulletin_date
+		ORDER BY datum_date
+		RANGE BETWEEN '60 day' PRECEDING
+			      AND '4 day' PRECEDING
+	), current AS (
+		PARTITION BY bulletin_date
+		ORDER BY datum_date
+		RANGE BETWEEN '3 day' PRECEDING
+				  AND '3 day' FOLLOWING
+	)
+)
+SELECT
+	bulletin_date,
+	datum_date,
+	confirmed_cases,
+	numerator / denominator AS covimetro
+FROM means
+ORDER BY bulletin_date DESC, datum_date DESC;
+
+COMMENT ON VIEW products.covimetro IS
+'Israel Meléndez''s (@tecnocato) "Covímetro" metric, as best as I can make it.';
