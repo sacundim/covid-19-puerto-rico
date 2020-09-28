@@ -681,7 +681,7 @@ ORDER BY bulletin_date DESC, ranges.lo ASC;
 
 
 CREATE VIEW products.covimetro AS
-WITH means AS (
+WITH terms AS (
 	SELECT
 		bulletin_date,
 		datum_date,
@@ -697,7 +697,7 @@ WITH means AS (
 	WINDOW older AS (
 		PARTITION BY bulletin_date
 		ORDER BY datum_date
-		RANGE BETWEEN '60 day' PRECEDING
+		RANGE BETWEEN '58 day' PRECEDING
 			      AND '4 day' PRECEDING
 	), current AS (
 		PARTITION BY bulletin_date
@@ -705,29 +705,40 @@ WITH means AS (
 		RANGE BETWEEN '3 day' PRECEDING
 				  AND '3 day' FOLLOWING
 	)
-)
+), sums AS (
 SELECT
 	bulletin_date,
 	datum_date,
 	confirmed_cases,
-	((7 * (old_sum + lag3)
+	(7 * (old_sum + lag3)
 		+ 6 * lag2
 		+ 5 * lag1
 		+ 4 * confirmed_cases
 		+ 3 * lead1
 		+ 2 * lead2
-		+ lead3) :: DOUBLE PRECISION
-		/ (7 * old_sum
+		+ lead3) / 7.0
+		AS sum_a,
+	(7 * old_sum
 			+ 6 * lag3
 			+ 5 * lag2
 			+ 4 * lag1
 			+ 3 * confirmed_cases
 			+ 2 * lead1
-			+ lead2))
-		- 1.0
+			+ lead2) / 7.0
+			AS sum_b
+	FROM terms
+)
+SELECT
+	bulletin_date,
+	datum_date,
+	confirmed_cases,
+	sum_a,
+	sum_b,
+	(sum_a - sum_b) / sum_b
 		AS covimetro
-FROM means
+FROM sums
 ORDER BY bulletin_date DESC, datum_date DESC;
+
 
 COMMENT ON VIEW products.covimetro IS
 'Israel Meléndez''s (@tecnocato) "Covímetro" metric, as best as I can make it.';
