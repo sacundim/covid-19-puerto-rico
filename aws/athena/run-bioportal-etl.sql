@@ -226,7 +226,7 @@ SELECT
 	bulletin_date,
 	reported_date,
 	date_diff('day', reported_date, bulletin_date)
-		AS collected_age,
+		AS reported_age,
 	sum(tests) AS tests,
 	sum(sum(tests)) OVER (
         PARTITION BY test_type, bulletin_date
