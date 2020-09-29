@@ -29,7 +29,7 @@ class NewPositiveRate(AbstractMolecularChart):
             x=alt.X('collected_date:T', title='Fecha de muestra',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('value:Q', title='Positividad',
-                    scale=alt.Scale(type='log', domain=[0.01, 1.0]),
+                    scale=alt.Scale(type='log', domain=[0.001, 1.0]),
                     axis=alt.Axis(format='%')),
             color=alt.Color('variable:N', sort=self.SORT_ORDER,
                             legend=alt.Legend(orient='top', columns=1, offset=-15,
