@@ -32,19 +32,15 @@ class NewPositiveRate(AbstractMolecularChart):
                     scale=alt.Scale(type='log', domain=[0.001, 1.0]),
                     axis=alt.Axis(format='%')),
             color=alt.Color('variable:N', sort=self.SORT_ORDER,
-                            legend=alt.Legend(orient='top', columns=1, offset=-15,
-                                              title='Método de cálculo')),
+                            legend=alt.Legend(orient='top', titleOrient='left',
+                                              title='Método de cálculo:')),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
-            tooltip=[alt.Tooltip('test_type:N', title='Tipo de prueba'),
-                     alt.Tooltip('collected_date:T', title='Fecha de muestra'),
+            tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('variable:N', title='Método de cálculo'),
                      alt.Tooltip('value:Q', format=".2%", title='Tasa de positividad')]
         ).properties(
-            width=580, height=150
-        ).facet(
-            columns=1,
-            facet=alt.Facet('test_type:N', title=None)
+            width=580, height=350
         )
 
     def filter_data(self, df, bulletin_date):
@@ -56,16 +52,15 @@ class NewPositiveRate(AbstractMolecularChart):
     def fetch_data(self, connection):
         table = sqlalchemy.Table('positive_rates', self.metadata, autoload=True)
         query = select([
-            table.c.test_type,
             table.c.bulletin_date,
             table.c.collected_date,
             (table.c.smoothed_daily_positive_tests / table.c.smoothed_daily_tests)\
                 .label('Positivas ÷ pruebas'),
             (table.c.smoothed_daily_cases / table.c.smoothed_daily_tests)\
                 .label('Casos ÷ pruebas')
-        ])
+        ]).where(table.c.test_type == 'Molecular')
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
-        return pd.melt(df, ['test_type', 'bulletin_date', 'collected_date'])
+        return pd.melt(df, ['bulletin_date', 'collected_date'])
 
 
 class NewDailyTestsPerCapita(AbstractMolecularChart):
