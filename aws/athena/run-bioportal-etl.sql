@@ -383,3 +383,33 @@ WHERE test_type = 'Molecular'
 AND bulletin_date >= DATE '2020-07-18'
 GROUP BY bulletin_date, ranges.lo, ranges.hi, ranges.tier
 ORDER BY bulletin_date DESC, ranges.lo ASC;
+
+
+CREATE OR REPLACE VIEW covid_pr_etl.tests_received AS
+SELECT
+	test_type,
+	bulletin_date,
+	sum(delta_tests) FILTER (WHERE collected_age <= 14)
+		AS recent_tests,
+	sum(delta_positive_tests) FILTER (WHERE collected_age <= 14)
+		AS recent_positive_tests,
+	sum(delta_tests) FILTER (WHERE collected_age > 14)
+		AS late_tests,
+	sum(delta_positive_tests) FILTER (WHERE collected_age > 14)
+		AS late_positive_tests
+FROM covid_pr_etl.bioportal_collected_agg
+GROUP BY test_type, bulletin_date
+ORDER BY bulletin_date DESC, test_type DESC;
+
+
+CREATE OR REPLACE VIEW covid_pr_etl.unsmoothed_tests AS
+SELECT
+    bulletin_date,
+	collected_date,
+	tests,
+	positive_tests,
+	100.0 * positive_tests
+		/ tests
+		AS positive_rate
+FROM covid_pr_etl.bioportal_collected_agg
+ORDER BY bulletin_date DESC, collected_date DESC;
