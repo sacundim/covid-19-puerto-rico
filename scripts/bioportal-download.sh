@@ -63,9 +63,6 @@ echo "$(date): Moved ${TESTS_JSON_TMP} to ${TESTS_JSON}"
 mv "${TESTS_CSV_TMP}" "${TESTS_CSV}"
 echo "$(date): Moved ${TESTS_CSV_TMP} to ${TESTS_CSV}"
 
-cp "${TESTS_CSV}" "${OUTPUT_DIR}/v2/"
-echo "$(date): Copied ${TESTS_CSV} to ${OUTPUT_DIR}/v2/"
-
 mv "${CASES_JSON_TMP}" "${CASES_JSON}"
 echo "$(date): Moved ${CASES_JSON_TMP} to ${CASES_JSON}"
 
