@@ -615,7 +615,9 @@ ORDER BY bc.bulletin_date DESC, bc.datum_date DESC""")
                                  title='Positivas ÷ pruebas (14 días)')]
         )
 
-        cases = base.mark_point(color='black', clip=True).encode(
+        cases = base.mark_point(
+            shape='square', color='black', clip=True
+        ).encode(
             x=alt.X('collected_date:T', axis=alt.Axis(title=None, labels=False)),
             y=alt.Y('cases_per_100k:Q', title='Casos/100k',
                     scale=alt.Scale(domain=[1, 200], type='linear')),
@@ -627,20 +629,24 @@ ORDER BY bc.bulletin_date DESC, bc.datum_date DESC""")
                                    title='Casos confirmados (14 días, crudo)')]
         )
 
-        positives_over_tests = base.mark_point(color='black', clip=True).encode(
-            x=alt.X('collected_date:T', axis=alt.Axis(title=None, labels=False)),
+        positives_over_tests = base.mark_point(
+            shape='circle', color='black', clip=True
+        ).encode(
+            x=alt.X('collected_date:T', title='Fecha de muestra'),
             y=alt.Y('positives_over_tests:Q', axis=alt.Axis(format='%'),
                     scale=alt.Scale(domain=[0.01, 0.2], type='linear'),
-                    title='Positivas/pruebas'),
+                    title='Positivad'),
             tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                      alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                      alt.Tooltip('positives_over_tests:Q', format='.2%',
                                  title='Positivas/pruebas (14 días)')]
         )
 
-        cases_over_tests = base.mark_point(color='black', clip=True).encode(
+        cases_over_tests = base.mark_point(
+            shape='diamond', color='black', clip=True
+        ).encode(
             x=alt.X('collected_date:T', title='Fecha de muestra'),
-            y=alt.Y('cases_over_tests:Q', title='Casos/pruebas',
+            y=alt.Y('cases_over_tests:Q', title='Positivad',
                     scale=alt.Scale(domain=[0.01, 0.2], type='linear'),
                     axis=alt.Axis(format='%')),
             tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
@@ -649,15 +655,16 @@ ORDER BY bc.bulletin_date DESC, bc.datum_date DESC""")
                                  title='Casos/pruebas (14 días)')]
         )
 
-        width, height = 585, 100
+        width, height = 585, 80
         return alt.vconcat(
             alt.layer(self.make_level_scale(self.CASES_LEVELS), cases).properties(
                 width=width, height=height
             ),
-            alt.layer(self.make_level_scale(self.POSITIVITY_LEVELS), positives_over_tests).properties(
-                width=width, height=height
-            ),
-            alt.layer(self.make_level_scale(self.POSITIVITY_LEVELS), cases_over_tests).properties(
+            alt.layer(
+                self.make_level_scale(self.POSITIVITY_LEVELS),
+                positives_over_tests,
+                cases_over_tests
+            ).properties(
                 width=width, height=height
             )
         )
