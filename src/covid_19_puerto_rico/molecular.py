@@ -601,18 +601,6 @@ ORDER BY bc.bulletin_date DESC, bc.datum_date DESC""")
             positives_over_tests=alt.datum.sum_positive_tests / alt.datum.sum_tests
         ).transform_filter(
             alt.datum.collected_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(weeks=9))
-        ).encode(
-            x=alt.X('collected_date:T', title='Fecha de muestra'),
-            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
-                     alt.Tooltip('collected_date:T', title='Fecha de muestra'),
-                     alt.Tooltip('cases_per_100k:Q', format=',.1f',
-                                 title='Casos confirmados (14 días, por 100k)'),
-                     alt.Tooltip('sum_cases:Q', format=',d',
-                                 title='Casos confirmados (14 días, crudo)'),
-                     alt.Tooltip('cases_over_tests:Q', format='.2%',
-                                 title='Casos ÷ pruebas (14 días)'),
-                     alt.Tooltip('positives_over_tests:Q', format='.2%',
-                                 title='Positivas ÷ pruebas (14 días)')]
         )
 
         cases = base.mark_point(
@@ -638,7 +626,7 @@ ORDER BY bc.bulletin_date DESC, bc.datum_date DESC""")
                     title='Positivad'),
             tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                      alt.Tooltip('collected_date:T', title='Fecha de muestra'),
-                     alt.Tooltip('positives_over_tests:Q', format='.2%',
+                     alt.Tooltip('positives_over_tests:Q', format='.1%',
                                  title='Positivas/pruebas (14 días)')]
         )
 
@@ -651,7 +639,7 @@ ORDER BY bc.bulletin_date DESC, bc.datum_date DESC""")
                     axis=alt.Axis(format='%')),
             tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                      alt.Tooltip('collected_date:T', title='Fecha de muestra'),
-                     alt.Tooltip('cases_over_tests:Q', format='.2%',
+                     alt.Tooltip('cases_over_tests:Q', format='.1%',
                                  title='Casos/pruebas (14 días)')]
         )
 
