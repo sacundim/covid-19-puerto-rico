@@ -8,6 +8,8 @@ import datetime
 import numpy as np
 import pandas as pd
 import sqlalchemy
+from covid_19_puerto_rico import util
+from sqlalchemy import text
 from sqlalchemy.sql import select
 from . import charts
 
@@ -546,3 +548,125 @@ class MolecularLatenessTiers(AbstractMolecularChart):
         )
 
         return alt.vconcat(absolute, normalized, spacing=5)
+
+
+class PublicHealthTrustLevels(AbstractMolecularChart):
+    """COVID-19 alert levels (green, yellow, orange, red)
+    as proposed by the Puerto Rico Public Health Trust."""
+
+    POPULATION_100K = 31.936_94
+
+    CASES_LEVELS = pd.DataFrame(data={
+        'Nivel': ['Crítico', 'Alto', 'Medio', 'Bajo'],
+        'Umbral': [100, 50, 10, 1],
+        'Tope': [1000, 100, 50, 10],
+        'Color': ['red', 'orange', 'yellow', 'green']
+    })
+
+    POSITIVITY_LEVELS = pd.DataFrame(data={
+        'Nivel': ['Crítico', 'Alto', 'Medio', 'Bajo'],
+        'Umbral': [0.1, 0.05, 0.03, 0.001],
+        'Tope': [1.0, 0.1, 0.05, 0.03],
+        'Color': ['red', 'orange', 'yellow', 'green']
+    })
+
+    def fetch_data(self, connection):
+        query = text("""SELECT 
+	bca.bulletin_date,
+	bca.collected_date,
+	bc.confirmed_cases,
+	bca.tests,
+	bca.positive_tests
+FROM covid_pr_etl.bioportal_collected_agg bca
+INNER JOIN covid_pr_etl.bulletin_cases bc
+	ON bc.bulletin_date = bca.bulletin_date 
+	AND bc.datum_date = bca.collected_date
+WHERE bca.test_type = 'Molecular'
+AND date_add('week', -11, bca.bulletin_date) <= bca.collected_date
+AND bca.collected_date < date_add('week', -1, bca.bulletin_date)
+ORDER BY bc.bulletin_date DESC, bc.datum_date DESC""")
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
+
+    def make_chart(self, df, bulletin_date):
+        base = alt.Chart(df).transform_window(
+            sort=[{'field': 'collected_date'}],
+            frame=[-13, 0],
+            sum_cases='sum(confirmed_cases)',
+            sum_tests='sum(tests)',
+            sum_positive_tests='sum(positive_tests)',
+            groupby=['bulletin_date']
+        ).transform_calculate(
+            cases_per_100k=alt.datum.sum_cases / self.POPULATION_100K,
+            cases_over_tests=alt.datum.sum_cases / alt.datum.sum_tests,
+            positives_over_tests=alt.datum.sum_positive_tests / alt.datum.sum_tests
+        ).transform_filter(
+            alt.datum.collected_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(weeks=9))
+        ).encode(
+            x=alt.X('collected_date:T', title='Fecha de muestra'),
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                     alt.Tooltip('collected_date:T', title='Fecha de muestra'),
+                     alt.Tooltip('cases_per_100k:Q', format=',.1f',
+                                 title='Casos confirmados (14 días, por 100k)'),
+                     alt.Tooltip('sum_cases:Q', format=',d',
+                                 title='Casos confirmados (14 días, crudo)'),
+                     alt.Tooltip('cases_over_tests:Q', format='.2%',
+                                 title='Casos ÷ pruebas (14 días)'),
+                     alt.Tooltip('positives_over_tests:Q', format='.2%',
+                                 title='Positivas ÷ pruebas (14 días)')]
+        )
+
+        cases = base.mark_point(color='black', clip=True).encode(
+            x=alt.X('collected_date:T', axis=alt.Axis(title=None, labels=False)),
+            y=alt.Y('cases_per_100k:Q', title='Casos/100k',
+                    scale=alt.Scale(domain=[1, 200], type='linear')),
+            tooltip = [alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                       alt.Tooltip('collected_date:T', title='Fecha de muestra'),
+                       alt.Tooltip('cases_per_100k:Q', format=',.1f',
+                                   title='Casos confirmados (14 días, por 100k)'),
+                       alt.Tooltip('sum_cases:Q', format=',d',
+                                   title='Casos confirmados (14 días, crudo)')]
+        )
+
+        positives_over_tests = base.mark_point(color='black', clip=True).encode(
+            x=alt.X('collected_date:T', axis=alt.Axis(title=None, labels=False)),
+            y=alt.Y('positives_over_tests:Q', axis=alt.Axis(format='%'),
+                    scale=alt.Scale(domain=[0.01, 0.2], type='linear'),
+                    title='Positivas/pruebas'),
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                     alt.Tooltip('collected_date:T', title='Fecha de muestra'),
+                     alt.Tooltip('positives_over_tests:Q', format='.2%',
+                                 title='Positivas/pruebas (14 días)')]
+        )
+
+        cases_over_tests = base.mark_point(color='black', clip=True).encode(
+            x=alt.X('collected_date:T', title='Fecha de muestra'),
+            y=alt.Y('cases_over_tests:Q', title='Casos/pruebas',
+                    scale=alt.Scale(domain=[0.01, 0.2], type='linear'),
+                    axis=alt.Axis(format='%')),
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                     alt.Tooltip('collected_date:T', title='Fecha de muestra'),
+                     alt.Tooltip('cases_over_tests:Q', format='.2%',
+                                 title='Casos/pruebas (14 días)')]
+        )
+
+        width, height = 585, 100
+        return alt.vconcat(
+            alt.layer(self.make_level_scale(self.CASES_LEVELS), cases).properties(
+                width=width, height=height
+            ),
+            alt.layer(self.make_level_scale(self.POSITIVITY_LEVELS), positives_over_tests).properties(
+                width=width, height=height
+            ),
+            alt.layer(self.make_level_scale(self.POSITIVITY_LEVELS), cases_over_tests).properties(
+                width=width, height=height
+            )
+        )
+
+    def make_level_scale(self, df):
+        return alt.Chart(df).mark_rect(
+            opacity=0.2, clip=True
+        ).encode(
+            y=alt.Y('Umbral:Q'),
+            y2=alt.Y2('Tope:Q'),
+            color=alt.Color('Color:N', scale=None)
+        )
