@@ -113,14 +113,14 @@
         resultados de tomar los números de sus gráficas como esta:</p>
 
     <figure>
-        <img class="source_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_confirmed.jpg">
+        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_confirmed.jpg">
         <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
     </figure>
 
     <p>...y restarle sus contrapartes del boletín anterior:</p>
 
     <figure>
-        <img class="source_chart" src="../source_material/{{ previous_date_month }}/{{ previous_date }}/{{ previous_date }}_confirmed.jpg">
+        <img class="figure_chart" src="../source_material/{{ previous_date_month }}/{{ previous_date }}/{{ previous_date }}_confirmed.jpg">
         <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
     </figure>
 
@@ -207,7 +207,7 @@
         fácil en esta gráfica del boletín:</p>
 
     <figure>
-        <img class="source_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_probable.jpg">
+        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_probable.jpg">
         <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
     </figure>
 
@@ -560,7 +560,7 @@
     </script>
 
     <figure>
-        <img class="source_chart" src="../source_material/PRPHealthTrust/PRPHT_niveles_2020-09-13.jpg">
+        <img class="figure_chart" src="../source_material/PRPHealthTrust/PRPHT_niveles_2020-09-13.jpg">
         <figcaption>Fuente: Fideicomiso de Salud Pública de Puerto Rico</figcaption>
     </figure>
 
@@ -958,28 +958,49 @@
     Estas son las imágenes de los boletines del Departamento de Salud que
     se usaron para elaborar este análisis.
 
-    <p><img class="source_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_announcement.jpg"></p>
+    <figure>
+        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_announcement.jpg">
+        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
+    </figure>
+
 
     <h3>Casos únicos confirmados {{ bulletin_date }} (vs. {{ previous_date }})</h3>
 
-    <p><img class="source_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_confirmed.jpg"></p>
-    <p><img class="source_chart" src="../source_material/{{ bulletin_month }}/{{ previous_date }}/{{ previous_date }}_confirmed.jpg"></p>
+    <figure>
+        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_confirmed.jpg">
+        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
+    </figure>
+
+    <figure>
+        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ previous_date }}/{{ previous_date }}_confirmed.jpg">
+        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
+    </figure>
+
 
     <h3>Casos únicos probables {{ bulletin_date }} (vs. {{ previous_date }})</h3>
 
-    <p><img class="source_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_probable.jpg"></p>
-    <p><img class="source_chart" src="../source_material/{{ bulletin_month }}/{{ previous_date }}/{{ previous_date }}_probable.jpg"></p>
+    <figure>
+        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_probable.jpg">
+        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
+    </figure>
+
+    <figure>
+        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ previous_date }}/{{ previous_date }}_probable.jpg">
+        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
+    </figure>
+
 
     <h3>Muertes {{ bulletin_date }} (vs. {{ previous_date }})</h3>
 
-    <p><img class="source_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_deaths.jpg"></p>
-    <p><img class="source_chart" src="../source_material/{{ bulletin_month }}/{{ previous_date }}/{{ previous_date }}_deaths.jpg"></p>
+    <figure>
+        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_deaths.jpg">
+        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
+    </figure>
 
-    <h3>Historial de hospitalizaciones por región, 18 de abril hasta el 9 de julio del 2020</h3>
+    <figure>
+        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ previous_date }}/{{ previous_date }}_deaths.jpg">
+        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
+    </figure>
 
-    <p>Estos los compartió el Departamento de Salud con periodistas el 9 de julio:</p>
-
-    <p><img class="source_chart" src="../source_material/2020-07/2020-07-09/2020-07-09_hospitalization_history_p1.jpg"></p>
-    <p><img class="source_chart" src="../source_material/2020-07/2020-07-09/2020-07-09_hospitalization_history_p2.jpg"></p>
 </div>
 {% endblock %}
