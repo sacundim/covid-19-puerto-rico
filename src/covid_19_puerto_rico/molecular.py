@@ -20,7 +20,12 @@ class AbstractMolecularChart(charts.AbstractChart):
 
 
 class NewPositiveRate(AbstractMolecularChart):
-    SORT_ORDER = ['Positivas ÷ pruebas', 'Casos ÷ pruebas']
+    SORT_ORDER = [
+        'Positivas ÷ pruebas',
+        'Nuevos ÷ (nuevos + rechazos)',
+        'Casos ÷ (casos + rechazos)',
+        'Casos ÷ pruebas'
+    ]
 
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df.dropna()).transform_filter(
@@ -35,7 +40,7 @@ class NewPositiveRate(AbstractMolecularChart):
                     axis=alt.Axis(format='%')),
             color=alt.Color('variable:N', sort=self.SORT_ORDER,
                             legend=alt.Legend(orient='top', titleOrient='left',
-                                              title='Método de cálculo:')),
+                                              title='Método de cálculo:', labelLimit=320)),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
             tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
@@ -56,10 +61,16 @@ class NewPositiveRate(AbstractMolecularChart):
         query = select([
             table.c.bulletin_date,
             table.c.collected_date,
-            (table.c.smoothed_daily_positive_tests / table.c.smoothed_daily_tests)\
+            (table.c.smoothed_daily_positives / table.c.smoothed_daily_tests)\
                 .label('Positivas ÷ pruebas'),
-            (table.c.smoothed_daily_cases / table.c.smoothed_daily_tests)\
-                .label('Casos ÷ pruebas')
+#            (table.c.smoothed_daily_novels
+#                / (table.c.smoothed_daily_novels + table.c.smoothed_daily_rejections))\
+#                .label('Nuevos ÷ (nuevos + rechazos)'),
+            (table.c.smoothed_daily_cases
+                / (table.c.smoothed_daily_cases + table.c.smoothed_daily_rejections))\
+                .label('Casos ÷ (casos + rechazos)'),
+#            (table.c.smoothed_daily_cases / table.c.smoothed_daily_tests)\
+#                .label('Casos ÷ pruebas')
         ]).where(table.c.test_type == 'Molecular')
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
         return pd.melt(df, ['bulletin_date', 'collected_date'])
