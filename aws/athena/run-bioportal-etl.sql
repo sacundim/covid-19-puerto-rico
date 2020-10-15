@@ -11,6 +11,9 @@
 -- The big core tables with disaggregated clean data.
 --
 
+--
+-- The bitemporal daily bulletin cases table
+--
 DROP TABLE IF EXISTS covid_pr_etl.bulletin_cases;
 CREATE TABLE covid_pr_etl.bulletin_cases WITH (
     format = 'PARQUET',
@@ -64,6 +67,9 @@ SELECT
 FROM cleaned;
 
 
+--
+-- The `minimal-info-unique-tests` row-per-test dataset.
+--
 DROP TABLE IF EXISTS covid_pr_etl.bioportal_tests;
 CREATE TABLE covid_pr_etl.bioportal_tests WITH (
     format = 'PARQUET',
@@ -135,6 +141,108 @@ SELECT
         ELSE date(created_at - INTERVAL '4' HOUR)
     END AS reported_date
 FROM first_clean;
+
+--
+-- The `minimal-info` row-per-test dataset. This one differs from
+-- `minimal-info-unique-tests` in that:
+--
+-- 1. It has a `patient_id` field (which makes it much bigger in disk space);
+-- 2. It has `region` instead of `municipality`.
+--
+-- If we had longer history of this one we might abandon `minimal-info-unique-tests`
+-- for this one.
+--
+DROP TABLE IF EXISTS covid_pr_etl.bioportal_cases;
+CREATE TABLE covid_pr_etl.bioportal_cases WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 6
+) AS
+WITH first_clean AS (
+	SELECT
+	    CAST(from_iso8601_timestamp(downloadedAt) AS TIMESTAMP)
+	        AS downloaded_at,
+	    CAST(from_iso8601_timestamp(downloadedAt) AS DATE) - INTERVAL '1' DAY
+	        AS bulletin_date,
+	    CAST(date_parse(nullif(collectedDate, ''), '%m/%d/%Y') AS DATE)
+	        AS raw_collected_date,
+	    CAST(date_parse(nullif(reportedDate, ''), '%m/%d/%Y') AS DATE)
+	        AS raw_reported_date,
+	    date_parse(createdAt, '%m/%d/%Y %H:%i') AS created_at,
+	    nullif(patientId, '') AS patient_id,
+	    nullif(ageRange, '') AS age_range,
+	    nullif(region, '') AS region,
+	    testType AS test_type,
+	    result,
+	    COALESCE(result, '') LIKE '%Positive%' AS positive
+	FROM covid_pr_sources.cases_csv_v1
+)
+SELECT
+    *,
+    CASE
+        WHEN raw_collected_date >= DATE '2020-01-01'
+        THEN raw_collected_date
+        WHEN raw_reported_date >= DATE '2020-03-13'
+        -- Suggested by @rafalab. He uses two days as the value and says
+        -- that's the average, but my spot check says 2.8 days.
+        THEN raw_reported_date - INTERVAL '3' DAY
+        ELSE date(created_at - INTERVAL '4' HOUR) - INTERVAL '3' DAY
+    END AS collected_date,
+    CASE
+        WHEN raw_reported_date >= DATE '2020-03-13'
+        THEN raw_reported_date
+        ELSE date(created_at - INTERVAL '4' HOUR)
+    END AS reported_date
+FROM first_clean;
+
+
+--
+-- This is data set computed off `bioportal_cases` is our
+-- analysis of which tests are likely to be followups of
+-- earlier positive tests.
+--
+-- We classify a test as a "followup" if the same `patient_id`
+-- has an earlier positive test that was collected within three
+-- months.  We use a three month cutoff following the Council of
+-- State and Territorial Epidemiologists (CSTE)'s 2020 Interim
+-- Case Definition (Interim-20-ID-02, approved August 5, 2020),
+-- which recommends this criterion for distinguishing new cases
+-- from existing ones.
+--
+-- https://wwwn.cdc.gov/nndss/conditions/coronavirus-disease-2019-covid-19/case-definition/2020/08/05/
+DROP TABLE IF EXISTS covid_pr_etl.bioportal_followups;
+CREATE TABLE covid_pr_etl.bioportal_followups WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
+SELECT
+	cur.test_type,
+	cur.bulletin_date,
+	cur.raw_collected_date,
+	cur.raw_reported_date,
+	cur.collected_date,
+	cur.reported_date,
+	cur.positive,
+	COALESCE(bool_or(prev.raw_collected_date >=
+				date_add('month', -3, cur.raw_collected_date)
+			AND prev.positive), FALSE)
+		AS followup
+FROM covid_pr_etl.bioportal_cases cur
+LEFT OUTER JOIN covid_pr_etl.bioportal_cases prev
+	ON prev.test_type = cur.test_type
+	AND prev.bulletin_date = cur.bulletin_date
+	AND prev.patient_id = cur.patient_id
+	AND prev.raw_collected_date < cur.raw_collected_date
+GROUP BY
+	cur.test_type,
+	cur.bulletin_date,
+	cur.raw_collected_date,
+	cur.raw_reported_date,
+	cur.collected_date,
+	cur.reported_date,
+	cur.patient_id,
+	cur.positive;
 
 
 ----------------------------------------------------------
@@ -243,6 +351,58 @@ FROM covid_pr_etl.bioportal_tritemporal_deltas
 GROUP BY test_type, bulletin_date, reported_date;
 
 
+DROP TABLE IF EXISTS covid_pr_etl.bioportal_followups_collected_agg;
+CREATE TABLE covid_pr_etl.bioportal_followups_collected_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
+WITH dailies AS (
+	SELECT
+		test_type,
+		bulletin_date,
+		collected_date,
+		count(*) tests,
+		count(*) FILTER (WHERE positive)
+			AS positives,
+		count(*) FILTER (WHERE positive AND NOT followup)
+			AS novels,
+		count(*) FILTER (WHERE NOT positive AND NOT followup)
+			AS rejections,
+		count(*) FILTER (WHERE followup)
+			AS followups
+	FROM covid_pr_etl.bioportal_followups
+	WHERE DATE '2020-03-01' <= collected_date
+	AND collected_date <= bulletin_date
+	AND DATE '2020-03-01' <= reported_date
+	AND reported_date <= bulletin_date
+	GROUP BY test_type, bulletin_date, collected_date
+)
+SELECT
+	*,
+	sum(tests) OVER (
+		PARTITION BY test_type,  bulletin_date
+		ORDER BY collected_date
+	) AS cumulative_tests,
+	sum(positives) OVER (
+		PARTITION BY test_type,  bulletin_date
+		ORDER BY collected_date
+	) AS cumulative_positives,
+	sum(novels) OVER (
+		PARTITION BY test_type,  bulletin_date
+		ORDER BY collected_date
+	) AS cumulative_novels,
+	sum(rejections) OVER (
+		PARTITION BY test_type,  bulletin_date
+		ORDER BY collected_date
+	) AS cumulative_rejections,
+	sum(followups) OVER (
+		PARTITION BY test_type,  bulletin_date
+		ORDER BY collected_date
+	) AS cumulative_followups
+FROM dailies;
+
+
 ----------------------------------------------------------
 ----------------------------------------------------------
 --
@@ -299,21 +459,36 @@ SELECT
 		PARTITION BY molecular.test_type, molecular.bulletin_date
 		ORDER BY collected_date
 	)) / 7.0 AS smoothed_daily_tests,
-	(molecular.cumulative_positive_tests - lag(molecular.cumulative_positive_tests, 7) OVER (
+	(molecular.cumulative_positives - lag(molecular.cumulative_positives, 7) OVER (
 		PARTITION BY molecular.test_type, molecular.bulletin_date
 		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_positive_tests,
+	)) / 7.0 AS smoothed_daily_positives,
+	(molecular.cumulative_novels - lag(molecular.cumulative_novels, 7) OVER (
+		PARTITION BY molecular.test_type, molecular.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_novels,
+	(molecular.cumulative_rejections - lag(molecular.cumulative_rejections, 7) OVER (
+		PARTITION BY molecular.test_type, molecular.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_rejections,
 	(cases.cumulative_confirmed_cases - lag(cases.cumulative_confirmed_cases, 7) OVER (
 		PARTITION BY molecular.test_type, molecular.bulletin_date
 		ORDER BY collected_date
 	)) / 7.0 AS smoothed_daily_cases
-FROM covid_pr_etl.bioportal_collected_agg molecular
+FROM covid_pr_etl.bioportal_followups_collected_agg molecular
 INNER JOIN covid_pr_etl.bulletin_cases cases
 	ON cases.bulletin_date = molecular.bulletin_date
 	AND cases.datum_date = molecular.collected_date
 WHERE molecular.test_type = 'Molecular'
 AND molecular.bulletin_date > DATE '2020-04-24'
-UNION ALL
+ORDER BY test_type, bulletin_date DESC, collected_date DESC;
+
+
+--
+-- We don't use this one in the dashboard but we keep it around because
+-- we're sometimes curious to know.
+--
+CREATE OR REPLACE VIEW covid_pr_etl.serological_positive_rates AS
 SELECT
 	serological.test_type,
 	serological.bulletin_date,
