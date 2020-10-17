@@ -19,11 +19,9 @@ class AbstractMolecularChart(charts.AbstractChart):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
 
-class NewPositiveRate(AbstractMolecularChart):
+class NaivePositiveRate(AbstractMolecularChart):
     SORT_ORDER = [
         'Positivas ÷ pruebas',
-        'Nuevos ÷ (nuevos + rechazos)',
-        'Casos ÷ (casos + rechazos)',
         'Casos ÷ pruebas'
     ]
 
@@ -57,20 +55,14 @@ class NewPositiveRate(AbstractMolecularChart):
                       | ((df['bulletin_date'] == week_ago))]
 
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('positive_rates', self.metadata, autoload=True)
+        table = sqlalchemy.Table('naive_positive_rates', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.collected_date,
             (table.c.smoothed_daily_positives / table.c.smoothed_daily_tests)\
                 .label('Positivas ÷ pruebas'),
-#            (table.c.smoothed_daily_novels
-#                / (table.c.smoothed_daily_novels + table.c.smoothed_daily_rejections))\
-#                .label('Nuevos ÷ (nuevos + rechazos)'),
-            (table.c.smoothed_daily_cases
-                / (table.c.smoothed_daily_cases + table.c.smoothed_daily_rejections))\
-                .label('Casos ÷ (casos + rechazos)'),
-#            (table.c.smoothed_daily_cases / table.c.smoothed_daily_tests)\
-#                .label('Casos ÷ pruebas')
+            (table.c.smoothed_daily_cases / table.c.smoothed_daily_tests)\
+                .label('Casos ÷ pruebas')
         ]).where(table.c.test_type == 'Molecular')
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
         return pd.melt(df, ['bulletin_date', 'collected_date'])

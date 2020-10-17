@@ -46,7 +46,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
-        molecular.NewPositiveRate(athena, args.output_dir, output_formats),
+        molecular.NaivePositiveRate(athena, args.output_dir, output_formats),
         molecular.PublicHealthTrustLevels(athena, args.output_dir, output_formats),
         molecular.MolecularLatenessTiers(athena, args.output_dir, output_formats),
         molecular.TestingLoad(athena, args.output_dir, output_formats),
