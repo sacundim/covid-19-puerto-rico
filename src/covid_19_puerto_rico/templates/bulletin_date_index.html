@@ -36,6 +36,7 @@
         <li><a href="#LatenessTiers_section">Historial de rezagos por renglones</a></li>
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas per cápita (promedio 7 días)</a></li>
         <li><a href="#NaivePositiveRate_section">Positividad (promedio 7 días)</a></li>
+        <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados (EXPERIMENTAL)</a></li>
         <li><a href="#CumulativeTestsVsCases_section">Pruebas vs. casos (acumulado)</a></li>
         <li><a href="#MolecularCurrentDeltas_section">Pruebas añadidas a Bioportal</a></li>
         <li><a href="#MolecularDailyDeltas_section">Historial de pruebas en Bioportal</a></li>
@@ -294,7 +295,7 @@
 
 
 <div class="section" id="NaivePositiveRate_section">
-    <h1>Positividad (promedio 7 días)</h1>
+    <h1>Positividad sencilla (promedio 7 días)</h1>
 
     <div id="NaivePositiveRate"></div>
     <script type="text/javascript">
@@ -361,6 +362,120 @@
             <a href="#Revisions_2020-08-30">revisión del 30 de agosto del 2020</a> y
             otras anteriores.</li>
     </ul>
+</div>
+
+
+<div class="section" id="ConfirmationsVsRejections_section">
+    <h1>Casos confirmados vs. descartados (EXPERIMENTAL)</h1>
+
+    <div id="ConfirmationsVsRejections"></div>
+    <script type="text/javascript">
+        embedChart('ConfirmationsVsRejections', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Lo que el autor de esta página entiende es una mejor manera de medir la tan mentada
+        "positividad de pruebas" a partir de los datos disponibles del Departamento de
+        Salud de Puerto Rico.  El concepto consiste en distinguir entre pruebas de:</p>
+
+    <ul>
+        <li><strong>Evaluación inicial</strong>, que se administran a pacientes que no
+            se sabe si tienen o no COVID-19 para confirmar o descartar esa hipótesis;</li>
+        <li><strong>Seguimiento</strong>, que se administran a pacientes que ya se ha
+            confirmado que tienen COVID-19 para darle seguimiento a sus casos.</li>
+    </ul>
+
+    <p>La idea es que queremos monitorear la razón de casos descartados a casos confirmados
+        pero <strong>solo contando pruebas de evaluación inicial</strong>, porque las de
+        seguimiento no aportan al propósito que se cita comunmente para las tasas de
+        positividad: evaluar si el volumen de pruebas se queda corto para detectar contagios
+        nuevos.  Como las pruebas de seguimiento no contribuyen a confirmar o descartar nuevos
+        casos, incluirlas en el cálculo de tasas de positividad es (entiendo yo) un defecto
+        común en la mayoría de los métodos para calcular positividad.</p>
+
+    <p>Este autor preferiría expresar este concepto como la razón de casos descartados a
+        confirmados, e.g., 95 casos descartados por cada 5 confirmados.  Pero como el concepto
+        de "positividad" anda tan difundido, he optado en vez por expresar esto como porcentaje
+        mediante la fórmula:</p>
+
+    <center>
+        positividad = confirmados / (confirmados + descartados)
+    </center>
+
+    <p>...que en el ejemplo dado sería 5 / (5 + 95) = 5%.  La unidad del numerador y el
+        denominador se entiende que es episodios evaluados para confirmar o descartar
+        si hay infección de COVID-19.</p>
+
+    <p>El valor para cada fecha en el eje horizontal es un promedio a partir de las
+        muestras tomadas en los 7 días que desembocan en esa fecha.</p>
+
+
+    <h3>Criterio para prueba inicial vs. seguimiento</h3>
+
+    <p>Catalogamos una prueba (negativa o positiva) como seguimiento si el mismo paciente
+        (según el campo <code>patientId</code> en Bioportal) ha tenido una prueba positiva
+        en los 90 días anteriores.  Este criterio lo adoptamos a partir de
+        <a href="https://wwwn.cdc.gov/nndss/conditions/coronavirus-disease-2019-covid-19/case-definition/2020/08/05/">la
+            definición interina de casos de COVID-19 del 5 de agosto del 2020 del Consejo de
+            Epidemiólogos Estatales y Territoriales</a>, que recomienda:</p>
+
+    <blockquote>
+        Una prueba positiva repetida para ARN de SARS-CoV-2 usando una prueba de detección de
+        amplificación molecular dentro de tres meses del reporte inicial no debe ser enumerada
+        como caso nuevo para propósitos de vigilancia.
+    </blockquote>
+
+
+    <h3>Bioportal vs. oficial</h3>
+
+    <p>Para el numerador de casos confirmados existen en los datos de Salud dos cifras
+        discrepantes que se pueden usar, y hemos optado por visualizar ambas:</p>
+
+    <ul>
+        <li>El número de pruebas iniciales positivas según los datos del API de Bioportal
+            del Departamento de Salud de Puerto Rico;</li>
+        <li>El número de casos confirmados según los boletines oficiales diarios del
+            Departamento de Salud.</li>
+    </ul>
+
+    <p>La segunda de estas es la cifra oficial, pero también la más baja.  No tengo información
+        firme que explique esta discrepancia pero mi conjetura provisional es que la cifra oficial
+        disfruta de análisis más cuidadoso para identificar pacientes duplicados que lo que
+        se expone en el campo de <code>patientId</code> en Bioportal.  Nótese que de ser así
+        entonces este análisis puede que subestime el número de pruebas de seguimiento y por
+        tanto que el verdadero denominador del porcentaje deba ser menor. <em>Caveat emptor.</em></p>
+
+
+    <h3>¿De qué sirve esto?</h3>
+
+    <p>Vale muy bien preguntar de qué sirve tener esta metodología idiosincrática y provincial
+        de positividad si nadie más la usa y por tanto los número que da no se pueden
+        comparar con los que calculan otros. </p>
+
+    <p>A esto contesto primero que todos los métodos de medir positividad parecen sufrir del
+        problema que no existe una vara independiente contra la cual comparar sus cifras.  Por
+        más que se repite a voces que la positividad no debería pasar de 3%, o 5%, o 8%, no he
+        encontrado aún un marco teórico que justifique cómo fijar tales umbrales.</p>
+
+    <p>Y contesto segundo que no descartar pruebas de seguimiento puede en algunas situaciones
+        confundir la forma de las curvas.  Por ejemplo:</p>
+
+    <ul>
+        <li>Una alta carga de pruebas de seguimiento, que se puede anticipar que son
+            desproporcionadamente positivas, podría opacar una caída entre las iniciales.
+            La definición más sencilla y común de positivas ÷ pruebas, en mi otra gráfica
+            que calcula y compara esta con casos ÷ pruebas, se nota este efecto—que
+            casos ÷ pruebas cae en algunos periodos que positivas ÷ pruebas se queda más
+            llano.</li>
+        <li>La medida de casos ÷ pruebas puede sufrir del desperfecto relacionado que cuando
+            hay alta carga de pruebas de seguimiento, el denominador crece relativo al número
+            de casos, desinfla la tasa, y podría opacar una subida entre las pruebas iniciales.</li>
+    </ul>
+
+    <p>Y en efecto, las tasas que calculo en esta gráfica dan cifras que caen entre medio
+        de positivas ÷ pruebas (que tiende a ser alta) y casos ÷ pruebas (que tiende a ser
+        baja).</p>
 </div>
 
 
