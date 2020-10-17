@@ -222,7 +222,7 @@ SELECT
 	cur.reported_date,
 	cur.positive,
 	COALESCE(bool_or(prev.raw_collected_date >=
-				date_add('month', -3, cur.raw_collected_date)
+				date_add('day', -90, cur.raw_collected_date)
 			AND prev.positive), FALSE)
 		AS followup
 FROM covid_pr_etl.bioportal_cases cur
@@ -519,26 +519,11 @@ SELECT
 	molecular.test_type,
 	molecular.bulletin_date,
 	collected_date,
-	(molecular.cumulative_tests - lag(molecular.cumulative_tests, 7) OVER (
-		PARTITION BY molecular.test_type, molecular.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_tests,
-	(molecular.cumulative_positives - lag(molecular.cumulative_positives, 7) OVER (
-		PARTITION BY molecular.test_type, molecular.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_positives,
-	(molecular.cumulative_novels - lag(molecular.cumulative_novels, 7) OVER (
-		PARTITION BY molecular.test_type, molecular.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_novels,
-	(molecular.cumulative_rejections - lag(molecular.cumulative_rejections, 7) OVER (
-		PARTITION BY molecular.test_type, molecular.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_rejections,
-	(cases.cumulative_confirmed_cases - lag(cases.cumulative_confirmed_cases, 7) OVER (
-		PARTITION BY molecular.test_type, molecular.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_cases
+	molecular.tests,
+	molecular.positives,
+	molecular.novels,
+	molecular.rejections,
+	cases.confirmed_cases AS cases
 FROM covid_pr_etl.bioportal_followups_collected_agg molecular
 INNER JOIN covid_pr_etl.bulletin_cases cases
 	ON cases.bulletin_date = molecular.bulletin_date
