@@ -317,7 +317,7 @@ SELECT
 	sum(sum(positive_tests)) OVER (
         PARTITION BY test_type, bulletin_date
         ORDER BY collected_date
-    ) AS cumulative_positive_tests,
+    ) AS cumulative_positives,
 	sum(delta_positive_tests) AS delta_positive_tests
 FROM covid_pr_etl.bioportal_tritemporal_deltas
 GROUP BY test_type, bulletin_date, collected_date;
@@ -345,7 +345,7 @@ SELECT
 	sum(sum(positive_tests)) OVER (
         PARTITION BY test_type, bulletin_date
         ORDER BY reported_date
-    ) AS cumulative_positive_tests,
+    ) AS cumulative_positives,
 	sum(delta_positive_tests) AS delta_positive_tests
 FROM covid_pr_etl.bioportal_tritemporal_deltas
 GROUP BY test_type, bulletin_date, reported_date;
@@ -450,7 +450,74 @@ FROM covid_pr_etl.bioportal_reported_agg
 ORDER BY bulletin_date DESC, date DESC, test_type, date_type;
 
 
-CREATE OR REPLACE VIEW covid_pr_etl.positive_rates AS
+--
+-- We call this the "naïve" positive rates chart because it uses the 
+-- simpler, more common metrics that don't account for followup test
+-- load.
+-- 
+CREATE OR REPLACE VIEW covid_pr_etl.naive_positive_rates AS
+SELECT
+	molecular.test_type,
+	molecular.bulletin_date,
+	collected_date,
+	(molecular.cumulative_tests - lag(molecular.cumulative_tests, 7) OVER (
+		PARTITION BY molecular.test_type, molecular.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_tests,
+	(molecular.cumulative_positives - lag(molecular.cumulative_positives, 7) OVER (
+		PARTITION BY molecular.test_type, molecular.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_positives,
+	(cases.cumulative_confirmed_cases - lag(cases.cumulative_confirmed_cases, 7) OVER (
+		PARTITION BY molecular.test_type, molecular.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_cases
+FROM covid_pr_etl.bioportal_collected_agg molecular
+INNER JOIN covid_pr_etl.bulletin_cases cases
+	ON cases.bulletin_date = molecular.bulletin_date
+	AND cases.datum_date = molecular.collected_date
+WHERE molecular.test_type = 'Molecular'
+AND molecular.bulletin_date > DATE '2020-04-24'
+ORDER BY test_type, bulletin_date DESC, collected_date DESC;
+
+
+--
+-- We don't use this one in the dashboard but we keep it around because
+-- we're sometimes curious to know.
+--
+CREATE OR REPLACE VIEW covid_pr_etl.naive_serological_positive_rates AS
+SELECT
+	serological.test_type,
+	serological.bulletin_date,
+	collected_date,
+	(serological.cumulative_tests - lag(serological.cumulative_tests, 7) OVER (
+		PARTITION BY serological.test_type, serological.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_tests,
+	(serological.cumulative_positives - lag(serological.cumulative_positives, 7) OVER (
+		PARTITION BY serological.test_type, serological.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_positive_tests,
+	(cases.cumulative_confirmed_cases - lag(cases.cumulative_confirmed_cases, 7) OVER (
+		PARTITION BY serological.test_type, serological.bulletin_date
+		ORDER BY collected_date
+	)) / 7.0 AS smoothed_daily_cases
+FROM covid_pr_etl.bioportal_collected_agg serological
+INNER JOIN covid_pr_etl.bulletin_cases cases
+	ON cases.bulletin_date = serological.bulletin_date
+	AND cases.datum_date = serological.collected_date
+WHERE serological.test_type = 'Serological'
+AND serological.bulletin_date > DATE '2020-04-24'
+ORDER BY test_type, bulletin_date DESC, collected_date DESC;
+
+
+--
+-- This is our more sophisticated "positive rate" analysis, which we
+-- prefer to call the confirmed vs. rejected cases rate.  The key idea
+-- is we don't count followup tests, i.e. test administered to patients
+-- that had a positive result in the past three months.
+--
+CREATE OR REPLACE VIEW covid_pr_etl.confirmed_vs_rejected AS
 SELECT
 	molecular.test_type,
 	molecular.bulletin_date,
@@ -484,36 +551,6 @@ AND molecular.bulletin_date > DATE '2020-04-24'
 ORDER BY test_type, bulletin_date DESC, collected_date DESC;
 
 
---
--- We don't use this one in the dashboard but we keep it around because
--- we're sometimes curious to know.
---
-CREATE OR REPLACE VIEW covid_pr_etl.serological_positive_rates AS
-SELECT
-	serological.test_type,
-	serological.bulletin_date,
-	collected_date,
-	(serological.cumulative_tests - lag(serological.cumulative_tests, 7) OVER (
-		PARTITION BY serological.test_type, serological.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_tests,
-	(serological.cumulative_positive_tests - lag(serological.cumulative_positive_tests, 7) OVER (
-		PARTITION BY serological.test_type, serological.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_positive_tests,
-	(cases.cumulative_confirmed_cases - lag(cases.cumulative_confirmed_cases, 7) OVER (
-		PARTITION BY serological.test_type, serological.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_cases
-FROM covid_pr_etl.bioportal_collected_agg serological
-INNER JOIN covid_pr_etl.bulletin_cases cases
-	ON cases.bulletin_date = serological.bulletin_date
-	AND cases.datum_date = serological.collected_date
-WHERE serological.test_type = 'Serological'
-AND serological.bulletin_date > DATE '2020-04-24'
-ORDER BY test_type, bulletin_date DESC, collected_date DESC;
-
-
 CREATE OR REPLACE VIEW covid_pr_etl.testing_load AS
 SELECT
 	bca.bulletin_date,
@@ -522,7 +559,7 @@ SELECT
 		PARTITION BY test_type, bca.bulletin_date
 		ORDER BY collected_date
 	)) / 7.0 AS tests,
-	((bca.cumulative_positive_tests - lag(bca.cumulative_positive_tests, 7) OVER (
+	((bca.cumulative_positives - lag(bca.cumulative_positives, 7) OVER (
 		PARTITION BY test_type, bca.bulletin_date
 		ORDER BY collected_date
 	)) - COALESCE(b.cumulative_confirmed_cases - lag(b.cumulative_confirmed_cases, 7) OVER (

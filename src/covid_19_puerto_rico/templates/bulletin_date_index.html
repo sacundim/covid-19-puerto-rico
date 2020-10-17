@@ -36,7 +36,7 @@
         <li><a href="#LatenessTiers_section">Historial de rezagos por renglones</a></li>
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas per cápita (promedio 7 días)</a></li>
         <li><a href="#TestingLoad_section">Carga de pruebas de seguimiento</a></li>
-        <li><a href="#NewPositiveRate_section">Positividad (promedio 7 días)</a></li>
+        <li><a href="#NaivePositiveRate_section">Positividad (promedio 7 días)</a></li>
         <li><a href="#CumulativeTestsVsCases_section">Pruebas vs. casos (acumulado)</a></li>
         <li><a href="#MolecularCurrentDeltas_section">Pruebas añadidas a Bioportal</a></li>
         <li><a href="#MolecularDailyDeltas_section">Historial de pruebas en Bioportal</a></li>
@@ -328,12 +328,12 @@
 </div>
 
 
-<div class="section" id="NewPositiveRate_section">
+<div class="section" id="NaivePositiveRate_section">
     <h1>Positividad (promedio 7 días)</h1>
 
-    <div id="NewPositiveRate"></div>
+    <div id="NaivePositiveRate"></div>
     <script type="text/javascript">
-        embedChart('NewPositiveRate', bulletin_date);
+        embedChart('NaivePositiveRate', bulletin_date);
     </script>
 
     <h3>¿Qué es esto?</h3>
