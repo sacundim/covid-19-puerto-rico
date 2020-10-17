@@ -49,7 +49,6 @@ def main():
         molecular.NaivePositiveRate(athena, args.output_dir, output_formats),
         molecular.PublicHealthTrustLevels(athena, args.output_dir, output_formats),
         molecular.MolecularLatenessTiers(athena, args.output_dir, output_formats),
-        molecular.TestingLoad(athena, args.output_dir, output_formats),
         molecular.MolecularCurrentDeltas(athena, args.output_dir, output_formats),
         molecular.MolecularDailyDeltas(athena, args.output_dir, output_formats),
         molecular.NewDailyTestsPerCapita(athena, args.output_dir, output_formats),

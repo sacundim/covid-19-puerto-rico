@@ -35,7 +35,6 @@
         <li><a href="#Lateness7Day_section">Tendencia de rezago de datos</a></li>
         <li><a href="#LatenessTiers_section">Historial de rezagos por renglones</a></li>
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas per cápita (promedio 7 días)</a></li>
-        <li><a href="#TestingLoad_section">Carga de pruebas de seguimiento</a></li>
         <li><a href="#NaivePositiveRate_section">Positividad (promedio 7 días)</a></li>
         <li><a href="#CumulativeTestsVsCases_section">Pruebas vs. casos (acumulado)</a></li>
         <li><a href="#MolecularCurrentDeltas_section">Pruebas añadidas a Bioportal</a></li>
@@ -291,40 +290,6 @@
             <a href="#Revisions_2020-08-30">revisión del 30 de agosto del 2020</a> y
             otras anteriores.</li>
     </ul>
-</div>
-
-
-<div class="section" id="TestingLoad_section">
-    <h1>Carga de pruebas de seguimiento</h1>
-
-    <div id="TestingLoad"></div>
-    <script type="text/javascript">
-        embedChart('TestingLoad', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Promedio de siete días de pruebas moleculares por fecha de muestra, pero subrayando
-        la porción de pruebas positivas que (se estima) no se usaron para buscar nuevos
-        casos sino para dar seguimiento a casos ya conocidos.  La idea es que la porción en
-        rojo representa una carga que el seguimiento de casos  ya conocidos le impone al
-        volumen de pruebas.  Estimamos la carga del siguiente modo:</p>
-
-    <dl>
-        <dt>Gris</dt>
-        <dd>Pruebas negativas + casos confirmados</dd>
-        <dt>Rojo</dt>
-        <dd>Pruebas positivas - casos confirmados</dd>
-    </dl>
-
-    <p>Estas medidas sin embargo no disciernen cuántas de las pruebas negativas son de
-        seguimiento a casos ya conocidos, así que la porción roja puede subestimar la
-        carga.</p>
-
-    <p>Otra fuente de error es que los datos de casos en los boletines diarios y los de
-        pruebas en el API de Bioportal no siempre cuadran.  Hay fechas en que el número de
-        casos confirmados que se reporta con muestras en esa fecha está por encima del
-        número de muestras positivas que dice Bioportal.</p>
 </div>
 
 
