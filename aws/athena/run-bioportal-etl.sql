@@ -79,7 +79,6 @@ CREATE TABLE covid_pr_etl.bioportal_tests WITH (
 WITH tests_csv_union AS (
     SELECT
         downloadedAt,
-        '' AS patientId,
         collectedDate,
         reportedDate,
         ageRange,
@@ -91,7 +90,6 @@ WITH tests_csv_union AS (
     UNION ALL
     SELECT
         downloadedAt,
-        patientId,
         collectedDate,
         reportedDate,
         ageRange,
@@ -111,7 +109,6 @@ WITH tests_csv_union AS (
         CAST(date_parse(nullif(reportedDate, ''), '%m/%d/%Y') AS DATE)
             AS raw_reported_date,
         date_parse(createdAt, '%m/%d/%Y %H:%i') AS created_at,
-        nullif(patientId, '') AS patient_id,
         nullif(ageRange, '') AS age_range,
         CASE patientCity
             WHEN '' THEN NULL
@@ -169,7 +166,7 @@ WITH first_clean AS (
 	    CAST(date_parse(nullif(reportedDate, ''), '%m/%d/%Y') AS DATE)
 	        AS raw_reported_date,
 	    date_parse(createdAt, '%m/%d/%Y %H:%i') AS created_at,
-	    nullif(patientId, '') AS patient_id,
+	    from_hex(replace(nullif(patientId, ''), '-')) AS patient_id,
 	    nullif(ageRange, '') AS age_range,
 	    nullif(region, '') AS region,
 	    testType AS test_type,
