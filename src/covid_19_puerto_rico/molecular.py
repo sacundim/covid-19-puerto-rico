@@ -24,7 +24,7 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
     Bioportal's `patientId` field to estimate how many tests are followups for
     persons who are already known to have tested positive."""
 
-    SORT_ORDER = ['Bioportal', 'Oficial']
+    SORT_ORDER = ['Oficial', 'Bioportal']
 
     def fetch_data(self, connection):
         table = sqlalchemy.Table('confirmed_vs_rejected', self.metadata, autoload=True)
@@ -32,7 +32,7 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
             table.c.bulletin_date,
             table.c.collected_date,
             table.c.rejections,
-            table.c.cases.label('Oficial'),
+            table.c.cases.label('Casos oficiales'),
             table.c.novels.label('Bioportal')
         ])
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
@@ -45,9 +45,7 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
                       | ((df['bulletin_date'] == week_ago))]
 
     def make_chart(self, df, bulletin_date):
-        return alt.Chart(df.dropna()).transform_filter(
-            alt.datum.value > 0.0
-        ).transform_window(
+        return alt.Chart(df.dropna()).transform_window(
             groupby=['bulletin_date', 'variable'],
             sort=[{'field': 'collected_date'}],
             frame=[-6, 0],
@@ -56,11 +54,13 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
         ).transform_calculate(
             rate=alt.datum.sum_value / (alt.datum.sum_value + alt.datum.sum_rejections),
             ratio=alt.datum.sum_rejections / alt.datum.sum_value
+        ).transform_filter(
+            alt.datum.sum_value > 0
         ).mark_line(
             point='transparent'
         ).encode(
             x=alt.X('collected_date:T', title='Fecha de muestra'),
-            y=alt.Y('rate:Q', title='% confirmados (7 días)',
+            y=alt.Y('rate:Q', title='% episodios que se confirma (7 días)',
                     scale=alt.Scale(type='log', domain=[0.001, 1.0]),
                     axis=alt.Axis(format='%')),
             color=alt.Color('variable:N', sort=self.SORT_ORDER,
@@ -71,7 +71,7 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('variable:N', title='Según'),
                      alt.Tooltip('ratio:Q', format=".1f", title='Rechazados / confirmados (7 días)'),
-                     alt.Tooltip('rate:Q', format=".3p", title='% confirmados  (7 días)')]
+                     alt.Tooltip('rate:Q', format=".3p", title='% episodios que se confirma (7 días)')]
         ).properties(
             width=580, height=350
         )
