@@ -442,9 +442,10 @@
     <p>La segunda de estas es la cifra oficial, pero también la más baja.  No tengo información
         firme que explique esta discrepancia pero mi conjetura provisional es que la cifra oficial
         disfruta de análisis más cuidadoso para identificar pacientes duplicados que lo que
-        se expone en el campo de <code>patientId</code> en Bioportal.  Nótese que de ser así
-        entonces este análisis puede que subestime el número de pruebas de seguimiento y por
-        tanto que el verdadero denominador del porcentaje deba ser menor. <em>Caveat emptor.</em></p>
+        se expone en el campo de <code>patientId</code> en Bioportal.</p>
+
+    <p>Nótese que de ser así, entonces este análisis subestima el número de pruebas de seguimiento,
+        y por ser este parte del denominador, sesga el porcentaje hacia abajo. <em>Caveat emptor.</em></p>
 
 
     <h3>¿De qué sirve esto?</h3>
@@ -454,28 +455,17 @@
         comparar con los que calculan otros. </p>
 
     <p>A esto contesto primero que todos los métodos de medir positividad parecen sufrir del
-        problema que no existe una vara independiente contra la cual comparar sus cifras.  Por
+        problema que no existe una vara de referencia contra la cual comparar sus cifras.  Por
         más que se repite a voces que la positividad no debería pasar de 3%, o 5%, o 8%, no he
-        encontrado aún un marco teórico que justifique cómo fijar tales umbrales.</p>
+        encontrado aún un marco teórico que justifique cómo fijar tales umbrales.  Y contesto
+        segundo que la inclusión de las pruebas de seguimiento en los cálculos podría en ciertas
+        situaciones confundir la tendencia de las curvas, e.g., pintar una caída en casos ÷ pruebas
+        que se debiera más bien a un aumento en el volumen de pruebas de seguimiento, y por tanto
+        que se modera o desaparece tras aplicarse una corrección como la que se hace aquí.</p>
 
-    <p>Y contesto segundo que no descartar pruebas de seguimiento puede en algunas situaciones
-        confundir la forma de las curvas.  Por ejemplo:</p>
-
-    <ul>
-        <li>Una alta carga de pruebas de seguimiento, que se puede anticipar que son
-            desproporcionadamente positivas, podría opacar una caída entre las iniciales.
-            La definición más sencilla y común de positivas ÷ pruebas, en mi otra gráfica
-            que calcula y compara esta con casos ÷ pruebas, se nota este efecto—que
-            casos ÷ pruebas cae en algunos periodos que positivas ÷ pruebas se queda más
-            llano.</li>
-        <li>La medida de casos ÷ pruebas puede sufrir del desperfecto relacionado que cuando
-            hay alta carga de pruebas de seguimiento, el denominador crece relativo al número
-            de casos, desinfla la tasa, y podría opacar una subida entre las pruebas iniciales.</li>
-    </ul>
-
-    <p>Y en efecto, las tasas que calculo en esta gráfica dan cifras que caen entre medio
-        de positivas ÷ pruebas (que tiende a ser alta) y casos ÷ pruebas (que tiende a ser
-        baja).</p>
+    <p>Es pertinente entonces notar que el método de esta gráfica arroja tasas que caen entre
+        medio de los más comunes de positivas ÷ pruebas (que tiende a dar más altas) y
+        casos ÷ pruebas (que tiende a más bajas).</p>
 </div>
 
 
