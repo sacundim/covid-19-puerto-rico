@@ -19,8 +19,69 @@ class AbstractMolecularChart(charts.AbstractChart):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
 
-class NewPositiveRate(AbstractMolecularChart):
-    SORT_ORDER = ['Positivas ÷ pruebas', 'Casos ÷ pruebas']
+class ConfirmationsVsRejections(AbstractMolecularChart):
+    """A more sophisticated version of the 'positive rate' concept, that uses
+    Bioportal's `patientId` field to estimate how many tests are followups for
+    persons who are already known to have tested positive."""
+
+    SORT_ORDER = ['Oficial', 'Bioportal']
+
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('confirmed_vs_rejected', self.metadata, autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.collected_date,
+            table.c.rejections,
+            table.c.cases.label('Casos oficiales'),
+            table.c.novels.label('Bioportal')
+        ])
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
+        return pd.melt(df, ['bulletin_date', 'collected_date', 'rejections'])
+
+    def filter_data(self, df, bulletin_date):
+        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
+        week_ago = effective_bulletin_date - datetime.timedelta(days=7)
+        return df.loc[(df['bulletin_date'] == effective_bulletin_date)
+                      | ((df['bulletin_date'] == week_ago))]
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df.dropna()).transform_window(
+            groupby=['bulletin_date', 'variable'],
+            sort=[{'field': 'collected_date'}],
+            frame=[-6, 0],
+            sum_value='sum(value)',
+            sum_rejections='sum(rejections)'
+        ).transform_calculate(
+            rate=alt.datum.sum_value / (alt.datum.sum_value + alt.datum.sum_rejections),
+            ratio=alt.datum.sum_rejections / alt.datum.sum_value
+        ).transform_filter(
+            alt.datum.sum_value > 0
+        ).mark_line(
+            point='transparent'
+        ).encode(
+            x=alt.X('collected_date:T', title='Fecha de muestra'),
+            y=alt.Y('rate:Q', title='% episodios que se confirma (7 días)',
+                    scale=alt.Scale(type='log', domain=[0.001, 1.0]),
+                    axis=alt.Axis(format='%')),
+            color=alt.Color('variable:N', sort=self.SORT_ORDER,
+                            legend=alt.Legend(orient='top', titleOrient='left',
+                                              title='Según:', labelLimit=320)),
+            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
+            tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
+                     alt.Tooltip('bulletin_date:T', title='Datos hasta'),
+                     alt.Tooltip('variable:N', title='Según'),
+                     alt.Tooltip('ratio:Q', format=".1f", title='Rechazados / confirmados (7 días)'),
+                     alt.Tooltip('rate:Q', format=".3p", title='% episodios que se confirma (7 días)')]
+        ).properties(
+            width=580, height=350
+        )
+
+
+class NaivePositiveRate(AbstractMolecularChart):
+    SORT_ORDER = [
+        'Positivas ÷ pruebas',
+        'Casos ÷ pruebas'
+    ]
 
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df.dropna()).transform_filter(
@@ -35,7 +96,7 @@ class NewPositiveRate(AbstractMolecularChart):
                     axis=alt.Axis(format='%')),
             color=alt.Color('variable:N', sort=self.SORT_ORDER,
                             legend=alt.Legend(orient='top', titleOrient='left',
-                                              title='Método de cálculo:')),
+                                              title='Método de cálculo:', labelLimit=320)),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
             tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
@@ -52,11 +113,11 @@ class NewPositiveRate(AbstractMolecularChart):
                       | ((df['bulletin_date'] == week_ago))]
 
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('positive_rates', self.metadata, autoload=True)
+        table = sqlalchemy.Table('naive_positive_rates', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.collected_date,
-            (table.c.smoothed_daily_positive_tests / table.c.smoothed_daily_tests)\
+            (table.c.smoothed_daily_positives / table.c.smoothed_daily_tests)\
                 .label('Positivas ÷ pruebas'),
             (table.c.smoothed_daily_cases / table.c.smoothed_daily_tests)\
                 .label('Casos ÷ pruebas')
@@ -439,50 +500,6 @@ class MolecularLateness7Day(AbstractMolecularChart):
             row=alt.Row('variable', title=None, sort=self.SORT_ORDER)
         )
 
-
-class TestingLoad(AbstractMolecularChart):
-    SORT_ORDER = ['Positivas duplicadas', 'Negativas + casos']
-
-    def fetch_data(self, connection):
-        table = sqlalchemy.Table('testing_load', self.metadata, autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.collected_date,
-            table.c.tests,
-            table.c.duplicate_positives]
-        )
-        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
-
-    def filter_data(self, df, bulletin_date):
-        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
-        return df.loc[df['bulletin_date'] == effective_bulletin_date]
-
-    def make_chart(self, df, bulletin_date):
-        base = alt.Chart(df).transform_calculate(
-            productive=alt.datum.tests - alt.datum.duplicate_positives
-        ).encode(
-            x=alt.X('collected_date:T', title='Fecha de muestra'),
-            tooltip=[
-                alt.Tooltip('bulletin_date:T', title='Fecha de datos'),
-                alt.Tooltip('collected_date:T', title='Fecha de muestra'),
-                alt.Tooltip('tests:Q', format='.1f', title='Muestras tomadas'),
-                alt.Tooltip('duplicate_positives:Q', format='.1f', title='Positivas duplicadas'),
-                alt.Tooltip('productive:Q', format='.1f', title='Negativas + casos nuevos')
-            ]
-        )
-
-        all = base.mark_area(color='red').encode(
-            y=alt.Y('tests:Q', title='Pruebas (promedio 7 días)'),
-            y2=alt.Y2('productive:Q')
-        )
-
-        productive = base.mark_area(color='lightgrey').encode(
-            y=alt.Y('productive:Q')
-        )
-
-        return (all + productive).properties(
-            width=575, height=350
-        )
 
 class MolecularLatenessTiers(AbstractMolecularChart):
     SORT_ORDER = ['≤ 7 días', '≤ 14 días', '> 14 días']

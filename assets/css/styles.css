@@ -60,3 +60,7 @@ figcaption {
 .figure_chart {
     max-width: 100%;
 }
+
+center {
+    margin-bottom: 1rem;
+}
