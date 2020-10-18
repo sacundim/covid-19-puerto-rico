@@ -319,17 +319,17 @@
             dividido entre número total de pruebas PCR.</li>
     </ol>
 
-    <p>La segunda de estas se entiende que es una división un tanto de "chinas con botellas"
-        (i.e., cantidades que en realidad no deberían compararse), pero se ha optado por
-        incluirla porque muchas colecciones de datos en EEUU (e.g., Johns Hopkins) e
-        internacionales (e.g., Our World In Data) calculan así o parecido para muchos locales.
-        Lo cual quiere decir que a la hora de comparar el dato de Puerto Rico con el de otro
-        país hay que tener cuidado cuál de las dos se habla.  Más generalmente, no existe una
-        definición estándar de cómo se calcula la tasa de positividad, así que mucho cuidado
-        con comparar los cálculos que ofrecen fuentes distintas.</p>
+    <p>La segunda de estas muchos entienden (sin razón a mi entender) que es una división un
+        tanto de "chinas con botellas" (i.e., cantidades que en realidad no deberían compararse),
+        pero he optado por incluirla porque muchas colecciones de datos en EEUU (e.g., Johns
+        Hopkins) e internacionales (e.g., Our World In Data) calculan así o parecido para muchos
+        locales.  Lo cual quiere decir que a la hora de comparar el dato de Puerto Rico con el de
+        otro país hay que tener cuidado cuál definición se habla.  Más generalmente, <strong>no
+            existe ningún consenso sobre cómo calcular positividad, así que mucho cuidado con
+            comparar las cifras que ofrecen fuentes distintas</strong>.</p>
 
     <p>Otra advertencia es que el cálculo dado aquí para Puerto Rico hace uso de datos por
-        fecha de toma de muestra, y no de reporte de resultados como hacen muchas colecciones
+        fecha de toma de muestra, y no de registro de resultados como hacen muchas colecciones
         de datos o informes.  Esto da números que reflejan la realidad más cercanamente, pero
         acarrea dos desventajas:</p>
 
@@ -339,7 +339,7 @@
             a que se revisen los valores aquí calculados;</li>
         <li>Un caso especial muy importante de esto es que <b>caídas o subidas repentinas al final
             de la curva no son fiables</b>, porque para las fechas más recientes se espera que se
-            incorpore una mayor proporción de nuevos resultados.</li>
+            los datos estén menos completos.</li>
     </ol>
 
     <p>Las líneas entrecortadas, cuyo cálculo excluye los datos recibidos en los 7 días más
@@ -386,18 +386,18 @@
             confirmado que tienen COVID-19 para darle seguimiento a sus casos.</li>
     </ul>
 
-    <p>La idea es que queremos monitorear la razón de casos descartados a casos confirmados
-        pero <strong>solo contando pruebas de evaluación inicial</strong>, porque las de
-        seguimiento no aportan al propósito que se cita comunmente para las tasas de
-        positividad: evaluar si el volumen de pruebas se queda corto para detectar contagios
-        nuevos.  Como las pruebas de seguimiento no contribuyen a confirmar o descartar nuevos
-        casos, incluirlas en el cálculo de tasas de positividad es (entiendo yo) un defecto
-        común en la mayoría de los métodos para calcular positividad.</p>
+    <p>La idea es monitorear la razón de casos descartados a casos confirmados pero <strong>solo
+        contando pruebas de evaluación inicial</strong>, porque las de seguimiento no aportan al
+        propósito que se cita comunmente para las tasas de positividad: evaluar si el volumen de
+        pruebas se queda corto para detectar contagios nuevos.  Como las pruebas de seguimiento no
+        contribuyen a confirmar o descartar nuevos casos, incluirlas en el cálculo de tasas de
+        positividad es (entiendo yo) un defecto común en los métodos más usuales para calcular
+        positividad.</p>
 
-    <p>Este autor preferiría expresar este concepto como la razón de casos descartados a
-        confirmados, e.g., 95 casos descartados por cada 5 confirmados.  Pero como el concepto
-        de "positividad" anda tan difundido, he optado en vez por expresar esto como porcentaje
-        mediante la fórmula:</p>
+    <p>Este autor favorecería expresar este concepto como la razón de casos descartados a
+        confirmados, e.g., 95 casos descartados por cada 5 confirmados, pero como el "porcentaje
+        de positividad" anda tan difundido, me he conformado por así expresarlo, mediante la
+        fórmula:</p>
 
     <center>
         positividad = confirmados / (confirmados + descartados)
@@ -426,6 +426,12 @@
         como caso nuevo para propósitos de vigilancia.
     </blockquote>
 
+    <p><strong>ADVERTENCIA:</strong> Este estimado usa el campo <code>patientId</code> de
+        Bioportal para adjudicar si un par de pruebas se le hicieron al mismo paciente, y
+        hay motivo para creer que este campo frecuentemente falla en lograr ese cometido
+        y muestre IDs distintos en muchos casos que en verdad es la misma persona.  El efecto
+        de esto sería subestimar qué cantidad de pruebas son de seguimiento.</p>
+
 
     <h3>Bioportal vs. oficial</h3>
 
@@ -443,9 +449,6 @@
         firme que explique esta discrepancia pero mi conjetura provisional es que la cifra oficial
         disfruta de análisis más cuidadoso para identificar pacientes duplicados que lo que
         se expone en el campo de <code>patientId</code> en Bioportal.</p>
-
-    <p>Nótese que de ser así, entonces este análisis subestima el número de pruebas de seguimiento,
-        y por ser este parte del denominador, sesga el porcentaje hacia abajo. <em>Caveat emptor.</em></p>
 
 
     <h3>¿De qué sirve esto?</h3>
