@@ -35,8 +35,8 @@
         <li><a href="#Lateness7Day_section">Tendencia de rezago de datos</a></li>
         <li><a href="#LatenessTiers_section">Historial de rezagos por renglones</a></li>
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas per cápita (promedio 7 días)</a></li>
-        <li><a href="#TestingLoad_section">Carga de pruebas de seguimiento</a></li>
-        <li><a href="#NewPositiveRate_section">Positividad (promedio 7 días)</a></li>
+        <li><a href="#NaivePositiveRate_section">Positividad (promedio 7 días)</a></li>
+        <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados (EXPERIMENTAL)</a></li>
         <li><a href="#CumulativeTestsVsCases_section">Pruebas vs. casos (acumulado)</a></li>
         <li><a href="#MolecularCurrentDeltas_section">Pruebas añadidas a Bioportal</a></li>
         <li><a href="#MolecularDailyDeltas_section">Historial de pruebas en Bioportal</a></li>
@@ -294,46 +294,12 @@
 </div>
 
 
-<div class="section" id="TestingLoad_section">
-    <h1>Carga de pruebas de seguimiento</h1>
+<div class="section" id="NaivePositiveRate_section">
+    <h1>Positividad sencilla (promedio 7 días)</h1>
 
-    <div id="TestingLoad"></div>
+    <div id="NaivePositiveRate"></div>
     <script type="text/javascript">
-        embedChart('TestingLoad', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Promedio de siete días de pruebas moleculares por fecha de muestra, pero subrayando
-        la porción de pruebas positivas que (se estima) no se usaron para buscar nuevos
-        casos sino para dar seguimiento a casos ya conocidos.  La idea es que la porción en
-        rojo representa una carga que el seguimiento de casos  ya conocidos le impone al
-        volumen de pruebas.  Estimamos la carga del siguiente modo:</p>
-
-    <dl>
-        <dt>Gris</dt>
-        <dd>Pruebas negativas + casos confirmados</dd>
-        <dt>Rojo</dt>
-        <dd>Pruebas positivas - casos confirmados</dd>
-    </dl>
-
-    <p>Estas medidas sin embargo no disciernen cuántas de las pruebas negativas son de
-        seguimiento a casos ya conocidos, así que la porción roja puede subestimar la
-        carga.</p>
-
-    <p>Otra fuente de error es que los datos de casos en los boletines diarios y los de
-        pruebas en el API de Bioportal no siempre cuadran.  Hay fechas en que el número de
-        casos confirmados que se reporta con muestras en esa fecha está por encima del
-        número de muestras positivas que dice Bioportal.</p>
-</div>
-
-
-<div class="section" id="NewPositiveRate_section">
-    <h1>Positividad (promedio 7 días)</h1>
-
-    <div id="NewPositiveRate"></div>
-    <script type="text/javascript">
-        embedChart('NewPositiveRate', bulletin_date);
+        embedChart('NaivePositiveRate', bulletin_date);
     </script>
 
     <h3>¿Qué es esto?</h3>
@@ -353,17 +319,17 @@
             dividido entre número total de pruebas PCR.</li>
     </ol>
 
-    <p>La segunda de estas se entiende que es una división un tanto de "chinas con botellas"
-        (i.e., cantidades que en realidad no deberían compararse), pero se ha optado por
-        incluirla porque muchas colecciones de datos en EEUU (e.g., Johns Hopkins) e
-        internacionales (e.g., Our World In Data) calculan así o parecido para muchos locales.
-        Lo cual quiere decir que a la hora de comparar el dato de Puerto Rico con el de otro
-        país hay que tener cuidado cuál de las dos se habla.  Más generalmente, no existe una
-        definición estándar de cómo se calcula la tasa de positividad, así que mucho cuidado
-        con comparar los cálculos que ofrecen fuentes distintas.</p>
+    <p>La segunda de estas muchos entienden (sin razón a mi entender) que es una división un
+        tanto de "chinas con botellas" (i.e., cantidades que en realidad no deberían compararse),
+        pero he optado por incluirla porque muchas colecciones de datos en EEUU (e.g., Johns
+        Hopkins) e internacionales (e.g., Our World In Data) calculan así o parecido para muchos
+        locales.  Lo cual quiere decir que a la hora de comparar el dato de Puerto Rico con el de
+        otro país hay que tener cuidado cuál definición se habla.  Más generalmente, <strong>no
+            existe ningún consenso sobre cómo calcular positividad, así que mucho cuidado con
+            comparar las cifras que ofrecen fuentes distintas</strong>.</p>
 
     <p>Otra advertencia es que el cálculo dado aquí para Puerto Rico hace uso de datos por
-        fecha de toma de muestra, y no de reporte de resultados como hacen muchas colecciones
+        fecha de toma de muestra, y no de registro de resultados como hacen muchas colecciones
         de datos o informes.  Esto da números que reflejan la realidad más cercanamente, pero
         acarrea dos desventajas:</p>
 
@@ -373,7 +339,7 @@
             a que se revisen los valores aquí calculados;</li>
         <li>Un caso especial muy importante de esto es que <b>caídas o subidas repentinas al final
             de la curva no son fiables</b>, porque para las fechas más recientes se espera que se
-            incorpore una mayor proporción de nuevos resultados.</li>
+            los datos estén menos completos.</li>
     </ol>
 
     <p>Las líneas entrecortadas, cuyo cálculo excluye los datos recibidos en los 7 días más
@@ -396,6 +362,113 @@
             <a href="#Revisions_2020-08-30">revisión del 30 de agosto del 2020</a> y
             otras anteriores.</li>
     </ul>
+</div>
+
+
+<div class="section" id="ConfirmationsVsRejections_section">
+    <h1>Casos confirmados vs. descartados (EXPERIMENTAL)</h1>
+
+    <div id="ConfirmationsVsRejections"></div>
+    <script type="text/javascript">
+        embedChart('ConfirmationsVsRejections', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Lo que el autor de esta página entiende es una mejor manera de medir la tan mentada
+        "positividad de pruebas" a partir de los datos disponibles del Departamento de
+        Salud de Puerto Rico.  El concepto consiste en distinguir entre pruebas de:</p>
+
+    <ul>
+        <li><strong>Evaluación inicial</strong>, que se administran a pacientes que no
+            se sabe si tienen o no COVID-19 para confirmar o descartar esa hipótesis;</li>
+        <li><strong>Seguimiento</strong>, que se administran a pacientes que ya se ha
+            confirmado que tienen COVID-19 para darle seguimiento a sus casos.</li>
+    </ul>
+
+    <p>La idea es monitorear la razón de casos descartados a casos confirmados pero <strong>solo
+        contando pruebas de evaluación inicial</strong>, porque las de seguimiento no aportan al
+        propósito que se cita comunmente para las tasas de positividad: evaluar si el volumen de
+        pruebas se queda corto para detectar contagios nuevos.  Como las pruebas de seguimiento no
+        contribuyen a confirmar o descartar nuevos casos, incluirlas en el cálculo de tasas de
+        positividad es (entiendo yo) un defecto común en los métodos más usuales para calcular
+        positividad.</p>
+
+    <p>Este autor favorecería expresar este concepto como la razón de casos descartados a
+        confirmados, e.g., 95 casos descartados por cada 5 confirmados, pero como el "porcentaje
+        de positividad" anda tan difundido, me he conformado por así expresarlo, mediante la
+        fórmula:</p>
+
+    <center>
+        positividad = confirmados / (confirmados + descartados)
+    </center>
+
+    <p>...que en el ejemplo dado sería 5 / (5 + 95) = 5%.  La unidad del numerador y el
+        denominador se entiende que es episodios evaluados para confirmar o descartar
+        si hay infección de COVID-19.</p>
+
+    <p>El valor para cada fecha en el eje horizontal es un promedio a partir de las
+        muestras tomadas en los 7 días que desembocan en esa fecha.</p>
+
+
+    <h3>Criterio para prueba inicial vs. seguimiento</h3>
+
+    <p>Catalogamos una prueba (negativa o positiva) como seguimiento si el mismo paciente
+        (según el campo <code>patientId</code> en Bioportal) ha tenido una prueba positiva
+        en los 90 días anteriores.  Este criterio lo adoptamos a partir de
+        <a href="https://wwwn.cdc.gov/nndss/conditions/coronavirus-disease-2019-covid-19/case-definition/2020/08/05/">la
+            definición interina de casos de COVID-19 del 5 de agosto del 2020 del Consejo de
+            Epidemiólogos Estatales y Territoriales</a>, que recomienda:</p>
+
+    <blockquote>
+        Una prueba positiva repetida para ARN de SARS-CoV-2 usando una prueba de detección de
+        amplificación molecular dentro de tres meses del reporte inicial no debe ser enumerada
+        como caso nuevo para propósitos de vigilancia.
+    </blockquote>
+
+    <p><strong>ADVERTENCIA:</strong> Este estimado usa el campo <code>patientId</code> de
+        Bioportal para adjudicar si un par de pruebas se le hicieron al mismo paciente, y
+        hay motivo para creer que este campo frecuentemente falla en lograr ese cometido
+        y muestre IDs distintos en muchos casos que en verdad es la misma persona.  El efecto
+        de esto sería subestimar qué cantidad de pruebas son de seguimiento.</p>
+
+
+    <h3>Bioportal vs. oficial</h3>
+
+    <p>Para el numerador de casos confirmados existen en los datos de Salud dos cifras
+        discrepantes que se pueden usar, y hemos optado por visualizar ambas:</p>
+
+    <ul>
+        <li>El número de pruebas iniciales positivas según los datos del API de Bioportal
+            del Departamento de Salud de Puerto Rico;</li>
+        <li>El número de casos confirmados según los boletines oficiales diarios del
+            Departamento de Salud.</li>
+    </ul>
+
+    <p>La segunda de estas es la cifra oficial, pero también la más baja.  No tengo información
+        firme que explique esta discrepancia pero mi conjetura provisional es que la cifra oficial
+        disfruta de análisis más cuidadoso para identificar pacientes duplicados que lo que
+        se expone en el campo de <code>patientId</code> en Bioportal.</p>
+
+
+    <h3>¿De qué sirve esto?</h3>
+
+    <p>Vale muy bien preguntar de qué sirve tener esta metodología idiosincrática y provincial
+        de positividad si nadie más la usa y por tanto los número que da no se pueden
+        comparar con los que calculan otros. </p>
+
+    <p>A esto contesto primero que todos los métodos de medir positividad parecen sufrir del
+        problema que no existe una vara de referencia contra la cual comparar sus cifras.  Por
+        más que se repite a voces que la positividad no debería pasar de 3%, o 5%, o 8%, no he
+        encontrado aún un marco teórico que justifique cómo fijar tales umbrales.  Y contesto
+        segundo que la inclusión de las pruebas de seguimiento en los cálculos podría en ciertas
+        situaciones confundir la tendencia de las curvas, e.g., pintar una caída en casos ÷ pruebas
+        que se debiera más bien a un aumento en el volumen de pruebas de seguimiento, y por tanto
+        que se modera o desaparece tras aplicarse una corrección como la que se hace aquí.</p>
+
+    <p>Es pertinente entonces notar que el método de esta gráfica arroja tasas que caen entre
+        medio de los más comunes de positivas ÷ pruebas (que tiende a dar más altas) y
+        casos ÷ pruebas (que tiende a más bajas).</p>
 </div>
 
 
