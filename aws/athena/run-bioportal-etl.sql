@@ -211,15 +211,14 @@ DROP TABLE IF EXISTS covid_pr_etl.bioportal_followups;
 CREATE TABLE covid_pr_etl.bioportal_followups WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
-    bucket_count = 1
+    bucket_count = 6
 ) AS
 SELECT
 	cur.test_type,
 	cur.bulletin_date,
-	cur.raw_collected_date,
-	cur.raw_reported_date,
 	cur.collected_date,
 	cur.reported_date,
+	cur.patient_id,
 	cur.positive,
 	COALESCE(bool_or(prev.raw_collected_date >=
 				date_add('day', -90, cur.raw_collected_date)
@@ -234,8 +233,6 @@ LEFT OUTER JOIN covid_pr_etl.bioportal_cases prev
 GROUP BY
 	cur.test_type,
 	cur.bulletin_date,
-	cur.raw_collected_date,
-	cur.raw_reported_date,
 	cur.collected_date,
 	cur.reported_date,
 	cur.patient_id,
