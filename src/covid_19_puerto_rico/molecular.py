@@ -142,7 +142,7 @@ class NewDailyTestsPerCapita(AbstractMolecularChart):
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('per_thousand:Q', title='Pruebas (por 1K)'),
             color=alt.Color('test_type:N', title='Tipo de prueba:', sort=self.TEST_TYPE_SORT_ORDER,
-                            legend=alt.Legend(orient='bottom', titleOrient='left')),
+                            legend=alt.Legend(orient='bottom', titleOrient='top')),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
             tooltip=[alt.Tooltip('test_type:N', title='Tipo de prueba'),
                      alt.Tooltip('date:T', title='Fecha'),
