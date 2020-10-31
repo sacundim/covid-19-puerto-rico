@@ -73,7 +73,7 @@ FROM cleaned;
 DROP TABLE IF EXISTS covid_pr_etl.bioportal_tests;
 CREATE TABLE covid_pr_etl.bioportal_tests WITH (
     format = 'PARQUET',
-    bucketed_by = ARRAY['test_type', 'bulletin_date'],
+    bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 5
 ) AS
 WITH tests_csv_union AS (
@@ -152,7 +152,7 @@ FROM first_clean;
 DROP TABLE IF EXISTS covid_pr_etl.bioportal_cases;
 CREATE TABLE covid_pr_etl.bioportal_cases WITH (
     format = 'PARQUET',
-    bucketed_by = ARRAY['test_type', 'bulletin_date'],
+    bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 8
 ) AS
 WITH first_clean AS (
@@ -210,7 +210,7 @@ FROM first_clean;
 DROP TABLE IF EXISTS covid_pr_etl.bioportal_followups;
 CREATE TABLE covid_pr_etl.bioportal_followups WITH (
     format = 'PARQUET',
-    bucketed_by = ARRAY['test_type', 'bulletin_date'],
+    bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 8
 ) AS
 SELECT
@@ -248,7 +248,7 @@ GROUP BY
 DROP TABLE IF EXISTS covid_pr_etl.bioportal_tritemporal_counts;
 CREATE TABLE covid_pr_etl.bioportal_tritemporal_counts WITH (
     format = 'PARQUET',
-    bucketed_by = ARRAY['test_type', 'bulletin_date'],
+    bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
 ) AS
 SELECT
@@ -270,7 +270,7 @@ GROUP BY test_type, bulletin_date, collected_date, reported_date;
 DROP TABLE IF EXISTS covid_pr_etl.bioportal_tritemporal_deltas;
 CREATE TABLE covid_pr_etl.bioportal_tritemporal_deltas WITH (
     format = 'PARQUET',
-    bucketed_by = ARRAY['test_type', 'bulletin_date'],
+    bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
 ) AS
 SELECT
@@ -296,7 +296,7 @@ AND reported_date <= bulletin_date;
 DROP TABLE IF EXISTS covid_pr_etl.bioportal_collected_agg;
 CREATE TABLE covid_pr_etl.bioportal_collected_agg WITH (
     format = 'PARQUET',
-    bucketed_by = ARRAY['test_type', 'bulletin_date'],
+    bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
 ) AS
 SELECT
@@ -324,7 +324,7 @@ GROUP BY test_type, bulletin_date, collected_date;
 DROP TABLE IF EXISTS covid_pr_etl.bioportal_reported_agg;
 CREATE TABLE covid_pr_etl.bioportal_reported_agg WITH (
     format = 'PARQUET',
-    bucketed_by = ARRAY['test_type', 'bulletin_date'],
+    bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
 ) AS
 SELECT
@@ -352,7 +352,7 @@ GROUP BY test_type, bulletin_date, reported_date;
 DROP TABLE IF EXISTS covid_pr_etl.bioportal_followups_collected_agg;
 CREATE TABLE covid_pr_etl.bioportal_followups_collected_agg WITH (
     format = 'PARQUET',
-    bucketed_by = ARRAY['test_type', 'bulletin_date'],
+    bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
 ) AS
 WITH dailies AS (
