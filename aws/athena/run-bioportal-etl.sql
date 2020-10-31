@@ -124,18 +124,26 @@ WITH tests_csv_union AS (
 SELECT
     *,
     CASE
-        WHEN raw_collected_date >= DATE '2020-01-01'
-        THEN raw_collected_date
-        WHEN raw_reported_date >= DATE '2020-03-13'
-        -- Suggested by @rafalab. He uses two days as the value and says
-        -- that's the average, but my spot check says 2.8 days.
-        THEN raw_reported_date - INTERVAL '3' DAY
-        ELSE date(created_at - INTERVAL '4' HOUR) - INTERVAL '3' DAY
+        WHEN test_type IN ('Molecular')
+        THEN CASE
+            WHEN raw_collected_date >= DATE '2020-01-01'
+            THEN raw_collected_date
+            WHEN raw_reported_date >= DATE '2020-03-13'
+            -- Suggested by @rafalab. He uses two days as the value and says
+            -- that's the average, but my spot check says 2.8 days.
+            THEN raw_reported_date - INTERVAL '3' DAY
+            ELSE date(created_at - INTERVAL '4' HOUR) - INTERVAL '3' DAY
+        END
+        ELSE coalesce(raw_collected_date, raw_reported_date)
     END AS collected_date,
     CASE
-        WHEN raw_reported_date >= DATE '2020-03-13'
-        THEN raw_reported_date
-        ELSE date(created_at - INTERVAL '4' HOUR)
+        WHEN test_type IN ('Molecular')
+        THEN CASE
+            WHEN raw_reported_date >= DATE '2020-03-13'
+            THEN raw_reported_date
+            ELSE date(created_at - INTERVAL '4' HOUR)
+        END
+        ELSE coalesce(raw_reported_date, raw_collected_date)
     END AS reported_date
 FROM first_clean;
 
@@ -177,18 +185,26 @@ WITH first_clean AS (
 SELECT
     *,
     CASE
-        WHEN raw_collected_date >= DATE '2020-01-01'
-        THEN raw_collected_date
-        WHEN raw_reported_date >= DATE '2020-03-13'
-        -- Suggested by @rafalab. He uses two days as the value and says
-        -- that's the average, but my spot check says 2.8 days.
-        THEN raw_reported_date - INTERVAL '3' DAY
-        ELSE date(created_at - INTERVAL '4' HOUR) - INTERVAL '3' DAY
+        WHEN test_type IN ('Molecular')
+        THEN CASE
+            WHEN raw_collected_date >= DATE '2020-01-01'
+            THEN raw_collected_date
+            WHEN raw_reported_date >= DATE '2020-03-13'
+            -- Suggested by @rafalab. He uses two days as the value and says
+            -- that's the average, but my spot check says 2.8 days.
+            THEN raw_reported_date - INTERVAL '3' DAY
+            ELSE date(created_at - INTERVAL '4' HOUR) - INTERVAL '3' DAY
+        END
+        ELSE coalesce(raw_collected_date, raw_reported_date)
     END AS collected_date,
     CASE
-        WHEN raw_reported_date >= DATE '2020-03-13'
-        THEN raw_reported_date
-        ELSE date(created_at - INTERVAL '4' HOUR)
+        WHEN test_type IN ('Molecular')
+        THEN CASE
+            WHEN raw_reported_date >= DATE '2020-03-13'
+            THEN raw_reported_date
+            ELSE date(created_at - INTERVAL '4' HOUR)
+        END
+        ELSE coalesce(raw_reported_date, raw_collected_date)
     END AS reported_date
 FROM first_clean;
 
