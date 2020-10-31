@@ -400,6 +400,59 @@ SELECT
 	) AS cumulative_followups
 FROM dailies;
 
+--
+-- A case curve from Bioportal data. This doesn't agree with the
+-- official reports' cases curve for a few reasons:
+--
+-- 1. The deduplication in Bioportal's `patientId` field doesn't
+--    work the same as the official bulletin, and in fact gives
+--    very different results;
+-- 2. Bioportal has fresher data than the official bulletin,
+--    routinely by 2-3 days;
+-- 3. This curve strives to use all data that Bioportal provides,
+--    not just molecular test results; we will definitely count
+--    antigen positives toward cases, and [TODO] count serological
+--    tests toward adjudicating the earliest collected_date for
+--    a case if there is molecular confirmation soon thereafter.
+--
+DROP TABLE covid_pr_etl.bioportal_cases_curve;
+CREATE TABLE covid_pr_etl.bioportal_cases_curve WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
+WITH cases AS (
+	SELECT
+		bulletin_date,
+		min(collected_date) collected_date
+	FROM covid_pr_etl.bioportal_cases
+	WHERE test_type IN ('Molecular', 'Antigens')
+	AND DATE '2020-03-01' <= collected_date
+	AND collected_date <= bulletin_date
+	AND DATE '2020-03-01' <= reported_date
+	AND reported_date <= bulletin_date
+    AND positive
+	GROUP BY
+		bulletin_date,
+		patient_id
+)
+SELECT
+	bulletin_date,
+	collected_date,
+	count(*) cases,
+	sum(count(*)) OVER (
+		PARTITION BY bulletin_date
+		ORDER BY collected_date
+	) AS cumulative_cases,
+	count(*) - lag(count(*)) OVER (
+		PARTITION BY collected_date
+		ORDER BY bulletin_date
+	) AS delta_cases
+FROM cases
+GROUP BY
+	bulletin_date,
+	collected_date;
+
 
 ----------------------------------------------------------
 ----------------------------------------------------------
