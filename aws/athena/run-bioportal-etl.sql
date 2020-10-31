@@ -220,8 +220,8 @@ SELECT
 	cur.reported_date,
 	cur.patient_id,
 	cur.positive,
-	COALESCE(bool_or(prev.raw_collected_date >=
-				date_add('day', -90, cur.raw_collected_date)
+	COALESCE(bool_or(prev.collected_date >=
+				date_add('day', -90, cur.collected_date)
 			AND prev.positive), FALSE)
 		AS followup
 FROM covid_pr_etl.bioportal_cases cur
@@ -229,7 +229,7 @@ LEFT OUTER JOIN covid_pr_etl.bioportal_cases prev
 	ON prev.test_type = cur.test_type
 	AND prev.bulletin_date = cur.bulletin_date
 	AND prev.patient_id = cur.patient_id
-	AND prev.raw_collected_date < cur.raw_collected_date
+	AND prev.collected_date < cur.collected_date
 GROUP BY
 	cur.test_type,
 	cur.bulletin_date,
