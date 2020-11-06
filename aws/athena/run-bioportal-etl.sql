@@ -416,6 +416,54 @@ SELECT
 	) AS cumulative_followups
 FROM dailies;
 
+
+--
+-- Counts of Bioportal cases (patients with at least one positive
+-- molecular or antigen test) grouped by earliest molecular, antigen
+-- and combined date.  This is intended for computing case curves
+-- either with or without antigens
+--
+DROP TABLE covid_pr_etl.bioportal_curve_agg;
+CREATE TABLE covid_pr_etl.bioportal_curve_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
+WITH cases AS (
+	SELECT
+		bulletin_date,
+		min(collected_date) collected_date,
+		min(collected_date) FILTER (
+			WHERE test_type = 'Antigens'
+		) AS antigens_date,
+		min(collected_date) FILTER (
+			WHERE test_type = 'Molecular'
+		) AS molecular_date
+	FROM covid_pr_etl.bioportal_cases
+	WHERE test_type IN ('Molecular', 'Antigens')
+	AND DATE '2020-03-01' <= collected_date
+	AND collected_date <= bulletin_date
+	AND DATE '2020-03-01' <= reported_date
+	AND reported_date <= bulletin_date
+    AND positive
+	GROUP BY
+		bulletin_date,
+		patient_id
+)
+SELECT
+	bulletin_date,
+	collected_date,
+	antigens_date,
+	molecular_date,
+	count(*) cases
+FROM cases
+GROUP BY
+	bulletin_date,
+	collected_date,
+	antigens_date,
+	molecular_date;
+
+
 --
 -- A case curve from Bioportal data. This doesn't agree with the
 -- official reports' cases curve for a few reasons:
@@ -431,43 +479,44 @@ FROM dailies;
 --    tests toward adjudicating the earliest collected_date for
 --    a case if there is molecular confirmation soon thereafter.
 --
-DROP TABLE covid_pr_etl.bioportal_cases_curve;
-CREATE TABLE covid_pr_etl.bioportal_cases_curve WITH (
-    format = 'PARQUET',
-    bucketed_by = ARRAY['bulletin_date'],
-    bucket_count = 1
-) AS
-WITH cases AS (
-	SELECT
-		bulletin_date,
-		min(collected_date) collected_date
-	FROM covid_pr_etl.bioportal_cases
-	WHERE test_type IN ('Molecular', 'Antigens')
-	AND DATE '2020-03-01' <= collected_date
-	AND collected_date <= bulletin_date
-	AND DATE '2020-03-01' <= reported_date
-	AND reported_date <= bulletin_date
-    AND positive
-	GROUP BY
-		bulletin_date,
-		patient_id
-)
+CREATE OR REPLACE VIEW covid_pr_etl.bioportal_curve AS
 SELECT
 	bulletin_date,
 	collected_date,
-	count(*) cases,
-	sum(count(*)) OVER (
+	sum(cases) cases,
+    sum(sum(cases)) OVER (
 		PARTITION BY bulletin_date
 		ORDER BY collected_date
 	) AS cumulative_cases,
-	count(*) - lag(count(*)) OVER (
+	sum(cases) - lag(sum(cases)) OVER (
 		PARTITION BY collected_date
 		ORDER BY bulletin_date
 	) AS delta_cases
-FROM cases
-GROUP BY
+FROM covid_pr_etl.bioportal_curve_agg
+GROUP BY bulletin_date, collected_date
+ORDER BY bulletin_date DESC, collected_date DESC;
+
+
+--
+-- Case curve but only with molecular test results.
+--
+CREATE OR REPLACE VIEW covid_pr_etl.bioportal_curve_molecular AS
+SELECT
 	bulletin_date,
-	collected_date;
+	molecular_date AS collected_date,
+	sum(cases) cases,
+    sum(sum(cases)) OVER (
+		PARTITION BY bulletin_date
+		ORDER BY molecular_date
+	) AS cumulative_cases,
+	sum(cases) - lag(sum(cases)) OVER (
+		PARTITION BY molecular_date
+		ORDER BY bulletin_date
+	) AS delta_cases
+FROM covid_pr_etl.bioportal_curve_agg
+WHERE molecular_date IS NOT NULL
+GROUP BY bulletin_date, molecular_date
+ORDER BY bulletin_date DESC, molecular_date DESC;
 
 
 ----------------------------------------------------------
