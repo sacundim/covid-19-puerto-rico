@@ -488,10 +488,10 @@ SELECT
 		PARTITION BY bulletin_date
 		ORDER BY collected_date
 	) AS cumulative_cases,
-	sum(cases) - lag(sum(cases)) OVER (
+	sum(cases) - coalesce(lag(sum(cases)) OVER (
 		PARTITION BY collected_date
 		ORDER BY bulletin_date
-	) AS delta_cases
+	), 0) AS delta_cases
 FROM covid_pr_etl.bioportal_curve_agg
 GROUP BY bulletin_date, collected_date
 ORDER BY bulletin_date DESC, collected_date DESC;
