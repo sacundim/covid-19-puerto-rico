@@ -59,7 +59,7 @@ CREATE TABLE announcement (
     cumulative_deaths INTEGER,
     cumulative_confirmed_deaths INTEGER,
     cumulative_probable_deaths INTEGER,
-    cumulative_certified_deaths INTEGER,
+    cumulative_suspect_deaths INTEGER,
     PRIMARY KEY (bulletin_date)
 );
 
@@ -117,7 +117,7 @@ COMMENT ON COLUMN announcement.cumulative_confirmed_deaths IS
 'Deaths confirmed by a positive lab test, by date that they
 were announced (not date of actual death).';
 
-COMMENT ON COLUMN announcement.cumulative_certified_deaths IS
+COMMENT ON COLUMN announcement.cumulative_suspect_deaths IS
 'Deaths not confirmed by a positive lab test, but for which a
 doctor or coroner indicated COVID-19 as cause of death in the
 death certificate.  Given by date that they were announced (not
@@ -393,8 +393,9 @@ SELECT
 		+ COALESCE(adjusted_suspect_cases, 0)
 		AS computed_cumulative_suspect_cases,
 	cumulative_deaths,
-	COALESCE(cumulative_certified_deaths , 0)
-		+ COALESCE(cumulative_confirmed_deaths , 0)
+	COALESCE(cumulative_confirmed_deaths, 0)
+		+ COALESCE(cumulative_probable_deaths, 0)
+		+ COALESCE(cumulative_suspect_deaths, 0)
 		AS computed_cumulative_deaths
 FROM announcement a
 WINDOW bulletin AS (ORDER BY bulletin_date)
