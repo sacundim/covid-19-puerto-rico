@@ -9,26 +9,31 @@ ANALYZE VERBOSE bitemporal;
 REFRESH MATERIALIZED VIEW bitemporal_agg;
 ANALYZE VERBOSE bitemporal_agg;
 
-COPY canonical_municipal_names
-FROM '/data/cases/Municipalities-canonical_names.csv'
-    CSV ENCODING 'UTF-8' HEADER NULL '';
-
-COPY municipal
-FROM '/data/cases/Municipalities-molecular.csv'
-    CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY age_groups_molecular
 FROM '/data/cases/AgeGroups-molecular.csv'
+    CSV ENCODING 'UTF-8' HEADER NULL '';
+
+COPY age_groups_antigens
+FROM '/data/cases/AgeGroups-antigens.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
 COPY age_groups_population
 FROM '/data/cases/AgeGroups-population.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
-COPY bioportal
-FROM '/data/cases/PuertoRico-bioportal.csv'
+
+COPY canonical_municipal_names
+FROM '/data/cases/Municipalities-canonical_names.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
-COPY hospitalizations
-FROM '/data/cases/PuertoRico-hospitalizations.csv'
+COPY municipal_molecular
+FROM '/data/cases/Municipalities-molecular.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
+
+COPY municipal_antigens
+FROM '/data/cases/Municipalities-antigens.csv'
+    CSV ENCODING 'UTF-8' HEADER NULL '';
+
+REFRESH MATERIALIZED VIEW municipal;
+ANALYZE VERBOSE municipal;
