@@ -57,6 +57,12 @@ time "${HERE}"/bioportal-cases-to-csv.sh "${timestamp}" "${CASES_JSON_TMP}" \
 echo "$(date): Wrote output to ${CASES_CSV_TMP}"
 
 
+echo "$(date): File sizes:"
+
+du -h "${TESTS_JSON_TMP}" "${CASES_JSON_TMP}" \
+  "${TESTS_CSV_TMP}" "${CASES_CSV_TMP}"
+
+
 mv "${TESTS_JSON_TMP}" "${TESTS_JSON}"
 echo "$(date): Moved ${TESTS_JSON_TMP} to ${TESTS_JSON}"
 
