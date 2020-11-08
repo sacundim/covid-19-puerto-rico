@@ -534,7 +534,7 @@ SELECT
 	    AS official_cases,
 	bio.cases AS bioportal_cases,
 	bul.deaths AS deaths
-FROM covid_pr_etl.bioportal_curve_molecular bio
+FROM covid_pr_etl.bioportal_curve bio
 LEFT OUTER JOIN covid_pr_etl.bulletin_cases bul
 	ON bul.bulletin_date = bio.bulletin_date
 	AND bul.datum_date = bio.collected_date
