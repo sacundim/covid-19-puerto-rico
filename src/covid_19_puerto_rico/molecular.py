@@ -38,14 +38,14 @@ class NewCases(AbstractMolecularChart):
                       | (df['bulletin_date'] == pd.to_datetime(week_ago))]
 
     def make_chart(self, df, bulletin_date):
-        base = alt.Chart(df.dropna()).transform_window(
+        return alt.Chart(df.dropna()).transform_window(
             groupby=['variable', 'bulletin_date'],
             sort=[{'field': 'datum_date'}],
             frame=[-6, 0],
             mean_value='mean(value)'
         ).transform_filter(
             alt.datum.mean_value > 0.0
-        ).encode(
+        ).mark_line().encode(
             x=alt.X('yearmonthdate(datum_date):T', title='Fecha de muestra o deceso',
                     axis=alt.Axis(format='%d/%m')),
             y = alt.Y('mean_value:Q', title='Casos nuevos (promedio 7 días)',
@@ -54,26 +54,23 @@ class NewCases(AbstractMolecularChart):
                 alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
                 alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                 alt.Tooltip('variable:N', title='Variable'),
-                alt.Tooltip('mean_value:Q', format='.1f', title='Promedio 7 días')]
-        )
-
-        average = base.transform_filter(
-            alt.datum.bulletin_date == util.altair_date_expr(bulletin_date)
-        ).mark_line(point='transparent')
-
-        week_ago = base.transform_filter(
-            alt.datum.bulletin_date == util.altair_date_expr(bulletin_date - datetime.timedelta(days=7))
-        ).mark_line(strokeDash=[6, 4], point='transparent')
-
-        return (week_ago + average).encode(
-            color=alt.Color('variable:N', title=None,
+                alt.Tooltip('mean_value:Q', format='.1f', title='Promedio 7 días')],
+            color=alt.Color('variable:N', title='Curva',
                             scale=alt.Scale(range=['#4c78a8', 'darkgray', '#e45756']),
-                            legend=alt.Legend(orient="top", labelLimit=250),
+                            legend=alt.Legend(orient='top-left', labelLimit=250,
+                                              symbolStrokeWidth=3, symbolSize=300,
+                                              direction='vertical', fillColor='white',
+                                              padding=7.5),
                             sort=['Casos (oficial)',
                                   'Casos (Bioportal)',
-                                  'Muertes'])
+                                  'Muertes']),
+            strokeDash=alt.StrokeDash('bulletin_date:T', title='Datos hasta', sort='descending',
+                                      legend=alt.Legend(orient='bottom-right', symbolSize=300,
+                                                        symbolStrokeWidth=2, symbolStrokeColor='black',
+                                                        direction='vertical', fillColor='white',
+                                                        padding=7.5))
         ).properties(
-            width=585, height=400
+            width=585, height=425
         )
 
 
