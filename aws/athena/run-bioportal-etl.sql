@@ -525,6 +525,22 @@ ORDER BY bulletin_date DESC, molecular_date DESC;
 -- Views to serve the dashboard.
 --
 
+CREATE OR REPLACE VIEW covid_pr_etl.new_daily_cases AS
+SELECT
+    bio.bulletin_date,
+	bio.collected_date AS datum_date,
+	nullif(coalesce(bul.confirmed_cases, 0)
+    	    + coalesce(bul.probable_cases, 0), 0)
+	    AS official_cases,
+	bio.cases AS bioportal_cases,
+	bul.deaths AS deaths
+FROM covid_pr_etl.bioportal_curve_molecular bio
+LEFT OUTER JOIN covid_pr_etl.bulletin_cases bul
+	ON bul.bulletin_date = bio.bulletin_date
+	AND bul.datum_date = bio.collected_date
+ORDER BY bio.bulletin_date DESC, bio.collected_date DESC;
+
+
 CREATE OR REPLACE VIEW covid_pr_etl.molecular_tests_vs_confirmed_cases AS
 SELECT
 	tests.bulletin_date,

@@ -12,9 +12,10 @@ $$ LANGUAGE SQL;
 CREATE TABLE bitemporal (
     bulletin_date DATE NOT NULL,
     datum_date DATE NOT NULL,
-    confirmed_and_probable_cases INTEGER,
+    confirmed_and_suspect_cases INTEGER,
     confirmed_cases INTEGER,
     probable_cases INTEGER,
+    suspect_cases INTEGER,
     deaths INTEGER,
     PRIMARY KEY (bulletin_date, datum_date)
 );
@@ -47,14 +48,18 @@ CREATE TABLE announcement (
     new_cases INTEGER,
     new_confirmed_cases INTEGER,
     new_probable_cases INTEGER,
+    new_suspect_cases INTEGER,
     adjusted_confirmed_cases INTEGER,
     adjusted_probable_cases INTEGER,
+    adjusted_suspect_cases INTEGER,
     cumulative_cases INTEGER,
     cumulative_confirmed_cases INTEGER,
     cumulative_probable_cases INTEGER,
+    cumulative_suspect_cases INTEGER,
     cumulative_deaths INTEGER,
-    cumulative_certified_deaths INTEGER,
     cumulative_confirmed_deaths INTEGER,
+    cumulative_probable_deaths INTEGER,
+    cumulative_suspect_deaths INTEGER,
     PRIMARY KEY (bulletin_date)
 );
 
@@ -77,7 +82,7 @@ COMMENT ON COLUMN announcement.cumulative_pending_results IS
 Publication stopped on April 22.';
 
 COMMENT ON COLUMN announcement.new_cases IS
-'Unique confirmed or probable cases (deduplicated by person),
+'Unique confirmed or suspect cases (deduplicated by person),
 by date that they were announced (not date of test sample).
 Publication stopped on July 10.';
 
@@ -85,8 +90,8 @@ COMMENT ON COLUMN announcement.new_confirmed_cases IS
 'Unique confirmed cases (molecular test, deduplicated by person),
 by date that they were announced (not date of test sample).';
 
-COMMENT ON COLUMN announcement.new_probable_cases IS
-'Unique probable cases (antibody test, deduplicated by person),
+COMMENT ON COLUMN announcement.new_suspect_cases IS
+'Unique suspect cases (antibody test, deduplicated by person),
 by date that they were announced (not date of test sample).';
 
 COMMENT ON COLUMN announcement.adjusted_confirmed_cases IS
@@ -99,11 +104,11 @@ are reported in footnotes that give free-form textual reports of cases
 added and subtracted, which we add up manually to get the net adjustment
 we record in this column.';
 
-COMMENT ON COLUMN announcement.adjusted_probable_cases IS
-'Irregular retroactive adjustment applied to cumulative_probable_cases,
-that was not counted toward new_probable_cases.  When this is done it
+COMMENT ON COLUMN announcement.adjusted_suspect_cases IS
+'Irregular retroactive adjustment applied to cumulative_suspect_cases,
+that was not counted toward new_suspect_cases.  When this is done it
 usually means either old cases that were belatedly added to the count.
-Adjustments to probable cases became a common occurrence since 2020-06-03.
+Adjustments to suspect cases became a common occurrence since 2020-06-03.
 These are reported in footnotes that give free-form textual reports of cases
 added and subtracted, which we add up manually to get the net adjustment we
 record in this column.';
@@ -112,54 +117,11 @@ COMMENT ON COLUMN announcement.cumulative_confirmed_deaths IS
 'Deaths confirmed by a positive lab test, by date that they
 were announced (not date of actual death).';
 
-COMMENT ON COLUMN announcement.cumulative_certified_deaths IS
+COMMENT ON COLUMN announcement.cumulative_suspect_deaths IS
 'Deaths not confirmed by a positive lab test, but for which a
 doctor or coroner indicated COVID-19 as cause of death in the
 death certificate.  Given by date that they were announced (not
 date of actual death).  First reported April 8.';
-
-
-CREATE TABLE bioportal (
-    bulletin_date DATE NOT NULL,
-    cumulative_tests INTEGER,
-    cumulative_molecular_tests INTEGER,
-    cumulative_positive_molecular_tests INTEGER,
-    cumulative_negative_molecular_tests INTEGER,
-    cumulative_inconclusive_molecular_tests INTEGER,
-    cumulative_serological_tests INTEGER,
-    cumulative_positive_serological_tests INTEGER,
-    cumulative_negative_serological_tests INTEGER,
-    new_tests INTEGER,
-    new_molecular_tests INTEGER,
-    new_positive_molecular_tests INTEGER,
-    new_negative_molecular_tests INTEGER,
-    new_inconclusive_molecular_tests INTEGER,
-    new_serological_tests INTEGER,
-    new_positive_serological_tests INTEGER,
-    new_negative_serological_tests INTEGER,
-    PRIMARY KEY (bulletin_date)
-);
-
-COMMENT ON TABLE bioportal IS
-'Weekly (?) report on number of test results counted by the Department of Health.
-Publication began with 2020-05-21 report.';
-
-
-CREATE TABLE hospitalizations (
-    datum_date DATE,
-    "Arecibo" INTEGER,
-    "Bayamón" INTEGER,
-    "Caguas" INTEGER,
-    "Fajardo" INTEGER,
-    "Mayagüez" INTEGER,
-    "Metro" INTEGER,
-    "Ponce" INTEGER,
-    "Total" INTEGER NOT NULL,
-    PRIMARY KEY (datum_date)
-);
-
-COMMENT ON TABLE hospitalizations IS
-'Total # of patients hospitalized for COVID-19 by date and region.';
 
 
 CREATE TABLE canonical_municipal_names (
@@ -177,7 +139,7 @@ COMMENT ON COLUMN canonical_municipal_names.popest2019 IS
 Population Estimates Program.';
 
 
-CREATE TABLE municipal (
+CREATE TABLE municipal_molecular (
     bulletin_date DATE NOT NULL,
     municipality TEXT NOT NULL
         REFERENCES canonical_municipal_names (name),
@@ -185,6 +147,27 @@ CREATE TABLE municipal (
     confirmed_cases_percent DOUBLE PRECISION,
     PRIMARY KEY (bulletin_date, municipality)
 );
+
+CREATE TABLE municipal_antigens (
+    bulletin_date DATE NOT NULL,
+    municipality TEXT NOT NULL
+        REFERENCES canonical_municipal_names (name),
+    probable_cases INTEGER,
+    probable_cases_percent DOUBLE PRECISION,
+    PRIMARY KEY (bulletin_date, municipality)
+);
+
+CREATE MATERIALIZED VIEW municipal AS
+SELECT
+    bulletin_date,
+    municipality,
+    confirmed_cases,
+    confirmed_cases_percent,
+    probable_cases,
+    probable_cases_percent
+FROM municipal_molecular
+FULL OUTER JOIN municipal_antigens
+    USING (bulletin_date, municipality);
 
 
 CREATE TABLE age_groups_population (
@@ -201,6 +184,18 @@ Population Estimates Program.';
 
 
 CREATE TABLE age_groups_molecular (
+    bulletin_date DATE NOT NULL,
+    age_range TEXT NOT NULL,
+    female INTEGER,
+    female_pct DOUBLE PRECISION,
+    male INTEGER,
+    male_pct DOUBLE PRECISION,
+    cases INTEGER,
+    cases_pct DOUBLE PRECISION,
+    PRIMARY KEY (bulletin_date, age_range)
+);
+
+CREATE TABLE age_groups_antigens (
     bulletin_date DATE NOT NULL,
     age_range TEXT NOT NULL,
     female INTEGER,
@@ -233,6 +228,13 @@ SELECT
         - COALESCE(lag(probable_cases) OVER datum, 0)
         AS delta_probable_cases,
 
+    suspect_cases,
+    sum(suspect_cases) OVER bulletin
+        AS cumulative_suspect_cases,
+    COALESCE(suspect_cases, 0)
+        - COALESCE(lag(suspect_cases) OVER datum, 0)
+        AS delta_suspect_cases,
+
     deaths,
     sum(deaths) OVER bulletin
         AS cumulative_deaths,
@@ -258,53 +260,6 @@ COMMENT ON MATERIALIZED VIEW bitemporal_agg IS
   minus previous bulletin_date''s value for previous datum_date.';
 
 
-CREATE VIEW announcement_consolidated AS
-SELECT
-    bulletin_date,
-    coalesce(cumulative_tests,
-             cumulative_positive_results + cumulative_negative_results + cumulative_pending_results)
-        AS cumulative_tests,
-    coalesce(cumulative_positive_results,
-             cumulative_positive_molecular_tests + cumulative_positive_serological_tests)
-        AS cumulative_positive_results,
-    coalesce(cumulative_negative_results,
-             cumulative_negative_molecular_tests + cumulative_negative_serological_tests)
-        AS cumulative_negative_results,
-    cumulative_pending_results,
-    cumulative_molecular_tests,
-    cumulative_positive_molecular_tests,
-    cumulative_negative_molecular_tests,
-    cumulative_inconclusive_molecular_tests,
-    cumulative_serological_tests,
-    cumulative_positive_serological_tests,
-    cumulative_negative_serological_tests,
-    new_cases,
-    new_confirmed_cases,
-    new_probable_cases,
-    cumulative_cases,
-    cumulative_confirmed_cases,
-    cumulative_probable_cases,
-    cumulative_deaths,
-    cumulative_certified_deaths,
-    cumulative_confirmed_deaths
-FROM announcement
-LEFT OUTER JOIN bioportal USING (bulletin_date);
-
-
-CREATE VIEW hospitalizations_delta AS
-SELECT
-    datum_date,
-    "Arecibo" - lag("Arecibo") OVER datum AS "Arecibo",
-    "Bayamón" - lag("Bayamón") OVER datum AS "Bayamón",
-    "Caguas" - lag("Caguas") OVER datum AS "Caguas",
-    "Fajardo" - lag("Fajardo") OVER datum AS "Fajardo",
-    "Mayagüez" - lag("Mayagüez") OVER datum AS "Mayagüez",
-    "Metro" - lag("Metro") OVER datum AS "Metro",
-    "Ponce" - lag("Ponce") OVER datum AS "Ponce",
-    "Total" - lag("Total") OVER datum AS "Total"
-FROM hospitalizations
-WINDOW datum AS (ORDER BY datum_date);
-
 CREATE VIEW municipal_agg AS
 WITH first_bulletin AS (
 	SELECT min(bulletin_date) min_bulletin_date
@@ -317,7 +272,12 @@ WITH first_bulletin AS (
         CASE WHEN bulletin_date > first_bulletin.min_bulletin_date
 		THEN COALESCE(confirmed_cases - lag(confirmed_cases) OVER bulletin,
     				  confirmed_cases)
-		END AS new_confirmed_cases
+		END AS new_confirmed_cases,
+		probable_cases AS cumulative_probable_cases,
+        CASE WHEN bulletin_date > first_bulletin.min_bulletin_date
+		THEN COALESCE(probable_cases - lag(probable_cases) OVER bulletin,
+    				  probable_cases)
+		END AS new_probable_cases
 	FROM municipal m
 	CROSS JOIN first_bulletin
 	WINDOW bulletin AS (
@@ -339,7 +299,21 @@ WITH first_bulletin AS (
 	sum(new_confirmed_cases) OVER twentyone_most_recent
 		AS new_21day_confirmed_cases,
 	sum(new_confirmed_cases) OVER twentyone_before
-		AS previous_21day_confirmed_cases
+		AS previous_21day_confirmed_cases,
+	cumulative_probable_cases,
+	new_probable_cases,
+	sum(new_probable_cases) OVER seven_most_recent
+		AS new_7day_probable_cases,
+	sum(new_probable_cases) OVER seven_before
+		AS previous_7day_probable_cases,
+	sum(new_probable_cases) OVER fourteen_most_recent
+		AS new_14day_probable_cases,
+	sum(new_probable_cases) OVER fourteen_before
+		AS previous_14day_probable_cases,
+	sum(new_probable_cases) OVER twentyone_most_recent
+		AS new_21day_probable_cases,
+	sum(new_probable_cases) OVER twentyone_before
+		AS previous_21day_probable_cases
 FROM new_cases
 WINDOW seven_most_recent AS (
 	PARTITION BY municipality
@@ -413,9 +387,15 @@ SELECT
 		+ COALESCE(new_probable_cases, 0)
 		+ COALESCE(adjusted_probable_cases, 0)
 		AS computed_cumulative_probable_cases,
+	cumulative_suspect_cases,
+	lag(cumulative_suspect_cases) OVER bulletin
+		+ COALESCE(new_suspect_cases, 0)
+		+ COALESCE(adjusted_suspect_cases, 0)
+		AS computed_cumulative_suspect_cases,
 	cumulative_deaths,
-	COALESCE(cumulative_certified_deaths , 0)
-		+ COALESCE(cumulative_confirmed_deaths , 0)
+	COALESCE(cumulative_confirmed_deaths, 0)
+		+ COALESCE(cumulative_probable_deaths, 0)
+		+ COALESCE(cumulative_suspect_deaths, 0)
 		AS computed_cumulative_deaths
 FROM announcement a
 WINDOW bulletin AS (ORDER BY bulletin_date)
@@ -433,6 +413,8 @@ SELECT
 	sum(bi.confirmed_cases) sum_confirmed_cases,
 	a.cumulative_probable_cases,
 	sum(bi.probable_cases) sum_probable_cases,
+	a.cumulative_suspect_cases,
+	sum(bi.suspect_cases) sum_suspect_cases,
 	a.cumulative_deaths,
 	sum(bi.deaths) sum_deaths
 FROM announcement a
@@ -452,51 +434,6 @@ CREATE SCHEMA products;
 COMMENT ON SCHEMA products IS
 'Views with queries that are intended to be presentations of the data';
 
-CREATE VIEW products.cumulative_data AS
--- This is harder to write than it looks. You can't FULL OUTER JOIN
--- the whole bitemporal table with just the announcements because
--- you need to union a copy of the latter to each bulletin_date.
--- So you end up building a grid of all the date combinations
--- and outer joining with that as its base.
-WITH dates AS (
-	SELECT DISTINCT bulletin_date date
-	FROM announcement
-	UNION
-	SELECT DISTINCT bulletin_date date
-	FROM bitemporal
-	UNION
-	SELECT DISTINCT datum_date date
-	FROM bitemporal
-), bulletin_dates AS (
-	SELECT DISTINCT bulletin_date
-	FROM bitemporal
-)
-SELECT
-	bulletin_dates.bulletin_date,
-	dates.date datum_date,
-	announcement.cumulative_positive_results AS positive_results,
-	announcement.cumulative_negative_results AS negative_results,
-	announcement.cumulative_pending_results AS pending_results,
-	announcement.cumulative_cases AS announced_cases,
-	announcement.cumulative_confirmed_cases AS announced_confirmed_cases,
-	announcement.cumulative_probable_cases AS announced_probable_cases,
-	announcement.cumulative_deaths AS announced_deaths,
-	announcement.cumulative_certified_deaths AS announced_certified_deaths,
-	announcement.cumulative_confirmed_deaths AS announced_confirmed_deaths,
-	ba.cumulative_confirmed_cases AS confirmed_cases,
-	ba.cumulative_probable_cases AS probable_cases,
-	ba.cumulative_deaths AS deaths
-FROM bulletin_dates
-INNER JOIN dates
-	ON dates.date <= bulletin_dates.bulletin_date
-LEFT OUTER JOIN bitemporal_agg ba
-	ON ba.bulletin_date = bulletin_dates.bulletin_date
-	AND ba.datum_date = dates.date
-LEFT OUTER JOIN announcement
-	ON announcement.bulletin_date = dates.date
-ORDER BY bulletin_dates.bulletin_date, dates.date;
-
-
 
 CREATE VIEW products.daily_deltas AS
 SELECT
@@ -504,6 +441,7 @@ SELECT
 	datum_date,
 	delta_confirmed_cases,
 	delta_probable_cases,
+	delta_suspect_cases,
 	delta_deaths
 FROM bitemporal_agg
 -- We exclude the earliest bulletin date because it's artificially big
@@ -541,6 +479,14 @@ SELECT
     	   sum(delta_probable_cases * age * age) FILTER (WHERE delta_probable_cases > 0))
         AS probable_cases_additions_stddev,
 
+    safediv(sum(delta_suspect_cases * age) FILTER (WHERE delta_suspect_cases > 0),
+            sum(delta_suspect_cases) FILTER (WHERE delta_suspect_cases > 0))
+        AS suspect_cases_additions,
+    aggdev(sum(delta_suspect_cases) FILTER (WHERE delta_suspect_cases > 0),
+    	   sum(delta_suspect_cases * age) FILTER (WHERE delta_suspect_cases > 0),
+    	   sum(delta_suspect_cases * age * age) FILTER (WHERE delta_suspect_cases > 0))
+        AS suspect_cases_additions_stddev,
+
     -- There is a very weird (nondeterminism?) bug in PRDoH's deaths data processing
     -- that causes weird back-and-forth revisions to the same six dates up to 2020-04-18,
     -- so we just filter those out.
@@ -558,7 +504,8 @@ WHERE bulletin_date > (
     SELECT min(bulletin_date)
     FROM bitemporal_agg
     WHERE delta_confirmed_cases IS NOT NULL
-    AND delta_probable_cases IS NOT NULL
+--    AND delta_probable_cases IS NOT NULL
+    AND delta_suspect_cases IS NOT NULL
     AND delta_deaths IS NOT NULL
 )
 GROUP BY bulletin_date;
@@ -573,7 +520,8 @@ WITH min_date AS (
 	SELECT min(bulletin_date) bulletin_date
 	FROM bitemporal
 	WHERE confirmed_cases IS NOT NULL
-	AND probable_cases IS NOT NULL
+--    AND delta_probable_cases IS NOT NULL
+	AND suspect_cases IS NOT NULL
 	AND deaths IS NOT NULL
 ), windowed_aggregates AS (
 	SELECT
@@ -596,6 +544,15 @@ WITH min_date AS (
 		sum(sum(delta_probable_cases * age * age)
 			FILTER (WHERE delta_probable_cases > 0)) OVER bulletin
 			AS sumsq_age_probable_cases,
+		sum(sum(delta_suspect_cases)
+			FILTER (WHERE delta_suspect_cases > 0)) OVER bulletin
+			AS count_suspect_cases,
+		sum(sum(delta_suspect_cases * age)
+			FILTER (WHERE delta_suspect_cases > 0)) OVER bulletin
+			AS sum_age_suspect_cases,
+		sum(sum(delta_suspect_cases * age * age)
+			FILTER (WHERE delta_suspect_cases > 0)) OVER bulletin
+			AS sumsq_age_suspect_cases,
 		sum(sum(delta_deaths)
 			FILTER (WHERE delta_deaths > 0)) OVER bulletin
 			AS count_deaths,
@@ -622,6 +579,10 @@ SELECT
 		AS probable_cases_additions,
 	aggdev(count_probable_cases, sum_age_probable_cases, sumsq_age_probable_cases)
 		AS probable_cases_additions_stdev,
+	safediv(sum_age_suspect_cases, count_suspect_cases)
+		AS suspect_cases_additions,
+	aggdev(count_suspect_cases, sum_age_suspect_cases, sumsq_age_suspect_cases)
+		AS suspect_cases_additions_stdev,
 	safediv(sum_age_deaths, count_deaths)
 		AS deaths_additions,
 	aggdev(count_deaths, sum_age_deaths, sumsq_age_deaths)
@@ -738,7 +699,6 @@ SELECT
 		AS covimetro
 FROM sums
 ORDER BY bulletin_date DESC, datum_date DESC;
-
 
 COMMENT ON VIEW products.covimetro IS
 'Israel Meléndez''s (@tecnocato) "Covímetro" metric, as best as I can make it.';
