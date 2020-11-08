@@ -411,9 +411,9 @@ SELECT
 	bulletin_date,
 	a.cumulative_confirmed_cases,
 	sum(bi.confirmed_cases) sum_confirmed_cases,
-	a.cumulative_suspect_cases,
-	sum(bi.probable_cases) sum_probable_cases,
 	a.cumulative_probable_cases,
+	sum(bi.probable_cases) sum_probable_cases,
+	a.cumulative_suspect_cases,
 	sum(bi.suspect_cases) sum_suspect_cases,
 	a.cumulative_deaths,
 	sum(bi.deaths) sum_deaths
