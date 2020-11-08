@@ -9,9 +9,10 @@
 CREATE EXTERNAL TABLE covid_pr_sources.bulletin_cases_csv (
     bulletin_date STRING,
     datum_date STRING,
-    confirmed_and_probable_cases STRING,
+    confirmed_and_suspect_cases STRING,
     confirmed_cases STRING,
     probable_cases STRING,
+    suspect_cases STRING,
     deaths STRING
 ) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
 LOCATION 's3://covid-19-puerto-rico-data/bulletin/cases/'

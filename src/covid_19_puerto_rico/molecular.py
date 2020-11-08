@@ -19,6 +19,61 @@ class AbstractMolecularChart(charts.AbstractChart):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
 
+class NewCases(AbstractMolecularChart):
+    def fetch_data(self, connection):
+        table = sqlalchemy.Table('new_daily_cases', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.datum_date,
+                        table.c.official_cases.label('Casos (oficial)'),
+                        table.c.bioportal_cases.label('Casos (Bioportal)'),
+                        table.c.deaths.label('Muertes')])
+        df = pd.read_sql_query(query, connection,
+                               parse_dates=["bulletin_date", "datum_date"])
+        return pd.melt(df, ["bulletin_date", "datum_date"])
+
+    def filter_data(self, df, bulletin_date):
+        week_ago = bulletin_date - datetime.timedelta(days=7)
+        return df.loc[(df['bulletin_date'] == pd.to_datetime(bulletin_date))
+                      | (df['bulletin_date'] == pd.to_datetime(week_ago))]
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df.dropna()).transform_window(
+            groupby=['variable', 'bulletin_date'],
+            sort=[{'field': 'datum_date'}],
+            frame=[-6, 0],
+            mean_value='mean(value)'
+        ).transform_filter(
+            alt.datum.mean_value > 0.0
+        ).mark_line().encode(
+            x=alt.X('yearmonthdate(datum_date):T', title='Fecha de muestra o deceso',
+                    axis=alt.Axis(format='%d/%m')),
+            y = alt.Y('mean_value:Q', title='Casos nuevos (promedio 7 días)',
+                      scale=alt.Scale(type='log')),
+                tooltip = [
+                alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
+                alt.Tooltip('bulletin_date:T', title='Datos hasta'),
+                alt.Tooltip('variable:N', title='Variable'),
+                alt.Tooltip('mean_value:Q', format='.1f', title='Promedio 7 días')],
+            color=alt.Color('variable:N', title='Curva',
+                            scale=alt.Scale(range=['#4c78a8', 'darkgray', '#e45756']),
+                            legend=alt.Legend(orient='top-left', labelLimit=250,
+                                              symbolStrokeWidth=3, symbolSize=300,
+                                              direction='vertical', fillColor='white',
+                                              padding=7.5),
+                            sort=['Casos (oficial)',
+                                  'Casos (Bioportal)',
+                                  'Muertes']),
+            strokeDash=alt.StrokeDash('bulletin_date:T', title='Datos hasta', sort='descending',
+                                      legend=alt.Legend(orient='bottom-right', symbolSize=300,
+                                                        symbolStrokeWidth=2, symbolStrokeColor='black',
+                                                        direction='vertical', fillColor='white',
+                                                        padding=7.5))
+        ).properties(
+            width=585, height=425
+        )
+
+
 class ConfirmationsVsRejections(AbstractMolecularChart):
     """A more sophisticated version of the 'positive rate' concept, that uses
     Bioportal's `patientId` field to estimate how many tests are followups for
