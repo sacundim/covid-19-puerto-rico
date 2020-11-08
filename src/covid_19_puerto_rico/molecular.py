@@ -18,14 +18,15 @@ class AbstractMolecularChart(charts.AbstractChart):
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
+
 class NewCases(AbstractMolecularChart):
     def fetch_data(self, connection):
         table = sqlalchemy.Table('new_daily_cases', self.metadata,
                                  schema='covid_pr_etl', autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.datum_date,
-                        table.c.bioportal_cases.label('Casos (Bioportal)'),
                         table.c.official_cases.label('Casos (oficial)'),
+                        table.c.bioportal_cases.label('Casos (Bioportal)'),
                         table.c.deaths.label('Muertes')])
         df = pd.read_sql_query(query, connection,
                                parse_dates=["bulletin_date", "datum_date"])
@@ -65,10 +66,11 @@ class NewCases(AbstractMolecularChart):
         ).mark_line(strokeDash=[6, 4], point='transparent')
 
         return (week_ago + average).encode(
-            color=alt.Color('variable', title=None,
+            color=alt.Color('variable:N', title=None,
+                            scale=alt.Scale(range=['#4c78a8', 'darkgray', '#e45756']),
                             legend=alt.Legend(orient="top", labelLimit=250),
-                            sort=['Casos (Bioportal)',
-                                  'Casos (oficial)',
+                            sort=['Casos (oficial)',
+                                  'Casos (Bioportal)',
                                   'Muertes'])
         ).properties(
             width=585, height=400
