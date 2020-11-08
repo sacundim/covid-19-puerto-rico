@@ -179,64 +179,6 @@ class Cumulative(AbstractChart):
         return pd.melt(df, ["bulletin_date", "datum_date"])
 
 
-class NewCases(AbstractChart):
-    def make_chart(self, df, bulletin_date):
-        base = alt.Chart(df.dropna()).transform_window(
-            frame=[-6, 0],
-            mean_value='mean(value)',
-            groupby=['variable', 'bulletin_date']
-        ).encode(
-            x=alt.X('yearmonthdate(datum_date):T', title='Fecha de muestra o deceso',
-                    axis=alt.Axis(format='%d/%m')),
-            y = alt.Y('mean_value:Q', title='Casos nuevos (promedio 7 días)',
-                      scale=alt.Scale(type='log')),
-                tooltip = [
-                alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
-                alt.Tooltip('bulletin_date:T', title='Datos hasta'),
-                alt.Tooltip('variable:N', title='Variable'),
-                alt.Tooltip('mean_value:Q', format='.1f', title='Promedio 7 días')]
-        )
-
-        average = base.transform_filter(
-            alt.datum.bulletin_date == util.altair_date_expr(bulletin_date)
-        ).mark_line(strokeWidth=3, point='transparent')
-
-        week_ago = base.transform_filter(
-            alt.datum.bulletin_date == util.altair_date_expr(bulletin_date - datetime.timedelta(days=7))
-        ).mark_line(strokeDash=[6, 4], point='transparent')
-
-        return (week_ago + average).encode(
-            color=alt.Color('variable', title=None,
-                            legend=alt.Legend(orient="top", labelLimit=250),
-                            sort=['Confirmados',
-                                  'Probables',
-                                  'Muertes'])
-        ).properties(
-            width=585, height=400
-        )
-
-    def fetch_data(self, connection):
-        table = sqlalchemy.Table('bitemporal', self.metadata, autoload=True)
-        query = select([table.c.bulletin_date,
-                        table.c.datum_date,
-                        table.c.confirmed_cases,
-                        table.c.probable_cases,
-                        table.c.deaths])
-        df = pd.read_sql_query(query, connection,
-                               parse_dates=["bulletin_date", "datum_date"])
-        df = df.rename(columns={
-            'confirmed_cases': 'Confirmados',
-            'probable_cases': 'Probables',
-            'deaths': 'Muertes'
-        })
-        return pd.melt(df, ["bulletin_date", "datum_date"])
-
-    def filter_data(self, df, bulletin_date):
-        week_ago = bulletin_date - datetime.timedelta(days=7)
-        return df.loc[(df['bulletin_date'] == pd.to_datetime(bulletin_date))
-                      | (df['bulletin_date'] == pd.to_datetime(week_ago))]
-
-
 class AbstractLateness(AbstractChart):
     def fetch_data_for_table(self, connection, table):
         query = select([table.c.bulletin_date,
