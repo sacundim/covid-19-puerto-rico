@@ -55,7 +55,7 @@ class NewCases(AbstractMolecularChart):
                 alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
                 alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                 alt.Tooltip('variable:N', title='Variable'),
-                alt.Tooltip('mean_value:Q', format='.1f', title='Promedio 7 días')],
+                alt.Tooltip('mean_value:Q', format=',.1f', title='Promedio 7 días')],
             color=alt.Color('variable:N', title=None,
                             scale=alt.Scale(range=['#4c78a8', 'darkgray', '#54a24b', '#e45756']),
                             legend=alt.Legend(orient='top', labelLimit=250,
