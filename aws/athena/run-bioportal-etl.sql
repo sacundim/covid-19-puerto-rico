@@ -533,13 +533,17 @@ SELECT
     	    + coalesce(bul.probable_cases, 0), 0)
 	    AS official_cases,
 	bio.cases AS bioportal_cases,
+    followups.rejections AS bioportal_rejections,
 	bul.deaths AS deaths
 FROM covid_pr_etl.bioportal_curve bio
+INNER JOIN covid_pr_etl.bioportal_followups_collected_agg followups
+	ON followups.bulletin_date = bio.bulletin_date
+	AND followups.collected_date = bio.collected_date
+	AND followups.test_type = 'Molecular'
 LEFT OUTER JOIN covid_pr_etl.bulletin_cases bul
 	ON bul.bulletin_date = bio.bulletin_date
 	AND bul.datum_date = bio.collected_date
 ORDER BY bio.bulletin_date DESC, bio.collected_date DESC;
-
 
 CREATE OR REPLACE VIEW covid_pr_etl.molecular_tests_vs_confirmed_cases AS
 SELECT
