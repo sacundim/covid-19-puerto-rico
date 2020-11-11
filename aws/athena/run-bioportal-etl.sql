@@ -700,13 +700,13 @@ CREATE OR REPLACE VIEW covid_pr_etl.tests_received AS
 SELECT
 	test_type,
 	bulletin_date,
-	sum(delta_tests) FILTER (WHERE collected_age <= 14)
+	sum(delta_tests) FILTER (WHERE collected_age <= 7)
 		AS recent_tests,
-	sum(delta_positive_tests) FILTER (WHERE collected_age <= 14)
+	sum(delta_positive_tests) FILTER (WHERE collected_age <= 7)
 		AS recent_positive_tests,
-	sum(delta_tests) FILTER (WHERE collected_age > 14)
+	sum(delta_tests) FILTER (WHERE collected_age > 7)
 		AS late_tests,
-	sum(delta_positive_tests) FILTER (WHERE collected_age > 14)
+	sum(delta_positive_tests) FILTER (WHERE collected_age > 7)
 		AS late_positive_tests
 FROM covid_pr_etl.bioportal_collected_agg
 GROUP BY test_type, bulletin_date
