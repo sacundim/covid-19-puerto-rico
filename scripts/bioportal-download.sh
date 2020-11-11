@@ -50,10 +50,10 @@ time wget -O - "${CASES_ENDPOINT}" \
 echo "$(date): Downloaded to ${CASES_JSON_TMP}"
 
 echo "$(date): Fetching from orders/basic endpoint..."
-time wget -O - "${CASES_ENDPOINT}" \
+time wget -O - "${ORDERS_ENDPOINT}" \
   | bzip2 -9 \
-  > "${CASES_JSON_TMP}"
-echo "$(date): Downloaded to ${CASES_JSON_TMP}"
+  > "${ORDERS_JSON_TMP}"
+echo "$(date): Downloaded to ${ORDERS_JSON_TMP}"
 
 
 echo "$(date): Converting tests to csv..."
