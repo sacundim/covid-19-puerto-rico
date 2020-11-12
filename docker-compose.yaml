@@ -12,8 +12,13 @@ services:
       target: /docker-entrypoint-initdb.d
       read_only: true
     - type: bind
-      source: ./assets/data
-      target: /data
+      source: ./assets/data/cases
+      target: /data/cases
+      read_only: true
+      consistency: cached
+    - type: bind
+      source: ./s3-bucket-sync/covid-19-puerto-rico-data/bioportal
+      target: /data/bioportal
       read_only: true
       consistency: cached
     ports:
