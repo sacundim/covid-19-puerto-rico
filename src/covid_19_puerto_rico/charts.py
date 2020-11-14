@@ -542,19 +542,19 @@ class Municipal(AbstractChart):
 
     def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).transform_impute(
-            impute='new_confirmed_cases',
+            impute='new_cases',
             groupby=['Municipio'],
             key='bulletin_date',
             value=0
         ).mark_area(interpolate='monotone', clip=True).encode(
             x=alt.X('bulletin_date:T', title='Fecha de boletín',
                     axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('new_confirmed_cases:Q', title=None, axis=None,
+            y=alt.Y('new_cases:Q', title=None, axis=None,
                     scale=alt.Scale(domain=self.DOMAIN)),
             color=alt.value(self.REDS[0]),
             tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                      alt.Tooltip('Municipio:N'),
-                     alt.Tooltip('new_confirmed_cases:Q', title='Casos confirmados nuevos')]
+                     alt.Tooltip('new_cases:Q', title='Casos nuevos')]
         )
 
         def make_band(variable, color, calculate):
@@ -566,14 +566,14 @@ class Municipal(AbstractChart):
             )
 
         one_above = make_band('one_above', self.REDS[1],
-                              alt.datum.new_confirmed_cases - self.DOMAIN[1])
+                              alt.datum.new_cases - self.DOMAIN[1])
         two_above = make_band('two_above', self.REDS[2],
-                              alt.datum.new_confirmed_cases - 2 * self.DOMAIN[1])
-        negative = make_band('negative', self.GRAYS[0], -alt.datum.new_confirmed_cases)
+                              alt.datum.new_cases - 2 * self.DOMAIN[1])
+        negative = make_band('negative', self.GRAYS[0], -alt.datum.new_cases)
         one_below = make_band('one_below', self.GRAYS[1],
-                              -alt.datum.new_confirmed_cases - self.DOMAIN[1])
+                              -alt.datum.new_cases - self.DOMAIN[1])
         two_below = make_band('two_below', self.GRAYS[2],
-                              -alt.datum.new_confirmed_cases - 2 * self.DOMAIN[1])
+                              -alt.datum.new_cases - 2 * self.DOMAIN[1])
 
         return (base + one_above + two_above
                 + negative + one_below + two_below).properties(
@@ -593,7 +593,7 @@ class Municipal(AbstractChart):
         table = sqlalchemy.Table('municipal_agg', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.municipality,
-                        table.c.new_confirmed_cases])\
+                        table.c.new_cases])\
             .where(table.c.municipality.notin_(['Total']))
         df = pd.read_sql_query(query, connection,
                                parse_dates=["bulletin_date"])
@@ -668,22 +668,23 @@ class MunicipalMap(AbstractChart):
         query = select([
             table.c.bulletin_date,
             table.c.municipality,
-            table.c.new_confirmed_cases,
-            table.c.new_7day_confirmed_cases,
+            table.c.new_cases,
+            table.c.new_7day_cases,
             table.c.pct_increase_1day,
             table.c.pct_increase_7day
         ]).where(table.c.municipality.notin_(['Total', 'No disponible', 'Otro lugar fuera de PR']))
         df = pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
         return df.rename(columns={
             'municipality': 'Municipio',
-            'new_confirmed_cases': 'Casos nuevos (último boletín)',
-            'new_7day_confirmed_cases': 'Casos nuevos (últimos 7)',
+            'new_cases': 'Casos nuevos (último boletín)',
+            'new_7day_cases': 'Casos nuevos (últimos 7)',
             'pct_increase_1day': 'Crecida (último vs 7 anteriores)',
             'pct_increase_7day': 'Crecida (últimos 7 vs 7 anteriores)'
         })
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+
 
 class Hospitalizations(AbstractChart):
     def fetch_data(self, connection):
@@ -772,12 +773,12 @@ class HospitalizationsCovid19Tracking(AbstractChart):
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df).transform_window(
             sort=[{'field': 'date'}],
-            frame=[-2, 0],
+            frame=[-6, 0],
             mean_value='mean(value)',
             groupby=['variable']
         ).mark_line(point='transparent').encode(
             x=alt.X('date:T', title='Fecha'),
-            y=alt.Y('mean_value:Q', title='Promedio 3 días', scale=alt.Scale(type='log')),
+            y=alt.Y('mean_value:Q', title='Promedio 7 días', scale=alt.Scale(type='log')),
             color=alt.Color('variable:N', title=None,
                             sort=self.SORT_ORDER,
                             legend=alt.Legend(orient='top')),
@@ -785,10 +786,10 @@ class HospitalizationsCovid19Tracking(AbstractChart):
                 alt.Tooltip('date:T', title='Fecha'),
                 alt.Tooltip('variable:N', title='Variable'),
                 alt.Tooltip('value:Q', title='Valor'),
-                alt.Tooltip('mean_value:Q', title='Promedio 3 días', format='.1f')
+                alt.Tooltip('mean_value:Q', title='Promedio 7 días', format=',.1f')
             ]
         ).properties(
-            width=575, height=300
+            width=575, height=350
         )
 
 
@@ -797,7 +798,7 @@ class AgeGroups(AbstractChart):
              '50-59', '60-69', '70-79', '≥ 80','No disponible']
 
     def fetch_data(self, connection):
-        table = sqlalchemy.Table('age_groups_molecular_agg', self.metadata, autoload=True)
+        table = sqlalchemy.Table('age_groups_agg', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.age_range,

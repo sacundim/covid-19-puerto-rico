@@ -74,7 +74,7 @@ DROP TABLE IF EXISTS covid_pr_etl.bioportal_tests;
 CREATE TABLE covid_pr_etl.bioportal_tests WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
-    bucket_count = 5
+    bucket_count = 7
 ) AS
 WITH tests_csv_union AS (
     SELECT
@@ -161,7 +161,7 @@ DROP TABLE IF EXISTS covid_pr_etl.bioportal_cases;
 CREATE TABLE covid_pr_etl.bioportal_cases WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
-    bucket_count = 8
+    bucket_count = 12
 ) AS
 WITH first_clean AS (
 	SELECT
@@ -227,7 +227,7 @@ DROP TABLE IF EXISTS covid_pr_etl.bioportal_followups;
 CREATE TABLE covid_pr_etl.bioportal_followups WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
-    bucket_count = 8
+    bucket_count = 12
 ) AS
 SELECT
 	cur.test_type,
@@ -593,27 +593,27 @@ ORDER BY bulletin_date DESC, date DESC, test_type, date_type;
 -- 
 CREATE OR REPLACE VIEW covid_pr_etl.naive_positive_rates AS
 SELECT
-	molecular.test_type,
-	molecular.bulletin_date,
+	bioportal.test_type,
+	bioportal.bulletin_date,
 	collected_date,
-	(molecular.cumulative_tests - lag(molecular.cumulative_tests, 7) OVER (
-		PARTITION BY molecular.test_type, molecular.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_tests,
-	(molecular.cumulative_positives - lag(molecular.cumulative_positives, 7) OVER (
-		PARTITION BY molecular.test_type, molecular.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_positives,
-	(cases.cumulative_confirmed_cases - lag(cases.cumulative_confirmed_cases, 7) OVER (
-		PARTITION BY molecular.test_type, molecular.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_cases
-FROM covid_pr_etl.bioportal_collected_agg molecular
+	bioportal.tests,
+	bioportal.positive_tests AS positives,
+	CASE bioportal.test_type
+		WHEN 'Molecular'
+		THEN cases.confirmed_cases
+	END AS cases
+FROM covid_pr_etl.bioportal_collected_agg bioportal
 INNER JOIN covid_pr_etl.bulletin_cases cases
-	ON cases.bulletin_date = molecular.bulletin_date
-	AND cases.datum_date = molecular.collected_date
-WHERE molecular.test_type = 'Molecular'
-AND molecular.bulletin_date > DATE '2020-04-24'
+	ON cases.bulletin_date = bioportal.bulletin_date
+	AND cases.datum_date = bioportal.collected_date
+WHERE bioportal.test_type IN ('Molecular', 'Antigens')
+AND bioportal.bulletin_date > DATE '2020-04-24'
+AND (
+    -- Don't report on antigens earlier than Oct. 24 when
+    -- it started in earnest.
+	bioportal.test_type != 'Antigens'
+		OR bioportal.collected_date >= DATE '2020-10-24'
+)
 ORDER BY test_type, bulletin_date DESC, collected_date DESC;
 
 

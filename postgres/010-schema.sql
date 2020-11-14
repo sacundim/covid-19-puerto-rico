@@ -162,9 +162,9 @@ SELECT
     bulletin_date,
     municipality,
     confirmed_cases,
-    confirmed_cases_percent,
     probable_cases,
-    probable_cases_percent
+    confirmed_cases + coalesce(probable_cases, 0)
+        AS cases
 FROM municipal_molecular
 FULL OUTER JOIN municipal_antigens
     USING (bulletin_date, municipality);
@@ -206,6 +206,29 @@ CREATE TABLE age_groups_antigens (
     cases_pct DOUBLE PRECISION,
     PRIMARY KEY (bulletin_date, age_range)
 );
+
+CREATE MATERIALIZED VIEW age_groups AS
+SELECT
+	agm.bulletin_date,
+	agm.age_range,
+
+	agm.female + coalesce(aga.female, 0)
+	    AS female,
+    agm.female AS female_molecular,
+    aga.female AS female_antigens,
+
+	agm.male + coalesce(aga.male, 0)
+	    AS male,
+    agm.male AS male_molecular,
+    aga.male AS male_antigens,
+
+	agm.cases + coalesce(aga.cases, 0)
+	    AS cases,
+    agm.cases AS cases_molecular,
+    aga.cases AS cases_antigens
+FROM age_groups_molecular agm
+FULL OUTER JOIN age_groups_antigens aga
+    USING (bulletin_date, age_range);
 
 
 CREATE MATERIALIZED VIEW bitemporal_agg AS
@@ -268,16 +291,10 @@ WITH first_bulletin AS (
 	SELECT
 		bulletin_date,
 		municipality,
-		confirmed_cases AS cumulative_confirmed_cases,
+		cases AS cumulative_cases,
         CASE WHEN bulletin_date > first_bulletin.min_bulletin_date
-		THEN COALESCE(confirmed_cases - lag(confirmed_cases) OVER bulletin,
-    				  confirmed_cases)
-		END AS new_confirmed_cases,
-		probable_cases AS cumulative_probable_cases,
-        CASE WHEN bulletin_date > first_bulletin.min_bulletin_date
-		THEN COALESCE(probable_cases - lag(probable_cases) OVER bulletin,
-    				  probable_cases)
-		END AS new_probable_cases
+		THEN COALESCE(cases - lag(cases) OVER bulletin, cases)
+		END AS new_cases
 	FROM municipal m
 	CROSS JOIN first_bulletin
 	WINDOW bulletin AS (
@@ -286,34 +303,20 @@ WITH first_bulletin AS (
 )SELECT
 	bulletin_date,
 	municipality,
-	cumulative_confirmed_cases,
-	new_confirmed_cases,
-	sum(new_confirmed_cases) OVER seven_most_recent
-		AS new_7day_confirmed_cases,
-	sum(new_confirmed_cases) OVER seven_before
-		AS previous_7day_confirmed_cases,
-	sum(new_confirmed_cases) OVER fourteen_most_recent
-		AS new_14day_confirmed_cases,
-	sum(new_confirmed_cases) OVER fourteen_before
-		AS previous_14day_confirmed_cases,
-	sum(new_confirmed_cases) OVER twentyone_most_recent
-		AS new_21day_confirmed_cases,
-	sum(new_confirmed_cases) OVER twentyone_before
-		AS previous_21day_confirmed_cases,
-	cumulative_probable_cases,
-	new_probable_cases,
-	sum(new_probable_cases) OVER seven_most_recent
-		AS new_7day_probable_cases,
-	sum(new_probable_cases) OVER seven_before
-		AS previous_7day_probable_cases,
-	sum(new_probable_cases) OVER fourteen_most_recent
-		AS new_14day_probable_cases,
-	sum(new_probable_cases) OVER fourteen_before
-		AS previous_14day_probable_cases,
-	sum(new_probable_cases) OVER twentyone_most_recent
-		AS new_21day_probable_cases,
-	sum(new_probable_cases) OVER twentyone_before
-		AS previous_21day_probable_cases
+	cumulative_cases,
+	new_cases,
+	sum(new_cases) OVER seven_most_recent
+		AS new_7day_cases,
+	sum(new_cases) OVER seven_before
+		AS previous_7day_cases,
+	sum(new_cases) OVER fourteen_most_recent
+		AS new_14day_cases,
+	sum(new_cases) OVER fourteen_before
+		AS previous_14day_cases,
+	sum(new_cases) OVER twentyone_most_recent
+		AS new_21day_cases,
+	sum(new_cases) OVER twentyone_before
+		AS previous_21day_cases
 FROM new_cases
 WINDOW seven_most_recent AS (
 	PARTITION BY municipality
@@ -346,19 +349,20 @@ WINDOW seven_most_recent AS (
 ORDER BY municipality, bulletin_date;
 
 
-CREATE VIEW age_groups_molecular_agg AS
+CREATE VIEW age_groups_agg AS
 SELECT
 	bulletin_date,
 	age_range,
 	female AS cumulative_female,
-	female - lag(female) OVER seven AS new_female,
+	female - lag(female) OVER seven
+	    AS new_female,
 	male AS cumulative_male,
 	male - lag(male) OVER seven AS new_male,
 	cases AS cumulative_cases,
 	cases - lag(cases) OVER seven AS new_cases,
 	(cases - lag(cases, 7) OVER seven) / 7.0
 		AS smoothed_daily_cases
-FROM age_groups_molecular agm
+FROM age_groups
 WINDOW seven AS (
 	PARTITION BY age_range
 	ORDER BY bulletin_date
@@ -601,18 +605,18 @@ SELECT
 	municipality,
 	popest2019,
 	bulletin_date,
-	new_confirmed_cases,
-	new_7day_confirmed_cases,
-	CAST(new_confirmed_cases AS DOUBLE PRECISION)
-		/ CASE WHEN previous_7day_confirmed_cases > 0
-			THEN previous_7day_confirmed_cases
+	new_cases,
+	new_7day_cases,
+	CAST(new_cases AS DOUBLE PRECISION)
+		/ CASE WHEN previous_7day_cases > 0
+			THEN previous_7day_cases
 			ELSE 1.0
 			END
 		AS pct_increase_1day,
-	previous_14day_confirmed_cases - previous_7day_confirmed_cases,
-	CAST(new_7day_confirmed_cases AS DOUBLE PRECISION)
-		/ CASE WHEN (previous_14day_confirmed_cases - previous_7day_confirmed_cases) > 0
-			THEN previous_14day_confirmed_cases - previous_7day_confirmed_cases
+	previous_14day_cases - previous_7day_cases,
+	CAST(new_7day_cases AS DOUBLE PRECISION)
+		/ CASE WHEN (previous_14day_cases - previous_7day_cases) > 0
+			THEN previous_14day_cases - previous_7day_cases
 			ELSE 1.0
 			END
 		AS pct_increase_7day
