@@ -74,7 +74,7 @@ DROP TABLE IF EXISTS covid_pr_etl.bioportal_tests;
 CREATE TABLE covid_pr_etl.bioportal_tests WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
-    bucket_count = 5
+    bucket_count = 7
 ) AS
 WITH tests_csv_union AS (
     SELECT
@@ -161,7 +161,7 @@ DROP TABLE IF EXISTS covid_pr_etl.bioportal_cases;
 CREATE TABLE covid_pr_etl.bioportal_cases WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
-    bucket_count = 8
+    bucket_count = 12
 ) AS
 WITH first_clean AS (
 	SELECT
@@ -227,7 +227,7 @@ DROP TABLE IF EXISTS covid_pr_etl.bioportal_followups;
 CREATE TABLE covid_pr_etl.bioportal_followups WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
-    bucket_count = 8
+    bucket_count = 12
 ) AS
 SELECT
 	cur.test_type,
