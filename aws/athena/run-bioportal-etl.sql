@@ -596,21 +596,12 @@ SELECT
 	bioportal.test_type,
 	bioportal.bulletin_date,
 	collected_date,
-	(bioportal.cumulative_tests - lag(bioportal.cumulative_tests, 7) OVER (
-		PARTITION BY bioportal.test_type, bioportal.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_tests,
-	(bioportal.cumulative_positives - lag(bioportal.cumulative_positives, 7) OVER (
-		PARTITION BY bioportal.test_type, bioportal.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_positives,
+	bioportal.tests,
+	bioportal.positive_tests AS positives,
 	CASE bioportal.test_type
-        WHEN 'Molecular'
-        THEN (cases.cumulative_confirmed_cases - lag(cases.cumulative_confirmed_cases, 7) OVER (
-                PARTITION BY bioportal.test_type, bioportal.bulletin_date
-                ORDER BY collected_date
-             )) / 7.0
-    END AS smoothed_daily_cases
+		WHEN 'Molecular'
+		THEN cases.confirmed_cases
+	END AS cases
 FROM covid_pr_etl.bioportal_collected_agg bioportal
 INNER JOIN covid_pr_etl.bulletin_cases cases
 	ON cases.bulletin_date = bioportal.bulletin_date
@@ -621,7 +612,7 @@ AND (
     -- Don't report on antigens earlier than Oct. 24 when
     -- it started in earnest.
 	bioportal.test_type != 'Antigens'
-		OR bioportal.collected_date >= DATE '2020-10-16'
+		OR bioportal.collected_date >= DATE '2020-10-24'
 )
 ORDER BY test_type, bulletin_date DESC, collected_date DESC;
 
