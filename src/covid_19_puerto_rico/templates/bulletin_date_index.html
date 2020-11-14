@@ -64,7 +64,8 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>La tendencia de los casos nuevos y las muertes, vista por medio de:</p>
+    <p>La tendencia de los casos nuevos por prueba viral diagnóstica y las muertes,
+        vista por medio de:</p>
 
     <ul>
         <li>La fecha en que se tomó la muestra o se dio el fallecimiento (no
@@ -76,10 +77,55 @@
         en esa fecha.  Las entrecortadas representan los valores que se obtienen solo
         con datos de 7 días antes de la fecha de este informe.</p>
 
-    <p><b>ADVERTENCIA:</b> Caídas súbitas al final de cada línea lo más probable
-        no son reales, si no que más bien son artefactos de los rezagos—i.e., no
-        han se han incorporado datos para esas fechas.  Las líneas entrecortadas
-        de hecho tienden a ilustrar esto.</p>
+
+    <h3>Advertencia</h3>
+
+    <p>Caídas súbitas al final de cada línea lo más probable no son reales, si no que más
+        bien son artefactos de los rezagos—i.e., no han se han incorporado datos para esas
+        fechas.  Las líneas entrecortadas, que muestran cómo se veía la curva solo con datos
+        recibidos hace una semana, de hecho tienden a ilustrar esto.</p>
+
+
+    <h3>Oficial vs. Bioportal</h3>
+
+    <p>Se trazan dos curvas de casos, una (en azul) usando los casos confirmados y probables
+        tal se reportan en el boletín diario oficial del Departmento de Salud de Puerto Rico,
+        y la otra (en gris) a partir de datos descargados de Bioportal, el sistema de
+        reporte de datos de pruebas del Departmento de Salud de Puerto Rico.</p>
+
+    <p>Hay que entender que:</p>
+
+    <ul>
+        <li>El reporte oficial siempre tiene números un tanto más bajos que Bioportal, que
+            a mi entender se debe a que el oficial hace un análisis más cuidadoso para
+            identificar y restar casos duplicados;</li>
+        <li>Bioportal siempre tiene datos más al día que el reporte oficial, por varios
+            días.</li>
+    </ul>
+
+    <p>Por eso recomiendo <strong>usar la curva oficial como la más autoritativa</strong>, y
+        la de Biorpotal como un indicador temprano de la dirección de la oficial en los
+        próximos días.</p>
+
+
+    <h3>Casos descartados</h3>
+
+    <p>Esta curva muestra el volumen de casos que:</p>
+
+    <ul>
+        <li>Tuvieron una prueba molcular negativa por muestra de esa fecha;</li>
+        <li>No son pruebas de seguimiento a caso ya conocido, según mi análisis
+            a partir de datos de Bioportal.</li>
+    </ul>
+
+    <p>Como prueba de seguimiento cuento toda esta que se realice a la misma persona dentro
+        de un periodo de 90 días luego que esta tuviera una prueba molecular positiva.  La
+        idea de descartar estas de esta curva es que las pruebas de seguimiento no ayudan
+        a descartar potenciales casos nuevos.</p>
+
+    <p>Vale también apuntar que al momento no cuento negativos en prueba de antígenos como
+        caso descartado, debido a la sensibilidad mucho menor de estas y la consecuente
+        práctica común de confirmar negativos por antígeno con molecular.</p>
 </div>
 
 
@@ -304,7 +350,7 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Las tasas de positividad, tanto de pruebas PCR y de casos confirmados, por fecha de toma
+    <p>Las tasas de positividad, tanto de pruebas moleculares y de casos confirmados, por fecha de toma
         de muestra, según datos del API de Bioportal del Departamento de Salud de Puerto Rico y
         del boletín diario de casos. Las líneas sólidas son con datos recibidos hasta la fecha de
         boletín de este dashboard.  Las líneas entrecortadas excluyen los datos recibidos durante
@@ -319,8 +365,8 @@
             dividido entre número total de pruebas PCR.</li>
     </ol>
 
-    <p>La segunda de estas muchos entienden (sin razón a mi entender) que es una división un
-        tanto de "chinas con botellas" (i.e., cantidades que en realidad no deberían compararse),
+    <p>La segunda de estas muchos entienden (con poca razón a mi entender) que es una división un
+        poco de "chinas con botellas" (i.e., cantidades que en realidad no deberían compararse),
         pero he optado por incluirla porque muchas colecciones de datos en EEUU (e.g., Johns
         Hopkins) e internacionales (e.g., Our World In Data) calculan así o parecido para muchos
         locales.  Lo cual quiere decir que a la hora de comparar el dato de Puerto Rico con el de
@@ -344,6 +390,7 @@
 
     <p>Las líneas entrecortadas, cuyo cálculo excluye los datos recibidos en los 7 días más
         recientes, tienden a ilustrar estos efectos.</p>
+
 
     <h3>Comparación internacional</h3>
 
