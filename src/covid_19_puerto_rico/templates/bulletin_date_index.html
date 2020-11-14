@@ -45,7 +45,7 @@
         <li><a href="#PublicHealthTrustLevels_section">Indicadores propuestos del Fideicomiso de Salud Pública</a></li>
         <li><a href="#AgeGroups_section">Casos por edad (per cápita, 7 días)</a></li>
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
-        <li><a href="#Municipal_section">Historial de casos confirmados por municipio (fecha de boletín)</a></li>
+        <li><a href="#Municipal_section">Historial de casos por municipio (fecha de boletín)</a></li>
         <li><a href="#ConsecutiveBulletinMismatch_section">Descuadre de encabezado de boletín</a></li>
         <li><a href="#BulletinChartMismatch_section">Descuadre de boletín y gráficas</a></li>
         <li><a href="#Revisions_section">Revisiones</a></li>
@@ -64,7 +64,8 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>La tendencia de los casos nuevos y las muertes, vista por medio de:</p>
+    <p>La tendencia de los casos nuevos por prueba viral diagnóstica y las muertes,
+        vista por medio de:</p>
 
     <ul>
         <li>La fecha en que se tomó la muestra o se dio el fallecimiento (no
@@ -76,10 +77,55 @@
         en esa fecha.  Las entrecortadas representan los valores que se obtienen solo
         con datos de 7 días antes de la fecha de este informe.</p>
 
-    <p><b>ADVERTENCIA:</b> Caídas súbitas al final de cada línea lo más probable
-        no son reales, si no que más bien son artefactos de los rezagos—i.e., no
-        han se han incorporado datos para esas fechas.  Las líneas entrecortadas
-        de hecho tienden a ilustrar esto.</p>
+
+    <h3>Advertencia</h3>
+
+    <p>Caídas súbitas al final de cada línea lo más probable no son reales, si no que más
+        bien son artefactos de los rezagos—i.e., no han se han incorporado datos para esas
+        fechas.  Las líneas entrecortadas, que muestran cómo se veía la curva solo con datos
+        recibidos hace una semana, de hecho tienden a ilustrar esto.</p>
+
+
+    <h3>Oficial vs. Bioportal</h3>
+
+    <p>Se trazan dos curvas de casos, una (en azul) usando los casos confirmados y probables
+        tal se reportan en el boletín diario oficial del Departmento de Salud de Puerto Rico,
+        y la otra (en gris) a partir de datos descargados de Bioportal, el sistema de
+        reporte de datos de pruebas del Departmento de Salud de Puerto Rico.</p>
+
+    <p>Hay que entender que:</p>
+
+    <ul>
+        <li>El reporte oficial siempre tiene números un tanto más bajos que Bioportal, que
+            a mi entender se debe a que el oficial hace un análisis más cuidadoso para
+            identificar y restar casos duplicados;</li>
+        <li>Bioportal siempre tiene datos más al día que el reporte oficial, por varios
+            días.</li>
+    </ul>
+
+    <p>Por eso recomiendo <strong>usar la curva oficial como la más autoritativa</strong>, y
+        la de Biorpotal como un indicador temprano de la dirección de la oficial en los
+        próximos días.</p>
+
+
+    <h3>Casos descartados</h3>
+
+    <p>Esta curva muestra el volumen de casos que:</p>
+
+    <ul>
+        <li>Tuvieron una prueba molcular negativa por muestra de esa fecha;</li>
+        <li>No son pruebas de seguimiento a caso ya conocido, según mi análisis
+            a partir de datos de Bioportal.</li>
+    </ul>
+
+    <p>Como prueba de seguimiento cuento toda esta que se realice a la misma persona dentro
+        de un periodo de 90 días luego que esta tuviera una prueba molecular positiva.  La
+        idea de descartar estas de esta curva es que las pruebas de seguimiento no ayudan
+        a descartar potenciales casos nuevos.</p>
+
+    <p>Vale también apuntar que al momento no cuento negativos en prueba de antígenos como
+        caso descartado, debido a la sensibilidad mucho menor de estas y la consecuente
+        práctica común de confirmar negativos por antígeno con molecular.</p>
 </div>
 
 
@@ -93,7 +139,7 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Promedio de 3 días de cuántos pacientes han estado hospitalizados por COVID-19. Datos
+    <p>Promedio de 7 días de cuántos pacientes han estado hospitalizados por COVID-19. Datos
         del API del <a href="https://covidtracking.com/">COVID Tracking Project</a>, que
         a su vez son capturas diarias de páginas del Departamento de Salud de Puerto Rico.</p>
 </div>
@@ -304,12 +350,11 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Las tasas de positividad, tanto de pruebas PCR y de casos confirmados, por fecha de toma
-        de muestra, según datos del API de Bioportal del Departamento de Salud de Puerto Rico y
-        del boletín diario de casos. Las líneas sólidas son con datos recibidos hasta la fecha de
-        boletín de este dashboard.  Las líneas entrecortadas excluyen los datos recibidos durante
-        las 7 fechas de boletín más recientes, a fin de ilustrar como los datos recibidos recientes
-        revisan fechas más viejas.</p>
+    <p>Tasas de positividad por fecha de toma de muestra, según datos del API de Bioportal del
+        Departamento de Salud de Puerto Rico y del boletín diario de casos. Las líneas sólidas son
+        con datos recibidos hasta la fecha de boletín de este dashboard.  Las líneas entrecortadas
+        excluyen los datos recibidos durante las 7 fechas de boletín más recientes, a fin de ilustrar
+        cómo los datos recibidos recientes revisan fechas más viejas.</p>
 
     <p>Se calcula aquí la tasa de positividad de dos maneras distintas:</p>
 
@@ -319,14 +364,32 @@
             dividido entre número total de pruebas PCR.</li>
     </ol>
 
-    <p>La segunda de estas muchos entienden (sin razón a mi entender) que es una división un
-        tanto de "chinas con botellas" (i.e., cantidades que en realidad no deberían compararse),
+    <p>La segunda de estas muchos entienden (con poca razón a mi entender) que es una división un
+        poco de "chinas con botellas" (i.e., cantidades que en realidad no deberían compararse),
         pero he optado por incluirla porque muchas colecciones de datos en EEUU (e.g., Johns
         Hopkins) e internacionales (e.g., Our World In Data) calculan así o parecido para muchos
         locales.  Lo cual quiere decir que a la hora de comparar el dato de Puerto Rico con el de
         otro país hay que tener cuidado cuál definición se habla.  Más generalmente, <strong>no
             existe ningún consenso sobre cómo calcular positividad, así que mucho cuidado con
             comparar las cifras que ofrecen fuentes distintas</strong>.</p>
+
+
+    <h3>Pruebas de antígenos</h3>
+
+    <p>Se calcula aquí también una tasa de positividad de pruebas de antígenos, aparte de las
+        de moleculares. Hay que entender que la positividad de antígenos no puede compararse
+        ingenuamente con la de moleculares. Las pruebas moleculares son más sensibles y tienen
+        una ventana de detección más amplia, por lo tanto la expectativa de antemano es que:</p>
+
+    <center>
+        positividad moleculares > positividad antígenos
+    </center>
+
+    <p>Y encima de esto las moleculares vs. las de antígenos se administran a grupos de la
+        población sesgados de manera distinta, que dificulta aún más la comparación.</p>
+
+
+    <h3>Datos incompletos</h3>
 
     <p>Otra advertencia es que el cálculo dado aquí para Puerto Rico hace uso de datos por
         fecha de toma de muestra, y no de registro de resultados como hacen muchas colecciones
@@ -344,6 +407,7 @@
 
     <p>Las líneas entrecortadas, cuyo cálculo excluye los datos recibidos en los 7 días más
         recientes, tienden a ilustrar estos efectos.</p>
+
 
     <h3>Comparación internacional</h3>
 
@@ -735,8 +799,8 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Casos confirmados reportados nuevos (por fecha de boletín), agrupados por edad,
-        promedio de 7 días, ajustado al estimado poblacional en cada grupo de edades.
+    <p>Casos confirmados y probables reportados nuevos (por fecha de boletín), agrupados
+        por edad, promedio de 7 días, ajustado al estimado poblacional en cada grupo de edades.
         Se usan datos del programa de estimados poblacionales del 2019 del Censo de los
         Estados Unidos para ajustar las cifras a la población de cada edad.</p>
 </div>
@@ -752,7 +816,8 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Casos nuevos confirmados reportados por municipio, visto de cuatro formas:</p>
+    <p>Casos confirmados y probables nuevos reportados por municipio, visto de cuatro
+        formas:</p>
 
     <ol>
         <li>Número de casos nuevos registrados en el boletín más reciente;</li>
@@ -778,12 +843,12 @@
 
 
 <div class="section" id="Municipal_section">
-    <h1>Historial de casos confirmados por municipio (fecha de boletín)</h1>
+    <h1>Historial de casos por municipio (fecha de boletín)</h1>
 
-    <p>Historial de números de casos nuevos para cada municipio para cada una de las 35 fechas
-        más recientes, interpretándose estas como fecha de boletín.  Nótese que esto último
-        quiere decir que esta gráfica no nos dice cuándo sucedieron los casos, sino cuándo se
-        añadieron al conteo.</p>
+    <p>Historial de números de casos confirmados y probables nuevos para cada municipio en
+        cada una de las 35 fechas más recientes, interpretándose estas como fecha de boletín.
+        Nótese que esto último quiere decir que esta gráfica no nos dice cuándo sucedieron los
+        casos, sino cuándo se añadieron al conteo.</p>
 
     <p>Esto es una
         <a href="https://flowingdata.com/2015/07/02/changing-price-of-food-items-and-horizon-graphs/">gráfica
@@ -823,6 +888,13 @@
 
     <h3>Descuadres constatados en los datos de fuente</h3>
     <dl>
+        <dt>2020-11-13</dt>
+        <dd>La nota al calce #1 dice que los casos confirmados adicionales para esta fecha comienzan
+            por muestras del 29 de octubre del 2020, y la gráfica en la nota dice que se suma un caso
+            por muestra de esa fecha.  Pero la nota al calce #2 dice también que se ajusta el total
+            acumulado sumando un caso al 29 de octubre.  Esto parece ser un error y se refleja como
+            descuadre de un caso en los totales.</dd>
+
         <dt>2020-04-23</dt>
         <dd>La cifra de 849 casos únicos acumulados por prueba molecular hasta el 22 de abril se obtuvo de
             <a href="../source_material/2020-04/2020-04-22/2020-04-22_confirmed.jpg">esta gráfica publicada por el

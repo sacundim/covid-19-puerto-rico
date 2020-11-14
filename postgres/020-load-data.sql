@@ -10,6 +10,10 @@ REFRESH MATERIALIZED VIEW bitemporal_agg;
 ANALYZE VERBOSE bitemporal_agg;
 
 
+COPY age_groups_population
+FROM '/data/cases/AgeGroups-population.csv'
+    CSV ENCODING 'UTF-8' HEADER NULL '';
+
 COPY age_groups_molecular
 FROM '/data/cases/AgeGroups-molecular.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
@@ -18,9 +22,8 @@ COPY age_groups_antigens
 FROM '/data/cases/AgeGroups-antigens.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
-COPY age_groups_population
-FROM '/data/cases/AgeGroups-population.csv'
-    CSV ENCODING 'UTF-8' HEADER NULL '';
+REFRESH MATERIALIZED VIEW age_groups;
+ANALYZE VERBOSE age_groups;
 
 
 COPY canonical_municipal_names
