@@ -134,13 +134,16 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
 
 class NaivePositiveRate(AbstractMolecularChart):
     SORT_ORDER = [
-        'Positivas ÷ pruebas',
-        'Casos ÷ pruebas'
+        'Positivas ÷ pruebas (Molecular)',
+        'Casos ÷ pruebas (Molecular)',
+        'Positivas ÷ pruebas (Antigens)'
     ]
 
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df.dropna()).transform_filter(
             alt.datum.value > 0.0
+        ).transform_calculate(
+            method="datum.variable + ' (' + datum.test_type + ')'"
         ).mark_line(
             point='transparent'
         ).encode(
@@ -149,16 +152,17 @@ class NaivePositiveRate(AbstractMolecularChart):
             y=alt.Y('value:Q', title='Positividad',
                     scale=alt.Scale(type='log', domain=[0.001, 1.0]),
                     axis=alt.Axis(format='%')),
-            color=alt.Color('variable:N', sort=self.SORT_ORDER,
-                            legend=alt.Legend(orient='top', titleOrient='left',
-                                              title='Método de cálculo:', labelLimit=320)),
+            color=alt.Color('method:N', sort=self.SORT_ORDER,
+                            legend=alt.Legend(orient='bottom-right', padding=7.5,
+                                              title='Método de cálculo', labelLimit=320)),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
-            tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
+            tooltip=[alt.Tooltip('test_type:O', title='Tipo de prueba'),
+                     alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('variable:N', title='Método de cálculo'),
                      alt.Tooltip('value:Q', format=".2%", title='Tasa de positividad')]
         ).properties(
-            width=580, height=350
+            width=580, height=400
         )
 
     def filter_data(self, df, bulletin_date):
@@ -170,15 +174,16 @@ class NaivePositiveRate(AbstractMolecularChart):
     def fetch_data(self, connection):
         table = sqlalchemy.Table('naive_positive_rates', self.metadata, autoload=True)
         query = select([
+            table.c.test_type,
             table.c.bulletin_date,
             table.c.collected_date,
             (table.c.smoothed_daily_positives / table.c.smoothed_daily_tests)\
                 .label('Positivas ÷ pruebas'),
             (table.c.smoothed_daily_cases / table.c.smoothed_daily_tests)\
                 .label('Casos ÷ pruebas')
-        ]).where(table.c.test_type == 'Molecular')
+        ])
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
-        return pd.melt(df, ['bulletin_date', 'collected_date'])
+        return pd.melt(df, ['test_type', 'bulletin_date', 'collected_date']).dropna()
 
 
 class NewDailyTestsPerCapita(AbstractMolecularChart):
