@@ -22,7 +22,7 @@ def process_arguments():
     parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat,
                         help='Bulletin date to generate charts for. Default: most recent in DB.')
     parser.add_argument('--earliest-date', type=datetime.date.fromisoformat,
-                        default=datetime.date(2020, 9, 1),
+                        default=datetime.date(2020, 10, 1),
                         help='Earliest date to generate website for. Has a sensible built-in default.')
     parser.add_argument('--no-svg', action='store_false', dest='svg',
                         help="Switch turn off the svg files (which is a bit slow)")
