@@ -334,7 +334,7 @@
 
     <ul>
         <li>El cálculo de las líneas entrecortadas se ve afectado por la
-            <a href="#Revisions_2020-08-30">revisión del 30 de agosto del 2020</a> y
+            <a href="#Revisions_2020-11-14">revisión del 14 de noviembre del 2020</a> y
             otras anteriores.</li>
     </ul>
 </div>
@@ -423,7 +423,7 @@
 
     <ul>
         <li>El cálculo de las líneas entrecortadas se ve afectado por la
-            <a href="#Revisions_2020-08-30">revisión del 30 de agosto del 2020</a> y
+            <a href="#Revisions_2020-11-14">revisión del 14 de noviembre del 2020</a> y
             otras anteriores.</li>
     </ul>
 </div>
@@ -598,8 +598,8 @@
         Puerto Rico), por combinación de fecha de toma de muestra y fecha que el autor de
         esta página descargó el récord en el API.</p>
 
-    <p>El API de Bioportal de Salud presenta tres campos de fecha/tiempo para cada récord
-        de prueba individual:</p>
+    <p>El API de Bioportal de Salud que usa esta página presenta tres campos de fecha/tiempo
+        para cada récord de prueba individual:</p>
 
     <dl>
         <dt><code>collectedDate</code></dt>
@@ -609,31 +609,22 @@
         <dd>Se entiende a partir de conversaciones con fuentes que es la fecha en que el
             laboratorio advino en conocimiento del resultado de la prueba.</dd>
 
-        <dt><code>createdAt</code></dt>
-        <dd>Tiempo que el sistema computarizado graba como la fecha, hora y minuto que
-            creó el récord de base de dato para esa prueba.  Este campo se observa que puede
-            caer tanto antes or después que el <code>reportedDate</code>.</dd>
+        <dt><code>resultCreatedAt</code></dt>
+        <dd>Tiempo que el sistema computarizado graba como la fecha y hora que se
+            recibió el resultado de la prueba.</dd>
     </dl>
 
-    <p>Examen de los datos y conversaciones con gente que conoce los sistemas del Departamento
-        de Salud han dado a entender que ninguno de los campos ni por si ni en combinación con
-        los otros permiten adjudicar cuándo fue que el resultado de la prueba se comunicó a Salud.
-        Por esto el autor de esta página ha optado, en el proceso diario de descarga de los
-        datos del API, grabar la fecha y hora en que realizó tal descarga, anotar todos los récords
-        con esta, y usar una fecha sintética calculada a partir de esto como la fecha imputada en
-        que Salud advino en conocimiento del resultado de la prueba.</p>
-
-    <p>Aún con todo esto, muchos récords sin embargo muestran un <code>collectedDate</code> más
-        tardío que su <code>reportedDate</code>, y en este caso se ha optado en imputarles que se
-        recogieron 3 días antes que el <code>reportedDate</code>, a partir de un análisis de la
-        tardanza promedio en toda la base de datos.</p>
+    <p>Aún con todo esto, muchos récords de pruebas moleculares sin embargo muestran un
+        <code>collectedDate</code> más tardío que su <code>reportedDate</code>, y en este
+        caso se ha optado en imputarles que se recogieron 3 días antes que el <code>reportedDate</code>,
+        a partir de un análisis de la tardanza promedio en toda la base de datos.</p>
 
     <h3>Revisiones</h3>
 
     <ul>
-        <li>La adjudicación de pruebas a fechas de reporte se vio fuertemente cambiada por
-            la <a href="#Revisions_2020-08-30">revisión del 30 de agosto del 2020</a>, y otras
-            anteriores.</li>
+        <li>La adjudicación de pruebas a fechas de reporte, y por tanto los rezagos calculados,
+            se han visto fuertemente cambiados en varias ocasiones, más recientemente por la
+            <a href="#Revisions_2020-11-14">revisión del 14 de noviembre del 2020</a>.</li>
     </ul>
 </div>
 
@@ -655,9 +646,9 @@
     <h3>Revisiones</h3>
 
     <ul>
-        <li>La adjudicación de pruebas a fechas de reporte se vio fuertemente cambiada por
-            la <a href="#Revisions_2020-08-30">revisión del 30 de agosto del 2020</a>, y otras
-            anteriores.</li>
+        <li>La adjudicación de pruebas a fechas de reporte, y por tanto los rezagos calculados,
+            se han visto fuertemente cambiados en varias ocasiones, más recientemente por la
+            <a href="#Revisions_2020-11-14">revisión del 14 de noviembre del 2020</a>.</li>
     </ul>
 </div>
 
@@ -682,8 +673,8 @@
 
     <ul>
         <li>La adjudicación de pruebas a fechas de reporte, y por tanto los rezagos calculados,
-            se vieron fuertemente cambiados por la <a href="#Revisions_2020-08-30">revisión
-                del 30 de agosto del 2020</a> y otras anteriores.</li>
+            se han visto fuertemente cambiados en varias ocasiones, más recientemente por la
+            <a href="#Revisions_2020-11-14">revisión del 14 de noviembre del 2020</a>.</li>
     </ul>
 </div>
 
@@ -947,6 +938,21 @@
 
 <div class="section" id="Revisions_section">
     <h1>Revisiones</h1>
+
+    <h3 id="Revisions_2020-11-14">Revisión 14 de noviembre del 2020</h3>
+
+    <p>Desde esta fecha se adoptó el API <code>/api/administration/reports/orders/basic</code>
+        de Bioportal, que provee un campo <code>resultCreatedAt</code> que dice precisamente
+        cuándo se recibió en Bioportal el resultado de cada prueba. Anterior a esto, como
+        detallan las notas sobre revisiones anteriores, no existía campo que dijera esta
+        información de manera fiable y nos veíamos forzados a estimar esta fecha a partir
+        de la fecha y hora de las descargas diarias que realizo yo.</p>
+
+    <p>Este cambio lo aplico retroactivamente a todas las páginas, por lo cual todas las
+        cifras que dependan de Bioportal se ven ligeramente cambiadas, pero los valores
+        nuevos deben ser más precisos y más reproducibles por otras partes que descarguen
+        de Bioportal indepedientemente.</p>
+
 
     <h3 id="Revisions_2020-08-30">Revisión 30 de agosto del 2020</h3>
 
