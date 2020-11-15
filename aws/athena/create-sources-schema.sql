@@ -20,6 +20,23 @@ TBLPROPERTIES (
     "skip.header.line.count"="1"
 );
 
+CREATE EXTERNAL TABLE covid_pr_sources.orders_basic_csv_v1 (
+    downloadedAt STRING,
+    patientId STRING,
+    collectedDate STRING,
+    reportedDate STRING,
+    ageRange STRING,
+    testType STRING,
+    result STRING,
+    region STRING,
+    orderCreatedAt STRING,
+    resultCreatedAt STRING
+) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+LOCATION 's3://covid-19-puerto-rico-data/bioportal/orders-basic/csv_v1/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
 CREATE EXTERNAL TABLE covid_pr_sources.tests_csv_v1 (
     downloadedAt STRING,
     collectedDate STRING,
