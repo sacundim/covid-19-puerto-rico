@@ -78,18 +78,120 @@ CREATE UNLOGGED TABLE bioportal_tests (
     PRIMARY KEY (id)
 );
 
-CREATE MATERIALIZED VIEW bioportal_tritemporal_agg AS
+
+CREATE MATERIALIZED VIEW bioportal_tritemporal_preagg AS
 SELECT
 	test_type,
 	bulletin_date,
 	collected_date,
 	reported_date,
-	count(*) tests,
+	count(*) delta_tests,
 	count(*) FILTER (WHERE positive)
-		AS positive_tests
+		AS delta_positive_tests
 FROM bioportal_tests
 WHERE '2020-03-01' <= collected_date
 AND collected_date <= bulletin_date
 AND '2020-03-01' <= reported_date
 AND reported_date <= bulletin_date
 GROUP BY test_type, bulletin_date, collected_date, reported_date;
+
+
+CREATE MATERIALIZED VIEW bioportal_tritemporal_agg AS
+WITH test_types AS (
+	SELECT DISTINCT test_type
+	FROM bioportal_tritemporal_preagg
+), bulletin_dates AS (
+	SELECT DISTINCT bulletin_date
+	FROM bioportal_tritemporal_preagg
+), collected_dates AS (
+	SELECT DISTINCT collected_date
+	FROM bioportal_tritemporal_preagg
+), reported_dates AS (
+	SELECT DISTINCT reported_date
+	FROM bioportal_tritemporal_preagg
+)
+SELECT
+	test_types.test_type,
+	bulletin_dates.bulletin_date,
+	collected_dates.collected_date,
+	reported_dates.reported_date,
+	btpa.delta_tests,
+	btpa.delta_positive_tests,
+	sum(btpa.delta_tests)
+		OVER bulletins
+		AS tests,
+	sum(btpa.delta_positive_tests)
+		OVER bulletins
+		AS positive_tests
+FROM test_types
+CROSS JOIN bulletin_dates
+INNER JOIN reported_dates
+	ON reported_dates.reported_date <= bulletin_dates.bulletin_date
+INNER JOIN collected_dates
+	ON collected_dates.collected_date <= reported_dates.reported_date
+LEFT OUTER JOIN bioportal_tritemporal_preagg btpa
+	ON btpa.test_type = test_types.test_type
+	AND btpa.bulletin_date = bulletin_dates.bulletin_date
+	AND btpa.collected_date = collected_dates.collected_date
+	AND btpa.reported_date = reported_dates.reported_date
+WINDOW bulletins AS (
+	PARTITION BY
+		test_types.test_type,
+		collected_dates.collected_date,
+		reported_dates.reported_date
+	ORDER BY bulletin_dates.bulletin_date
+)
+ORDER BY
+	btpa.test_type,
+	bulletin_dates.bulletin_date,
+	collected_dates.collected_date,
+	reported_dates.reported_date;
+
+
+
+CREATE MATERIALIZED VIEW bioportal_collected_agg AS
+SELECT
+	test_type,
+	bulletin_date,
+	collected_date,
+	bulletin_date - collected_date
+		AS collected_age,
+	sum(tests) AS tests,
+	sum(sum(tests)) OVER (
+        PARTITION BY test_type, bulletin_date
+        ORDER BY collected_date
+    ) AS cumulative_tests,
+	sum(delta_tests) AS delta_tests,
+	sum(positive_tests) AS positive_tests,
+	sum(sum(positive_tests)) OVER (
+        PARTITION BY test_type, bulletin_date
+        ORDER BY collected_date
+    ) AS cumulative_positives,
+	sum(delta_positive_tests) AS delta_positive_tests
+FROM bioportal_tritemporal_agg
+GROUP BY test_type, bulletin_date, collected_date
+ORDER BY test_type, bulletin_date, collected_date;
+
+
+CREATE MATERIALIZED VIEW bioportal_reported_agg AS
+SELECT
+	test_type,
+	bulletin_date,
+	reported_date,
+	bulletin_date - reported_date
+		AS reported_age,
+	sum(tests) AS tests,
+	sum(sum(tests)) OVER (
+        PARTITION BY test_type, bulletin_date
+        ORDER BY reported_date
+    ) AS cumulative_tests,
+	sum(delta_tests) AS delta_tests,
+	sum(positive_tests) AS positive_tests,
+	sum(sum(positive_tests)) OVER (
+        PARTITION BY test_type, bulletin_date
+        ORDER BY reported_date
+    ) AS cumulative_positives,
+	sum(delta_positive_tests) AS delta_positive_tests
+FROM bioportal_tritemporal_agg
+GROUP BY test_type, bulletin_date, reported_date
+ORDER BY test_type, bulletin_date, reported_date;
