@@ -68,111 +68,33 @@ FROM cleaned;
 
 
 --
--- The `minimal-info-unique-tests` row-per-test dataset.
---
-DROP TABLE IF EXISTS covid_pr_etl.bioportal_tests;
-CREATE TABLE covid_pr_etl.bioportal_tests WITH (
-    format = 'PARQUET',
-    bucketed_by = ARRAY['bulletin_date'],
-    bucket_count = 7
-) AS
-WITH tests_csv_union AS (
-    SELECT
-        downloadedAt,
-        collectedDate,
-        reportedDate,
-        ageRange,
-        testType,
-        result,
-        patientCity,
-        createdAt
-    FROM covid_pr_sources.tests_csv_v1
-    UNION ALL
-    SELECT
-        downloadedAt,
-        collectedDate,
-        reportedDate,
-        ageRange,
-        testType,
-        result,
-        patientCity,
-        createdAt
-    FROM covid_pr_sources.tests_csv_v2
-), first_clean AS (
-    SELECT
-        CAST(from_iso8601_timestamp(downloadedAt) AS TIMESTAMP)
-            AS downloaded_at,
-        CAST(from_iso8601_timestamp(downloadedAt) AS DATE) - INTERVAL '1' DAY
-            AS bulletin_date,
-        CAST(date_parse(nullif(collectedDate, ''), '%m/%d/%Y') AS DATE)
-            AS raw_collected_date,
-        CAST(date_parse(nullif(reportedDate, ''), '%m/%d/%Y') AS DATE)
-            AS raw_reported_date,
-        date_parse(createdAt, '%m/%d/%Y %H:%i') AS created_at,
-        nullif(ageRange, '') AS age_range,
-        CASE patientCity
-            WHEN '' THEN NULL
-            WHEN 'Loiza' THEN 'Loíza'
-            WHEN 'Rio Grande' THEN 'Río Grande'
-            ELSE patientCity
-        END AS municipality,
-        testType AS test_type,
-        result,
-        COALESCE(result, '') LIKE '%Positive%' AS positive
-    FROM tests_csv_union
-)
-SELECT
-    *,
-    CASE
-        WHEN test_type IN ('Molecular')
-        THEN CASE
-            WHEN raw_collected_date >= DATE '2020-01-01'
-            THEN raw_collected_date
-            WHEN raw_reported_date >= DATE '2020-03-13'
-            -- Suggested by @rafalab. He uses two days as the value and says
-            -- that's the average, but my spot check says 2.8 days.
-            THEN raw_reported_date - INTERVAL '3' DAY
-            ELSE date(created_at - INTERVAL '4' HOUR) - INTERVAL '3' DAY
-        END
-        ELSE coalesce(raw_collected_date, raw_reported_date)
-    END AS collected_date,
-    CASE
-        WHEN test_type IN ('Molecular')
-        THEN CASE
-            WHEN raw_reported_date >= DATE '2020-03-13'
-            THEN raw_reported_date
-            ELSE date(created_at - INTERVAL '4' HOUR)
-        END
-        ELSE coalesce(raw_reported_date, raw_collected_date)
-    END AS reported_date
-FROM first_clean;
-
---
 -- The `orders/basic` row-per-test dataset.
 --
 DROP TABLE IF EXISTS covid_pr_etl.bioportal_orders_basic;
 CREATE TABLE covid_pr_etl.bioportal_orders_basic WITH (
     format = 'PARQUET',
-    bucketed_by = ARRAY['bulletin_date'],
+    bucketed_by = ARRAY['downloaded_date'],
     bucket_count = 2
 ) AS
 WITH first_clean AS (
 	SELECT
 	    CAST(from_iso8601_timestamp(downloadedAt) AS TIMESTAMP)
 	        AS downloaded_at,
-	    CAST(from_iso8601_timestamp(collectedDate) AS TIMESTAMP)
+	    CAST(from_iso8601_timestamp(nullif(collectedDate, '')) AS TIMESTAMP)
 	    	AS raw_collected_at,
-	    CAST(from_iso8601_timestamp(reportedDate) AS TIMESTAMP)
+	    CAST(from_iso8601_timestamp(nullif(reportedDate, '')) AS TIMESTAMP)
 	    	AS raw_reported_at,
 	    CAST(from_iso8601_timestamp(resultCreatedAt) AS TIMESTAMP)
 	    	AS result_created_at,
 	    CAST(from_iso8601_timestamp(orderCreatedAt) AS TIMESTAMP)
 	    	AS order_created_at,
+	    date(from_iso8601_timestamp(downloadedAt) AT TIME ZONE 'America/Puerto_Rico')
+	        AS downloaded_date,
 	    date(from_iso8601_timestamp(resultCreatedAt) AT TIME ZONE 'America/Puerto_Rico')
-	        AS bulletin_date,
-	    date(from_iso8601_timestamp(collectedDate) AT TIME ZONE 'America/Puerto_Rico')
+	        AS received_date,
+	    date(from_iso8601_timestamp(nullif(collectedDate, '')) AT TIME ZONE 'America/Puerto_Rico')
 	        AS raw_collected_date,
-	    date(from_iso8601_timestamp(reportedDate) AT TIME ZONE 'America/Puerto_Rico')
+	    date(from_iso8601_timestamp(nullif(reportedDate, '')) AT TIME ZONE 'America/Puerto_Rico')
 	        AS raw_reported_date,
 	    from_hex(replace(nullif(patientId, ''), '-')) AS patient_id,
 	    nullif(ageRange, '') AS age_range,
@@ -193,87 +115,24 @@ SELECT
 	        -- Suggested by @rafalab. He uses two days as the value and says
 	        -- that's the average, but my spot check says 2.8 days.
 	        THEN date_add('day', -3, raw_reported_date)
-	        ELSE date_add('day', -3, bulletin_date)
+	        ELSE date_add('day', -3, received_date)
 	    END
-	    ELSE coalesce(raw_collected_date, raw_reported_date, bulletin_date)
+	    ELSE coalesce(raw_collected_date, raw_reported_date, received_date)
     END AS collected_date,
     CASE
 	    WHEN test_type IN ('Molecular')
 	    THEN CASE
 	        WHEN raw_reported_date >= DATE '2020-03-13'
 	        THEN raw_reported_date
-	        ELSE bulletin_date
+	        ELSE received_date
 	    END
-	    ELSE coalesce(raw_reported_date, raw_collected_date, bulletin_date)
-    END AS reported_date
-FROM first_clean;
-
-
-
---
--- The `minimal-info` row-per-test dataset. This one differs from
--- `minimal-info-unique-tests` in that:
---
--- 1. It has a `patient_id` field (which makes it much bigger in disk space);
--- 2. It has `region` instead of `municipality`.
---
--- If we had longer history of this one we might abandon `minimal-info-unique-tests`
--- for this one.
---
-DROP TABLE IF EXISTS covid_pr_etl.bioportal_cases;
-CREATE TABLE covid_pr_etl.bioportal_cases WITH (
-    format = 'PARQUET',
-    bucketed_by = ARRAY['bulletin_date'],
-    bucket_count = 12
-) AS
-WITH first_clean AS (
-	SELECT
-	    CAST(from_iso8601_timestamp(downloadedAt) AS TIMESTAMP)
-	        AS downloaded_at,
-	    CAST(from_iso8601_timestamp(downloadedAt) AS DATE) - INTERVAL '1' DAY
-	        AS bulletin_date,
-	    CAST(date_parse(nullif(collectedDate, ''), '%m/%d/%Y') AS DATE)
-	        AS raw_collected_date,
-	    CAST(date_parse(nullif(reportedDate, ''), '%m/%d/%Y') AS DATE)
-	        AS raw_reported_date,
-	    date_parse(createdAt, '%m/%d/%Y %H:%i') AS created_at,
-	    from_hex(replace(nullif(patientId, ''), '-')) AS patient_id,
-	    nullif(ageRange, '') AS age_range,
-	    nullif(region, '') AS region,
-	    testType AS test_type,
-	    result,
-	    COALESCE(result, '') LIKE '%Positive%' AS positive
-	FROM covid_pr_sources.cases_csv_v1
-)
-SELECT
-    *,
-    CASE
-        WHEN test_type IN ('Molecular')
-        THEN CASE
-            WHEN raw_collected_date >= DATE '2020-01-01'
-            THEN raw_collected_date
-            WHEN raw_reported_date >= DATE '2020-03-13'
-            -- Suggested by @rafalab. He uses two days as the value and says
-            -- that's the average, but my spot check says 2.8 days.
-            THEN raw_reported_date - INTERVAL '3' DAY
-            ELSE date(created_at - INTERVAL '4' HOUR) - INTERVAL '3' DAY
-        END
-        ELSE coalesce(raw_collected_date, raw_reported_date)
-    END AS collected_date,
-    CASE
-        WHEN test_type IN ('Molecular')
-        THEN CASE
-            WHEN raw_reported_date >= DATE '2020-03-13'
-            THEN raw_reported_date
-            ELSE date(created_at - INTERVAL '4' HOUR)
-        END
-        ELSE coalesce(raw_reported_date, raw_collected_date)
+	    ELSE coalesce(raw_reported_date, raw_collected_date, received_date)
     END AS reported_date
 FROM first_clean;
 
 
 --
--- This is data set computed off `bioportal_cases` is our
+-- This is data set computed off `bioportal_orders_basic` is our
 -- analysis of which tests are likely to be followups of
 -- earlier positive tests.
 --
@@ -289,12 +148,13 @@ FROM first_clean;
 DROP TABLE IF EXISTS covid_pr_etl.bioportal_followups;
 CREATE TABLE covid_pr_etl.bioportal_followups WITH (
     format = 'PARQUET',
-    bucketed_by = ARRAY['bulletin_date'],
+    bucketed_by = ARRAY['downloaded_date'],
     bucket_count = 12
 ) AS
 SELECT
 	cur.test_type,
-	cur.bulletin_date,
+	cur.downloaded_date,
+	cur.received_date,
 	cur.collected_date,
 	cur.reported_date,
 	cur.patient_id,
@@ -303,15 +163,17 @@ SELECT
 				date_add('day', -90, cur.collected_date)
 			AND prev.positive), FALSE)
 		AS followup
-FROM covid_pr_etl.bioportal_cases cur
-LEFT OUTER JOIN covid_pr_etl.bioportal_cases prev
+FROM covid_pr_etl.bioportal_orders_basic cur
+LEFT OUTER JOIN covid_pr_etl.bioportal_orders_basic prev
 	ON prev.test_type = cur.test_type
-	AND prev.bulletin_date = cur.bulletin_date
+	AND prev.downloaded_date = cur.downloaded_date
+	AND prev.received_date = cur.received_date
 	AND prev.patient_id = cur.patient_id
 	AND prev.collected_date < cur.collected_date
 GROUP BY
 	cur.test_type,
-	cur.bulletin_date,
+	cur.downloaded_date,
+	cur.received_date,
 	cur.collected_date,
 	cur.reported_date,
 	cur.patient_id,
@@ -332,18 +194,19 @@ CREATE TABLE covid_pr_etl.bioportal_tritemporal_counts WITH (
 ) AS
 SELECT
 	test_type,
-	bulletin_date,
+	date_add('day', -1, downloaded_date) AS bulletin_date,
 	reported_date,
 	collected_date,
 	count(*) tests,
 	count(*) FILTER (WHERE positive)
 		AS positive_tests
-FROM covid_pr_etl.bioportal_tests
-WHERE DATE '2020-03-01' <= collected_date
-AND collected_date <= bulletin_date
+FROM covid_pr_etl.bioportal_orders_basic
+WHERE received_date < downloaded_date
+AND DATE '2020-03-01' <= collected_date
+AND collected_date <= received_date
 AND DATE '2020-03-01' <= reported_date
-AND reported_date <= bulletin_date
-GROUP BY test_type, bulletin_date, collected_date, reported_date;
+AND reported_date <= received_date
+GROUP BY test_type, downloaded_date, collected_date, reported_date;
 
 
 DROP TABLE IF EXISTS covid_pr_etl.bioportal_tritemporal_deltas;
@@ -437,7 +300,7 @@ CREATE TABLE covid_pr_etl.bioportal_followups_collected_agg WITH (
 WITH dailies AS (
 	SELECT
 		test_type,
-		bulletin_date,
+		date_add('day', -1, downloaded_date) AS bulletin_date,
 		collected_date,
 		count(*) tests,
 		count(*) FILTER (WHERE positive)
@@ -450,10 +313,10 @@ WITH dailies AS (
 			AS followups
 	FROM covid_pr_etl.bioportal_followups
 	WHERE DATE '2020-03-01' <= collected_date
-	AND collected_date <= bulletin_date
+	AND collected_date <= received_date
 	AND DATE '2020-03-01' <= reported_date
-	AND reported_date <= bulletin_date
-	GROUP BY test_type, bulletin_date, collected_date
+	AND reported_date <= received_date
+	GROUP BY test_type, downloaded_date, collected_date
 )
 SELECT
 	*,
@@ -494,7 +357,7 @@ CREATE TABLE covid_pr_etl.bioportal_curve_agg WITH (
 ) AS
 WITH cases AS (
 	SELECT
-		bulletin_date,
+		date_add('day', -1, downloaded_date) AS bulletin_date,
 		min(collected_date) collected_date,
 		min(collected_date) FILTER (
 			WHERE test_type = 'Antigens'
@@ -502,15 +365,15 @@ WITH cases AS (
 		min(collected_date) FILTER (
 			WHERE test_type = 'Molecular'
 		) AS molecular_date
-	FROM covid_pr_etl.bioportal_cases
+	FROM covid_pr_etl.bioportal_orders_basic
 	WHERE test_type IN ('Molecular', 'Antigens')
 	AND DATE '2020-03-01' <= collected_date
-	AND collected_date <= bulletin_date
+	AND collected_date <= received_date
 	AND DATE '2020-03-01' <= reported_date
-	AND reported_date <= bulletin_date
+	AND reported_date <= received_date
     AND positive
 	GROUP BY
-		bulletin_date,
+		downloaded_date,
 		patient_id
 )
 SELECT
