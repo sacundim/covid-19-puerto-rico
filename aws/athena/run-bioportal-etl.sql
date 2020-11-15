@@ -404,9 +404,20 @@ CREATE TABLE covid_pr_etl.bioportal_curve_agg WITH (
     bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
 ) AS
-WITH cases AS (
+WITH bulletins AS (
+	SELECT CAST(date_column AS DATE) AS bulletin_date
+	FROM (
+		VALUES (SEQUENCE(DATE '2020-04-24', DATE '2020-12-31', INTERVAL '1' DAY))
+	) AS date_array (date_array)
+	CROSS JOIN UNNEST(date_array) AS t2(date_column)
+), downloads AS (
 	SELECT
-		date_add('day', -1, downloaded_date) AS bulletin_date,
+		max(downloaded_at) max_downloaded_at,
+		max(downloaded_date) max_downloaded_date
+	FROM covid_pr_etl.bioportal_followups
+), cases AS (
+	SELECT
+		bulletins.bulletin_date AS bulletin_date,
 		min(collected_date) collected_date,
 		min(collected_date) FILTER (
 			WHERE test_type = 'Antigens'
@@ -414,7 +425,12 @@ WITH cases AS (
 		min(collected_date) FILTER (
 			WHERE test_type = 'Molecular'
 		) AS molecular_date
-	FROM covid_pr_etl.bioportal_orders_basic
+	FROM covid_pr_etl.bioportal_orders_basic tests
+	INNER JOIN downloads
+		ON tests.downloaded_at = downloads.max_downloaded_at
+	INNER JOIN bulletins
+		ON bulletins.bulletin_date < downloads.max_downloaded_date
+		AND tests.received_date <= bulletins.bulletin_date
 	WHERE test_type IN ('Molecular', 'Antigens')
 	AND DATE '2020-03-01' <= collected_date
 	AND collected_date <= received_date
@@ -422,7 +438,7 @@ WITH cases AS (
 	AND reported_date <= received_date
     AND positive
 	GROUP BY
-		downloaded_date,
+		bulletin_date,
 		patient_id
 )
 SELECT
