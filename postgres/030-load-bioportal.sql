@@ -18,8 +18,29 @@ CREATE INDEX ON bioportal_tests (test_type, bulletin_date, collected_date, repor
 ANALYZE VERBOSE bioportal_tests;
 
 
+REFRESH MATERIALIZED VIEW bioportal_tritemporal_preagg;
+CREATE INDEX ON bioportal_tritemporal_preagg (
+    test_type, bulletin_date, collected_date, reported_date
+);
+ANALYZE VERBOSE bioportal_tritemporal_preagg;
+
+
 REFRESH MATERIALIZED VIEW bioportal_tritemporal_agg;
 CREATE INDEX ON bioportal_tritemporal_agg (
-    test_type, collected_date, bulletin_date
+    test_type, bulletin_date, collected_date, reported_date
 );
 ANALYZE VERBOSE bioportal_tritemporal_agg;
+
+
+REFRESH MATERIALIZED VIEW bioportal_collected_agg;
+CREATE INDEX ON bioportal_collected_agg (
+    test_type, bulletin_date, collected_date
+);
+ANALYZE VERBOSE bioportal_collected_agg;
+
+
+REFRESH MATERIALIZED VIEW bioportal_reported_agg;
+CREATE INDEX ON bioportal_reported_agg (
+    test_type, bulletin_date, reported_date
+);
+ANALYZE VERBOSE bioportal_reported_agg;
