@@ -148,6 +148,69 @@ SELECT
 FROM first_clean;
 
 --
+-- The `orders/basic` row-per-test dataset.
+--
+DROP TABLE IF EXISTS covid_pr_etl.bioportal_orders_basic;
+CREATE TABLE covid_pr_etl.bioportal_orders_basic WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 2
+) AS
+WITH first_clean AS (
+	SELECT
+	    CAST(from_iso8601_timestamp(downloadedAt) AS TIMESTAMP)
+	        AS downloaded_at,
+	    CAST(from_iso8601_timestamp(collectedDate) AS TIMESTAMP)
+	    	AS raw_collected_at,
+	    CAST(from_iso8601_timestamp(reportedDate) AS TIMESTAMP)
+	    	AS raw_reported_at,
+	    CAST(from_iso8601_timestamp(resultCreatedAt) AS TIMESTAMP)
+	    	AS result_created_at,
+	    CAST(from_iso8601_timestamp(orderCreatedAt) AS TIMESTAMP)
+	    	AS order_created_at,
+	    date(from_iso8601_timestamp(resultCreatedAt) AT TIME ZONE 'America/Puerto_Rico')
+	        AS bulletin_date,
+	    date(from_iso8601_timestamp(collectedDate) AT TIME ZONE 'America/Puerto_Rico')
+	        AS raw_collected_date,
+	    date(from_iso8601_timestamp(reportedDate) AT TIME ZONE 'America/Puerto_Rico')
+	        AS raw_reported_date,
+	    from_hex(replace(nullif(patientId, ''), '-')) AS patient_id,
+	    nullif(ageRange, '') AS age_range,
+	    nullif(region, '') AS region,
+	    testType AS test_type,
+	    result,
+	    COALESCE(result, '') LIKE '%Positive%' AS positive
+	FROM covid_pr_sources.orders_basic_csv_v1
+)
+SELECT
+    *,
+    CASE
+	    WHEN test_type IN ('Molecular')
+	    THEN CASE
+	        WHEN raw_collected_date >= DATE '2020-01-01'
+	        THEN raw_collected_date
+	        WHEN raw_reported_date >= DATE '2020-03-13'
+	        -- Suggested by @rafalab. He uses two days as the value and says
+	        -- that's the average, but my spot check says 2.8 days.
+	        THEN date_add('day', -3, raw_reported_date)
+	        ELSE date_add('day', -3, bulletin_date)
+	    END
+	    ELSE coalesce(raw_collected_date, raw_reported_date, bulletin_date)
+    END AS collected_date,
+    CASE
+	    WHEN test_type IN ('Molecular')
+	    THEN CASE
+	        WHEN raw_reported_date >= DATE '2020-03-13'
+	        THEN raw_reported_date
+	        ELSE bulletin_date
+	    END
+	    ELSE coalesce(raw_reported_date, raw_collected_date, bulletin_date)
+    END AS reported_date
+FROM first_clean;
+
+
+
+--
 -- The `minimal-info` row-per-test dataset. This one differs from
 -- `minimal-info-unique-tests` in that:
 --
