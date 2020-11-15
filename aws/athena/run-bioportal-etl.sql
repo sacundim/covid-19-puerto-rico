@@ -4,6 +4,11 @@
 -- Rebuild the whole schema from scratch from the raw CSV tables.
 --
 
+DROP DATABASE IF EXISTS covid_pr_etl CASCADE;
+
+CREATE DATABASE covid_pr_etl
+LOCATION 's3://covid-19-puerto-rico-athena/';
+
 
 ----------------------------------------------------------
 ----------------------------------------------------------
@@ -149,10 +154,17 @@ DROP TABLE IF EXISTS covid_pr_etl.bioportal_followups;
 CREATE TABLE covid_pr_etl.bioportal_followups WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['downloaded_date'],
-    bucket_count = 12
+    bucket_count = 1
 ) AS
+WITH downloads AS (
+	SELECT
+		max(downloaded_at) max_downloaded_at,
+		max(downloaded_date) max_downloaded_date
+	FROM covid_pr_etl.bioportal_orders_basic
+)
 SELECT
 	cur.test_type,
+	cur.downloaded_at,
 	cur.downloaded_date,
 	cur.received_date,
 	cur.collected_date,
@@ -164,14 +176,19 @@ SELECT
 			AND prev.positive), FALSE)
 		AS followup
 FROM covid_pr_etl.bioportal_orders_basic cur
+INNER JOIN downloads
+    ON cur.downloaded_at = downloads.max_downloaded_at
+    AND cur.downloaded_date = downloads.max_downloaded_date
 LEFT OUTER JOIN covid_pr_etl.bioportal_orders_basic prev
 	ON prev.test_type = cur.test_type
+	AND prev.downloaded_at = cur.downloaded_at
 	AND prev.downloaded_date = cur.downloaded_date
 	AND prev.received_date = cur.received_date
 	AND prev.patient_id = cur.patient_id
 	AND prev.collected_date < cur.collected_date
 GROUP BY
 	cur.test_type,
+	cur.downloaded_at,
 	cur.downloaded_date,
 	cur.received_date,
 	cur.collected_date,
@@ -313,10 +330,21 @@ CREATE TABLE covid_pr_etl.bioportal_followups_collected_agg WITH (
     bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
 ) AS
-WITH dailies AS (
+WITH bulletins AS (
+	SELECT CAST(date_column AS DATE) AS bulletin_date
+	FROM (
+		VALUES (SEQUENCE(DATE '2020-04-24', DATE '2020-12-31', INTERVAL '1' DAY))
+	) AS date_array (date_array)
+	CROSS JOIN UNNEST(date_array) AS t2(date_column)
+), downloads AS (
+	SELECT
+		max(downloaded_at) max_downloaded_at,
+		max(downloaded_date) max_downloaded_date
+	FROM covid_pr_etl.bioportal_followups
+), dailies AS (
 	SELECT
 		test_type,
-		date_add('day', -1, downloaded_date) AS bulletin_date,
+		bulletins.bulletin_date,
 		collected_date,
 		count(*) tests,
 		count(*) FILTER (WHERE positive)
@@ -327,12 +355,17 @@ WITH dailies AS (
 			AS rejections,
 		count(*) FILTER (WHERE followup)
 			AS followups
-	FROM covid_pr_etl.bioportal_followups
+	FROM covid_pr_etl.bioportal_followups followups
+    INNER JOIN downloads
+        ON followups.downloaded_at = downloads.max_downloaded_at
+	INNER JOIN bulletins
+	    ON bulletins.bulletin_date < downloads.max_downloaded_date
+	    AND followups.received_date <= bulletins.bulletin_date
 	WHERE DATE '2020-03-01' <= collected_date
 	AND collected_date <= received_date
 	AND DATE '2020-03-01' <= reported_date
 	AND reported_date <= received_date
-	GROUP BY test_type, downloaded_date, collected_date
+	GROUP BY test_type, bulletins.bulletin_date, collected_date
 )
 SELECT
 	*,
