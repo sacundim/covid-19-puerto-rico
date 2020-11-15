@@ -414,7 +414,7 @@ WITH bulletins AS (
 	SELECT
 		max(downloaded_at) max_downloaded_at,
 		max(downloaded_date) max_downloaded_date
-	FROM covid_pr_etl.bioportal_followups
+	FROM covid_pr_etl.bioportal_orders_basic
 ), cases AS (
 	SELECT
 		bulletins.bulletin_date AS bulletin_date,
