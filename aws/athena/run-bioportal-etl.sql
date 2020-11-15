@@ -192,21 +192,37 @@ CREATE TABLE covid_pr_etl.bioportal_tritemporal_counts WITH (
     bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
 ) AS
+WITH bulletins AS (
+	SELECT CAST(date_column AS DATE) AS bulletin_date
+	FROM (
+		VALUES (SEQUENCE(DATE '2020-04-24', DATE '2020-12-31', INTERVAL '1' DAY))
+	) AS date_array (date_array)
+	CROSS JOIN UNNEST(date_array) AS t2(date_column)
+), downloads AS (
+	SELECT
+		max(downloaded_at) max_downloaded_at,
+		max(downloaded_date) max_downloaded_date
+	FROM covid_pr_etl.bioportal_orders_basic
+)
 SELECT
 	test_type,
-	date_add('day', -1, downloaded_date) AS bulletin_date,
+	bulletins.bulletin_date,
 	reported_date,
 	collected_date,
 	count(*) tests,
 	count(*) FILTER (WHERE positive)
 		AS positive_tests
-FROM covid_pr_etl.bioportal_orders_basic
-WHERE received_date < downloaded_date
+FROM covid_pr_etl.bioportal_orders_basic tests
+INNER JOIN downloads
+	ON tests.downloaded_at = downloads.max_downloaded_at
+INNER JOIN bulletins
+	ON bulletins.bulletin_date < downloads.max_downloaded_date
+	AND tests.received_date <= bulletins.bulletin_date
 AND DATE '2020-03-01' <= collected_date
 AND collected_date <= received_date
 AND DATE '2020-03-01' <= reported_date
 AND reported_date <= received_date
-GROUP BY test_type, downloaded_date, collected_date, reported_date;
+GROUP BY test_type, bulletins.bulletin_date, collected_date, reported_date;
 
 
 DROP TABLE IF EXISTS covid_pr_etl.bioportal_tritemporal_deltas;
