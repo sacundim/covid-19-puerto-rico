@@ -171,9 +171,9 @@ SELECT
 	cur.reported_date,
 	cur.patient_id,
 	cur.positive,
-	COALESCE(bool_or(prev.collected_date >=
-				date_add('day', -90, cur.collected_date)
-			AND prev.positive), FALSE)
+	COALESCE(bool_or(prev.collected_date >= date_add('day', -90, cur.collected_date)
+			            AND prev.positive),
+             FALSE)
 		AS followup
 FROM covid_pr_etl.bioportal_orders_basic cur
 INNER JOIN downloads
@@ -183,7 +183,6 @@ LEFT OUTER JOIN covid_pr_etl.bioportal_orders_basic prev
 	ON prev.test_type = cur.test_type
 	AND prev.downloaded_at = cur.downloaded_at
 	AND prev.downloaded_date = cur.downloaded_date
-	AND prev.received_date = cur.received_date
 	AND prev.patient_id = cur.patient_id
 	AND prev.collected_date < cur.collected_date
 GROUP BY
