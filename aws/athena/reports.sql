@@ -12,6 +12,7 @@ WITH bulletins AS (
 	FROM covid_pr_etl.bulletin_cases
 )
 SELECT
+	max_bulletin_date "Datos hasta",
 	bio.collected_date AS "Fecha muestra",
 	COALESCE(bul.confirmed_cases, 0)
 		+ COALESCE(bul.probable_cases, 0)
@@ -39,6 +40,7 @@ WITH bulletins AS (
 	FROM covid_pr_etl.bioportal_collected_agg
 )
 SELECT
+	max_bulletin_date "Datos hasta",
 	molecular.collected_date "Fecha muestra",
 	molecular.cases "Por molecular",
 	(molecular.cumulative_cases - lag(molecular.cumulative_cases, 7) OVER (
@@ -66,8 +68,9 @@ WITH bulletins AS (
 	FROM covid_pr_etl.bioportal_collected_agg
 )
 SELECT
+	max_bulletin_date "Datos hasta",
 	collected_date "Fecha de muestra",
-	tests "Pruebas de antígeno",
+	tests "Pruebas antígeno",
 	positive_tests "Positivas",
 	100.0 * (cumulative_positives - lag(cumulative_positives, 7) OVER (
 		PARTITION BY test_type, bulletin_date
@@ -86,16 +89,22 @@ INNER JOIN bulletins
 WHERE test_type = 'Antigens'
 ORDER BY collected_date DESC;
 
+
 --
 -- Lag of recently received molecular and antigen test results.
 -- Excludes very old samples because they're outside of the
 -- "happy path."
 --
 WITH bulletins AS (
-	SELECT max(bulletin_date) AS max_bulletin_date
+	SELECT
+		max(bulletin_date) AS until_bulletin_date,
+		date_add('day', -7, max(bulletin_date))
+			AS since_bulletin_date
 	FROM covid_pr_etl.bioportal_collected_agg
 )
 SELECT
+	bulletins.since_bulletin_date "Desde",
+	bulletins.until_bulletin_date "Hasta",
 	test_type "Tipo de prueba",
 	sum(delta_positive_tests * collected_age)
 		/ cast(sum(delta_positive_tests) AS DOUBLE PRECISION)
@@ -105,9 +114,9 @@ SELECT
 		AS "Rezago (todas)"
 FROM covid_pr_etl.bioportal_collected_agg bca
 INNER JOIN bulletins
-	ON date_add('day', -7, bulletins.max_bulletin_date) < bca.bulletin_date
-	AND bca.bulletin_date <= bulletins.max_bulletin_date
+	ON bulletins.since_bulletin_date < bca.bulletin_date
+	AND bca.bulletin_date <= bulletins.until_bulletin_date
 WHERE test_type IN ('Molecular', 'Antigens')
 AND collected_age <= 14
-GROUP BY test_type
+GROUP BY bulletins.since_bulletin_date, bulletins.until_bulletin_date, test_type
 ORDER BY test_type;
