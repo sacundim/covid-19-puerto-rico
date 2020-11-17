@@ -857,8 +857,6 @@ class AgeGroups(AbstractChart):
         )
 
 class LatenessTiers(AbstractChart):
-    SORT_ORDER = ['≤ 7 días', '≤ 14 días', '> 14 días']
-
     def fetch_data(self, connection):
         table = sqlalchemy.Table('lateness_tiers', self.metadata,
                                  schema='products', autoload=True)
@@ -890,7 +888,7 @@ class LatenessTiers(AbstractChart):
             percent=alt.datum.count / alt.datum.total,
             mean_percent=alt.datum.mean_count / alt.datum.mean_total
         ).mark_area(opacity=0.85).encode(
-            color=alt.Color('tier:N', title='Renglón (días)', sort=self.SORT_ORDER,
+            color=alt.Color('tier:N', title='Renglón (días)',
                             legend=alt.Legend(orient='top', titleOrient='left', offset=5),
                             scale=alt.Scale(scheme='redyellowgreen', reverse=True)),
             order=alt.Order('tier_order:O'),
