@@ -25,10 +25,9 @@ SELECT
 FROM covid_pr_etl.bioportal_curve bio
 INNER JOIN bulletins
 	ON bulletins.max_bulletin_date = bio.bulletin_date
-LEFT OUTER JOIN covid_pr_etl.bulletin_cases bul
+INNER JOIN covid_pr_etl.bulletin_cases bul
 	ON bul.bulletin_date = bio.bulletin_date
 	AND bul.datum_date = bio.collected_date
-WHERE bio.bulletin_date = DATE '2020-11-14'
 ORDER BY bio.collected_date DESC;
 
 
