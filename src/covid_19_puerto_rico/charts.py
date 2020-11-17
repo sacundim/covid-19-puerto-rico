@@ -25,6 +25,7 @@ class AbstractChart(ABC):
             df = self.fetch_data(connection)
         logging.info("%s dataframe: %s", self.name, util.describe_frame(df))
 
+        logging.info(f'Writing {self.name} charts to {self.output_dir}...')
         for bulletin_date in bulletin_dates:
             self.render_bulletin_date(df, bulletin_date)
 

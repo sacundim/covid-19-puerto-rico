@@ -27,11 +27,12 @@ class Website:
             relative = pathlib.Path(directory).relative_to(self.assets_dir)
             output_directory = pathlib.Path(f'{self.output_dir}/{relative}')
             output_directory.mkdir(exist_ok=True)
+            logging.info("Copying files from %s/ to %s/", directory, output_directory)
             for filename in filenames:
-                logging.info("Copying %s from %s/ to %s/", filename, directory, output_directory)
+                logging.debug("Copying %s from %s/ to %s/", filename, directory, output_directory)
                 basename, extension = os.path.splitext(filename)
                 if extension == '.png':
-                    logging.info("Converting %s to jpg", filename)
+                    logging.warning("Converting %s to jpg", filename)
                     copy_to_jpg(f'{directory}/{filename}',
                                 f'{output_directory}/{basename}.jpg')
                 elif extension == '.jpeg':

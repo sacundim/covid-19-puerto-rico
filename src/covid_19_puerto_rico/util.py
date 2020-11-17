@@ -38,7 +38,7 @@ def create_athena_engine(args):
 def save_chart(chart, basename, formats):
     for format in formats:
         filename = f"{basename}.{format}"
-        logging.info("Writing chart to %s", filename)
+        logging.debug("Writing chart to %s", filename)
         chart.save(filename)
 
 def heatmap_text_color(df, field, extreme_color='white', mid_color='black'):
