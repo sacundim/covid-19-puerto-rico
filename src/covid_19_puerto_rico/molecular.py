@@ -695,7 +695,7 @@ ORDER BY bc.bulletin_date DESC, bc.datum_date DESC""")
         ).encode(
             x=alt.X('collected_date:T', axis=alt.Axis(title=None, labels=False)),
             y=alt.Y('cases_per_100k:Q', title='Casos/100k',
-                    scale=alt.Scale(domain=[1, 200], type='linear')),
+                    scale=alt.Scale(domain=[1, 300], type='linear')),
             tooltip = [alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                        alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                        alt.Tooltip('cases_per_100k:Q', format=',.1f',
@@ -733,7 +733,7 @@ ORDER BY bc.bulletin_date DESC, bc.datum_date DESC""")
         width, height = 585, 80
         return alt.vconcat(
             alt.layer(self.make_level_scale(self.CASES_LEVELS), cases).properties(
-                width=width, height=height
+                width=width, height=height*1.5
             ),
             alt.layer(
                 self.make_level_scale(self.POSITIVITY_LEVELS),
