@@ -214,25 +214,32 @@ class NaivePositiveRate(AbstractMolecularChart):
 class NewDailyTestsPerCapita(AbstractMolecularChart):
     POPULATION = 3_193_694
     POPULATION_THOUSANDS = POPULATION / 1_000.0
-    TEST_TYPE_SORT_ORDER = ['Molecular', 'Serological', 'Antigens']
+    TEST_TYPE_SORT_ORDER = ['Molecular', 'Serológica', 'Antígeno']
     DATE_TYPE_SORT_ORDER = ['Fecha de muestra', 'Fecha de reporte']
 
     def make_chart(self, df, bulletin_date):
-        return alt.Chart(df.dropna()).transform_calculate(
-            per_thousand=alt.datum.value / self.POPULATION_THOUSANDS
-        ).mark_line(
-            point='transparent'
-        ).encode(
+        return alt.Chart(df.dropna()).transform_window(
+            groupby=['test_type', 'bulletin_date', 'date_type', 'test_type'],
+            sort=[{'field': 'date'}],
+            frame=[-6, 0],
+            mean_tests='mean(tests)'
+        ).transform_calculate(
+            per_thousand=alt.datum.mean_tests / self.POPULATION_THOUSANDS
+        ).mark_line().encode(
             x=alt.X('date:T', title=None,
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('per_thousand:Q', title='Pruebas (por 1K)'),
-            color=alt.Color('test_type:N', title='Tipo de prueba:', sort=self.TEST_TYPE_SORT_ORDER,
-                            legend=alt.Legend(orient='bottom', titleOrient='top')),
-            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
+            color=alt.Color('test_type:N', title='Tipo de prueba', sort=self.TEST_TYPE_SORT_ORDER,
+                            legend=alt.Legend(orient='bottom', titleOrient='top', direction='vertical',
+                                              padding=7.5, symbolStrokeWidth=3, symbolSize=300)),
+            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', title='Datos hasta',
+                                      legend=alt.Legend(orient='bottom', titleOrient='top',
+                                                        direction='vertical', padding=7.5,
+                                                        symbolStrokeWidth=3, symbolSize=300)),
             tooltip=[alt.Tooltip('test_type:N', title='Tipo de prueba'),
                      alt.Tooltip('date:T', title='Fecha'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
-                     alt.Tooltip('value:Q', format=",.1f", title='Pruebas (promedio 7 días)'),
+                     alt.Tooltip('mean_tests:Q', format=",.1f", title='Pruebas (promedio 7 días)'),
                      alt.Tooltip('per_thousand:Q', format=".2f",
                                  title='Pruebas por mil habitantes')]
         ).properties(
@@ -256,7 +263,7 @@ class NewDailyTestsPerCapita(AbstractMolecularChart):
             table.c.test_type,
             table.c.bulletin_date,
             table.c.date,
-            table.c.smoothed_daily_tests.label('value')
+            table.c.tests
         ])
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "date"])
 

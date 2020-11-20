@@ -109,7 +109,7 @@ SELECT
 FROM covid_pr_etl.bioportal_collected_agg bca
 INNER JOIN bulletins
 	ON bulletins.max_bulletin_date = bca.bulletin_date
-WHERE test_type = 'Antigens'
+WHERE test_type = 'Antígeno'
 ORDER BY collected_date DESC;
 
 
@@ -139,7 +139,7 @@ FROM covid_pr_etl.bioportal_collected_agg bca
 INNER JOIN bulletins
 	ON bulletins.since_bulletin_date < bca.bulletin_date
 	AND bca.bulletin_date <= bulletins.until_bulletin_date
-WHERE test_type IN ('Molecular', 'Antigens')
+WHERE test_type IN ('Molecular', 'Antígeno')
 AND collected_age <= 14
 GROUP BY bulletins.since_bulletin_date, bulletins.until_bulletin_date, test_type
 ORDER BY test_type;
