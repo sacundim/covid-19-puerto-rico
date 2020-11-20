@@ -104,7 +104,19 @@ WITH first_clean AS (
 	    from_hex(replace(nullif(patientId, ''), '-')) AS patient_id,
 	    nullif(ageRange, '') AS age_range,
 	    nullif(region, '') AS region,
-	    testType AS test_type,
+	    testType AS raw_test_type,
+        CASE
+            WHEN testType IN (
+                'Molecular', 'MOLECULAR'
+            ) THEN 'Molecular'
+            WHEN testType IN (
+                'Antigens', 'ANTIGENO'
+            ) THEN 'Antígeno'
+            WHEN testType IN (
+                'Serological', 'Serological IgG Only', 'Total Antibodies', 'SEROLOGICAL'
+            ) THEN 'Serológica'
+            ELSE testType
+        END AS test_type,
 	    result,
 	    COALESCE(result, '') LIKE '%Positive%' AS positive
 	FROM covid_pr_sources.orders_basic_csv_v1
@@ -419,7 +431,7 @@ WITH bulletins AS (
 		bulletins.bulletin_date AS bulletin_date,
 		min(collected_date) collected_date,
 		min(collected_date) FILTER (
-			WHERE test_type = 'Antigens'
+			WHERE test_type = 'Antígeno'
 		) AS antigens_date,
 		min(collected_date) FILTER (
 			WHERE test_type = 'Molecular'
@@ -430,7 +442,7 @@ WITH bulletins AS (
 	INNER JOIN bulletins
 		ON bulletins.bulletin_date < downloads.max_downloaded_date
 		AND tests.received_date <= bulletins.bulletin_date
-	WHERE test_type IN ('Molecular', 'Antigens')
+	WHERE test_type IN ('Molecular', 'Antígeno')
 	AND DATE '2020-03-01' <= collected_date
 	AND collected_date <= received_date
 	AND DATE '2020-03-01' <= reported_date
@@ -557,10 +569,7 @@ SELECT
     test_type,
     bulletin_date,
     collected_date AS date,
-    (cumulative_tests - lag(cumulative_tests, 7) OVER (
-		PARTITION BY test_type, bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_tests
+    tests
 FROM covid_pr_etl.bioportal_collected_agg
 UNION
 SELECT
@@ -568,10 +577,7 @@ SELECT
     test_type,
     bulletin_date,
     reported_date AS date,
-    (cumulative_tests - lag(cumulative_tests, 7) OVER (
-		PARTITION BY test_type, bulletin_date
-		ORDER BY reported_date
-	)) / 7.0 AS smoothed_daily_tests
+    tests
 FROM covid_pr_etl.bioportal_reported_agg
 ORDER BY bulletin_date DESC, date DESC, test_type, date_type;
 
@@ -596,12 +602,12 @@ FROM covid_pr_etl.bioportal_collected_agg bioportal
 INNER JOIN covid_pr_etl.bulletin_cases cases
 	ON cases.bulletin_date = bioportal.bulletin_date
 	AND cases.datum_date = bioportal.collected_date
-WHERE bioportal.test_type IN ('Molecular', 'Antigens')
+WHERE bioportal.test_type IN ('Molecular', 'Antígeno')
 AND bioportal.bulletin_date > DATE '2020-04-24'
 AND (
     -- Don't report on antigens earlier than Oct. 24 when
     -- it started in earnest.
-	bioportal.test_type != 'Antigens'
+	bioportal.test_type != 'Antígeno'
 		OR bioportal.collected_date >= DATE '2020-10-24'
 )
 ORDER BY test_type, bulletin_date DESC, collected_date DESC;
@@ -632,7 +638,7 @@ FROM covid_pr_etl.bioportal_collected_agg serological
 INNER JOIN covid_pr_etl.bulletin_cases cases
 	ON cases.bulletin_date = serological.bulletin_date
 	AND cases.datum_date = serological.collected_date
-WHERE serological.test_type = 'Serological'
+WHERE serological.test_type = 'Serológica'
 AND serological.bulletin_date > DATE '2020-04-24'
 ORDER BY test_type, bulletin_date DESC, collected_date DESC;
 
