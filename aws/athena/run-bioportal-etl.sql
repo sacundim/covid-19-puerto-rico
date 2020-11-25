@@ -79,7 +79,7 @@ DROP TABLE IF EXISTS covid_pr_etl.bioportal_orders_basic;
 CREATE TABLE covid_pr_etl.bioportal_orders_basic WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['downloaded_date'],
-    bucket_count = 6
+    bucket_count = 8
 ) AS
 WITH first_clean AS (
 	SELECT
