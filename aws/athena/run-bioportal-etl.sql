@@ -79,7 +79,7 @@ DROP TABLE IF EXISTS covid_pr_etl.bioportal_orders_basic;
 CREATE TABLE covid_pr_etl.bioportal_orders_basic WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['downloaded_date'],
-    bucket_count = 12
+    bucket_count = 1
 ) AS
 WITH first_clean AS (
 	SELECT
@@ -119,7 +119,11 @@ WITH first_clean AS (
         END AS test_type,
 	    result,
 	    COALESCE(result, '') LIKE '%Positive%' AS positive
-	FROM covid_pr_sources.orders_basic_parquet_v1
+	FROM covid_pr_sources.orders_basic_parquet_v1 tests
+	WHERE downloadedAt IN (
+	    SELECT max(downloadedAt) max_downloaded_at
+	    FROM covid_pr_sources.orders_basic_parquet_v1
+    )
 )
 SELECT
     *,
