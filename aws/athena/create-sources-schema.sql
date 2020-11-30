@@ -37,6 +37,20 @@ TBLPROPERTIES (
     "skip.header.line.count"="1"
 );
 
+CREATE EXTERNAL TABLE covid_pr_sources.orders_basic_parquet_v1 (
+    downloadedAt STRING,
+    patientId STRING,
+    collectedDate STRING,
+    reportedDate STRING,
+    ageRange STRING,
+    testType STRING,
+    result STRING,
+    region STRING,
+    orderCreatedAt STRING,
+    resultCreatedAt STRING
+) STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/bioportal/orders-basic/parquet_v1/';
+
 CREATE EXTERNAL TABLE covid_pr_sources.tests_csv_v1 (
     downloadedAt STRING,
     collectedDate STRING,
