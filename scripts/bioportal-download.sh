@@ -50,17 +50,11 @@ time "${HERE}"/bioportal-tests-to-csv.sh "${timestamp}" "${TESTS_JSON_TMP}" \
     > "${TESTS_CSV_TMP}"
 echo "$(date): Wrote output to ${TESTS_CSV_TMP}"
 
-echo "$(date): Converting orders-basic to csv..."
-time "${HERE}"/bioportal-basic-to-csv.sh "${timestamp}" "${ORDERS_JSON_TMP}" \
-    | bzip2 -9 \
-    > "${ORDERS_CSV_TMP}"
-echo "$(date): Wrote output to ${ORDERS_CSV_TMP}"
-
 echo "$(date): Converting orders-basic to parquet..."
 # TRICKY: One is tempted to use the timestamp data type option
 # in the `csv2parquet` tool, but Athena can't read the timestamps
 # it produces, because Parquet is a horrible mess.
-bzcat "${ORDERS_CSV_TMP}" \
+time "${HERE}"/bioportal-basic-to-csv.sh "${timestamp}" "${ORDERS_JSON_TMP}" \
   | time csv2parquet --codec gzip --row-group-size 10000000 \
       --output /dev/stdout \
       /dev/stdin \
@@ -70,12 +64,11 @@ echo "$(date): Wrote output to ${ORDERS_PARQUET_TMP}"
 
 echo "$(date): File sizes:"
 du -h "${TESTS_JSON_TMP}" "${ORDERS_JSON_TMP}" \
-  "${TESTS_CSV_TMP}" "${ORDERS_CSV_TMP}" \
-  "${ORDERS_PARQUET_TMP}"
+  "${TESTS_CSV_TMP}" "${ORDERS_PARQUET_TMP}"
+
 
 echo "$(date): Moving files to the sync directory"
 mv "${TESTS_JSON_TMP}" "${TESTS_JSON}"
 mv "${TESTS_CSV_TMP}" "${TESTS_CSV}"
 mv "${ORDERS_JSON_TMP}" "${ORDERS_JSON}"
-mv "${ORDERS_CSV_TMP}" "${ORDERS_CSV}"
 mv "${ORDERS_PARQUET_TMP}" "${ORDERS_PARQUET}"
