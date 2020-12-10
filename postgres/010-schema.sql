@@ -613,7 +613,6 @@ SELECT
 			ELSE 1.0
 			END
 		AS pct_increase_1day,
-	previous_14day_cases - previous_7day_cases,
 	CAST(new_7day_cases AS DOUBLE PRECISION)
 		/ CASE WHEN (previous_14day_cases - previous_7day_cases) > 0
 			THEN previous_14day_cases - previous_7day_cases
