@@ -966,14 +966,16 @@
     <dl>
         <dt>2020-12-09</dt>
         <dd>La tabla de casos probables publicada hoy tiene el mismo tipo de error que las del 7
-            y 8 de diciembre, así que descuadra por 1 de nuevo.
+            y 8 de diciembre, así que se aplica la misma corrección para hacerla cuadrar: quitar
+            el caso que la tabla de datos recoge para el 24/jul pero que en la gráfica no aparece.
         </dd>
 
         <dt>2020-12-08</dt>
         <dd>La tabla de casos probables publicada hoy tiene el mismo tipo de error que la del 7
             y, semejantemente, la suma de los casos diarios después de corregir las fechas da
             2,289 que no cuadra la de casos acumulados que reportan la misma tabla, la portada
-            del informe y la gráfica: 2,288.
+            del informe y la gráfica: 2,288. Luego (11/dic) aplicamos la corrección que logra el
+            cuadre: la tabla de datos tiene un caso para el 24/jul que la gráfica eliminó.
         </dd>
 
         <dt>2020-12-07</dt>
@@ -984,7 +986,10 @@
             en que a todas las hileras del 28/may al 25/nov tienen el valor que en verdad debería
             corresponderle a la fecha de la hilera próxima, y la del 26/oct (última en la primera
             columna de la tabla) tiene el valor que debería tener la del 28 de mayo. Esta corrección
-            se le aplicó a los datos que copiamos, pero aún así nos queda el descuadre de un caso.</dd>
+            se le aplicó a los datos que copiamos, pero aún así quedó el descuadre de un caso, que
+            el 11 de diciembre logré diagnosticar: la gráfica borra un caso que las anteriores
+            reportaban para el 2020-07-24, pero la tabla de datos aún recoge. Borrar este arregla
+            el descuadre.</dd>
 
         <dt>2020-11-29</dt>
         <dd>La gráfica dice 50,988 casos confirmados, pero por más que intente no logro copiar
