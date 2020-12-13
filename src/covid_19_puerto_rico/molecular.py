@@ -10,7 +10,7 @@ import pandas as pd
 import sqlalchemy
 from covid_19_puerto_rico import util
 from sqlalchemy import text
-from sqlalchemy.sql import select
+from sqlalchemy.sql import select, and_
 from . import charts
 
 
@@ -22,7 +22,7 @@ class AbstractMolecularChart(charts.AbstractChart):
 class NewCases(AbstractMolecularChart):
     POPULATION_100K = 31.93694
 
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('new_daily_cases', self.metadata,
                                  schema='covid_pr_etl', autoload=True)
         query = select([table.c.bulletin_date,
@@ -30,7 +30,9 @@ class NewCases(AbstractMolecularChart):
                         table.c.official_cases.label('Casos (oficial)'),
                         table.c.bioportal_cases.label('Casos (Bioportal)'),
                         table.c.bioportal_rejections.label('Descartados (Bioportal)'),
-                        table.c.deaths.label('Muertes')])
+                        table.c.deaths.label('Muertes')])\
+            .where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
+                        table.c.bulletin_date <= max(bulletin_dates)))
         df = pd.read_sql_query(query, connection,
                                parse_dates=["bulletin_date", "datum_date"])
         return pd.melt(df, ["bulletin_date", "datum_date"])
@@ -94,7 +96,7 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
 
     SORT_ORDER = ['Oficial', 'Bioportal']
 
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('confirmed_vs_rejected', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
@@ -102,7 +104,8 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
             table.c.rejections,
             table.c.cases.label('Casos oficiales'),
             table.c.novels.label('Bioportal')
-        ])
+        ]).where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
+                      table.c.bulletin_date <= max(bulletin_dates)))
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
         return pd.melt(df, ['bulletin_date', 'collected_date', 'rejections'])
 
@@ -197,7 +200,7 @@ class NaivePositiveRate(AbstractMolecularChart):
         return df.loc[(df['bulletin_date'] == effective_bulletin_date)
                       | ((df['bulletin_date'] == week_ago))]
 
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('naive_positive_rates', self.metadata, autoload=True)
         query = select([
             table.c.test_type,
@@ -206,7 +209,8 @@ class NaivePositiveRate(AbstractMolecularChart):
             table.c.tests,
             table.c.positives.label('Positivas'),
             table.c.cases.label('Casos')
-        ])
+        ]).where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
+                      table.c.bulletin_date <= max(bulletin_dates)))
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
         return pd.melt(df, ['test_type', 'bulletin_date', 'collected_date', 'tests']).dropna()
 
@@ -256,7 +260,7 @@ class NewDailyTestsPerCapita(AbstractMolecularChart):
         return df.loc[(df['bulletin_date'] == effective_bulletin_date)
                       | ((df['bulletin_date'] == week_ago))]
 
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('new_daily_tests', self.metadata, autoload=True)
         query = select([
             table.c.date_type,
@@ -264,21 +268,23 @@ class NewDailyTestsPerCapita(AbstractMolecularChart):
             table.c.bulletin_date,
             table.c.date,
             table.c.tests
-        ])
+        ]).where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
+                      table.c.bulletin_date <= max(bulletin_dates)))
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "date"])
 
 
 class CumulativeTestsVsCases(AbstractMolecularChart):
     POPULATION_MILLIONS = 3.193_694
 
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('molecular_tests_vs_confirmed_cases', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.collected_date,
             table.c.cumulative_tests,
             table.c.cumulative_cases
-        ])
+        ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
+                      table.c.bulletin_date <= max(bulletin_dates)))
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
 
     def filter_data(self, df, bulletin_date):
@@ -369,13 +375,15 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
 
 
 class MolecularCurrentDeltas(AbstractMolecularChart):
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('bioportal_collected_agg', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.collected_date,
                         table.c.delta_tests.label('Pruebas'),
                         table.c.delta_positive_tests.label('Positivas')]
-        ).where(table.c.test_type == 'Molecular')
+        ).where(and_(table.c.test_type == 'Molecular',
+                     min(bulletin_dates) <= table.c.bulletin_date,
+                     table.c.bulletin_date <= max(bulletin_dates)))
         df = pd.read_sql_query(query, connection,
                                parse_dates=['bulletin_date', 'collected_date'])
         return pd.melt(df, ['bulletin_date', 'collected_date']).replace(0, np.NaN)
@@ -429,13 +437,15 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
 
 
 class MolecularDailyDeltas(AbstractMolecularChart):
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('bioportal_collected_agg', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.collected_date,
                         table.c.delta_tests.label('Pruebas'),
                         table.c.delta_positive_tests.label('Positivas')]
-        ).where(table.c.test_type == 'Molecular')
+        ).where(and_(table.c.test_type == 'Molecular',
+                     min(bulletin_dates) - datetime.timedelta(days=14) <= table.c.bulletin_date,
+                     table.c.bulletin_date <= max(bulletin_dates)))
         df = pd.read_sql_query(query, connection,
                                parse_dates=['bulletin_date', 'collected_date'])
         return pd.melt(df, ['bulletin_date', 'collected_date'])
@@ -497,13 +507,15 @@ class MolecularDailyDeltas(AbstractMolecularChart):
 class MolecularLatenessDaily(AbstractMolecularChart):
     SORT_ORDER = ['Pruebas', 'Positivas']
 
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('molecular_lateness', self.metadata,
                                  schema='products', autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.lateness_tests.label('Pruebas'),
                         table.c.lateness_positive_tests.label('Positivas')]
-        ).where(table.c.test_type == 'Molecular')
+        ).where(and_(table.c.test_type == 'Molecular',
+                     min(bulletin_dates) - datetime.timedelta(days=8) <= table.c.bulletin_date,
+                     table.c.bulletin_date <= max(bulletin_dates)))
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
         return pd.melt(df, ['bulletin_date'])
 
@@ -545,14 +557,16 @@ class MolecularLatenessDaily(AbstractMolecularChart):
 class MolecularLateness7Day(AbstractMolecularChart):
     SORT_ORDER = ['Pruebas', 'Positivas']
 
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('molecular_lateness', self.metadata,
                                  schema='products', autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.smoothed_lateness_tests.label('Pruebas'),
             table.c.smoothed_lateness_positive_tests.label('Positivas')]
-        ).where(table.c.test_type == 'Molecular')
+        ).where(and_(table.c.test_type == 'Molecular',
+                     min(bulletin_dates) - datetime.timedelta(days=15) <= table.c.bulletin_date,
+                     table.c.bulletin_date <= max(bulletin_dates)))
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
         return pd.melt(df, ['bulletin_date'])
 
@@ -594,14 +608,14 @@ class MolecularLateness7Day(AbstractMolecularChart):
 
 
 class MolecularLatenessTiers(AbstractMolecularChart):
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('molecular_lateness_tiers', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.tier,
             table.c.tier_order,
             table.c.count
-        ])
+        ]).where(table.c.bulletin_date <= max(bulletin_dates))
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
 
     def filter_data(self, df, bulletin_date):
@@ -677,7 +691,7 @@ class PublicHealthTrustLevels(AbstractMolecularChart):
         'Color': ['red', 'orange', 'yellow', 'green']
     })
 
-    def fetch_data(self, connection):
+    def fetch_data(self, connection, bulletin_dates):
         query = text("""SELECT 
 	bca.bulletin_date,
 	bca.collected_date,
