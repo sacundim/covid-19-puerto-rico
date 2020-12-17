@@ -669,9 +669,9 @@ class HospitalizationsCovid19Tracking(AbstractChart):
                                 day=n % 100)
 
         logging.info("Fetching hospitalizations data from: %s", self.API_URL)
-        raw = pd.read_csv(self.API_URL)
-        df = raw[['date', 'hospitalizedCurrently', 'inIcuCurrently', 'onVentilatorCurrently']]
+        df = pd.read_csv(self.API_URL)
         df['date'] = df['date'].apply(parse_date)
+        df = df[['date', 'hospitalizedCurrently', 'inIcuCurrently', 'onVentilatorCurrently']]
         df = df.rename(columns={
             'hospitalizedCurrently': 'Hospitalizados',
             'inIcuCurrently': 'Cuidado intensivo',
