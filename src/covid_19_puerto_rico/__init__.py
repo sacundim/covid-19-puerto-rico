@@ -3,8 +3,8 @@ import argparse
 import datetime
 import logging
 import sqlalchemy
-from sqlalchemy.sql import select
-from sqlalchemy.sql.functions import max
+import sqlalchemy.sql as sql
+import sqlalchemy.sql.functions as sqlfn
 
 from . import charts
 from . import molecular
@@ -74,8 +74,10 @@ def main():
         site = website.Website(args)
         targets.append(site)
 
+    start_date = max([args.earliest_date,
+                      bulletin_date - datetime.timedelta(days=31)])
     date_range = list(
-        util.make_date_range(args.earliest_date, bulletin_date)
+        util.make_date_range(start_date, bulletin_date)
     )
 
     for target in targets:
@@ -109,6 +111,6 @@ def query_for_bulletin_date(engine):
     metadata = sqlalchemy.MetaData(engine)
     with engine.connect() as connection:
         table = sqlalchemy.Table('bitemporal', metadata, autoload=True)
-        query = select([max(table.c.bulletin_date)])
+        query = sql.select([sqlfn.max(table.c.bulletin_date)])
         result = connection.execute(query)
         return result.fetchone()[0]
