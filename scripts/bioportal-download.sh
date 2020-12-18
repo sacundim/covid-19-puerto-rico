@@ -32,13 +32,13 @@ ORDERS_PARQUET="${BIOPORTAL_SYNC_DIR}/orders-basic/parquet_v1/${orders_basename}
 
 
 echo "$(date): Fetching from tests endpoint..."
-time wget -O - "${TESTS_ENDPOINT}" \
+time wget --compress=gzip -O - "${TESTS_ENDPOINT}" \
   | bzip2 -9 \
   > "${TESTS_JSON_TMP}"
 echo "$(date): Downloaded to ${TESTS_JSON_TMP}"
 
 echo "$(date): Fetching from orders/basic endpoint..."
-time wget -O - "${ORDERS_ENDPOINT}" \
+time wget --compress=gzip -O - "${ORDERS_ENDPOINT}" \
   | bzip2 -9 \
   > "${ORDERS_JSON_TMP}"
 echo "$(date): Downloaded to ${ORDERS_JSON_TMP}"
