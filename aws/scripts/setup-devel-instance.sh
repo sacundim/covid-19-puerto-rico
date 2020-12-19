@@ -3,7 +3,7 @@
 # Install devel stuff on a fresh EC2 instance
 #
 
-sudo yum install -y python3 git
+sudo yum install -y python3 git jq
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 source $HOME/.poetry/env
 git clone https://github.com/sacundim/covid-19-puerto-rico
