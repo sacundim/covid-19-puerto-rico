@@ -30,7 +30,7 @@ do
     > ../parquet_v1/"${file%.csv.bz2}".parquet
 done
 
-cd "${TESTS_DIR}/csv_v2"
+cd ../csv_v2
 for file in minimal-info-unique-tests_*.csv.bz2
 do
   echo "$(date): converting ${file}..."
