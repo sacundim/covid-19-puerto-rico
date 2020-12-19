@@ -51,7 +51,7 @@ CREATE EXTERNAL TABLE covid_pr_sources.orders_basic_parquet_v1 (
 ) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/bioportal/orders-basic/parquet_v1/';
 
-CREATE EXTERNAL TABLE covid_pr_sources.tests_csv_v1 (
+CREATE EXTERNAL TABLE covid_pr_sources.tests_parquet_v1 (
     downloadedAt STRING,
     collectedDate STRING,
     reportedDate STRING,
@@ -60,27 +60,8 @@ CREATE EXTERNAL TABLE covid_pr_sources.tests_csv_v1 (
     result STRING,
     patientCity STRING,
     createdAt STRING
-) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-LOCATION 's3://covid-19-puerto-rico-data/bioportal/tests/csv_v1/'
-TBLPROPERTIES (
-    "skip.header.line.count"="1"
-);
-
-CREATE EXTERNAL TABLE covid_pr_sources.tests_csv_v2 (
-    downloadedAt STRING,
-    patientId STRING,
-    collectedDate STRING,
-    reportedDate STRING,
-    ageRange STRING,
-    testType STRING,
-    result STRING,
-    patientCity STRING,
-    createdAt STRING
-) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-LOCATION 's3://covid-19-puerto-rico-data/bioportal/tests/csv_v2/'
-TBLPROPERTIES (
-    "skip.header.line.count"="1"
-);
+) STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/bioportal/tests/parquet_v1/';
 
 CREATE EXTERNAL TABLE covid_pr_sources.cases_csv_v1 (
     downloadedAt STRING,
