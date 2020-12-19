@@ -69,9 +69,6 @@ echo "$(date): File sizes:"
 du -h "${TESTS_JSON_TMP}" "${ORDERS_JSON_TMP}" \
   "${TESTS_PARQUET_TMP}" "${ORDERS_PARQUET_TMP}"
 
-# REMOVE ME BEFORE CHECK-IN
-exit 0
-
 echo "$(date): Moving files to the sync directory"
 mv "${TESTS_JSON_TMP}" "${TESTS_JSON}"
 mv "${TESTS_PARQUET_TMP}" "${TESTS_PARQUET}"
