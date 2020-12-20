@@ -23,7 +23,7 @@ do
   echo "$(date): converting ${file}..."
   bzcat "${file}" \
     | time csv2parquet \
-        --exclude patientId \
+        --exclude patientid \
         --codec gzip \
         --row-group-size 10000000 \
         --output /dev/stdout \
@@ -37,7 +37,7 @@ do
   echo "$(date): converting ${file}..."
   bzcat "${file}" \
     | time csv2parquet \
-        --exclude patientId \
+        --exclude patientid \
         --codec gzip \
         --row-group-size 10000000 \
         --output /dev/stdout \
