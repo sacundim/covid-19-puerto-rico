@@ -18,8 +18,9 @@ mkdir -p "${TESTS_DIR}"/parquet_v3
 for file in "${TESTS_DIR}"/json_v3/minimal-info-unique-tests_*.json.bz2
 do
   echo "$(date): converting ${file}..."
-  name="$(basename file)"
+  name="$(basename "${file}")"
   ts="$(echo -n "${name}" |sed -e 's/^minimal-info-unique-tests_\(.*\)\.json\.bz2$/\1/')"
+  out="${TESTS_DIR}"/parquet_v3/"${name%.json.bz2}.parquet"
   "${HERE}"/../bioportal-tests-to-csv.sh "${ts}" "${file}" \
     | time csv2parquet \
         --exclude patientid \
@@ -27,6 +28,7 @@ do
         --row-group-size 10000000 \
         --output /dev/stdout \
         /dev/stdin \
-    > "${TESTS_DIR}"/parquet_v3/"${name%.json.bz2}".parquet
+    > "${out}"
+  echo "$(date): Wrote ${out}"
 done
 
