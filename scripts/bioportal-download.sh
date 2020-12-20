@@ -29,14 +29,14 @@ ORDERS_JSON="${BIOPORTAL_SYNC_DIR}/orders-basic/json_v1/${orders_basename}.json.
 ORDERS_PARQUET="${BIOPORTAL_SYNC_DIR}/orders-basic/parquet_v1/${orders_basename}.parquet"
 
 
-echo "$(date): Fetching from tests endpoint..."
+echo "$(date): Fetching from endpoint: ${TESTS_ENDPOINT}"
 time wget --header="Accept-Encoding: gzip" -O - "${TESTS_ENDPOINT}" \
   | gunzip \
   | bzip2 -9 \
   > "${TESTS_JSON_TMP}"
 echo "$(date): Downloaded to ${TESTS_JSON_TMP}"
 
-echo "$(date): Fetching from orders/basic endpoint..."
+echo "$(date): Fetching from endpoint: ${ORDERS_ENDPOINT}"
 time wget --header="Accept-Encoding: gzip"  -O - "${ORDERS_ENDPOINT}" \
   | gunzip \
   | bzip2 -9 \
