@@ -19,8 +19,8 @@ for file in "${TESTS_DIR}"/json_v3/minimal-info-unique-tests_*.json.bz2
 do
   echo "$(date): converting ${file}..."
   name="$(basename file)"
-  ts="$(echo "${name}" |sed -e 's/^minimal-info-unique-tests_\(.*\)\.json\.bz2$/\1/')"
-  "${HERE}"/../bioportal-tests-to-csv.sh "${file}" "${ts}"\
+  ts="$(echo -n "${name}" |sed -e 's/^minimal-info-unique-tests_\(.*\)\.json\.bz2$/\1/')"
+  "${HERE}"/../bioportal-tests-to-csv.sh "${ts}" "${file}" \
     | time csv2parquet \
         --exclude patientid \
         --codec gzip \
