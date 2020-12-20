@@ -3,7 +3,9 @@
 # Install devel stuff on a fresh EC2 instance
 #
 
-sudo yum install -y python3 git jq
+sudo yum install -y gcc python3 git jq
+# AWS Linux installs a hella old version of pip
+sudo python3 -m pip install --upgrade pip
 
 python3 -m pip install --user pipx
 python3 -m pipx ensurepath
