@@ -30,13 +30,15 @@ ORDERS_PARQUET="${BIOPORTAL_SYNC_DIR}/orders-basic/parquet_v1/${orders_basename}
 
 
 echo "$(date): Fetching from tests endpoint..."
-time wget --compress=gzip -O - "${TESTS_ENDPOINT}" \
+time wget --header="Accept-Encoding: gzip" -O - "${TESTS_ENDPOINT}" \
+  | gunzip \
   | bzip2 -9 \
   > "${TESTS_JSON_TMP}"
 echo "$(date): Downloaded to ${TESTS_JSON_TMP}"
 
 echo "$(date): Fetching from orders/basic endpoint..."
-time wget --compress=gzip -O - "${ORDERS_ENDPOINT}" \
+time wget --header="Accept-Encoding: gzip"  -O - "${ORDERS_ENDPOINT}" \
+  | gunzip \
   | bzip2 -9 \
   > "${ORDERS_JSON_TMP}"
 echo "$(date): Downloaded to ${ORDERS_JSON_TMP}"
@@ -64,6 +66,8 @@ time "${HERE}"/bioportal-basic-to-csv.sh "${timestamp}" "${ORDERS_JSON_TMP}" \
   > "${ORDERS_PARQUET_TMP}"
 echo "$(date): Wrote output to ${ORDERS_PARQUET_TMP}"
 
+#REMOVE ME
+exit 0
 
 echo "$(date): File sizes:"
 du -h "${TESTS_JSON_TMP}" "${ORDERS_JSON_TMP}" \
