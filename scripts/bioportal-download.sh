@@ -23,8 +23,8 @@ ORDERS_PARQUET_TMP="${TMP}/${orders_basename}.parquet"
 
 S3_SYNC_DIR="${REPO_ROOT}/s3-bucket-sync/covid-19-puerto-rico-data"
 BIOPORTAL_SYNC_DIR="${S3_SYNC_DIR}/bioportal"
-TESTS_JSON="${BIOPORTAL_SYNC_DIR}/tests/json_v2/${tests_basename}.json.bz2"
-TESTS_PARQUET="${BIOPORTAL_SYNC_DIR}/tests/parquet_v1/${tests_basename}.parquet"
+TESTS_JSON="${BIOPORTAL_SYNC_DIR}/minimal-info-unique-tests/json_v3/${tests_basename}.json.bz2"
+TESTS_PARQUET="${BIOPORTAL_SYNC_DIR}/minimal-info-unique-tests/parquet_v3/${tests_basename}.parquet"
 ORDERS_JSON="${BIOPORTAL_SYNC_DIR}/orders-basic/json_v1/${orders_basename}.json.bz2"
 ORDERS_PARQUET="${BIOPORTAL_SYNC_DIR}/orders-basic/parquet_v1/${orders_basename}.parquet"
 
@@ -65,9 +65,6 @@ time "${HERE}"/bioportal-basic-to-csv.sh "${timestamp}" "${ORDERS_JSON_TMP}" \
       /dev/stdin \
   > "${ORDERS_PARQUET_TMP}"
 echo "$(date): Wrote output to ${ORDERS_PARQUET_TMP}"
-
-#REMOVE ME
-exit 0
 
 echo "$(date): File sizes:"
 du -h "${TESTS_JSON_TMP}" "${ORDERS_JSON_TMP}" \
