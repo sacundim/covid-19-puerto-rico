@@ -18,5 +18,5 @@ source $HOME/.poetry/env
 
 git clone https://github.com/sacundim/covid-19-puerto-rico
 cd covid-19-puerto-rico
-mkdir -p output s3-bucket-sync/covid-19-puerto-rico-data
+mkdir -p tmp output s3-bucket-sync/covid-19-puerto-rico-data
 poetry install
