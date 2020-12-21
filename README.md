@@ -44,7 +44,10 @@ en el subdirectorio [`assets/data/`](assets/data/), que incluyen:
 Los datos de pruebas vienen de un conjunto de descargas diarias que realizo
 del Bioportal del Departamento de Salud de Puerto Rico.  Todas estas descargas
 no se comparten aquí pero las guardo en la nube de Amazon (AWS S3) y podrían 
-compartirse con quien tenga un interés serio.
+compartirse con quien tenga un interés serio.  También todo el código chapucero
+que uso para descargar esos datos y analizarlos está en este repositorio, así 
+que quien tenga el conocimiento técnico y se pueda tapar un poco la nariz podría
+servirse.
 
 
 ## Esquema bitemporal
