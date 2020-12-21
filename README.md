@@ -11,11 +11,16 @@ Visita el dashboard en:
 
 ## Datos de fuente y archivos CSV
 
-Los datos provienen principalmente de los [informes de Casos Positivos COVID-19](http://www.salud.gov.pr/Estadisticas-Registros-y-Publicaciones/Pages/COVID-19.aspx)
-del Departamento de Salud de Puerto Rico, en algunos casos suplementados 
-por fuentes misceláneas como reportes de prensa o informes y gráficas
-de Salud que no aparecen (al momento) en ese enlace pero que se han
-compartido con periodistas.
+Los datos provienen principalmente de:
+ 
+1. Los [informes de Casos Positivos COVID-19](http://www.salud.gov.pr/Estadisticas-Registros-y-Publicaciones/Pages/COVID-19.aspx)
+   del Departamento de Salud de Puerto Rico;
+2. Descargas diarias del [API del Bioportal del Departamento de Salud de Puerto Rico](Bioportal.md);
+3. El [COVID Tracking Project](https://covidtracking.com/) (datos de hospitalizaciones),
+   que a su vez los obtiene del Departamento de Salud de Puerto Rico;
+4. Fuentes misceláneas como reportes de prensa o informes y gráficas del Departamento de 
+   Salud de Puerto Rico que no aparecen en esos enlaces pero que se han compartido con 
+   periodistas.
 
 En el directorio [`assets/source_material/`](assets/source_material/)
 se recopilan imágenes de boletines y gráficas, según este esquema:
@@ -35,9 +40,11 @@ en el subdirectorio [`assets/data/`](assets/data/), que incluyen:
   que consiste de datos de gráficas que acompañan estos boletines
   y que atribuyen las muertes a la fecha en que en verdad sucedieron
   y los casos positivos a la fecha que se tomó la muestra.
-* [`PuertoRico-bioportal.csv`](assets/data/cases/PuertoRico-bioportal.csv),
-  que consiste de datos del informe sobre pruebas entradas al bioportal
-  (que al momento no están en PDF).
+
+Los datos de pruebas vienen de un conjunto de descargas diarias que realizo
+del Bioportal del Departamento de Salud de Puerto Rico.  Todas estas descargas
+no se comparten aquí pero las guardo en la nube de Amazon (AWS S3) y podrían 
+compartirse con quien tenga un interés serio.
 
 
 ## Esquema bitemporal
@@ -78,56 +85,11 @@ De nuevo, esta recopilación de datos intenta facilitar tales
 observaciones.
 
 
-## Base de datos PostgreSQL
+## Información técnica
 
-Se incluye una configuración de Docker para lanzar una base de 
-datos PostgreSQL con los datos extraídos de los boletines, y 
-ciertos "views" para consultarlos más fácil y analizarlos.  Para
-lanzarlo hay que tener Docker Compose y ejecutar desde este 
-directorio:
-
-    docker-compose up
-
-La base de datos aparece en `localhost:5432`, usuario `postgres`,
-contraseña `password`.
-
-Para destruir la base de datos:
-
-    docker-compose down -v
-
-Importante usar la opción `-v` aquí porque si no, Docker no destruye el volumen
-de datos que corresponde a la base de datos, que ocupa varios gigaoctetos.  De
-olvidársele esto se pueden borrar *con mucho cuidado* con `docker volume rm`
-o **con mayor cuidado aún** con `docker volume prune`.
-
-Para entender las vistas que se ofrecen de los datos, se puede
-consultar el código que define el esquema o los metadatos de
-este en la base de datos.  El código está aquí:
-
-* [`postgres/010-schema.sql`](postgres/010-schema.sql)
-
-
-## Análisis y gráficas
-
-Hay además aquí código Python para generar una página web con una
-serie de análisis y gráficas.  La forma más sencilla de lanzarlo 
-requiere Docker y Docker Compose. Desde este directorio:
-
-1. `docker-compose up` (inicia base de datos y servidor HTTP local;
-    **ADVERTENCIA:** descarga como 300 MiB);
-2. `./scripts/build-docker-image.sh` (**ADVERTENCIA:** Descarga más 
-   de 1 gigabyte de datos);
-3. `./scripts/run-in-docker.sh`;
-   
-...y navegar a [`http://localhost:8078/`](http://localhost:8078/):
-
-* Casos cumulativos por fecha anuncio y fecha evento;
-* Tiempo de duplicación de casos por ventanas de 7,
-  14 y 21 días (por fecha de evento);
-* Cambios de boletín a boletín ("deltas") para misma 
-  fecha de evento;
-* Estimado de rezago promedio en reporte de casos 
-  (comparando boletines consecutivos).
+Si se diera el triste caso que a este autor se lo llevaran arrestado
+o lo atropellara un tren, o que alguín loquitx quisiera reproducir estas 
+páginas, [hay instrucciones bien malas aquí](INSTRUCCIONES.md).
 
 
 ## Agradecimientos

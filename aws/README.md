@@ -13,12 +13,17 @@ textual description of the setup.
    should be set up to maximize protection of data, e.g., set up 
    data versioning so that if we delete stuff by mistake we can 
    get it back. (That's why it's a separate bucket too.)
-3. `covid-19-puerto-rico-athena`: The S3 location for Athena to
-   dump its result sets and CTAS tables to. This can/should be 
-   set to automatically expire content relatively often.
+3. `covid-19-puerto-rico-athena`: A bucket for Athena to dump its 
+    result sets and CTAS tables to.  Athena should be configured 
+    to use this bucket (using its "workgroups" feature).  To save
+    on costs, the bucket itself can/should be set to automatically 
+    expire content relatively often.
 
 
 ## Glue Catalog databases
+
+The [Athena SQL scripts](athena/) take care of creating and recreating these
+two Glue Catalog databases:
 
 * `covid_pr_sources`: Tables that serve as thin wrappers around the
   external source data files we archive in `s3://covid-19-puerto-rico-data/`.
@@ -28,4 +33,4 @@ textual description of the setup.
 ## Lambda (TODO)
 
 Write a Lambda function to do the daily Bioportal downloads and the
-CSV conversion.
+Parquet conversion.

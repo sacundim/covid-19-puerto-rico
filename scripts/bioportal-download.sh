@@ -28,6 +28,7 @@ TESTS_PARQUET="${BIOPORTAL_SYNC_DIR}/minimal-info-unique-tests/parquet_v3/${test
 ORDERS_JSON="${BIOPORTAL_SYNC_DIR}/orders-basic/json_v1/${orders_basename}.json.bz2"
 ORDERS_PARQUET="${BIOPORTAL_SYNC_DIR}/orders-basic/parquet_v1/${orders_basename}.parquet"
 
+mkdir -p "${TMP}"
 
 echo "$(date): Fetching from endpoint: ${TESTS_ENDPOINT}"
 time wget --header="Accept-Encoding: gzip" -O - "${TESTS_ENDPOINT}" \
@@ -71,6 +72,11 @@ du -h "${TESTS_JSON_TMP}" "${ORDERS_JSON_TMP}" \
   "${TESTS_PARQUET_TMP}" "${ORDERS_PARQUET_TMP}"
 
 echo "$(date): Moving files to the sync directory"
+mkdir -p \
+  "$(dirname "${TESTS_JSON}")" \
+  "$(dirname "${TESTS_PARQUET}")" \
+  "$(dirname "${ORDERS_JSON}")" \
+  "$(dirname "${ORDERS_PARQUET}")"
 mv "${TESTS_JSON_TMP}" "${TESTS_JSON}"
 mv "${TESTS_PARQUET_TMP}" "${TESTS_PARQUET}"
 mv "${ORDERS_JSON_TMP}" "${ORDERS_JSON}"
