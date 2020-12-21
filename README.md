@@ -88,7 +88,7 @@ observaciones.
 ## Información técnica
 
 Si se diera el triste caso que a este autor se lo llevaran arrestado
-o lo atropellara un tren, o que alguín loquitx quisiera reproducir estas 
+o lo atropellara un tren, o que algún loquitx quisiera reproducir estas 
 páginas, [hay instrucciones bien malas aquí](INSTRUCCIONES.md).
 
 
