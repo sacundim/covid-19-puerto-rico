@@ -10,7 +10,9 @@ arrestado por informar demasiado bien al público.
 Esto solo aplica a quien quiera correr el software para generar la página,
 no a quien solo le interese visitar la que genero yo:
 
-1. Python 3.7 o posterior
+1. Python 3.7 o posterior. Preferiblemente 3.7; se pueden manejar
+   múltiples versiones a la vez con la herramienta [pyenv](https://github.com/pyenv/pyenv),
+   on en una Mac con [Homebrew](https://brew.sh/) (`brew install python@3.7`).
 2. [Poetry](https://python-poetry.org/) (manejador de dependencias Python)
 3. Docker y Docker Compose
 4. Entorno Unix con `bash`
@@ -20,6 +22,22 @@ no a quien solo le interese visitar la que genero yo:
 
 No todos los componentes de este proyecto requiren todas estas dependencias.
 
+Una vez se tiene la versión adecuada de Python y la herramienta Poetry, hay que
+crear un "virtualenv" (entorno aislado) con las demás dependencias de este software.
+Entrar a este directorio y correr:
+
+```python
+# Modificar para apuntar al comando de python. Recomiendo 3.7
+# porque cuando intenté 3.9 habían menos paquetes precompilados
+# y era un pugilato lento.
+poetry env use /path/to/python3.7  
+
+# Instalar dependencias
+poetry install
+
+# Lanzar un "shell" con el virtualenv de python
+poetry shell
+```
 
 ## Bases de datos
 
@@ -80,8 +98,8 @@ Reproducir este "data lake" requeriría:
 Los "shell scripts" requieren:
 
 * Instalación de las herramientas `poetry`, `wget` y `jq`;
-* Correr un `poetry install` desde este directorio, que instala una herramienta
-  llamada `csv2parquet`;
+* Correr un `poetry install` desde este directorio, que instala (entre muchas otras 
+  cosas) una herramienta llamada `csv2parquet`;
 * Activación del `virtualenv` Python que define este proyecto; este se puede
   activar corriendo el comando `poetry shell` en este directorio.
 
