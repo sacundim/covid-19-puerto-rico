@@ -41,7 +41,7 @@
         <li><a href="#MolecularCurrentDeltas_section">Pruebas añadidas a Bioportal</a></li>
         <li><a href="#MolecularDailyDeltas_section">Historial de pruebas en Bioportal</a></li>
         <li><a href="#MolecularLatenessTiers_section">Rezagos de resultados de pruebas moleculares</a></li>
-        <li><a href="#PublicHealthTrustLevels_section">Indicadores propuestos del Fideicomiso de Salud Pública</a></li>
+        <li><a href="#WeekdayBias_section">Tendencias por día de semana</a></li>
         <li><a href="#AgeGroups_section">Casos por edad (per cápita, 7 días)</a></li>
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
         <li><a href="#Municipal_section">Historial de casos por municipio (fecha de boletín)</a></li>
@@ -674,67 +674,6 @@
             se han visto fuertemente cambiados en varias ocasiones, más recientemente por la
             <a href="#Revisions_2020-11-14">revisión del 14 de noviembre del 2020</a>.</li>
     </ul>
-</div>
-
-
-<div class="section" id="PublicHealthTrustLevels_section">
-    <h1>Indicadores propuestos del Fideicomiso de Salud Pública</h1>
-
-    <div id="PublicHealthTrustLevels" class="chart"></div>
-    <script type="text/javascript" class="chart">
-      embedChart('PublicHealthTrustLevels', bulletin_date);
-    </script>
-
-    <figure>
-        <img class="figure_chart" src="../source_material/PRPHealthTrust/PRPHT_niveles_2020-09-13.jpg">
-        <figcaption>Fuente: Fideicomiso de Salud Pública de Puerto Rico</figcaption>
-    </figure>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Mi mejor interpretación de cómo se está respecto a la tabla de indicadores de nivel
-        de alerta que el Fideicomiso de Salud Pública de Puerto Rico propuso cerca del 13
-        de septiembre del 2020.</p>
-
-    <p>La propuesta (de la que solo he visto una diapositiva de una presentación) no define
-        con toda claridad los indicadores, ni indica cómo manejar el difícil tema del rezago
-        de datos.  Así que me he visto obligado a imponer ciertos supuestos y cálculos alternos:</p>
-
-    <dl>
-        <dt>Excluyo los 7 días (de muestras) más recientes</dt>
-        <dd>Uso datos por fecha  de toma de muestra, pero excluyo de la gráfica las 7 fechas más
-            recientes para reducir el efecto de datos incompletos.  Este procedimiento es semejante,
-            por ejemplo, al que usa el <a href="https://covid19.ca.gov/es/safer-economy/">"Plan para
-                una economía más segura"</a> del estado de California para monitorear los datos de
-            los condados y ordenar cierres cuando exceden ciertos umbrales, con una diferencia:
-            California etiqueta con la fecha 7 días después de los datos (e.g., el cálculo con datos
-            de 11/sep a 17/sep lo etiquetarían 24/sep), y yo etiqueto con las fechas de los datos
-            mismos. <strong>Aún así es de preocuparse que con el retraso de datos que impera en Puerto
-                Rico se amerite excluir más de 7 días.</strong></dd>
-
-        <dt>Tasa de casos positivos en 14 días (× 100,000 personas)</dt>
-        <dd>No dice si son solo casos confirmados o suma de confirmados y probables.  He optado
-            por solo casos confirmados.  Usan el término "casos activos" también aquí sin explicar;
-            interpreto que quieren decir que usan una suma rodante de 14 días consecutivos como
-            estimado crudo de los casos activos.</dd>
-
-        <dt>% de Positividad</dt>
-        <dd>La tabla no indica qué numerador y denominador se usa ni la ventana de fechas.
-            Por eso he optado por dar <strong>dos</strong> cálculos distintos de positividad:
-            (1) casos confirmados sobre total de pruebas PCR; y (2) pruebas PCR positivas sobre
-            total de pruebas PCR. Como para la tasa de casos positivos proponen ventanas de 14
-            días, hago lo mismo en el cálculo de la positividad.</dd>
-    </dl>
-
-    <h3>Advertencia</h3>
-
-    <p>El Fideicomiso de Salud Pública a esta fecha (12 de octubre del 2020) no ha sabido
-        explicar bien sus indicadores propuestos.  Pero no obstante esto, personajes de este y
-        de otras organizaciones se pronuncian con cierta frecuencia sobre por dónde anda el nivel
-        corriente, y sus aseveraciones rutinariamente no cuadran con la tabla de niveles que ha
-        compartido el Fideicomiso y reproduzco arriba.  Mi gráfica la proveo no como endoso de los
-        indicadores propuestos, más bien como herramienta para fiscalizar lo que entiendo ha sido
-        un abuso de este concepto.</p>
 </div>
 
 
