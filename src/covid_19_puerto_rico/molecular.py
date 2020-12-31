@@ -47,15 +47,19 @@ class NewCases(AbstractMolecularChart):
             groupby=['variable', 'bulletin_date'],
             sort=[{'field': 'datum_date'}],
             frame=[-6, 0],
-            mean_7day='mean(value)'
+            mean_7day='mean(value)',
+            sum_7day = 'sum(value)'
         ).transform_window(
             groupby=['variable', 'bulletin_date'],
             sort=[{'field': 'datum_date'}],
             frame=[-13, 0],
+            mean_14day = 'mean(value)',
             sum_14day='sum(value)'
         ).transform_calculate(
             mean_7day_100k=alt.datum.mean_7day / self.POPULATION_100K,
-            sum_14day_100k=alt.datum.sum_14day / self.POPULATION_100K,
+            sum_7day_100k=alt.datum.sum_7day / self.POPULATION_100K,
+            mean_14day_100k=alt.datum.mean_14day / self.POPULATION_100K,
+            sum_14day_100k=alt.datum.sum_14day / self.POPULATION_100K
         ).transform_filter(
             alt.datum.mean_7day > 0.0
         ).mark_line().encode(
@@ -63,12 +67,16 @@ class NewCases(AbstractMolecularChart):
                     axis=alt.Axis(format='%d/%m')),
             y = alt.Y('mean_7day:Q', title='Nuevos (promedio 7 días)',
                       scale=alt.Scale(type='log')),
-                tooltip = [
+            tooltip = [
                 alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
                 alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                 alt.Tooltip('variable:N', title='Variable'),
                 alt.Tooltip('sum_14day:Q', format=',d', title='Suma 14 días'),
                 alt.Tooltip('sum_14day_100k:Q', format=',.1f', title='Suma 14 días (/100k)'),
+                alt.Tooltip('mean_14day:Q', format=',.1f', title='Promedio 14 días'),
+                alt.Tooltip('mean_14day_100k:Q', format=',.1f', title='Promedio 14 días (/100k)'),
+                alt.Tooltip('sum_7day:Q', format=',d', title='Suma 7 días'),
+                alt.Tooltip('sum_7day_100k:Q', format=',.1f', title='Suma 7 días (/100k)'),
                 alt.Tooltip('mean_7day:Q', format=',.1f', title='Promedio 7 días'),
                 alt.Tooltip('mean_7day_100k:Q', format=',.1f', title='Promedio 7 días (/100k)')],
             color=alt.Color('variable:N', title=None,
