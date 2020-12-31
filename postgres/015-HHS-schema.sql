@@ -1,4 +1,19 @@
 --
+-- The HHS data set puts -999999 in a lot of columns
+-- where the rows in question have values below a certain
+-- threshold.
+CREATE FUNCTION null_nines(x INTEGER)
+RETURNS INTEGER AS $$
+    SELECT nullif(x, -999999);
+$$ LANGUAGE SQL;
+
+CREATE FUNCTION null_nines(x DOUBLE PRECISION)
+RETURNS DOUBLE PRECISION AS $$
+    SELECT nullif(x, -999999.0);
+$$ LANGUAGE SQL;
+
+
+--
 -- Data dictionary here:
 --
 -- * https://healthdata.gov/covid-19-reported-patient-impact-and-hospital-capacity-facility-data-dictionary
