@@ -31,14 +31,20 @@ ORDERS_PARQUET="${BIOPORTAL_SYNC_DIR}/orders-basic/parquet_v1/${orders_basename}
 mkdir -p "${TMP}"
 
 echo "$(date): Fetching from endpoint: ${TESTS_ENDPOINT}"
-time wget --header="Accept-Encoding: gzip" -O - "${TESTS_ENDPOINT}" \
+time wget \
+    --no-verbose \
+    --header="Accept-Encoding: gzip" \
+    -O - "${TESTS_ENDPOINT}" \
   | gunzip \
   | bzip2 -9 \
   > "${TESTS_JSON_TMP}"
 echo "$(date): Downloaded to ${TESTS_JSON_TMP}"
 
 echo "$(date): Fetching from endpoint: ${ORDERS_ENDPOINT}"
-time wget --header="Accept-Encoding: gzip"  -O - "${ORDERS_ENDPOINT}" \
+time wget \
+    --no-verbose \
+    --header="Accept-Encoding: gzip" \
+    -O - "${ORDERS_ENDPOINT}" \
   | gunzip \
   | bzip2 -9 \
   > "${ORDERS_JSON_TMP}"
