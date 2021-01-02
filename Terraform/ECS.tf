@@ -20,20 +20,20 @@ resource "aws_ecs_task_definition" "bioportal_download_and_sync" {
   task_role_arn = aws_iam_role.ecs_task_role.arn
   execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
   cpu = 1024
-  memory = 4096
+  memory = 8192
   network_mode = "awsvpc"
   container_definitions = jsonencode([
     {
       name = "bioportal-downloader",
       image = "${data.aws_ecr_image.scripts.registry_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${data.aws_ecr_image.scripts.repository_name}:${data.aws_ecr_image.scripts.image_tag}"
       cpu = 1024,
-      memoryReservation = 4096,
+      memoryReservation = 8192,
       essential = true,
       command = ["bioportal-download-and-sync.sh"],
       environment = [
         {
           name = "S3_DATA_URL",
-          value = "s3://covid-19-puerto-rico-data"
+          value = "s3://covid-19-puerto-rico-data/testing"
         }
       ],
       logConfiguration = {
