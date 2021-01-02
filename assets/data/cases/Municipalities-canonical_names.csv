@@ -1,85 +1,85 @@
-name,popest2019
-Adjuntas,17363
-Aguada,36694
-Aguadilla,50265
-Aguas Buenas,24814
-Aibonito,22108
-Añasco,26161
-Arecibo,81966
-Arroyo,17238
-Barceloneta,23727
-Barranquitas,27725
-Bayamón,169269
-Cabo Rojo,47515
-Caguas,124606
-Camuy,30504
-Canóvanas,44674
-Carolina,146984
-Cataño,23121
-Cayey,42409
-Ceiba,10904
-Ciales,15808
-Cidra,38307
-Coamo,38336
-Comerío,18648
-Corozal,32293
-Culebra,1714
-Dorado,36141
-Fajardo,29454
-Florida,11317
-Florida (estado),
-Guánica,15383
-Guayama,39465
-Guayanilla,17623
-Guaynabo,83728
-Gurabo,47093
-Hatillo,39218
-Hormigueros,15518
-Humacao,50653
-Isabela,40423
-Jayuya,13891
-Juana Díaz,44679
-Juncos,38155
-Lajas,22010
-Lares,24276
-Las Marías,7927
-Las Piedras,37007
-Loíza,24553
-Luquillo,17665
-Manatí,37287
-Maricao,5430
-Maunabo,10321
-Mayagüez,71530
-Moca,34891
-Morovis,30335
-Naguabo,25761
-Naranjito,27349
-Nueva Jersey,
-Nueva York,
-Orocovis,20220
-Patillas,16211
-Peñuelas,19249
-Ponce,131881
-Quebradillas,22918
-Rincón,13656
-Río Grande,48025
-Sabana Grande,21712
-Salinas,27128
-San Germán,30227
-San Juan,318441
-San Lorenzo,35989
-San Sebastián,35528
-Santa Isabel,21209
-Toa Alta,72025
-Toa Baja,74271
-Trujillo Alto,63674
-Utuado,27395
-Vega Alta,36061
-Vega Baja,50023
-Vieques,8386
-Villalba,21372
-Yabucoa,32282
-Yauco,33575
-Otro lugar fuera de PR,
-No disponible,
-Total,3193694
+name,popest2019,fips_code,region
+Adjuntas,17363,72001,Ponce
+Aguada,36694,72003,Mayagüez
+Aguadilla,50265,72005,Mayagüez
+Aguas Buenas,24814,72007,Caguas
+Aibonito,22108,72009,Caguas
+Añasco,26161,72011,Mayagüez
+Arecibo,81966,72013,Arecibo
+Arroyo,17238,72015,Ponce
+Barceloneta,23727,72017,Arecibo
+Barranquitas,27725,72019,Bayamón
+Bayamón,169269,72021,Bayamón
+Cabo Rojo,47515,72023,Mayagüez
+Caguas,124606,72025,Caguas
+Camuy,30504,72027,Arecibo
+Canóvanas,44674,72029,Metro
+Carolina,146984,72031,Metro
+Cataño,23121,72033,Bayamón
+Cayey,42409,72035,Caguas
+Ceiba,10904,72037,Fajardo
+Ciales,15808,72039,Arecibo
+Cidra,38307,72041,Caguas
+Coamo,38336,72043,Ponce
+Comerío,18648,72045,Bayamón
+Corozal,32293,72047,Bayamón
+Culebra,1714,72049,Fajardo
+Dorado,36141,72051,Bayamón
+Fajardo,29454,72053,Fajardo
+Florida,11317,72054,Arecibo
+Florida (estado),,,
+Guánica,15383,72055,Ponce
+Guayama,39465,72057,Ponce
+Guayanilla,17623,72059,Ponce
+Guaynabo,83728,72061,Metro
+Gurabo,47093,72063,Caguas
+Hatillo,39218,72065,Arecibo
+Hormigueros,15518,72067,Mayagüez
+Humacao,50653,72069,Caguas
+Isabela,40423,72071,Mayagüez
+Jayuya,13891,72073,Ponce
+Juana Díaz,44679,72075,Ponce
+Juncos,38155,72077,Caguas
+Lajas,22010,72079,Mayagüez
+Lares,24276,72081,Arecibo
+Las Marías,7927,72083,Mayagüez
+Las Piedras,37007,72085,Caguas
+Loíza,24553,72087,Metro
+Luquillo,17665,72089,Fajardo
+Manatí,37287,72091,Arecibo
+Maricao,5430,72093,Mayagüez
+Maunabo,10321,72095,Caguas
+Mayagüez,71530,72097,Mayagüez
+Moca,34891,72099,Mayagüez
+Morovis,30335,72101,Arecibo
+Naguabo,25761,72103,Caguas
+Naranjito,27349,72105,Bayamón
+Nueva Jersey,,,
+Nueva York,,,
+Orocovis,20220,72107,Bayamón
+Patillas,16211,72109,Ponce
+Peñuelas,19249,72111,Ponce
+Ponce,131881,72113,Ponce
+Quebradillas,22918,72115,Arecibo
+Rincón,13656,72117,Mayagüez
+Río Grande,48025,72119,Fajardo
+Sabana Grande,21712,72121,Mayagüez
+Salinas,27128,72123,Ponce
+San Germán,30227,72125,Mayagüez
+San Juan,318441,72127,Metro
+San Lorenzo,35989,72129,Caguas
+San Sebastián,35528,72131,Mayagüez
+Santa Isabel,21209,72133,Ponce
+Toa Alta,72025,72135,Bayamón
+Toa Baja,74271,72137,Bayamón
+Trujillo Alto,63674,72139,Metro
+Utuado,27395,72141,Arecibo
+Vega Alta,36061,72143,Bayamón
+Vega Baja,50023,72145,Arecibo
+Vieques,8386,72147,Fajardo
+Villalba,21372,72149,Ponce
+Yabucoa,32282,72151,Caguas
+Yauco,33575,72153,Ponce
+Otro lugar fuera de PR,,,
+No disponible,,,
+Total,3193694,,

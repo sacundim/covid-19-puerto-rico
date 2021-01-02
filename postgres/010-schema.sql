@@ -127,6 +127,8 @@ date of actual death).  First reported April 8.';
 CREATE TABLE canonical_municipal_names (
     name TEXT NOT NULL,
     popest2019 INTEGER,
+    fips_code VARCHAR(5),
+    region TEXT,
     PRIMARY KEY (name)
 );
 
