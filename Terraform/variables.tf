@@ -22,6 +22,12 @@ variable "athena_bucket_name" {
   default = "covid-19-puerto-rico-athena"
 }
 
+variable "testing_bucket_name" {
+  type = string
+  description = "The name of the bucket to create/use for testing stuff."
+  default = "covid-19-puerto-rico-testing"
+}
+
 variable "aws_region" {
   description = "The AWS region things are created in."
   default     = "us-west-2"

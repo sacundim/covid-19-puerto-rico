@@ -43,7 +43,9 @@ resource "aws_iam_policy" "data_bucket_rw" {
         ],
         Resource = [
           aws_s3_bucket.data_bucket.arn,
-          "${aws_s3_bucket.data_bucket.arn}/*"
+          "${aws_s3_bucket.data_bucket.arn}/*",
+          aws_s3_bucket.testing_bucket.arn,
+          "${aws_s3_bucket.testing_bucket.arn}/*"
         ]
       }
     ]
