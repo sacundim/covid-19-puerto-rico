@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "main_bucket" {
-  bucket = "covid-19-puerto-rico"
+  bucket = var.main_bucket_name
 
   tags = {
     Project = "covid-19-puerto-rico"
@@ -19,7 +19,7 @@ resource "aws_s3_bucket" "main_bucket" {
 }
 
 resource "aws_s3_bucket" "athena_bucket" {
-  bucket = "covid-19-puerto-rico-athena"
+  bucket = var.athena_bucket_name
 
   tags = {
     Project = "covid-19-puerto-rico"
@@ -42,7 +42,7 @@ resource "aws_s3_bucket" "athena_bucket" {
 }
 
 resource "aws_s3_bucket" "data_bucket" {
-  bucket = "covid-19-puerto-rico-data"
+  bucket = var.datalake_bucket_name
 
   tags = {
     Project = "covid-19-puerto-rico"

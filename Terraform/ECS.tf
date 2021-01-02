@@ -1,7 +1,7 @@
 resource "aws_ecs_cluster" "main" {
-  name = "covid-19-puerto-rico-ecs"
+  name = "${var.project_name}-ecs"
   tags = {
-    "Project" = "covid-19-puerto-rico"
+    "Project" = var.project_name
   }
   capacity_providers = ["FARGATE", "FARGATE_SPOT"]
   default_capacity_provider_strategy {
@@ -14,7 +14,7 @@ resource "aws_ecs_cluster" "main" {
 resource "aws_ecs_task_definition" "bioportal_download_and_sync" {
   family = "bioportal-download-and-sync"
   tags = {
-    Project = "covid-19-puerto-rico"
+    Project = var.project_name
   }
   requires_compatibilities = ["FARGATE"]
   task_role_arn = aws_iam_role.ecs_task_role.arn
@@ -83,10 +83,10 @@ resource "aws_cloudwatch_event_target" "bioportal_daily_download" {
 ##
 
 resource "aws_iam_role" "ecs_task_role" {
-  name = "covid-19-puerto-rico-ecs"
+  name = "${var.project_name}-ecs-task-role"
   description = "Allows ECS tasks to call AWS services on your behalf."
   tags = {
-    Project = "covid-19-puerto-rico"
+    Project = var.project_name
   }
 
   assume_role_policy = <<EOF
@@ -119,10 +119,10 @@ resource "aws_iam_role_policy_attachment" "ecs_task_role_s3_rw" {
 
 
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "ecsTaskExecutionRole"
+  name = "${var.project_name}-ecs-task-execution-role"
   path = "/"
   tags = {
-    Project = "covid-19-puerto-rico"
+    Project = var.project_name
   }
 
   assume_role_policy = <<EOF
@@ -150,11 +150,11 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_attach" {
 
 
 resource "aws_iam_role" "ecs_events_role" {
-  name = "ecsEventsRole"
+  name = "${var.project_name}-ecs-events-role"
   description = "Used by CloudWatch Events to launch scheduled tasks in our ECS cluster."
   path = "/"
   tags = {
-    Project = "covid-19-puerto-rico"
+    Project = var.project_name
   }
 
   assume_role_policy = <<EOF

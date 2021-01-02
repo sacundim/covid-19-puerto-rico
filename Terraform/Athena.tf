@@ -1,7 +1,7 @@
 resource "aws_athena_workgroup" "main" {
   name = "covid-19-puerto-rico"
   tags = {
-    Project = "covid-19-puerto-rico"
+    Project = var.project_name
   }
 
   configuration {

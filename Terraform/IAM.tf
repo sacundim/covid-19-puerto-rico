@@ -5,7 +5,7 @@
 ##
 
 resource "aws_iam_policy" "data_bucket_ro" {
-  name        = "covid-19-puerto-rico-data-reader"
+  name        = "${var.project_name}-data-reader"
   description = "Grant list/read access to the S3 data bucket."
 
   policy = jsonencode({
@@ -28,7 +28,7 @@ resource "aws_iam_policy" "data_bucket_ro" {
 
 
 resource "aws_iam_policy" "data_bucket_rw" {
-  name        = "covid-19-puerto-rico-data-writer"
+  name        = "${var.project_name}-data-writer"
   description = "Grant list/read access to the S3 data bucket."
 
   policy = jsonencode({
@@ -51,7 +51,7 @@ resource "aws_iam_policy" "data_bucket_rw" {
 }
 
 resource "aws_iam_policy" "athena_bucket_rw" {
-  name        = "covid-19-puerto-rico-athena-bucket"
+  name        = "${var.project_name}-athena-bucket"
   description = "Grant list/read/write access to the S3 Athena bucket."
 
   policy = jsonencode({
@@ -83,9 +83,6 @@ resource "aws_iam_policy" "athena_bucket_rw" {
 resource "aws_iam_role" "ecs_service_role" {
   name = "AWSServiceRoleForECS"
   path = "/aws-service-role/ecs.amazonaws.com/"
-  tags = {
-    Project = "covid-19-puerto-rico"
-  }
 
   assume_role_policy = <<EOF
 {
@@ -158,7 +155,7 @@ resource "aws_iam_user" "user" {
   name = "covid-19-puerto-rico"
   path = "/"
   tags = {
-    Project = "covid-19-puerto-rico"
+    Project = var.project_name
   }
 }
 
