@@ -33,7 +33,7 @@ resource "aws_ecs_task_definition" "bioportal_download_and_sync" {
       environment = [
         {
           name = "S3_DATA_URL",
-          value = "s3://covid-19-puerto-rico-data"
+          value = "s3://${aws_s3_bucket.data_bucket.bucket}"
         }
       ],
       logConfiguration = {
@@ -69,7 +69,7 @@ resource "aws_cloudwatch_event_target" "bioportal_daily_download" {
     network_configuration {
       assign_public_ip = true
       subnets          = [
-        "arn:aws:ec2:us-west-2:400565676434:subnet/subnet-f3111db5",
+        aws_subnet.subnet.arn
       ]
     }
   }

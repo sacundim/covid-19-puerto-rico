@@ -8,24 +8,22 @@ resource "aws_iam_policy" "data_bucket_ro" {
   name        = "covid-19-puerto-rico-data-reader"
   description = "Grant list/read access to the S3 data bucket."
 
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:GetObject",
-                "s3:ListBucket"
-            ],
-            "Resource": [
-                "arn:aws:s3:::covid-19-puerto-rico-data",
-                "arn:aws:s3:::covid-19-puerto-rico-data/*"
-            ]
-        }
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ],
+        Resource = [
+          aws_s3_bucket.data_bucket.arn,
+          "${aws_s3_bucket.data_bucket.arn}/*"
+        ]
+      }
     ]
-}
-EOF
+  })
 }
 
 
@@ -33,50 +31,46 @@ resource "aws_iam_policy" "data_bucket_rw" {
   name        = "covid-19-puerto-rico-data-writer"
   description = "Grant list/read access to the S3 data bucket."
 
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:PutObject",
-                "s3:GetObject",
-                "s3:ListBucket"
-            ],
-            "Resource": [
-                "arn:aws:s3:::covid-19-puerto-rico-athena",
-                "arn:aws:s3:::covid-19-puerto-rico-athena/*"
-            ]
-        }
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:ListBucket"
+        ],
+        Resource = [
+          aws_s3_bucket.data_bucket.arn,
+          "${aws_s3_bucket.data_bucket.arn}/*"
+        ]
+      }
     ]
-}
-EOF
+  })
 }
 
 resource "aws_iam_policy" "athena_bucket_rw" {
   name        = "covid-19-puerto-rico-athena-bucket"
   description = "Grant list/read/write access to the S3 Athena bucket."
 
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:PutObject",
-                "s3:GetObject",
-                "s3:ListBucket"
-            ],
-            "Resource": [
-                "arn:aws:s3:::covid-19-puerto-rico-athena",
-                "arn:aws:s3:::covid-19-puerto-rico-athena/*"
-            ]
-        }
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:ListBucket"
+        ],
+        Resource = [
+          aws_s3_bucket.athena_bucket.arn,
+          "${aws_s3_bucket.athena_bucket.arn}/*"
+        ]
+      }
     ]
-}
-EOF
+  })
 }
 
 
