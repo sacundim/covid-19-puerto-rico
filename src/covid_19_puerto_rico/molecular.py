@@ -408,7 +408,7 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
             x=alt.X('date(collected_date):O',
                     title="Día del mes", sort="descending",
                     axis=alt.Axis(format='%d')),
-            y=alt.Y('month(collected_date):O',
+            y=alt.Y('yearmonth(collected_date):O',
                     title=None, sort="descending",
                     axis=alt.Axis(format='%B')),
             tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
@@ -436,7 +436,7 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
         )
 
         return (heatmap + text).properties(
-            width=580, height=70
+            width=580, height=120
         ).facet(
             columns=1,
             facet=alt.Facet('variable:N', title=None,
