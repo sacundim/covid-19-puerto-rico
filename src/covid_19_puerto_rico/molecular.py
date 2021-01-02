@@ -255,7 +255,7 @@ class NewDailyTestsPerCapita(AbstractMolecularChart):
                      alt.Tooltip('per_thousand:Q', format=".2f",
                                  title='Pruebas por mil habitantes')]
         ).properties(
-            width=585, height=150
+            width=585, height=175
         ).facet(
             columns=1,
             facet=alt.Facet('date_type:N', title=None,
