@@ -21,3 +21,18 @@ variable "athena_bucket_name" {
   description = "The name of the bucket to create/use for Athena query results and tables."
   default = "covid-19-puerto-rico-athena"
 }
+
+variable "aws_region" {
+  description = "The AWS region things are created in."
+  default     = "us-west-2"
+}
+
+variable "az_count" {
+  description = "Number of AZs to cover in a given region. Depends on the AWS region. Most regions have 3."
+  default     = "4"
+}
+
+variable "cidr_block" {
+  description = "Private IP address range to use."
+  default = "172.32.128.0/22"
+}

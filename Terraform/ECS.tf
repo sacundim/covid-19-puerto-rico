@@ -68,9 +68,8 @@ resource "aws_cloudwatch_event_target" "bioportal_daily_download" {
 
     network_configuration {
       assign_public_ip = true
-      subnets          = [
-        aws_subnet.subnet.arn
-      ]
+      subnets = aws_subnet.subnet.*.id
+      security_groups = [aws_security_group.outbound_only.arn]
     }
   }
 }
