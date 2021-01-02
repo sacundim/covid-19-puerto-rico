@@ -25,7 +25,7 @@ resource "aws_ecs_task_definition" "bioportal_download_and_sync" {
   container_definitions = jsonencode([
     {
       name = "bioportal-downloader",
-      image = "${data.aws_ecr_image.scripts.registry_id}/${data.aws_ecr_image.scripts.repository_name}:${data.aws_ecr_image.scripts.image_tag}"
+      image = "${data.aws_ecr_image.scripts.registry_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${data.aws_ecr_image.scripts.repository_name}:${data.aws_ecr_image.scripts.image_tag}"
       cpu = 1024,
       memoryReservation = 4096,
       essential = true,
