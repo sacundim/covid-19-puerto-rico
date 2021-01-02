@@ -10,15 +10,17 @@ arrestado por informar demasiado bien al público.
 Esto solo aplica a quien quiera correr el software para generar la página,
 no a quien solo le interese visitar la que genero yo:
 
-1. Python 3.7 o posterior. Preferiblemente 3.7; se pueden manejar
+1. Una cuenta de [Amazon Web Services](https://aws.amazon.com/).
+2. [AWS Command Line Interface](https://aws.amazon.com/cli/)
+3. [Terraform](https://www.terraform.io/)
+4. Docker y Docker Compose
+5. Entorno Unix con `bash`
+6. Python 3.7 o posterior. Preferiblemente 3.7; se pueden manejar
    múltiples versiones a la vez con la herramienta [pyenv](https://github.com/pyenv/pyenv),
    on en una Mac con [Homebrew](https://brew.sh/) (`brew install python@3.7`).
-2. [Poetry](https://python-poetry.org/) (manejador de dependencias Python)
-3. Docker y Docker Compose
-4. Entorno Unix con `bash`
-5. [`wget`](https://www.gnu.org/software/wget/)
-6. [`jq`](https://stedolan.github.io/jq/)
-7. [AWS Command Line Interface](https://aws.amazon.com/cli/)
+7. [Poetry](https://python-poetry.org/) (manejador de dependencias Python)
+8. [`wget`](https://www.gnu.org/software/wget/)
+9. [`jq`](https://stedolan.github.io/jq/)
 
 No todos los componentes de este proyecto requiren todas estas dependencias.
 
@@ -70,32 +72,21 @@ este en la base de datos.  El código está aquí:
 * [`postgres/010-schema.sql`](postgres/010-schema.sql)
 
 
-### Amazon Athena
+### Descargas de Bioportal
 
-Los análisis y visualizaciones de datos de Bioportal se realizan en la nube de 
-Amazon con [el servicio Athena](https://aws.amazon.com/athena/), que a esta fecha 
-(diciembre del 2020) solo me está incurriendo en costos de $1 a $2 mensuales. 
+Este repo provee infraestructura de nube en Amazon, configurada mediante la herramienta
+Terraform, para realizar una descarga diaria automática de los destinos de Bioportal 
+que se requieren.  Esto requiere una cuenta en Amazon Web Services, y puede incurrir en
+costos monetarios con Amazon, a la cantidad de $1 a $2 por mes.
 
-Los "scripts" de SQL para montar el "data lake" y realizar las transformaciones son:
+Para usar esto hay que montar la infraestructura de Terraform (que al momento no me atrevo
+a explicar en detalle aquí, pero es algo como `cd Terraform; terraform init; terraform apply`).
+Luego hay que construir la imagen Docker para los scripts de descarga y conversión, que
+está automatizado en [`scripts/build-docker-scripts-image.sh`](scripts/build-docker-scripts-image.sh)
+pero requiere buscar la dirección DNS del servicio ECR en la cuenta de Amazon propia.
 
-* [`create-sources-schema.sql`](aws/athena/create-sources-schema.sql), que
-  define una base de datos en Athena que accede a los archivos Parquet de las
-  descargas crudas de Bioportal.  Este solo hace falta correrlo cuando hay cambios
-  mayores a la forma que se organizan estos.
-* [`run-bioportal-etl.sql`](aws/athena/run-bioportal-etl.sql), que procesa los 
-  datos crudos para crear una base de datos más refinada.  Este suele correrse diario.
-
-Reproducir este "data lake" requeriría:
- 
-1. Montar un entorno en AWS ([descrito de forma bien incompleta aquí](aws/README.md)).
-2. Instalar los prerequisitos de los "shell scripts" de descargas de Bioportal.
-3. Modificar los "shell scripts" y los de SQL para quitar las referencias a mano 
-   ("hardcoded") al entorno AWS de este autor.
-4. Realizar descargas diarias de Bioportal, convertirlas a Parquet y subirlas a S3, 
-   todo automatizado por los "shell scripts" aquí provistos. 
-5. Correr los archivos SQL en Athena.
-
-Los "shell scripts" requieren:
+También es posible correr los scripts de descarga y sincronización con S3 a mano. 
+Los "scripts" para hacerlo requieren:
 
 * Instalación de las herramientas `poetry`, `wget` y `jq`;
 * Correr un `poetry install` desde este directorio, que instala (entre muchas otras 
@@ -133,10 +124,29 @@ a no serlo.  Si alguien tiene interés en acceder a mi colección de descargas d
 Al momento (diciembre del 2020) son más de 15 GB de datos.
 
 
+### Amazon Athena
+
+Los análisis y visualizaciones de datos de Bioportal se realizan en la nube de 
+Amazon con [el servicio Athena](https://aws.amazon.com/athena/), que a esta fecha 
+(diciembre del 2020) solo me está incurriendo en costos de $1 a $2 mensuales. 
+
+Los "scripts" de SQL para montar el "data lake" y realizar las transformaciones son:
+
+* [`create-sources-schema.sql`](aws/athena/create-sources-schema.sql), que
+  define una base de datos en Athena que accede a los archivos Parquet de las
+  descargas crudas de Bioportal.  Este solo hace falta correrlo cuando hay cambios
+  mayores a la forma que se organizan estos.
+* [`run-bioportal-etl.sql`](aws/athena/run-bioportal-etl.sql), que procesa los 
+  datos crudos para crear una base de datos más refinada.  Este suele correrse diario.
+
+No hay muchas herramientas capaces de correr "scripts" de SQL en Athena.  Yo uso
+[DBeaver](https://dbeaver.io/) para esto.
+
+
 ## Análisis y gráficas
 
 La forma más sencilla de lanzar la aplicación que genera las páginas 
-es con Docker y Docker Compose. Desde este directorio:
+es localmente, con Docker y Docker Compose. Desde este directorio:
 
 1. `docker-compose up` (inicia base de datos PostgreSQL y servidor 
    HTTP local; **ADVERTENCIA:** descarga como 300 MiB la primera vez);

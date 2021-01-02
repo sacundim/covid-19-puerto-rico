@@ -1,5 +1,5 @@
 resource "aws_ecr_repository" "script_image_repo" {
-  name = "covid-19-puerto-rico-scripts"
+  name = "${var.project_name}-scripts"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
