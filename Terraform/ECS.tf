@@ -113,7 +113,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_role_ecr_ro" {
 
 resource "aws_iam_role_policy_attachment" "ecs_task_role_s3_rw" {
   role       = aws_iam_role.ecs_task_role.name
-  policy_arn = aws_iam_policy.all_buckets_rw.arn
+  policy_arn = aws_iam_policy.data_bucket_rw.arn
 }
 
 

@@ -4,16 +4,40 @@
 ## Policies
 ##
 
-resource "aws_iam_policy" "all_buckets_rw" {
-  name        = "covid-19-puerto-rico-buckets-rw"
-  description = "Grant list/read/write access to all project S3 buckets."
+resource "aws_iam_policy" "data_bucket_ro" {
+  name        = "covid-19-puerto-rico-data-reader"
+  description = "Grant list/read access to the S3 data bucket."
 
   policy = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::covid-19-puerto-rico-data",
+                "arn:aws:s3:::covid-19-puerto-rico-data/*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+
+resource "aws_iam_policy" "data_bucket_rw" {
+  name        = "covid-19-puerto-rico-data-writer"
+  description = "Grant list/read access to the S3 data bucket."
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
             "Effect": "Allow",
             "Action": [
                 "s3:PutObject",
@@ -21,12 +45,33 @@ resource "aws_iam_policy" "all_buckets_rw" {
                 "s3:ListBucket"
             ],
             "Resource": [
-                "arn:aws:s3:::covid-19-puerto-rico",
                 "arn:aws:s3:::covid-19-puerto-rico-athena",
-                "arn:aws:s3:::covid-19-puerto-rico-data",
-                "arn:aws:s3:::covid-19-puerto-rico/*",
-                "arn:aws:s3:::covid-19-puerto-rico-athena/*",
-                "arn:aws:s3:::covid-19-puerto-rico-data/*"
+                "arn:aws:s3:::covid-19-puerto-rico-athena/*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "athena_bucket_rw" {
+  name        = "covid-19-puerto-rico-athena-bucket"
+  description = "Grant list/read/write access to the S3 Athena bucket."
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::covid-19-puerto-rico-athena",
+                "arn:aws:s3:::covid-19-puerto-rico-athena/*"
             ]
         }
     ]
@@ -71,9 +116,62 @@ resource "aws_iam_role_policy_attachment" "ecs_service_role_attach" {
 
 
 
+#################################################################################
+#################################################################################
+##
+## Groups and users
+##
+
+resource "aws_iam_group" "athena" {
+  name = "athena-users"
+  path = "/"
+}
+
+resource "aws_iam_group_policy_attachment" "athena_data_bucket_ro" {
+  group      = aws_iam_group.athena.name
+  policy_arn = aws_iam_policy.data_bucket_ro.arn
+}
+
+resource "aws_iam_group_policy_attachment" "athena_athena_bucket_rw" {
+  group      = aws_iam_group.athena.name
+  policy_arn = aws_iam_policy.athena_bucket_rw.arn
+}
+
+resource "aws_iam_group_policy_attachment" "athena_full_access" {
+  group      = aws_iam_group.athena.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonAthenaFullAccess"
+}
+
+
+resource "aws_iam_group" "ecr" {
+  name = "ecr-users"
+  path = "/"
+}
+
+resource "aws_iam_group_policy_attachment" "ecr_ecr_power_user" {
+  group      = aws_iam_group.ecr.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
+}
+
 
 #################################################################################
 #################################################################################
 ##
 ## Users
 ##
+
+resource "aws_iam_user" "user" {
+  name = "covid-19-puerto-rico"
+  path = "/"
+  tags = {
+    Project = "covid-19-puerto-rico"
+  }
+}
+
+resource "aws_iam_user_group_membership" "user_athena_member" {
+  user = aws_iam_user.user.name
+  groups = [
+    aws_iam_group.athena.name,
+    aws_iam_group.ecr.name
+  ]
+}
