@@ -12,8 +12,8 @@ services:
       target: /docker-entrypoint-initdb.d
       read_only: true
     - type: bind
-      source: ./assets/data/cases
-      target: /data/cases
+      source: ./assets/data
+      target: /data
       read_only: true
       consistency: cached
     ports:
