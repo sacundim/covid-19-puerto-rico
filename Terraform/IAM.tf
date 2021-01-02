@@ -147,6 +147,17 @@ resource "aws_iam_group_policy_attachment" "ecr_ecr_power_user" {
 }
 
 
+resource "aws_iam_group" "uploaders" {
+  name = "uploaders"
+  path = "/"
+}
+
+resource "aws_iam_group_policy_attachment" "uploaders_data_bucket_rw" {
+  group      = aws_iam_group.uploaders.name
+  policy_arn = aws_iam_policy.data_bucket_rw.arn
+}
+
+
 #################################################################################
 #################################################################################
 ##
@@ -165,6 +176,7 @@ resource "aws_iam_user_group_membership" "user_athena_member" {
   user = aws_iam_user.user.name
   groups = [
     aws_iam_group.athena.name,
-    aws_iam_group.ecr.name
+    aws_iam_group.ecr.name,
+    aws_iam_group.uploaders.name,
   ]
 }
