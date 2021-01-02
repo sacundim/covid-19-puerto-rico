@@ -33,7 +33,7 @@ resource "aws_ecs_task_definition" "bioportal_download_and_sync" {
       environment = [
         {
           name = "S3_DATA_URL",
-          value = "s3://covid-19-puerto-rico-data/testing"
+          value = "s3://covid-19-puerto-rico-data"
         }
       ],
       logConfiguration = {
