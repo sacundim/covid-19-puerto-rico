@@ -221,17 +221,19 @@ CREATE TABLE covid_pr_etl.bioportal_tritemporal_counts WITH (
     bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
 ) AS
-WITH bulletins AS (
-	SELECT CAST(date_column AS DATE) AS bulletin_date
-	FROM (
-		VALUES (SEQUENCE(DATE '2020-04-24', DATE '2020-12-31', INTERVAL '1' DAY))
-	) AS date_array (date_array)
-	CROSS JOIN UNNEST(date_array) AS t2(date_column)
-), downloads AS (
+WITH downloads AS (
 	SELECT
 		max(downloaded_at) max_downloaded_at,
 		max(downloaded_date) max_downloaded_date
 	FROM covid_pr_etl.bioportal_orders_basic
+), bulletins AS (
+	SELECT CAST(date_column AS DATE) AS bulletin_date
+	FROM (
+		VALUES (SEQUENCE(DATE '2020-04-24', DATE '2021-12-31', INTERVAL '1' DAY))
+	) AS date_array (date_array)
+	CROSS JOIN UNNEST(date_array) AS t2(date_column)
+	INNER JOIN downloads
+	    ON CAST(date_column AS DATE) < downloads.max_downloaded_date
 )
 SELECT
 	test_type,
@@ -338,17 +340,19 @@ CREATE TABLE covid_pr_etl.bioportal_followups_collected_agg WITH (
     bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
 ) AS
-WITH bulletins AS (
-	SELECT CAST(date_column AS DATE) AS bulletin_date
-	FROM (
-		VALUES (SEQUENCE(DATE '2020-04-24', DATE '2020-12-31', INTERVAL '1' DAY))
-	) AS date_array (date_array)
-	CROSS JOIN UNNEST(date_array) AS t2(date_column)
-), downloads AS (
+WITH downloads AS (
 	SELECT
 		max(downloaded_at) max_downloaded_at,
 		max(downloaded_date) max_downloaded_date
-	FROM covid_pr_etl.bioportal_followups
+	FROM covid_pr_etl.bioportal_orders_basic
+), bulletins AS (
+	SELECT CAST(date_column AS DATE) AS bulletin_date
+	FROM (
+		VALUES (SEQUENCE(DATE '2020-04-24', DATE '2021-12-31', INTERVAL '1' DAY))
+	) AS date_array (date_array)
+	CROSS JOIN UNNEST(date_array) AS t2(date_column)
+	INNER JOIN downloads
+	    ON CAST(date_column AS DATE) < downloads.max_downloaded_date
 ), dailies AS (
 	SELECT
 		test_type,
@@ -411,17 +415,19 @@ CREATE TABLE covid_pr_etl.bioportal_curve_agg WITH (
     bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
 ) AS
-WITH bulletins AS (
-	SELECT CAST(date_column AS DATE) AS bulletin_date
-	FROM (
-		VALUES (SEQUENCE(DATE '2020-04-24', DATE '2020-12-31', INTERVAL '1' DAY))
-	) AS date_array (date_array)
-	CROSS JOIN UNNEST(date_array) AS t2(date_column)
-), downloads AS (
+WITH downloads AS (
 	SELECT
 		max(downloaded_at) max_downloaded_at,
 		max(downloaded_date) max_downloaded_date
 	FROM covid_pr_etl.bioportal_orders_basic
+), bulletins AS (
+	SELECT CAST(date_column AS DATE) AS bulletin_date
+	FROM (
+		VALUES (SEQUENCE(DATE '2020-04-24', DATE '2021-12-31', INTERVAL '1' DAY))
+	) AS date_array (date_array)
+	CROSS JOIN UNNEST(date_array) AS t2(date_column)
+	INNER JOIN downloads
+	    ON CAST(date_column AS DATE) < downloads.max_downloaded_date
 ), cases AS (
 	SELECT
 		bulletins.bulletin_date AS bulletin_date,

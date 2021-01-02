@@ -60,7 +60,7 @@ class AbstractMismatchChart(AbstractChart):
             x=alt.X('date(bulletin_date):O',
                     title="Día del mes", sort="descending",
                     axis=alt.Axis(format='%d')),
-            y=alt.Y('month(bulletin_date):O',
+            y=alt.Y('yearmonth(bulletin_date):O',
                     title=None, sort="descending",
                     axis=alt.Axis(format='%B')),
             tooltip=['bulletin_date:T', 'value']
@@ -81,7 +81,7 @@ class AbstractMismatchChart(AbstractChart):
         )
 
         return (heatmap + text).properties(
-            width=575, height=70
+            width=575, height=120
         ).facet(
             columns=1,
             facet=alt.Facet('variable', title=None,
@@ -257,7 +257,7 @@ class CurrentDeltas(AbstractChart):
             x=alt.X('date(datum_date):O',
                     title="Día del mes", sort="descending",
                     axis=alt.Axis(format='%d')),
-            y=alt.Y('month(datum_date):O',
+            y=alt.Y('yearmonth(datum_date):O',
                     title=None, sort="descending",
                     axis=alt.Axis(format='%B')),
             tooltip=[alt.Tooltip('datum_date:T', title='Fecha de muestra o muerte'),
@@ -280,7 +280,7 @@ class CurrentDeltas(AbstractChart):
         ).transform_filter("(datum.value !== 0) & (datum.value !== null)")
 
         return (heatmap + text).properties(
-            width=580, height=70
+            width=580, height=120
         ).facet(
             columns=1,
             facet=alt.Facet('variable', title=None,

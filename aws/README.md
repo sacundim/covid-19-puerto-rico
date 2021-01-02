@@ -1,7 +1,9 @@
 # AWS Environment
 
-There isn't any infrastructure-as-code as of yet, so this is a
-textual description of the setup.
+There is a Terraform setup in [the top-level `Terraform` directory](../Terraform)
+that manages this infrastructure, but be warned that as of now it was
+created after a bunch of it had been created manually so it might not
+be 100% reproducible as-is.
 
 
 ## S3 buckets
@@ -29,8 +31,13 @@ two Glue Catalog databases:
   external source data files we archive in `s3://covid-19-puerto-rico-data/`.
 * `covid_pr_etl`: All tables and views that we build off the external data.
 
+These are not (as of now) managed by Terraform, so they must be run by hand
+with a SQL client (e.g., [DBeaver](https://dbeaver.io/)).
 
-## Lambda (TODO)
 
-Write a Lambda function to do the daily Bioportal downloads and the
-Parquet conversion.
+## Automated Bioportal download
+
+The Terraform setup creates an [ECS](https://aws.amazon.com/ecs/) cluster and 
+scheduled [Fargate](https://aws.amazon.com/fargate/) task that downloads from 
+the Bioportal API endpoints at noon Puerto Rico time every day, converts the
+downloads to Parquet, and syncs them to the datalake S3 bucket.  This requires

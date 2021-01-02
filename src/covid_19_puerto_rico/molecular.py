@@ -255,7 +255,7 @@ class NewDailyTestsPerCapita(AbstractMolecularChart):
                      alt.Tooltip('per_thousand:Q', format=".2f",
                                  title='Pruebas por mil habitantes')]
         ).properties(
-            width=585, height=150
+            width=585, height=175
         ).facet(
             columns=1,
             facet=alt.Facet('date_type:N', title=None,
@@ -300,7 +300,7 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
         return df.loc[df['bulletin_date'] == effective_bulletin_date]
 
     def make_chart(self, df, bulletin_date):
-        max_x, max_y = 24_000, 400_000
+        max_x, max_y = 24_000, 450_000
 
         main = alt.Chart(df.dropna()).transform_calculate(
             tests_per_million=alt.datum.cumulative_tests / self.POPULATION_MILLIONS,
@@ -408,7 +408,7 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
             x=alt.X('date(collected_date):O',
                     title="Día del mes", sort="descending",
                     axis=alt.Axis(format='%d')),
-            y=alt.Y('month(collected_date):O',
+            y=alt.Y('yearmonth(collected_date):O',
                     title=None, sort="descending",
                     axis=alt.Axis(format='%B')),
             tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
@@ -436,7 +436,7 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
         )
 
         return (heatmap + text).properties(
-            width=580, height=70
+            width=580, height=120
         ).facet(
             columns=1,
             facet=alt.Facet('variable:N', title=None,
