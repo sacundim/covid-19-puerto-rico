@@ -1,7 +1,11 @@
 .idea/
+Terraform/.terraform/
 .venv/
 *.egg-info
 *.pyc
+*.tfstate
+*.tfstate.*
+*.tfvars
 dist/
 output/
 s3-bucket-sync/
