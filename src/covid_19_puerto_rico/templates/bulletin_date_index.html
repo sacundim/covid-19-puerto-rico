@@ -800,15 +800,16 @@
 <div class="section" id="ICUsByHospital_section">
     <h1>Historial de cuidado intensivo</h1>
 
-    <p>Promedios de 7 días de disponibilidad de camas de cuidado intensivo <b>de adultos</b>. Datos del
+    <p>Promedios de 7 días de disponibilidad de camas de cuidado intensivo <em>de adultos</em>,
+        y cuántas están ocupadas por pacientes de COVID-19 (sospechado o confirmado). Datos del
         <a href="https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-facility">reporte
             semanal del Departamento de Salud de los EEUU</a>. Este informe no incluye todos los
         hospitales, y por privacidad suprime valores menores que cuatro, pero sí incluye ceros.
         Por este motivo optamos por mostrar los valores suprimidos como barras grises de la misma
         altura que un valor cuatro, pero hay que entender que estas indican un valor mayor que cero
         pero menor que cuatro. O sea, imagínense que las barras grises son unas de tamaño fijo
-        puestas encima de la gráfica para tapar barras verdes, anaranjadas o grises más cortas.
-        Si reporte dice cero no hay valor que tapar y la barra gris no se pone.</p>
+        puestas encima de la verdadera gráfica para tapar barras verdes, anaranjadas o grises
+        más cortas. Si el reporte dice cero no hay valor que tapar y la barra gris no se pone.</p>
 
     <div id="ICUsByHospital"></div>
     <script type="text/javascript">
