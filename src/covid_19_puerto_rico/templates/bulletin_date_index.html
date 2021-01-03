@@ -29,6 +29,7 @@
     <ul>
         <li><a href="#NewCases_section">Tendencia de casos nuevos por fecha de evento (promedios 7 días)</a></li>
         <li><a href="#Hospitalizations_section">Tendencia de hospitalizaciones</a></li>
+        <li><a href="#HospitalizationHHSRegionHistory_section">Historial de hospitalizaciones por región</a></li>
         <li><a href="#CurrentDeltas_section">Cambio entre boletín actual y anterior</a></li>
         <li><a href="#DailyDeltas_section">Cambios entre boletines recientes</a></li>
         <li><a href="#LatenessDaily_section">Rezago de datos de cada boletín</a></li>
@@ -141,6 +142,29 @@
     <p>Promedio de 7 días de cuántos pacientes han estado hospitalizados por COVID-19. Datos
         del API del <a href="https://covidtracking.com/">COVID Tracking Project</a>, que
         a su vez son capturas diarias de páginas del Departamento de Salud de Puerto Rico.</p>
+</div>
+
+
+<div class="section" id="HospitalizationHHSRegionHistory_section">
+    <h1>Tendencia de hospitalizaciones</h1>
+
+    <div id="HospitalizationHHSRegionHistory"></div>
+    <script type="text/javascript">
+      embedChart('HospitalizationHHSRegionHistory', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Promedios de 7 días de cuántos pacientes adultos han estado hospitalizados por COVID-19 vs.
+        otras causas, y dispobibilidad de camas. Datos del
+        <a href="https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-facility">reporte
+            semanal del Departamento de Salud de los EEUU</a>.</p>
+
+    <h3>Advertencias</h3>
+
+    <p>Este informe de Salud federal no cubre todos los hospitales de Puerto Rico, y los que cubre
+        muchas veces excluye el dato cuando su valor es bajo (por asuntos de privacidad).  Esta
+        gráfica por tanto no debe tomarse como un dato exacto sino un estimado de la tendencia.</p>
 </div>
 
 
