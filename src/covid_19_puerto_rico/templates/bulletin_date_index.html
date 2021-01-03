@@ -803,11 +803,10 @@
     <p>Promedios de 7 días de disponibilidad de camas de cuidado intensivo de adultos. Datos del
         <a href="https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-facility">reporte
             semanal del Departamento de Salud de los EEUU</a>. Este informe no incluye todos los
-        hospitales, y por privacidad suprime valores menores que cuatro.  Para cada hospital incluído
-        en el informe federal, incluímos solo las fechas en que este informe reporta el número de camas
-        de intensivo ocupadas. Cuántas de estas son por COVID-19 (sospechado o confirmado) no está
-        dispobible la mayoría de las veces, pero lo marcamos más oscuro donde sí lo dice el informe
-        federal.</p>
+        hospitales, y por privacidad suprime valores menores que cuatro, pero sí incluye ceros.
+        Por este motivo optamos por mostrar los valores suprimidos como barras grises de la misma
+        altura que un valor cuatro, pero hay que entender que estas indican un valor mayor que cero
+        pero menor que cuatro. Cuando el reporte dice cero no hay barra gris.</p>
 
     <div id="ICUsByHospital"></div>
     <script type="text/javascript">

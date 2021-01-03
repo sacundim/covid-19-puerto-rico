@@ -175,6 +175,4 @@ SELECT
 	staffed_icu_adult_patients_confirmed_covid_7_day_avg
 		AS confirmed_covid_adult_icu_patients
 FROM hhs_hospital_history_municipal_cube
-WHERE total_staffed_adult_icu_beds_7_day_avg > 0
-AND staffed_adult_icu_bed_occupancy_7_day_avg > 0
 ORDER BY until_date DESC, municipality;

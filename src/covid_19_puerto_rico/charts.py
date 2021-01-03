@@ -708,9 +708,10 @@ class HospitalizationsCovid19Tracking(AbstractChart):
 class ICUsByHospital(AbstractChart):
     """Hospitalizations based on HHS data, by region"""
 
-    SORT_ORDER = ['Camas UCI', 'Ocupadas', '# COVID (si disponible)']
-    ORDER_DF = pd.DataFrame({'variable': SORT_ORDER, 'order': [0, 1, 2]})
-    COLORS = ["#a4d86e", "#f58518", "#d4322c"]
+    SORT_ORDER = ['Camas (≥ 4)', 'Ocupadas (≥ 4)', 'COVID (≥ 4)',
+                  'Camas (> 0)', 'Ocupadas (> 0)', 'COVID (> 0)']
+    COLORS = ["#a4d86e", "#f58518", "#d4322c",
+              'lightgray', 'darkgray', 'dimgray']
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('hhs_icu_history', self.metadata,
@@ -719,12 +720,18 @@ class ICUsByHospital(AbstractChart):
             table.c.until_date,
             table.c.hospital_name,
             table.c.municipality,
-            table.c.adult_icu_beds.label('Camas UCI'),
-            table.c.adult_icu_patients.label('Ocupadas'),
-            table.c.covid_adult_icu_patients.label('# COVID (si disponible)')
+            table.c.adult_icu_beds.label('Camas (≥ 4)'),
+            sqlalchemy.case([(table.c.adult_icu_beds == None, 4.0)])
+                .label('Camas (> 0)'),
+            table.c.adult_icu_patients.label('Ocupadas (≥ 4)'),
+            sqlalchemy.case([(table.c.adult_icu_patients == None, 4.0)])
+                .label('Ocupadas (> 0)'),
+            table.c.covid_adult_icu_patients.label('COVID (≥ 4)'),
+            sqlalchemy.case([(table.c.covid_adult_icu_patients == None, 4.0)])
+                .label('COVID (> 0)')
         ]).where(table.c.until_date <= max(bulletin_dates))
         df = pd.read_sql_query(query, connection, parse_dates=['until_date'])
-        return pd.melt(df, ['until_date', 'hospital_name', 'municipality'])
+        return pd.melt(df, ['until_date', 'hospital_name', 'municipality']).dropna()
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['until_date'] <= pd.to_datetime(bulletin_date)]
@@ -735,19 +742,15 @@ class ICUsByHospital(AbstractChart):
         # the domain manually on all.
         min_date = df['until_date'].min()
         max_date = df['until_date'].max()
-        facet_width = 175
-        return alt.Chart(df).transform_lookup(
-            lookup='variable',
-            from_=alt.LookupData(data=self.ORDER_DF, key='variable', fields=['order'])
-        ).mark_bar().encode(
+        facet_width = 170
+        return alt.Chart(df).mark_bar().encode(
             x=alt.X('until_date:T', title=None, axis=alt.Axis(format='%b'),
                     scale=alt.Scale(domain=[min_date, max_date])),
             y=alt.Y('value:Q', title=None, stack=None,
                     axis=alt.Axis(minExtent=25, labelFlush=True)),
             color=alt.Color('variable:N', title=None, sort=self.SORT_ORDER,
                             scale=alt.Scale(range=self.COLORS),
-                            legend=alt.Legend(orient='top', labelLimit=250)),
-            order=alt.Order('order:Q'),
+                            legend=alt.Legend(orient='top', columns=3, labelLimit=250)),
             tooltip=[
                 alt.Tooltip('until_date:T', title='Fecha'),
                 alt.Tooltip('hospital_name:N', title='Hospital'),
@@ -756,7 +759,7 @@ class ICUsByHospital(AbstractChart):
                 alt.Tooltip('value:Q', format='.1f', title='Promedio 7 días)')
             ]
         ).properties(
-            width=facet_width, height=60
+            width=facet_width, height=80
         ).facet(
             columns=3,
             facet=alt.Facet('hospital_name:N', title=None,
