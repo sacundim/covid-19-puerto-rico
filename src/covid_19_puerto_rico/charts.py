@@ -705,7 +705,7 @@ class HospitalizationsCovid19Tracking(AbstractChart):
         )
 
 
-class HospitalizationHHSRegionHistory(AbstractChart):
+class HHSICURegionHistory(AbstractChart):
     """Hospitalizations based on HHS data, by region"""
 
     SORT_ORDER = ['COVID (confirmado)', 'COVID (sospechado)', 'Otros', 'Disponibles']
@@ -718,10 +718,10 @@ class HospitalizationHHSRegionHistory(AbstractChart):
         query = select([
             table.c.until_date,
             table.c.region,
-            table.c.free_adult_beds.label('Disponibles'),
-            table.c.non_covid_patients.label('Otros'),
-            table.c.suspected_covid_patients.label('COVID (sospechado)'),
-            table.c.confirmed_covid_patients.label('COVID (confirmado)')
+            table.c.free_adult_icu_beds.label('Disponibles'),
+            table.c.non_covid_icu_patients.label('Otros'),
+            table.c.suspected_covid_icu_patients.label('COVID (sospechado)'),
+            table.c.confirmed_covid_icu_patients.label('COVID (confirmado)')
         ]).where(table.c.until_date <= max(bulletin_dates))
         df = pd.read_sql_query(query, connection, parse_dates=['until_date'])
         return pd.melt(df, ['until_date', 'region'])
