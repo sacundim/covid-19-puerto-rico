@@ -705,7 +705,7 @@ class HospitalizationsCovid19Tracking(AbstractChart):
         )
 
 
-class HHSICURegionHistory(AbstractChart):
+class ICUsByHospital(AbstractChart):
     """Hospitalizations based on HHS data, by region"""
 
     SORT_ORDER = ['COVID (confirmado)', 'COVID (sospechado)', 'Otros', 'Disponibles']
@@ -713,18 +713,18 @@ class HHSICURegionHistory(AbstractChart):
     COLORS = ['#d4322c', '#fcac63', '#f9f7ae', '#d7ee8e']
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('hhs_hospital_history_regional', self.metadata,
+        table = sqlalchemy.Table('hhs_icu_history', self.metadata,
                                  autoload=True, schema='products')
         query = select([
             table.c.until_date,
-            table.c.region,
+            table.c.hospital_name,
             table.c.free_adult_icu_beds.label('Disponibles'),
             table.c.non_covid_icu_patients.label('Otros'),
             table.c.suspected_covid_icu_patients.label('COVID (sospechado)'),
             table.c.confirmed_covid_icu_patients.label('COVID (confirmado)')
         ]).where(table.c.until_date <= max(bulletin_dates))
         df = pd.read_sql_query(query, connection, parse_dates=['until_date'])
-        return pd.melt(df, ['until_date', 'region'])
+        return pd.melt(df, ['until_date', 'hospital_name'])
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['until_date'] <= pd.to_datetime(bulletin_date)]
@@ -737,7 +737,7 @@ class HHSICURegionHistory(AbstractChart):
             from_=alt.LookupData(data=self.ORDER_DF, key='variable', fields=['order'])
         ).mark_area(opacity=0.85).encode(
             x=alt.X('until_date:T', title='Fecha', axis=alt.Axis(format='%b')),
-            y=alt.Y('value:Q', title='Hospitalizados', stack='normalize',
+            y=alt.Y('value:Q', title='% UCI', stack='normalize',
                     axis=alt.Axis(format='%')),
             color=alt.Color('variable:N', title=None, sort=self.SORT_ORDER,
                             scale=alt.Scale(range=self.COLORS),
@@ -746,15 +746,15 @@ class HHSICURegionHistory(AbstractChart):
             order=alt.Order('order:Q'),
             tooltip=[
                 alt.Tooltip('until_date:T', title='Fecha'),
-                alt.Tooltip('region:N', title='Región'),
+                alt.Tooltip('hospital_name:N', title='Hospital'),
                 alt.Tooltip('variable:N', title='Categoría'),
-                alt.Tooltip('value:Q', format='.1f', title='Hospitalizados (promedio 7 días)')
+                alt.Tooltip('value:Q', format='.1f', title='Promedio 7 días)')
             ]
         ).properties(
-            width=125, height=125
+            width=250, height=40
         ).facet(
-            columns=4,
-            facet=alt.Facet('region:N', title="Región")
+            columns=2,
+            facet=alt.Facet('hospital_name:N', title='Hospital')
         )
 
 
