@@ -6,10 +6,15 @@
 #
 set -eu -o pipefail
 
-# This is a JSON document from which we can fetch the URL
-# of the download, which changes every week.
-JSON_URL="https://healthdata.gov/api/3/action/package_show?id=d475cc4e-83cd-4c16-be57-9105f300e0bc&page=0"
-CSV_URL="$(wget -O - "${JSON_URL}" |jq -r '.result[0].resources[0].url')"
+if [ $# -eq 0 ]
+then
+  # This is a JSON document from which we can fetch the URL
+  # of the download, which changes every week.
+  JSON_URL="https://healthdata.gov/api/3/action/package_show?id=d475cc4e-83cd-4c16-be57-9105f300e0bc&page=0"
+  CSV_URL="$(wget -O - "${JSON_URL}" |jq -r '.result[0].resources[0].url')"
+else
+  CSV_URL="${1}"
+fi
 
 HERE="$(dirname $0)"
 REPO_ROOT="${HERE}/.."
