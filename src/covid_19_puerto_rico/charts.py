@@ -710,7 +710,7 @@ class ICUsByHospital(AbstractChart):
 
     SORT_ORDER = ['Camas UCI', 'Ocupadas', '# COVID (si disponible)']
     ORDER_DF = pd.DataFrame({'variable': SORT_ORDER, 'order': [0, 1, 2]})
-    COLORS = ['#d7ee8e', '#fcac63', '#f16e43']
+    COLORS = ["#a4d86e", "#f58518", "#d4322c"]
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('hhs_icu_history', self.metadata,
@@ -739,7 +739,7 @@ class ICUsByHospital(AbstractChart):
         return alt.Chart(df).transform_lookup(
             lookup='variable',
             from_=alt.LookupData(data=self.ORDER_DF, key='variable', fields=['order'])
-        ).mark_area(opacity=0.85).encode(
+        ).mark_bar().encode(
             x=alt.X('until_date:T', title=None, axis=alt.Axis(format='%b'),
                     scale=alt.Scale(domain=[min_date, max_date])),
             y=alt.Y('value:Q', title=None, stack=None,
