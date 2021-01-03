@@ -705,6 +705,59 @@ class HospitalizationsCovid19Tracking(AbstractChart):
         )
 
 
+class HospitalizationHHSRegionHistory(AbstractChart):
+    """Hospitalizations based on HHS data, by region"""
+
+    SORT_ORDER = ['COVID (confirmado)', 'COVID (sospechado)', 'Otros', 'Disponibles']
+    ORDER_DF = pd.DataFrame({'variable': SORT_ORDER, 'order': [0, 1, 2, 3]})
+    COLORS = ['#d4322c', '#fcac63', '#f9f7ae', '#d7ee8e']
+
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('hhs_hospital_history_regional', self.metadata,
+                                 autoload=True, schema='products')
+        query = select([
+            table.c.until_date,
+            table.c.region,
+            table.c.free_adult_beds.label('Disponibles'),
+            table.c.non_covid_patients.label('Otros'),
+            table.c.suspected_covid_patients.label('COVID (sospechado)'),
+            table.c.confirmed_covid_patients.label('COVID (confirmado)')
+        ]).where(table.c.until_date <= max(bulletin_dates))
+        df = pd.read_sql_query(query, connection, parse_dates=['until_date'])
+        return pd.melt(df, ['until_date', 'region'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['until_date'] <= pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df).transform_filter(
+            alt.datum.value > 0.0
+        ).transform_lookup(
+            lookup='variable',
+            from_=alt.LookupData(data=self.ORDER_DF, key='variable', fields=['order'])
+        ).mark_area(opacity=0.85).encode(
+            x=alt.X('until_date:T', title='Fecha', axis=alt.Axis(format='%b')),
+            y=alt.Y('value:Q', title='Hospitalizados', stack='normalize',
+                    axis=alt.Axis(format='%')),
+            color=alt.Color('variable:N', title=None, sort=self.SORT_ORDER,
+                            scale=alt.Scale(range=self.COLORS),
+                            legend=alt.Legend(orient='bottom',
+                                              labelLimit=250)),
+            order=alt.Order('order:Q'),
+            tooltip=[
+                alt.Tooltip('until_date:T', title='Fecha'),
+                alt.Tooltip('region:N', title='Región'),
+                alt.Tooltip('variable:N', title='Categoría'),
+                alt.Tooltip('value:Q', format='.1f', title='Hospitalizados (promedio 7 días)')
+            ]
+        ).properties(
+            width=125, height=125
+        ).facet(
+            columns=4,
+            facet=alt.Facet('region:N', title="Región")
+        )
+
+
 class AgeGroups(AbstractChart):
     ORDER = ['< 10', '10-19', '20-29', '30-39', '40-49',
              '50-59', '60-69', '70-79', '≥ 80','No disponible']
@@ -759,7 +812,6 @@ class AgeGroups(AbstractChart):
                             title='Casos (7 días)'),
                 alt.Tooltip('smoothed_daily_cases_1m:Q', format='.1f',
                             title='Casos (7 días, por millón)')
-
             ]
         ).properties(
             width=300, height=75
