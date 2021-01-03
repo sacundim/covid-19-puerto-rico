@@ -28,8 +28,8 @@
 
     <ul>
         <li><a href="#NewCases_section">Tendencia de casos nuevos por fecha de evento (promedios 7 días)</a></li>
-        <li><a href="#Hospitalizations_section">Tendencia de hospitalizaciones</a></li>
-        <li><a href="#HospitalizationHHSRegionHistory_section">Historial de hospitalizaciones por región</a></li>
+        <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
+        <li><a href="#HHSICURegionHistory_section">Historial de unidades de cuidado intensivo</a></li>
         <li><a href="#CurrentDeltas_section">Cambio entre boletín actual y anterior</a></li>
         <li><a href="#DailyDeltas_section">Cambios entre boletines recientes</a></li>
         <li><a href="#LatenessDaily_section">Rezago de datos de cada boletín</a></li>
@@ -130,7 +130,7 @@
 
 
 <div class="section" id="Hospitalizations_section">
-    <h1>Tendencia de hospitalizaciones</h1>
+    <h1>Historial de hospitalizaciones</h1>
 
     <div id="HospitalizationsCovid19Tracking"></div>
     <script type="text/javascript">
@@ -145,18 +145,18 @@
 </div>
 
 
-<div class="section" id="HospitalizationHHSRegionHistory_section">
-    <h1>Tendencia de hospitalizaciones</h1>
+<div class="section" id="HHSICURegionHistory_section">
+    <h1>Historial de unidades de cuidado intensivo</h1>
 
-    <div id="HospitalizationHHSRegionHistory"></div>
+    <div id="HHSICURegionHistory"></div>
     <script type="text/javascript">
-      embedChart('HospitalizationHHSRegionHistory', bulletin_date);
+      embedChart('HHSICURegionHistory', bulletin_date);
     </script>
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Promedios de 7 días de cuántos pacientes adultos han estado hospitalizados por COVID-19 vs.
-        otras causas, y dispobibilidad de camas. Datos del
+    <p>Promedios de 7 días de cuántos pacientes adultos se han reportado en cuidado intensivo por
+        COVID-19 vs. otras causas, y dispobibilidad de camas. Datos del
         <a href="https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-facility">reporte
             semanal del Departamento de Salud de los EEUU</a>.</p>
 

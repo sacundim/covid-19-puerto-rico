@@ -151,6 +151,8 @@ SELECT
 		AS total_staffed_adult_icu_beds_7_day_avg,
 	sum(null_nines(staffed_adult_icu_bed_occupancy_7_day_avg))
 		AS staffed_adult_icu_bed_occupancy_7_day_avg,
+	sum(null_nines(staffed_icu_adult_patients_covid_7_day_avg))
+		AS staffed_icu_adult_patients_covid_7_day_avg,
 	sum(null_nines(staffed_icu_adult_patients_confirmed_covid_7_day_avg))
 		AS staffed_icu_adult_patients_confirmed_covid_7_day_avg
 FROM hhs_hospital_history hhh
@@ -165,6 +167,7 @@ WITH sums AS (
 	SELECT
 		until_date,
 		region,
+
 		sum(all_adult_hospital_inpatient_beds_7_day_avg)
 			AS all_adult_hospital_inpatient_beds_7_day_avg,
 		sum(all_adult_hospital_inpatient_bed_occupied_7_day_avg)
@@ -172,13 +175,23 @@ WITH sums AS (
 		sum(total_adult_patients_hospitalized_covid_7_day_avg)
 			AS total_adult_patients_hospitalized_covid_7_day_avg,
 		sum(total_adult_patients_hospitalized_confirmed_covid_7_day_avg)
-			AS total_adult_patients_hospitalized_confirmed_covid_7_day_avg
+			AS total_adult_patients_hospitalized_confirmed_covid_7_day_avg,
+
+		sum(total_staffed_adult_icu_beds_7_day_avg)
+			AS total_staffed_adult_icu_beds_7_day_avg,
+		sum(staffed_adult_icu_bed_occupancy_7_day_avg)
+			AS staffed_adult_icu_bed_occupancy_7_day_avg,
+		sum(staffed_icu_adult_patients_covid_7_day_avg)
+			AS staffed_icu_adult_patients_covid_7_day_avg,
+		sum(staffed_icu_adult_patients_confirmed_covid_7_day_avg)
+			AS staffed_icu_adult_patients_confirmed_covid_7_day_avg
 	FROM hhs_hospital_history_municipal_cube
 	GROUP BY until_date, region
 )
 SELECT
 	until_date,
 	region,
+
 	all_adult_hospital_inpatient_beds_7_day_avg
 		- all_adult_hospital_inpatient_bed_occupied_7_day_avg
 		AS free_adult_beds,
@@ -189,6 +202,19 @@ SELECT
 		- total_adult_patients_hospitalized_confirmed_covid_7_day_avg
 		AS suspected_covid_patients,
 	total_adult_patients_hospitalized_confirmed_covid_7_day_avg
-		AS confirmed_covid_patients
+		AS confirmed_covid_patients,
+
+	total_staffed_adult_icu_beds_7_day_avg
+		- staffed_adult_icu_bed_occupancy_7_day_avg
+		AS free_adult_icu_beds,
+	staffed_adult_icu_bed_occupancy_7_day_avg
+		- staffed_icu_adult_patients_covid_7_day_avg
+		AS non_covid_icu_patients,
+	staffed_icu_adult_patients_covid_7_day_avg
+		- staffed_icu_adult_patients_confirmed_covid_7_day_avg
+		AS suspected_covid_icu_patients,
+	staffed_icu_adult_patients_confirmed_covid_7_day_avg
+		AS confirmed_covid_icu_patients
 FROM sums
 ORDER BY until_date DESC, region;
+
