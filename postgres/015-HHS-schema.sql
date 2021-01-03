@@ -137,7 +137,8 @@ SELECT
 	cmn.region region,
 	cmn."name" municipality,
 	fips_code,
-
+	hospital_name,
+	hospital_pk,
 	sum(null_nines(all_adult_hospital_inpatient_beds_7_day_avg))
 		AS all_adult_hospital_inpatient_beds_7_day_avg,
 	sum(null_nines(all_adult_hospital_inpatient_bed_occupied_7_day_avg))
@@ -146,7 +147,6 @@ SELECT
 		AS total_adult_patients_hospitalized_covid_7_day_avg,
 	sum(null_nines(total_adult_patients_hospitalized_confirmed_covid_7_day_avg))
 		AS total_adult_patients_hospitalized_confirmed_covid_7_day_avg,
-
 	sum(null_nines(total_staffed_adult_icu_beds_7_day_avg))
 		AS total_staffed_adult_icu_beds_7_day_avg,
 	sum(null_nines(staffed_adult_icu_bed_occupancy_7_day_avg))
@@ -158,52 +158,13 @@ SELECT
 FROM hhs_hospital_history hhh
 INNER JOIN canonical_municipal_names cmn
 	USING (fips_code)
-GROUP BY collection_week, region, cmn."name", fips_code
-ORDER BY collection_week DESC, region, cmn."name";
+GROUP BY collection_week, region, cmn."name", fips_code, hospital_name, hospital_pk
+ORDER BY collection_week DESC, region, cmn."name", hospital_name;
 
-
-CREATE VIEW products.hhs_hospital_history_regional AS
-WITH sums AS (
-	SELECT
-		until_date,
-		region,
-
-		sum(all_adult_hospital_inpatient_beds_7_day_avg)
-			AS all_adult_hospital_inpatient_beds_7_day_avg,
-		sum(all_adult_hospital_inpatient_bed_occupied_7_day_avg)
-			AS all_adult_hospital_inpatient_bed_occupied_7_day_avg,
-		sum(total_adult_patients_hospitalized_covid_7_day_avg)
-			AS total_adult_patients_hospitalized_covid_7_day_avg,
-		sum(total_adult_patients_hospitalized_confirmed_covid_7_day_avg)
-			AS total_adult_patients_hospitalized_confirmed_covid_7_day_avg,
-
-		sum(total_staffed_adult_icu_beds_7_day_avg)
-			AS total_staffed_adult_icu_beds_7_day_avg,
-		sum(staffed_adult_icu_bed_occupancy_7_day_avg)
-			AS staffed_adult_icu_bed_occupancy_7_day_avg,
-		sum(staffed_icu_adult_patients_covid_7_day_avg)
-			AS staffed_icu_adult_patients_covid_7_day_avg,
-		sum(staffed_icu_adult_patients_confirmed_covid_7_day_avg)
-			AS staffed_icu_adult_patients_confirmed_covid_7_day_avg
-	FROM hhs_hospital_history_municipal_cube
-	GROUP BY until_date, region
-)
+CREATE VIEW products.hhs_icu_history AS
 SELECT
 	until_date,
-	region,
-
-	all_adult_hospital_inpatient_beds_7_day_avg
-		- all_adult_hospital_inpatient_bed_occupied_7_day_avg
-		AS free_adult_beds,
-	all_adult_hospital_inpatient_bed_occupied_7_day_avg
-		- total_adult_patients_hospitalized_covid_7_day_avg
-		AS non_covid_patients,
-	total_adult_patients_hospitalized_covid_7_day_avg
-		- total_adult_patients_hospitalized_confirmed_covid_7_day_avg
-		AS suspected_covid_patients,
-	total_adult_patients_hospitalized_confirmed_covid_7_day_avg
-		AS confirmed_covid_patients,
-
+	hospital_name,
 	total_staffed_adult_icu_beds_7_day_avg
 		- staffed_adult_icu_bed_occupancy_7_day_avg
 		AS free_adult_icu_beds,
@@ -215,6 +176,9 @@ SELECT
 		AS suspected_covid_icu_patients,
 	staffed_icu_adult_patients_confirmed_covid_7_day_avg
 		AS confirmed_covid_icu_patients
-FROM sums
-ORDER BY until_date DESC, region;
-
+FROM hhs_hospital_history_municipal_cube
+WHERE total_staffed_adult_icu_beds_7_day_avg > 0
+AND staffed_adult_icu_bed_occupancy_7_day_avg > 0
+AND staffed_icu_adult_patients_covid_7_day_avg > 0
+AND staffed_icu_adult_patients_confirmed_covid_7_day_avg > 0
+ORDER BY until_date DESC, municipality;
