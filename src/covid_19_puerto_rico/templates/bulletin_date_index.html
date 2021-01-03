@@ -29,7 +29,6 @@
     <ul>
         <li><a href="#NewCases_section">Tendencia de casos nuevos por fecha de evento (promedios 7 días)</a></li>
         <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
-        <li><a href="#ICUsByHospital_section">Historial de unidades de cuidado intensivo</a></li>
         <li><a href="#CurrentDeltas_section">Cambio entre boletín actual y anterior</a></li>
         <li><a href="#DailyDeltas_section">Cambios entre boletines recientes</a></li>
         <li><a href="#LatenessDaily_section">Rezago de datos de cada boletín</a></li>
@@ -46,6 +45,7 @@
         <li><a href="#AgeGroups_section">Casos por edad (per cápita, 7 días)</a></li>
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
         <li><a href="#Municipal_section">Historial de casos por municipio (fecha de boletín)</a></li>
+        <li><a href="#ICUsByHospital_section">Unidades de cuidado intensivo</a></li>
         <li><a href="#ConsecutiveBulletinMismatch_section">Descuadre de encabezado de boletín</a></li>
         <li><a href="#BulletinChartMismatch_section">Descuadre de boletín y gráficas</a></li>
         <li><a href="#Revisions_section">Revisiones</a></li>
@@ -142,29 +142,6 @@
     <p>Promedio de 7 días de cuántos pacientes han estado hospitalizados por COVID-19. Datos
         del API del <a href="https://covidtracking.com/">COVID Tracking Project</a>, que
         a su vez son capturas diarias de páginas del Departamento de Salud de Puerto Rico.</p>
-</div>
-
-
-<div class="section" id="ICUsByHospital_section">
-    <h1>Historial de unidades de cuidado intensivo</h1>
-
-    <div id="ICUsByHospital"></div>
-    <script type="text/javascript">
-      embedChart('ICUsByHospital', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Promedios de 7 días de cuántos pacientes adultos se han reportado en cuidado intensivo por
-        COVID-19 vs. otras causas, y dispobibilidad de camas. Datos del
-        <a href="https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-facility">reporte
-            semanal del Departamento de Salud de los EEUU</a>.</p>
-
-    <h3>Advertencias</h3>
-
-    <p>Este informe de Salud federal no cubre todos los hospitales de Puerto Rico, y los que cubre
-        muchas veces excluye el dato cuando su valor es bajo (por asuntos de privacidad).  Esta
-        gráfica por tanto no debe tomarse como un dato exacto sino un estimado de la tendencia.</p>
 </div>
 
 
@@ -816,6 +793,23 @@
     <div id="Municipal"></div>
     <script type="text/javascript">
       embedChart('Municipal', bulletin_date);
+    </script>
+</div>
+
+
+<div class="section" id="ICUsByHospital_section">
+    <h1>Unidades de cuidado intensivo</h1>
+
+    <p>Promedios de 7 días de disponibilidad de camas de cuidado intensivo de adultos. Datos del
+        <a href="https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-facility">reporte
+            semanal del Departamento de Salud de los EEUU</a>. Estos datos no incluyen todos los
+        hospitales, y suprimen valores menores que cuatro. Incluímos todos los datos en que el
+        número de camas de intensivo ocupadas es ≥4; si menos de 4 son por COVID no aparece ese
+        número.</p>
+
+    <div id="ICUsByHospital"></div>
+    <script type="text/javascript">
+      embedChart('ICUsByHospital', bulletin_date);
     </script>
 </div>
 

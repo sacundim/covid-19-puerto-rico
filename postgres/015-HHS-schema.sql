@@ -165,20 +165,16 @@ CREATE VIEW products.hhs_icu_history AS
 SELECT
 	until_date,
 	hospital_name,
+	municipality,
 	total_staffed_adult_icu_beds_7_day_avg
-		- staffed_adult_icu_bed_occupancy_7_day_avg
-		AS free_adult_icu_beds,
+		AS adult_icu_beds,
 	staffed_adult_icu_bed_occupancy_7_day_avg
-		- staffed_icu_adult_patients_covid_7_day_avg
-		AS non_covid_icu_patients,
+		AS adult_icu_patients,
 	staffed_icu_adult_patients_covid_7_day_avg
-		- staffed_icu_adult_patients_confirmed_covid_7_day_avg
-		AS suspected_covid_icu_patients,
+		AS covid_adult_icu_patients,
 	staffed_icu_adult_patients_confirmed_covid_7_day_avg
-		AS confirmed_covid_icu_patients
+		AS confirmed_covid_adult_icu_patients
 FROM hhs_hospital_history_municipal_cube
 WHERE total_staffed_adult_icu_beds_7_day_avg > 0
 AND staffed_adult_icu_bed_occupancy_7_day_avg > 0
-AND staffed_icu_adult_patients_covid_7_day_avg > 0
-AND staffed_icu_adult_patients_confirmed_covid_7_day_avg > 0
 ORDER BY until_date DESC, municipality;

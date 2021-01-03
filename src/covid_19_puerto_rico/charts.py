@@ -708,9 +708,9 @@ class HospitalizationsCovid19Tracking(AbstractChart):
 class ICUsByHospital(AbstractChart):
     """Hospitalizations based on HHS data, by region"""
 
-    SORT_ORDER = ['COVID (confirmado)', 'COVID (sospechado)', 'Otros', 'Disponibles']
-    ORDER_DF = pd.DataFrame({'variable': SORT_ORDER, 'order': [0, 1, 2, 3]})
-    COLORS = ['#d4322c', '#fcac63', '#f9f7ae', '#d7ee8e']
+    SORT_ORDER = ['Camas UCI', 'Ocupadas', '# COVID (si disponible)']
+    ORDER_DF = pd.DataFrame({'variable': SORT_ORDER, 'order': [0, 1, 2]})
+    COLORS = ['#d7ee8e', '#fcac63', '#d4322c']
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('hhs_icu_history', self.metadata,
@@ -718,43 +718,51 @@ class ICUsByHospital(AbstractChart):
         query = select([
             table.c.until_date,
             table.c.hospital_name,
-            table.c.free_adult_icu_beds.label('Disponibles'),
-            table.c.non_covid_icu_patients.label('Otros'),
-            table.c.suspected_covid_icu_patients.label('COVID (sospechado)'),
-            table.c.confirmed_covid_icu_patients.label('COVID (confirmado)')
+            table.c.municipality,
+            table.c.adult_icu_beds.label('Camas UCI'),
+            table.c.adult_icu_patients.label('Ocupadas'),
+            table.c.covid_adult_icu_patients.label('# COVID (si disponible)')
         ]).where(table.c.until_date <= max(bulletin_dates))
         df = pd.read_sql_query(query, connection, parse_dates=['until_date'])
-        return pd.melt(df, ['until_date', 'hospital_name'])
+        return pd.melt(df, ['until_date', 'hospital_name', 'municipality'])
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['until_date'] <= pd.to_datetime(bulletin_date)]
 
     def make_chart(self, df, bulletin_date):
-        return alt.Chart(df).transform_filter(
-            alt.datum.value > 0.0
-        ).transform_lookup(
+        # We want all facets to have an x-axis scale but to have the same
+        # domain. So we set resolve = independent for the facets, but set
+        # the domain manually on all.
+        min_date = df['until_date'].min()
+        max_date = df['until_date'].max()
+        return alt.Chart(df).transform_lookup(
             lookup='variable',
             from_=alt.LookupData(data=self.ORDER_DF, key='variable', fields=['order'])
         ).mark_area(opacity=0.85).encode(
-            x=alt.X('until_date:T', title='Fecha', axis=alt.Axis(format='%b')),
-            y=alt.Y('value:Q', title='% UCI', stack='normalize',
-                    axis=alt.Axis(format='%')),
+            x=alt.X('until_date:T', title=None, axis=alt.Axis(format='%b'),
+                    scale=alt.Scale(domain=[min_date, max_date])),
+            y=alt.Y('value:Q', title=None, stack=None,
+                    axis=alt.Axis(labelFlush=True)),
             color=alt.Color('variable:N', title=None, sort=self.SORT_ORDER,
                             scale=alt.Scale(range=self.COLORS),
-                            legend=alt.Legend(orient='bottom',
+                            legend=alt.Legend(orient='top',
                                               labelLimit=250)),
             order=alt.Order('order:Q'),
             tooltip=[
                 alt.Tooltip('until_date:T', title='Fecha'),
                 alt.Tooltip('hospital_name:N', title='Hospital'),
+                alt.Tooltip('municipality:N', title='Municipio'),
                 alt.Tooltip('variable:N', title='Categoría'),
                 alt.Tooltip('value:Q', format='.1f', title='Promedio 7 días)')
             ]
         ).properties(
-            width=250, height=40
+            width=275, height=50
         ).facet(
             columns=2,
-            facet=alt.Facet('hospital_name:N', title='Hospital')
+            facet=alt.Facet('hospital_name:N', title=None,
+                            header=alt.Header(labelLimit=275, labelFontSize=9))
+        ).resolve_scale(
+            x='independent', y='independent'
         )
 
 
