@@ -705,6 +705,67 @@ class HospitalizationsCovid19Tracking(AbstractChart):
         )
 
 
+class ICUsByHospital(AbstractChart):
+    """Hospitalizations based on HHS data, by region"""
+
+    SORT_ORDER = ['Camas UCI', 'Ocupadas', '# COVID (si disponible)']
+    ORDER_DF = pd.DataFrame({'variable': SORT_ORDER, 'order': [0, 1, 2]})
+    COLORS = ['#d7ee8e', '#fcac63', '#d4322c']
+
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('hhs_icu_history', self.metadata,
+                                 autoload=True, schema='products')
+        query = select([
+            table.c.until_date,
+            table.c.hospital_name,
+            table.c.municipality,
+            table.c.adult_icu_beds.label('Camas UCI'),
+            table.c.adult_icu_patients.label('Ocupadas'),
+            table.c.covid_adult_icu_patients.label('# COVID (si disponible)')
+        ]).where(table.c.until_date <= max(bulletin_dates))
+        df = pd.read_sql_query(query, connection, parse_dates=['until_date'])
+        return pd.melt(df, ['until_date', 'hospital_name', 'municipality'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['until_date'] <= pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df, bulletin_date):
+        # We want all facets to have an x-axis scale but to have the same
+        # domain. So we set resolve = independent for the facets, but set
+        # the domain manually on all.
+        min_date = df['until_date'].min()
+        max_date = df['until_date'].max()
+        return alt.Chart(df).transform_lookup(
+            lookup='variable',
+            from_=alt.LookupData(data=self.ORDER_DF, key='variable', fields=['order'])
+        ).mark_area(opacity=0.85).encode(
+            x=alt.X('until_date:T', title=None, axis=alt.Axis(format='%b'),
+                    scale=alt.Scale(domain=[min_date, max_date])),
+            y=alt.Y('value:Q', title=None, stack=None,
+                    axis=alt.Axis(labelFlush=True)),
+            color=alt.Color('variable:N', title=None, sort=self.SORT_ORDER,
+                            scale=alt.Scale(range=self.COLORS),
+                            legend=alt.Legend(orient='top',
+                                              labelLimit=250)),
+            order=alt.Order('order:Q'),
+            tooltip=[
+                alt.Tooltip('until_date:T', title='Fecha'),
+                alt.Tooltip('hospital_name:N', title='Hospital'),
+                alt.Tooltip('municipality:N', title='Municipio'),
+                alt.Tooltip('variable:N', title='Categoría'),
+                alt.Tooltip('value:Q', format='.1f', title='Promedio 7 días)')
+            ]
+        ).properties(
+            width=275, height=50
+        ).facet(
+            columns=2,
+            facet=alt.Facet('hospital_name:N', title=None,
+                            header=alt.Header(labelLimit=275, labelFontSize=9))
+        ).resolve_scale(
+            x='independent', y='independent'
+        )
+
+
 class AgeGroups(AbstractChart):
     ORDER = ['< 10', '10-19', '20-29', '30-39', '40-49',
              '50-59', '60-69', '70-79', '≥ 80','No disponible']
@@ -759,7 +820,6 @@ class AgeGroups(AbstractChart):
                             title='Casos (7 días)'),
                 alt.Tooltip('smoothed_daily_cases_1m:Q', format='.1f',
                             title='Casos (7 días, por millón)')
-
             ]
         ).properties(
             width=300, height=75

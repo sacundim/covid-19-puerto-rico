@@ -28,7 +28,7 @@
 
     <ul>
         <li><a href="#NewCases_section">Tendencia de casos nuevos por fecha de evento (promedios 7 días)</a></li>
-        <li><a href="#Hospitalizations_section">Tendencia de hospitalizaciones</a></li>
+        <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
         <li><a href="#CurrentDeltas_section">Cambio entre boletín actual y anterior</a></li>
         <li><a href="#DailyDeltas_section">Cambios entre boletines recientes</a></li>
         <li><a href="#LatenessDaily_section">Rezago de datos de cada boletín</a></li>
@@ -45,6 +45,7 @@
         <li><a href="#AgeGroups_section">Casos por edad (per cápita, 7 días)</a></li>
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
         <li><a href="#Municipal_section">Historial de casos por municipio (fecha de boletín)</a></li>
+        <li><a href="#ICUsByHospital_section">Unidades de cuidado intensivo</a></li>
         <li><a href="#ConsecutiveBulletinMismatch_section">Descuadre de encabezado de boletín</a></li>
         <li><a href="#BulletinChartMismatch_section">Descuadre de boletín y gráficas</a></li>
         <li><a href="#Revisions_section">Revisiones</a></li>
@@ -129,7 +130,7 @@
 
 
 <div class="section" id="Hospitalizations_section">
-    <h1>Tendencia de hospitalizaciones</h1>
+    <h1>Historial de hospitalizaciones</h1>
 
     <div id="HospitalizationsCovid19Tracking"></div>
     <script type="text/javascript">
@@ -792,6 +793,23 @@
     <div id="Municipal"></div>
     <script type="text/javascript">
       embedChart('Municipal', bulletin_date);
+    </script>
+</div>
+
+
+<div class="section" id="ICUsByHospital_section">
+    <h1>Unidades de cuidado intensivo</h1>
+
+    <p>Promedios de 7 días de disponibilidad de camas de cuidado intensivo de adultos. Datos del
+        <a href="https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-facility">reporte
+            semanal del Departamento de Salud de los EEUU</a>. Estos datos no incluyen todos los
+        hospitales, y suprimen valores menores que cuatro. Incluímos todos los datos en que el
+        número de camas de intensivo ocupadas es ≥4; si menos de 4 son por COVID no aparece ese
+        número.</p>
+
+    <div id="ICUsByHospital"></div>
+    <script type="text/javascript">
+      embedChart('ICUsByHospital', bulletin_date);
     </script>
 </div>
 

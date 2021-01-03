@@ -128,3 +128,53 @@ CREATE TABLE hhs_hospital_history (
     "previous_day_admission_influenza_confirmed_7_day_sum" INTEGER,
     PRIMARY KEY ("hospital_pk", "collection_week")
 );
+
+
+CREATE MATERIALIZED VIEW hhs_hospital_history_municipal_cube AS
+SELECT
+	collection_week since_date,
+	collection_week + 6 until_date,
+	cmn.region region,
+	cmn."name" municipality,
+	fips_code,
+	hospital_name,
+	hospital_pk,
+	sum(null_nines(all_adult_hospital_inpatient_beds_7_day_avg))
+		AS all_adult_hospital_inpatient_beds_7_day_avg,
+	sum(null_nines(all_adult_hospital_inpatient_bed_occupied_7_day_avg))
+		AS all_adult_hospital_inpatient_bed_occupied_7_day_avg,
+	sum(null_nines(total_adult_patients_hospitalized_covid_7_day_avg))
+		AS total_adult_patients_hospitalized_covid_7_day_avg,
+	sum(null_nines(total_adult_patients_hospitalized_confirmed_covid_7_day_avg))
+		AS total_adult_patients_hospitalized_confirmed_covid_7_day_avg,
+	sum(null_nines(total_staffed_adult_icu_beds_7_day_avg))
+		AS total_staffed_adult_icu_beds_7_day_avg,
+	sum(null_nines(staffed_adult_icu_bed_occupancy_7_day_avg))
+		AS staffed_adult_icu_bed_occupancy_7_day_avg,
+	sum(null_nines(staffed_icu_adult_patients_covid_7_day_avg))
+		AS staffed_icu_adult_patients_covid_7_day_avg,
+	sum(null_nines(staffed_icu_adult_patients_confirmed_covid_7_day_avg))
+		AS staffed_icu_adult_patients_confirmed_covid_7_day_avg
+FROM hhs_hospital_history hhh
+INNER JOIN canonical_municipal_names cmn
+	USING (fips_code)
+GROUP BY collection_week, region, cmn."name", fips_code, hospital_name, hospital_pk
+ORDER BY collection_week DESC, region, cmn."name", hospital_name;
+
+CREATE VIEW products.hhs_icu_history AS
+SELECT
+	until_date,
+	hospital_name,
+	municipality,
+	total_staffed_adult_icu_beds_7_day_avg
+		AS adult_icu_beds,
+	staffed_adult_icu_bed_occupancy_7_day_avg
+		AS adult_icu_patients,
+	staffed_icu_adult_patients_covid_7_day_avg
+		AS covid_adult_icu_patients,
+	staffed_icu_adult_patients_confirmed_covid_7_day_avg
+		AS confirmed_covid_adult_icu_patients
+FROM hhs_hospital_history_municipal_cube
+WHERE total_staffed_adult_icu_beds_7_day_avg > 0
+AND staffed_adult_icu_bed_occupancy_7_day_avg > 0
+ORDER BY until_date DESC, municipality;
