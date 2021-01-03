@@ -710,7 +710,7 @@ class ICUsByHospital(AbstractChart):
 
     SORT_ORDER = ['Camas UCI', 'Ocupadas', '# COVID (si disponible)']
     ORDER_DF = pd.DataFrame({'variable': SORT_ORDER, 'order': [0, 1, 2]})
-    COLORS = ['#d7ee8e', '#fcac63', '#d4322c']
+    COLORS = ['#d7ee8e', '#fcac63', '#f16e43']
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('hhs_icu_history', self.metadata,
@@ -735,6 +735,7 @@ class ICUsByHospital(AbstractChart):
         # the domain manually on all.
         min_date = df['until_date'].min()
         max_date = df['until_date'].max()
+        facet_width = 175
         return alt.Chart(df).transform_lookup(
             lookup='variable',
             from_=alt.LookupData(data=self.ORDER_DF, key='variable', fields=['order'])
@@ -742,11 +743,10 @@ class ICUsByHospital(AbstractChart):
             x=alt.X('until_date:T', title=None, axis=alt.Axis(format='%b'),
                     scale=alt.Scale(domain=[min_date, max_date])),
             y=alt.Y('value:Q', title=None, stack=None,
-                    axis=alt.Axis(labelFlush=True)),
+                    axis=alt.Axis(minExtent=25, labelFlush=True)),
             color=alt.Color('variable:N', title=None, sort=self.SORT_ORDER,
                             scale=alt.Scale(range=self.COLORS),
-                            legend=alt.Legend(orient='top',
-                                              labelLimit=250)),
+                            legend=alt.Legend(orient='top', labelLimit=250)),
             order=alt.Order('order:Q'),
             tooltip=[
                 alt.Tooltip('until_date:T', title='Fecha'),
@@ -756,11 +756,11 @@ class ICUsByHospital(AbstractChart):
                 alt.Tooltip('value:Q', format='.1f', title='Promedio 7 días)')
             ]
         ).properties(
-            width=275, height=50
+            width=facet_width, height=60
         ).facet(
-            columns=2,
+            columns=3,
             facet=alt.Facet('hospital_name:N', title=None,
-                            header=alt.Header(labelLimit=275, labelFontSize=9))
+                            header=alt.Header(labelLimit=facet_width, labelFontSize=8))
         ).resolve_scale(
             x='independent', y='independent'
         )
