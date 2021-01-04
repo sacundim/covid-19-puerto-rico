@@ -1,19 +1,4 @@
 --
--- The HHS data set puts -999999 in a lot of columns
--- where the rows in question have values below a certain
--- threshold.
-CREATE FUNCTION coalesce_nines(x INTEGER, y INTEGER)
-RETURNS INTEGER AS $$
-    SELECT CASE WHEN x = -999999 THEN y ELSE x END;
-$$ LANGUAGE SQL;
-
-CREATE FUNCTION coalesce_nines(x DOUBLE PRECISION, y DOUBLE PRECISION)
-RETURNS DOUBLE PRECISION AS $$
-    SELECT CASE WHEN x = -999999 THEN y ELSE x END;
-$$ LANGUAGE SQL;
-
-
---
 -- Data dictionary here:
 --
 -- * https://healthdata.gov/covid-19-reported-patient-impact-and-hospital-capacity-facility-data-dictionary
@@ -130,7 +115,47 @@ CREATE TABLE hhs_hospital_history (
 );
 
 
-CREATE MATERIALIZED VIEW hhs_hospital_history_municipal_cube AS
+--
+-- For privacy reasons, the HHS data set puts -999999 for values
+-- that are less than four, but still reports zeroes as zeroes.
+-- They do this superficially for the `*_7_day_avg` columns as for
+-- the `*_7_day_sum`, which means that you can get more precise
+-- averages by not using `*_7_day_avg` at all and instead dividing
+-- the `*_7_day_sum` by the `*_7_day_coverage` (number of days the
+-- facility reported in that week).
+--
+-- By imputing 0.0 and 4.0 respectively we can also obtain a lower
+-- and upper bound for omitted sums, and we provide functions for
+-- that as well.
+--
+CREATE FUNCTION hhs_avg(sum INTEGER, coverage INTEGER)
+RETURNS DOUBLE PRECISION AS $$
+    SELECT nullif(sum, -999999) :: DOUBLE PRECISION / coverage;
+$$ LANGUAGE SQL;
+
+CREATE FUNCTION hhs_lo(sum INTEGER, coverage INTEGER)
+RETURNS DOUBLE PRECISION AS $$
+    SELECT CASE WHEN sum = -999999
+            THEN 0.0
+            ELSE sum :: DOUBLE PRECISION / coverage
+           END;
+$$ LANGUAGE SQL;
+
+CREATE FUNCTION hhs_hi(sum INTEGER, coverage INTEGER)
+RETURNS DOUBLE PRECISION AS $$
+    SELECT CASE WHEN sum = -999999
+            THEN 4.0
+            ELSE sum :: DOUBLE PRECISION / coverage
+           END;
+$$ LANGUAGE SQL;
+
+CREATE FUNCTION estimate_hi(x DOUBLE PRECISION, y DOUBLE PRECISION)
+RETURNS DOUBLE PRECISION AS $$
+    SELECT CASE WHEN x = -999999 THEN y ELSE x END;
+$$ LANGUAGE SQL;
+
+
+CREATE MATERIALIZED VIEW hhs_hospital_history_cube AS
 SELECT
 	collection_week since_date,
 	collection_week + 6 until_date,
@@ -139,61 +164,87 @@ SELECT
 	fips_code,
 	hospital_name,
 	hospital_pk,
-	coalesce_nines(all_adult_hospital_inpatient_beds_7_day_avg, NULL)
+
+	hhs_avg(all_adult_hospital_inpatient_beds_7_day_sum,
+	        all_adult_hospital_inpatient_beds_7_day_coverage)
 		AS all_adult_hospital_inpatient_beds_7_day_avg,
-	coalesce_nines(all_adult_hospital_inpatient_beds_7_day_avg, 0.0)
+	hhs_lo(all_adult_hospital_inpatient_beds_7_day_sum,
+	       all_adult_hospital_inpatient_beds_7_day_coverage)
 		AS all_adult_hospital_inpatient_beds_7_day_lo,
-	coalesce_nines(all_adult_hospital_inpatient_beds_7_day_avg, 4.0)
+	hhs_hi(all_adult_hospital_inpatient_beds_7_day_sum,
+	       all_adult_hospital_inpatient_beds_7_day_coverage)
 		AS all_adult_hospital_inpatient_beds_7_day_hi,
 
-	coalesce_nines(all_adult_hospital_inpatient_bed_occupied_7_day_avg, NULL)
+	hhs_avg(all_adult_hospital_inpatient_bed_occupied_7_day_sum,
+	        all_adult_hospital_inpatient_bed_occupied_7_day_coverage)
 		AS all_adult_hospital_inpatient_bed_occupied_7_day_avg,
-	coalesce_nines(all_adult_hospital_inpatient_bed_occupied_7_day_avg, 0.0)
+	hhs_lo(all_adult_hospital_inpatient_bed_occupied_7_day_sum,
+	       all_adult_hospital_inpatient_bed_occupied_7_day_coverage)
 		AS all_adult_hospital_inpatient_bed_occupied_7_day_lo,
-	coalesce_nines(all_adult_hospital_inpatient_bed_occupied_7_day_avg, 4.0)
+	hhs_hi(all_adult_hospital_inpatient_bed_occupied_7_day_sum,
+	       all_adult_hospital_inpatient_bed_occupied_7_day_coverage)
 		AS all_adult_hospital_inpatient_bed_occupied_7_day_hi,
 
-	coalesce_nines(total_adult_patients_hospitalized_covid_7_day_avg, NULL)
+	hhs_avg(total_adult_patients_hospitalized_covid_7_day_sum,
+	        total_adult_patients_hospitalized_covid_7_day_coverage)
 		AS total_adult_patients_hospitalized_covid_7_day_avg,
-	coalesce_nines(total_adult_patients_hospitalized_covid_7_day_avg, 0.0)
+	hhs_lo(total_adult_patients_hospitalized_covid_7_day_sum,
+	       total_adult_patients_hospitalized_covid_7_day_coverage)
 		AS total_adult_patients_hospitalized_covid_7_day_lo,
-	coalesce_nines(total_adult_patients_hospitalized_covid_7_day_avg, 4.0)
+	hhs_hi(total_adult_patients_hospitalized_covid_7_day_sum,
+	       total_adult_patients_hospitalized_covid_7_day_coverage)
 		AS total_adult_patients_hospitalized_covid_7_day_hi,
 
-	coalesce_nines(total_adult_patients_hospitalized_confirmed_covid_7_day_avg, NULL)
+	hhs_avg(total_adult_patients_hospitalized_confirmed_covid_7_day_sum,
+	        total_adult_patients_hospitalized_confirmed_covid_7_day_coverage)
 		AS total_adult_patients_hospitalized_confirmed_covid_7_day_avg,
-	coalesce_nines(total_adult_patients_hospitalized_confirmed_covid_7_day_avg, 0.0)
+	hhs_lo(total_adult_patients_hospitalized_confirmed_covid_7_day_sum,
+	       total_adult_patients_hospitalized_confirmed_covid_7_day_coverage)
 		AS total_adult_patients_hospitalized_confirmed_covid_7_day_lo,
-	coalesce_nines(total_adult_patients_hospitalized_confirmed_covid_7_day_avg, 4.0)
+	hhs_hi(total_adult_patients_hospitalized_confirmed_covid_7_day_sum,
+	       total_adult_patients_hospitalized_confirmed_covid_7_day_coverage)
 		AS total_adult_patients_hospitalized_confirmed_covid_7_day_hi,
 
-	coalesce_nines(total_staffed_adult_icu_beds_7_day_avg, NULL)
+	hhs_avg(total_staffed_adult_icu_beds_7_day_sum,
+	        total_staffed_adult_icu_beds_7_day_coverage)
 		AS total_staffed_adult_icu_beds_7_day_avg,
-	coalesce_nines(total_staffed_adult_icu_beds_7_day_avg, 0.0)
+	hhs_lo(total_staffed_adult_icu_beds_7_day_sum,
+	       total_staffed_adult_icu_beds_7_day_coverage)
 		AS total_staffed_adult_icu_beds_7_day_lo,
-	coalesce_nines(total_staffed_adult_icu_beds_7_day_avg, 4.0)
+	hhs_hi(total_staffed_adult_icu_beds_7_day_sum,
+	       total_staffed_adult_icu_beds_7_day_coverage)
 		AS total_staffed_adult_icu_beds_7_day_hi,
 
-	coalesce_nines(staffed_adult_icu_bed_occupancy_7_day_avg, NULL)
+	hhs_avg(staffed_adult_icu_bed_occupancy_7_day_sum,
+	        staffed_adult_icu_bed_occupancy_7_day_coverage)
 		AS staffed_adult_icu_bed_occupancy_7_day_avg,
-	coalesce_nines(staffed_adult_icu_bed_occupancy_7_day_avg, 0.0)
+	hhs_lo(staffed_adult_icu_bed_occupancy_7_day_sum,
+	       staffed_adult_icu_bed_occupancy_7_day_coverage)
 		AS staffed_adult_icu_bed_occupancy_7_day_lo,
-	coalesce_nines(staffed_adult_icu_bed_occupancy_7_day_avg, 4.0)
+	hhs_hi(staffed_adult_icu_bed_occupancy_7_day_sum,
+	       staffed_adult_icu_bed_occupancy_7_day_coverage)
 		AS staffed_adult_icu_bed_occupancy_7_day_hi,
 
-	coalesce_nines(staffed_icu_adult_patients_covid_7_day_avg, NULL)
+	hhs_avg(staffed_icu_adult_patients_covid_7_day_sum,
+	        staffed_icu_adult_patients_covid_7_day_coverage)
 		AS staffed_icu_adult_patients_covid_7_day_avg,
-	coalesce_nines(staffed_icu_adult_patients_covid_7_day_avg, 0.0)
+	hhs_lo(staffed_icu_adult_patients_covid_7_day_sum,
+	       staffed_icu_adult_patients_covid_7_day_coverage)
 		AS staffed_icu_adult_patients_covid_7_day_lo,
-	coalesce_nines(staffed_icu_adult_patients_covid_7_day_avg, 4.0)
+	hhs_hi(staffed_icu_adult_patients_covid_7_day_sum,
+	       staffed_icu_adult_patients_covid_7_day_coverage)
 		AS staffed_icu_adult_patients_covid_7_day_hi,
 
-	coalesce_nines(staffed_icu_adult_patients_confirmed_covid_7_day_avg, NULL)
+	hhs_avg(staffed_icu_adult_patients_confirmed_covid_7_day_sum,
+	        staffed_icu_adult_patients_confirmed_covid_7_day_coverage)
 		AS staffed_icu_adult_patients_confirmed_covid_7_day_avg,
-	coalesce_nines(staffed_icu_adult_patients_confirmed_covid_7_day_avg, 0.0)
+	hhs_lo(staffed_icu_adult_patients_confirmed_covid_7_day_sum,
+	       staffed_icu_adult_patients_confirmed_covid_7_day_coverage)
 		AS staffed_icu_adult_patients_confirmed_covid_7_day_lo,
-	coalesce_nines(staffed_icu_adult_patients_confirmed_covid_7_day_avg, 4.0)
+	hhs_hi(staffed_icu_adult_patients_confirmed_covid_7_day_sum,
+	       staffed_icu_adult_patients_confirmed_covid_7_day_coverage)
 		AS staffed_icu_adult_patients_confirmed_covid_7_day_hi
+
 FROM hhs_hospital_history hhh
 INNER JOIN canonical_municipal_names cmn
 	USING (fips_code)
@@ -223,6 +274,6 @@ SELECT
 	    AS staffed_icu_adult_patients_confirmed_covid_7_day_lo,
 	sum(staffed_icu_adult_patients_confirmed_covid_7_day_hi)
 	    AS staffed_icu_adult_patients_confirmed_covid_7_day_hi
-FROM hhs_hospital_history_municipal_cube
+FROM hhs_hospital_history_cube
 GROUP BY since_date, until_date, region
 ORDER BY since_date DESC, until_date DESC, region;

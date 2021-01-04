@@ -708,30 +708,22 @@ class HospitalizationsCovid19Tracking(AbstractChart):
 class ICUsByHospital(AbstractChart):
     """Hospitalizations based on HHS data, by hospital"""
 
-    SORT_ORDER = ['Camas (≥ 4)', 'Ocupadas (≥ 4)', 'COVID (≥ 4)',
-                  'Camas (> 0)', 'Ocupadas (> 0)', 'COVID (> 0)']
-    COLORS = ["#a4d86e", "#f58518", "#d4322c",
-              'lightgray', 'darkgray', 'dimgray']
+    SORT_ORDER = ['Camas (mínimo)', 'Ocupadas (máximo)', 'COVID (máximo)']
+    COLORS = ["#a4d86e", "#f58518", "#d4322c"]
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('hhs_hospital_history_municipal_cube',
+        table = sqlalchemy.Table('hhs_hospital_history_cube',
                                  self.metadata, autoload=True,)
         query = select([
             table.c.until_date,
             table.c.hospital_name,
             table.c.municipality,
-            table.c.total_staffed_adult_icu_beds_7_day_avg
-                .label('Camas (≥ 4)'),
-            sqlalchemy.case([(table.c.total_staffed_adult_icu_beds_7_day_avg == None, 4.0)])
-                .label('Camas (> 0)'),
-            table.c.staffed_adult_icu_bed_occupancy_7_day_avg
-                .label('Ocupadas (≥ 4)'),
-            sqlalchemy.case([(table.c.staffed_adult_icu_bed_occupancy_7_day_avg == None, 4.0)])
-                .label('Ocupadas (> 0)'),
-            table.c.staffed_icu_adult_patients_covid_7_day_avg
-                .label('COVID (≥ 4)'),
-            sqlalchemy.case([(table.c.staffed_icu_adult_patients_covid_7_day_avg == None, 4.0)])
-                .label('COVID (> 0)')
+            table.c.total_staffed_adult_icu_beds_7_day_lo
+                .label('Camas (mínimo)'),
+            table.c.staffed_adult_icu_bed_occupancy_7_day_hi
+                .label('Ocupadas (máximo)'),
+            table.c.staffed_icu_adult_patients_covid_7_day_hi
+                .label('COVID (máximo)')
         ]).where(table.c.until_date <= max(bulletin_dates))
         df = pd.read_sql_query(query, connection, parse_dates=['until_date'])
         return pd.melt(df, ['until_date', 'hospital_name', 'municipality']).dropna()
@@ -745,7 +737,7 @@ class ICUsByHospital(AbstractChart):
         # the domain manually on all.
         min_date = df['until_date'].min()
         max_date = df['until_date'].max()
-        facet_width = 170
+        facet_width = 160
         return alt.Chart(df).mark_bar().encode(
             x=alt.X('until_date:T', title=None, axis=alt.Axis(format='%b'),
                     scale=alt.Scale(domain=[min_date, max_date])),
@@ -775,7 +767,7 @@ class ICUsByHospital(AbstractChart):
 class ICUsByRegion(AbstractChart):
     """Hospitalizations based on HHS data, by region"""
 
-    SORT_ORDER = ['Camas (min)', 'Ocupadas (max)', 'COVID (max)']
+    SORT_ORDER = ['Camas (mínimo)', 'Ocupadas (máximo)', 'COVID (máximo)']
     COLORS = ["#a4d86e", "#f58518", "#d4322c"]
 
     def fetch_data(self, connection, bulletin_dates):
@@ -784,11 +776,11 @@ class ICUsByRegion(AbstractChart):
             table.c.until_date,
             table.c.region,
             table.c.total_staffed_adult_icu_beds_7_day_lo
-                .label('Camas (min)'),
+                .label('Camas (mínimo)'),
             table.c.staffed_adult_icu_bed_occupancy_7_day_hi
-                .label('Ocupadas (max)'),
+                .label('Ocupadas (máximo)'),
             table.c.staffed_icu_adult_patients_covid_7_day_hi
-                .label('COVID (max)')
+                .label('COVID (máximo)')
         ]).where(table.c.until_date <= max(bulletin_dates))
         df = pd.read_sql_query(query, connection, parse_dates=['until_date'])
         return pd.melt(df, ['until_date', 'region']).dropna()
