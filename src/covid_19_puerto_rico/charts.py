@@ -706,7 +706,7 @@ class HospitalizationsCovid19Tracking(AbstractChart):
 
 
 class ICUsByHospital(AbstractChart):
-    """Hospitalizations based on HHS data, by region"""
+    """Hospitalizations based on HHS data, by hospital"""
 
     SORT_ORDER = ['Camas (≥ 4)', 'Ocupadas (≥ 4)', 'COVID (≥ 4)',
                   'Camas (> 0)', 'Ocupadas (> 0)', 'COVID (> 0)']
@@ -714,20 +714,23 @@ class ICUsByHospital(AbstractChart):
               'lightgray', 'darkgray', 'dimgray']
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('hhs_icu_history', self.metadata,
-                                 autoload=True, schema='products')
+        table = sqlalchemy.Table('hhs_hospital_history_municipal_cube',
+                                 self.metadata, autoload=True,)
         query = select([
             table.c.until_date,
             table.c.hospital_name,
             table.c.municipality,
-            table.c.adult_icu_beds.label('Camas (≥ 4)'),
-            sqlalchemy.case([(table.c.adult_icu_beds == None, 4.0)])
+            table.c.total_staffed_adult_icu_beds_7_day_avg
+                .label('Camas (≥ 4)'),
+            sqlalchemy.case([(table.c.total_staffed_adult_icu_beds_7_day_avg == None, 4.0)])
                 .label('Camas (> 0)'),
-            table.c.adult_icu_patients.label('Ocupadas (≥ 4)'),
-            sqlalchemy.case([(table.c.adult_icu_patients == None, 4.0)])
+            table.c.staffed_adult_icu_bed_occupancy_7_day_avg
+                .label('Ocupadas (≥ 4)'),
+            sqlalchemy.case([(table.c.staffed_adult_icu_bed_occupancy_7_day_avg == None, 4.0)])
                 .label('Ocupadas (> 0)'),
-            table.c.covid_adult_icu_patients.label('COVID (≥ 4)'),
-            sqlalchemy.case([(table.c.covid_adult_icu_patients == None, 4.0)])
+            table.c.staffed_icu_adult_patients_covid_7_day_avg
+                .label('COVID (≥ 4)'),
+            sqlalchemy.case([(table.c.staffed_icu_adult_patients_covid_7_day_avg == None, 4.0)])
                 .label('COVID (> 0)')
         ]).where(table.c.until_date <= max(bulletin_dates))
         df = pd.read_sql_query(query, connection, parse_dates=['until_date'])
@@ -767,6 +770,63 @@ class ICUsByHospital(AbstractChart):
         ).resolve_scale(
             x='independent', y='independent'
         )
+
+
+class ICUsByRegion(AbstractChart):
+    """Hospitalizations based on HHS data, by region"""
+
+    SORT_ORDER = ['Camas (min)', 'Ocupadas (max)', 'COVID (max)']
+    COLORS = ["#a4d86e", "#f58518", "#d4322c"]
+
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('hhs_icu_history_region', self.metadata, autoload=True,)
+        query = select([
+            table.c.until_date,
+            table.c.region,
+            table.c.total_staffed_adult_icu_beds_7_day_lo
+                .label('Camas (min)'),
+            table.c.staffed_adult_icu_bed_occupancy_7_day_hi
+                .label('Ocupadas (max)'),
+            table.c.staffed_icu_adult_patients_covid_7_day_hi
+                .label('COVID (max)')
+        ]).where(table.c.until_date <= max(bulletin_dates))
+        df = pd.read_sql_query(query, connection, parse_dates=['until_date'])
+        return pd.melt(df, ['until_date', 'region']).dropna()
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['until_date'] <= pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df, bulletin_date):
+        # We want all facets to have an x-axis scale but to have the same
+        # domain. So we set resolve = independent for the facets, but set
+        # the domain manually on all.
+        min_date = df['until_date'].min()
+        max_date = df['until_date'].max()
+        facet_width = 160
+        return alt.Chart(df).mark_bar().encode(
+            x=alt.X('until_date:T', title=None, axis=alt.Axis(format='%b'),
+                    scale=alt.Scale(domain=[min_date, max_date])),
+            y=alt.Y('value:Q', title=None, stack=None,
+                    axis=alt.Axis(minExtent=30, labelFlush=True)),
+            color=alt.Color('variable:N', title=None, sort=self.SORT_ORDER,
+                            scale=alt.Scale(range=self.COLORS),
+                            legend=alt.Legend(orient='top', columns=3, labelLimit=250)),
+            tooltip=[
+                alt.Tooltip('until_date:T', title='Fecha'),
+                alt.Tooltip('region:N', title='Región'),
+                alt.Tooltip('variable:N', title='Categoría'),
+                alt.Tooltip('value:Q', format='.1f', title='Promedio 7 días)')
+            ]
+        ).properties(
+            width=facet_width, height=100
+        ).facet(
+            columns=3,
+            facet=alt.Facet('region:N', title=None,
+                            header=alt.Header(labelLimit=facet_width))
+        ).resolve_scale(
+            x='independent', y='independent'
+        )
+
 
 
 class AgeGroups(AbstractChart):

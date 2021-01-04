@@ -45,7 +45,8 @@
         <li><a href="#AgeGroups_section">Casos por edad (per cápita, 7 días)</a></li>
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
         <li><a href="#Municipal_section">Historial de casos por municipio (fecha de boletín)</a></li>
-        <li><a href="#ICUsByHospital_section">Historial de cuidado intensivo</a></li>
+        <li><a href="#ICUsByRegion_section">Historial de cuidado intensivo, regiones</a></li>
+        <li><a href="#ICUsByHospital_section">Historial de cuidado intensivo, hopsitales</a></li>
         <li><a href="#ConsecutiveBulletinMismatch_section">Descuadre de encabezado de boletín</a></li>
         <li><a href="#BulletinChartMismatch_section">Descuadre de boletín y gráficas</a></li>
         <li><a href="#Revisions_section">Revisiones</a></li>
@@ -797,8 +798,33 @@
 </div>
 
 
+<div class="section" id="ICUsByRegion_section">
+    <h1>Historial de cuidado intensivo, regiones</h1>
+
+    <div id="ICUsByRegion"></div>
+    <script type="text/javascript">
+      embedChart('ICUsByRegion', bulletin_date);
+    </script>
+
+    <h2>¿Qué es esto?</h2>
+
+    <p>Una gráfica <b>muy imprecisa e imperfecta</b> de disponibilidad y uso de camas de
+        cuidado intensivo <em>de adultos</em>, por datos del
+        <a href="https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-facility">reporte
+            semanal del Departamento de Salud de los EEUU</a>. Este informe, sin embargo, no
+        permite dar valores precisos porque (a) no incluye todos los hospitales, y (b) por privacidad
+        suprime valores menores que cuatro y mayores que cero.  Por este motivo optamos por la vía
+        pesimista de ilustrar el número de camas disponibles como el mínimo que se deduce del informe,
+        pero el uso de estas y la porción por COVID (sospechado o confirmado) como el máximo.  O sea,
+        el número verdadero de camas debe ser mayor, y los de utilización menores.</p>
+
+    <p>Vale apuntar que la región de Fajardo tiene bien pocas camas de UCI y por tanto los datos
+        federales están bien suprimidos.</p>
+</div>
+
+
 <div class="section" id="ICUsByHospital_section">
-    <h1>Historial de cuidado intensivo</h1>
+    <h1>Historial de cuidado intensivo, hospitales</h1>
 
     <p>Promedios de 7 días de disponibilidad de camas de cuidado intensivo <em>de adultos</em>,
         y cuántas están ocupadas por pacientes de COVID-19 (sospechado o confirmado). Datos del
