@@ -250,30 +250,40 @@ INNER JOIN canonical_municipal_names cmn
 	USING (fips_code)
 ORDER BY collection_week DESC, region, cmn."name", hospital_name;
 
-CREATE VIEW hhs_icu_history_region AS
+
+CREATE VIEW products.icus_by_hospital AS
 SELECT
-    since_date,
+	until_date,
+	hospital_name,
+	municipality,
+	total_staffed_adult_icu_beds_7_day_lo,
+	-- Occupied ICU beds can't be more than staffed ones:
+	LEAST(staffed_adult_icu_bed_occupancy_7_day_hi,
+		  total_staffed_adult_icu_beds_7_day_lo)
+		AS staffed_adult_icu_bed_occupancy_7_day_hi,
+	-- ICU COVID patients can't be more than either occupied
+	-- or staffed beds:
+	LEAST(staffed_icu_adult_patients_covid_7_day_hi,
+		  staffed_adult_icu_bed_occupancy_7_day_hi,
+		  total_staffed_adult_icu_beds_7_day_lo)
+	  AS staffed_icu_adult_patients_covid_7_day_hi
+FROM hhs_hospital_history_cube
+ORDER BY until_date DESC, hospital_name;
+
+
+CREATE VIEW products.icus_by_region AS
+SELECT
 	until_date,
 	region,
 	sum(total_staffed_adult_icu_beds_7_day_lo)
-	    AS total_staffed_adult_icu_beds_7_day_lo,
-	sum(total_staffed_adult_icu_beds_7_day_hi)
-	    AS total_staffed_adult_icu_beds_7_day_hi,
-
-	sum(staffed_adult_icu_bed_occupancy_7_day_lo)
-	    AS staffed_adult_icu_bed_occupancy_7_day_lo,
-	sum(staffed_adult_icu_bed_occupancy_7_day_hi)
-	    AS staffed_adult_icu_bed_occupancy_7_day_hi,
-
-	sum(staffed_icu_adult_patients_covid_7_day_lo)
-	    AS staffed_icu_adult_patients_covid_7_day_lo,
-	sum(staffed_icu_adult_patients_covid_7_day_hi)
-	    AS staffed_icu_adult_patients_covid_7_day_hi,
-
-	sum(staffed_icu_adult_patients_confirmed_covid_7_day_lo)
-	    AS staffed_icu_adult_patients_confirmed_covid_7_day_lo,
-	sum(staffed_icu_adult_patients_confirmed_covid_7_day_hi)
-	    AS staffed_icu_adult_patients_confirmed_covid_7_day_hi
+		AS total_staffed_adult_icu_beds_7_day_lo,
+	sum(LEAST(staffed_adult_icu_bed_occupancy_7_day_hi,
+		 	  total_staffed_adult_icu_beds_7_day_lo))
+		AS staffed_adult_icu_bed_occupancy_7_day_hi,
+	sum(LEAST(staffed_icu_adult_patients_covid_7_day_hi,
+		      staffed_adult_icu_bed_occupancy_7_day_hi,
+		      total_staffed_adult_icu_beds_7_day_lo))
+	  AS staffed_icu_adult_patients_covid_7_day_hi
 FROM hhs_hospital_history_cube
-GROUP BY since_date, until_date, region
-ORDER BY since_date DESC, until_date DESC, region;
+GROUP BY until_date, region
+ORDER BY until_date DESC, region;

@@ -712,8 +712,8 @@ class ICUsByHospital(AbstractChart):
     COLORS = ["#a4d86e", "#f58518", "#d4322c"]
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('hhs_hospital_history_cube',
-                                 self.metadata, autoload=True,)
+        table = sqlalchemy.Table('icus_by_hospital', self.metadata,
+                                 schema='products', autoload=True)
         query = select([
             table.c.until_date,
             table.c.hospital_name,
@@ -771,7 +771,8 @@ class ICUsByRegion(AbstractChart):
     COLORS = ["#a4d86e", "#f58518", "#d4322c"]
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('hhs_icu_history_region', self.metadata, autoload=True,)
+        table = sqlalchemy.Table('icus_by_region', self.metadata,
+                                 schema='products', autoload=True)
         query = select([
             table.c.until_date,
             table.c.region,
