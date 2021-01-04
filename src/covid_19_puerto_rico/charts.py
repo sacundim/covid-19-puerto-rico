@@ -708,7 +708,7 @@ class HospitalizationsCovid19Tracking(AbstractChart):
 class ICUsByHospital(AbstractChart):
     """Hospitalizations based on HHS data, by hospital"""
 
-    SORT_ORDER = ['Camas (mínimo)', 'Ocupadas (máximo)', 'COVID (máximo)']
+    SORT_ORDER = ['Camas', 'Ocupadas', 'COVID']
     COLORS = ["#a4d86e", "#f58518", "#d4322c"]
 
     def fetch_data(self, connection, bulletin_dates):
@@ -719,11 +719,11 @@ class ICUsByHospital(AbstractChart):
             table.c.hospital_name,
             table.c.municipality,
             table.c.total_staffed_adult_icu_beds_7_day_lo
-                .label('Camas (mínimo)'),
+                .label('Camas'),
             table.c.staffed_adult_icu_bed_occupancy_7_day_hi
-                .label('Ocupadas (máximo)'),
+                .label('Ocupadas'),
             table.c.staffed_icu_adult_patients_covid_7_day_hi
-                .label('COVID (máximo)')
+                .label('COVID')
         ]).where(table.c.until_date <= max(bulletin_dates))
         df = pd.read_sql_query(query, connection, parse_dates=['until_date'])
         return pd.melt(df, ['until_date', 'hospital_name', 'municipality']).dropna()
@@ -767,7 +767,7 @@ class ICUsByHospital(AbstractChart):
 class ICUsByRegion(AbstractChart):
     """Hospitalizations based on HHS data, by region"""
 
-    SORT_ORDER = ['Camas (mínimo)', 'Ocupadas (máximo)', 'COVID (máximo)']
+    SORT_ORDER = ['Camas', 'Ocupadas', 'COVID']
     COLORS = ["#a4d86e", "#f58518", "#d4322c"]
 
     def fetch_data(self, connection, bulletin_dates):
@@ -777,11 +777,11 @@ class ICUsByRegion(AbstractChart):
             table.c.until_date,
             table.c.region,
             table.c.total_staffed_adult_icu_beds_7_day_lo
-                .label('Camas (mínimo)'),
+                .label('Camas'),
             table.c.staffed_adult_icu_bed_occupancy_7_day_hi
-                .label('Ocupadas (máximo)'),
+                .label('Ocupadas'),
             table.c.staffed_icu_adult_patients_covid_7_day_hi
-                .label('COVID (máximo)')
+                .label('COVID')
         ]).where(table.c.until_date <= max(bulletin_dates))
         df = pd.read_sql_query(query, connection, parse_dates=['until_date'])
         return pd.melt(df, ['until_date', 'region']).dropna()

@@ -46,7 +46,7 @@
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
         <li><a href="#Municipal_section">Historial de casos por municipio (fecha de boletín)</a></li>
         <li><a href="#ICUsByRegion_section">Historial de cuidado intensivo, regiones</a></li>
-        <li><a href="#ICUsByHospital_section">Historial de cuidado intensivo, hopsitales</a></li>
+        <li><a href="#ICUsByHospital_section">Historial de cuidado intensivo, hospitales individuales</a></li>
         <li><a href="#ConsecutiveBulletinMismatch_section">Descuadre de encabezado de boletín</a></li>
         <li><a href="#BulletinChartMismatch_section">Descuadre de boletín y gráficas</a></li>
         <li><a href="#Revisions_section">Revisiones</a></li>
@@ -822,11 +822,11 @@
     </ol>
 
     <p>Por este motivo optamos por la medida pesimista de ilustrar el número de camas como el
-        mínimo que se puede deducir del informe (imputando 0.0 a números suprimidos), pero el
-        máximo (imputando 4.0) de ocupadas y pacientes de COVID (sospechado o confirmado).  Esto
-        significa que el número de camas que calculamos aquí es menor que el real, pero el de
-        ocupadas y pacientes de COVID mayor. (Pero no olvidar que estos datos no cubren todos
-        los hospitales, cuyas camas ni pacientes contamos.)</p>
+        mínimo que se puede deducir del informe, pero el máximo de ocupadas y pacientes de COVID
+        (sospechado o confirmado).  Dejando aparte el fallo obvio que esta gráfica no abarca todos
+        los hospitales, esto significa que aún para los que sí cubre, el número de camas que estimamos
+        a veces podría ser menor que el real (aunque casi nunca parece serlo), y nuestros números de
+        camas ocupadas y pacientes de COVID generalmente son mayores que los reales.</p>
 
     <h2>Nota técnica</h2>
 
@@ -860,11 +860,10 @@
         y cuántas están ocupadas por pacientes de COVID-19 (sospechado o confirmado). Datos del
         <a href="https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-facility">reporte
             semanal del Departamento de Salud de los EEUU</a>. Como el informe federal suprime
-        valores menores de cuatro por privacidad, en esos caso imputamos el mínimo de camas
-        compatible con los datos pero el máximo de pacientes; ver las notas de
-        <a href="#ICUsByRegion_section">nuestra gráfica de cuidado intensivo por región</a>.
-        Pero vale advertir aquí que barras que digan exactamente 4.0 son generalmente por esta
-        imputación pesimista en vez del valor real.</p>
+        algunos valores pequeños por privacidad, en esos casos imputamos el mínimo de camas
+        disponibles que sea compatible con los datos (que casi siempre es igual al máximo), pero
+        el máximo de ocupadas y COVID; ver las notas de <a href="#ICUsByRegion_section">nuestra
+            gráfica de cuidado intensivo por región</a>.</p>
 
     <div id="ICUsByHospital"></div>
     <script type="text/javascript">
