@@ -93,7 +93,7 @@ class NewCases(AbstractMolecularChart):
                                                         direction='vertical', fillColor='white',
                                                         padding=7.5))
         ).properties(
-            width=585, height=425
+            width=585, height=475
         )
 
 
