@@ -286,4 +286,22 @@ SELECT
 	  AS staffed_icu_adult_patients_covid_7_day_hi
 FROM hhs_hospital_history_cube
 GROUP BY until_date, region
+
+UNION
+
+SELECT
+	until_date,
+	'Puerto Rico',
+	sum(total_staffed_adult_icu_beds_7_day_lo)
+		AS total_staffed_adult_icu_beds_7_day_lo,
+	sum(LEAST(staffed_adult_icu_bed_occupancy_7_day_hi,
+		 	  total_staffed_adult_icu_beds_7_day_lo))
+		AS staffed_adult_icu_bed_occupancy_7_day_hi,
+	sum(LEAST(staffed_icu_adult_patients_covid_7_day_hi,
+		      staffed_adult_icu_bed_occupancy_7_day_hi,
+		      total_staffed_adult_icu_beds_7_day_lo))
+	  AS staffed_icu_adult_patients_covid_7_day_hi
+FROM hhs_hospital_history_cube
+GROUP BY until_date
+
 ORDER BY until_date DESC, region;
