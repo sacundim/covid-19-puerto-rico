@@ -9,7 +9,7 @@ S3_DATA_URL="${S3_DATA_URL-s3://covid-19-puerto-rico-data}"
 
 HERE="$(dirname $0)"
 REPO_ROOT="${HERE}/.."
-SOURCE_MATERIAL_DIR="${REPO_ROOT}/assets/source_material"
+ASSETS_DIR="${REPO_ROOT}/assets"
 S3_SYNC_DIR="${REPO_ROOT}/s3-bucket-sync/covid-19-puerto-rico-data"
 
 BULLETIN_CASES_FROM="${REPO_ROOT}/assets/data/cases/PuertoRico-bitemporal.csv"
@@ -26,6 +26,13 @@ cp -p "${BULLETIN_CASES_FROM}" "${BULLETIN_CASES_TMP}"
 echo "$(date): Syncing ${BULLETIN_CASES_FROM} to ${BULLETIN_CASES_TO}"
 aws s3 sync $* "${BULLETIN_CASES_TMP}" "${BULLETIN_CASES_TO}"
 
-echo "$(date): Syncing ${SOURCE_MATERIAL_DIR} to ${S3_DATA_URL}/source_material"
+echo "$(date): Syncing ${ASSETS_DIR}/source_material/ to ${S3_DATA_URL}/source_material/"
 time aws s3 sync $* --exclude '*.DS_Store' \
-  "${SOURCE_MATERIAL_DIR}/" "${S3_DATA_URL}/source_material/"
+  "${ASSETS_DIR}/source_material/" "${S3_DATA_URL}/source_material/"
+
+if [ -d "${S3_SYNC_DIR}/worksheets" ]
+then
+  echo "$(date): Syncing ${S3_SYNC_DIR}/worksheets/ to ${S3_DATA_URL}/worksheets/"
+  time aws s3 sync $* --exclude '*.DS_Store' \
+    "${S3_SYNC_DIR}/worksheets/" "${S3_DATA_URL}/worksheets/"
+fi
