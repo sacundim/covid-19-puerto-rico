@@ -5,6 +5,7 @@
 
 import altair as alt
 import datetime
+import logging
 import numpy as np
 import pandas as pd
 import sqlalchemy
@@ -35,14 +36,36 @@ class NewCases(AbstractMolecularChart):
                         table.c.bulletin_date <= max(bulletin_dates)))
         df = pd.read_sql_query(query, connection,
                                parse_dates=["bulletin_date", "datum_date"])
-        return pd.melt(df, ["bulletin_date", "datum_date"])
+        assert(df['bulletin_date'].max() == pd.to_datetime(max(bulletin_dates)))
+
+        melted = pd.melt(df, ["bulletin_date", "datum_date"])
+        max_bulletin_date = max(bulletin_dates)
+        self.assert_good_df(melted, max_bulletin_date)
+        logging.debug("NewCases: melted df is good for %s", max_bulletin_date)
+
+        return melted
+
+    def assert_good_df(self, df, bulletin_date):
+        """There's a weird nondeterministic bug where the most recent bulletin_date gets dropped"""
+        deaths = df.loc[df['variable'] == 'Muertes']
+        most_recent = deaths['bulletin_date'].max()
+        newest = deaths.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+        logging.debug('NewCases bulletin_date = %s, most_recent: %s',
+                      bulletin_date, most_recent)
+        assert(most_recent == pd.to_datetime(bulletin_date))
+        return df
 
     def filter_data(self, df, bulletin_date):
         week_ago = bulletin_date - datetime.timedelta(days=7)
-        return df.loc[(df['bulletin_date'] == pd.to_datetime(bulletin_date))
-                      | (df['bulletin_date'] == pd.to_datetime(week_ago))]
+        filtered = df.loc[(df['bulletin_date'] == pd.to_datetime(bulletin_date))
+                          | (df['bulletin_date'] == pd.to_datetime(week_ago))]
+        self.assert_good_df(filtered, bulletin_date)
+        logging.debug("NewCases: filtered df is good for %s", bulletin_date)
+        return filtered
 
     def make_chart(self, df, bulletin_date):
+        self.assert_good_df(df, bulletin_date)
+        logging.debug("NewCases: make_chart df is good for %s", bulletin_date)
         return alt.Chart(df.dropna()).transform_window(
             groupby=['variable', 'bulletin_date'],
             sort=[{'field': 'datum_date'}],
