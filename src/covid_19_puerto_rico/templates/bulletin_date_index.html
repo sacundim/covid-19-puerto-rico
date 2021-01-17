@@ -36,7 +36,7 @@
         <li><a href="#LatenessTiers_section">Rezago de casos por renglones</a></li>
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas per cápita (promedio 7 días)</a></li>
         <li><a href="#NaivePositiveRate_section">Positividad (promedio 7 días)</a></li>
-        <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados (EXPERIMENTAL)</a></li>
+        <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados</a></li>
         <li><a href="#CaseFatalityRate_section">Tasa de letalidad (CFR) rezagada</a></li>
         <li><a href="#CumulativeTestsVsCases_section">Pruebas vs. casos (acumulado)</a></li>
         <li><a href="#MolecularCurrentDeltas_section">Pruebas añadidas a Bioportal</a></li>
@@ -432,7 +432,7 @@
 
 
 <div class="section" id="ConfirmationsVsRejections_section">
-    <h1>Casos confirmados vs. descartados (EXPERIMENTAL)</h1>
+    <h1>Casos confirmados vs. descartados</h1>
 
     <div id="ConfirmationsVsRejections"></div>
     <script type="text/javascript">
@@ -515,27 +515,8 @@
         firme que explique esta discrepancia pero mi conjetura provisional es que la cifra oficial
         disfruta de análisis más cuidadoso para identificar pacientes duplicados que lo que
         se expone en el campo de <code>patientId</code> en Bioportal.</p>
-
-
-    <h3>¿De qué sirve esto?</h3>
-
-    <p>Vale muy bien preguntar de qué sirve tener esta metodología idiosincrática y provincial
-        de positividad si nadie más la usa y por tanto los número que da no se pueden
-        comparar con los que calculan otros. </p>
-
-    <p>A esto contesto primero que todos los métodos de medir positividad parecen sufrir del
-        problema que no existe una vara de referencia contra la cual comparar sus cifras.  Por
-        más que se repite a voces que la positividad no debería pasar de 3%, o 5%, o 8%, no he
-        encontrado aún un marco teórico que justifique cómo fijar tales umbrales.  Y contesto
-        segundo que la inclusión de las pruebas de seguimiento en los cálculos podría en ciertas
-        situaciones confundir la tendencia de las curvas, e.g., pintar una caída en casos ÷ pruebas
-        que se debiera más bien a un aumento en el volumen de pruebas de seguimiento, y por tanto
-        que se modera o desaparece tras aplicarse una corrección como la que se hace aquí.</p>
-
-    <p>Es pertinente entonces notar que el método de esta gráfica arroja tasas que caen entre
-        medio de los más comunes de positivas ÷ pruebas (que tiende a dar más altas) y
-        casos ÷ pruebas (que tiende a más bajas).</p>
 </div>
+
 
 <div class="section" id="CaseFatalityRate_section">
     <h1>Tasa de letalidad (CFR) rezagada</h1>
