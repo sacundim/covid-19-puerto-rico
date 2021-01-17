@@ -37,6 +37,7 @@
         <li><a href="#NewDailyTestsPerCapita_section">Pruebas per cápita (promedio 7 días)</a></li>
         <li><a href="#NaivePositiveRate_section">Positividad (promedio 7 días)</a></li>
         <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados (EXPERIMENTAL)</a></li>
+        <li><a href="#CaseFatalityRate_section">Tasa de letalidad CFR (EXPERIMENTAL)</a></li>
         <li><a href="#CumulativeTestsVsCases_section">Pruebas vs. casos (acumulado)</a></li>
         <li><a href="#MolecularCurrentDeltas_section">Pruebas añadidas a Bioportal</a></li>
         <li><a href="#MolecularDailyDeltas_section">Historial de pruebas en Bioportal</a></li>
@@ -534,6 +535,49 @@
     <p>Es pertinente entonces notar que el método de esta gráfica arroja tasas que caen entre
         medio de los más comunes de positivas ÷ pruebas (que tiende a dar más altas) y
         casos ÷ pruebas (que tiende a más bajas).</p>
+</div>
+
+<div class="section" id="CaseFatalityRate_section">
+    <h1>Tasa de letalidad CFR (EXPERIMENTAL)</h1>
+
+    <div id="CaseFatalityRate"></div>
+    <script type="text/javascript">
+        embedChart('CaseFatalityRate', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Aproximación de qué porcentaje de los casos <b>detectados</b> (que no son todos los
+        contagios) resultaron en decesos, lo que en inglés se llama el "case fatality rate"
+        (CFR). Esto sin embargo lo calculamos de una manera más cuidadosa que lo usual,
+        comparando muertes (por fecha actual de deceso, ventanas móbiles de 14 días) con
+        casos detectados por muestras 16 días atrás. Esto responde a los siguientes
+        supuestos:</p>
+
+    <ol>
+        <li>Tiempo típico entre contagio y deceso es de 23 días;</li>
+        <li>Tiempo típico entre contagio y síntomas es de 5 días;</li>
+        <li>Tiempo típico entre síntomas y toma de muestra es de 2 días.
+            (Esto es pura adivinanza de mi parte.)</li>
+    </ol>
+
+    <p>Esta tasa no es la letalidad verdadera del virus, porque no toma en cuenta casos que
+        no se detectaron.  Esto quiere decir que si se contempla en conjunto con un estimado
+        de la letalidad verdadera ("infection fatality rate" (IFR) en inglés), sirve para
+        estimar qué porciento de los contagios verdaderos se detecta, según esta fórmula:</p>
+
+    <center>
+        % detectados = IFR / CFR
+    </center>
+
+    <p>Los <a href="https://www.cdc.gov/coronavirus/2019-ncov/hcp/planning-scenarios.html">estimados
+        de los CDC de los EEUU</a> (revisión 10 de septiembre), ajustados a la edad de la población de
+        Puerto Rico, pondrían el IFR del país cerca del 1%, así que un CFR por ejemplo de 1.5% en esta
+        gráfica implicaría entonces que para esas fechas se detectaba como el 67% de los contagios.
+        Existen otros estudios con otros estimados que he consultado, que ajustados a la población de
+        Puerto Rico predicen diversos IFRs entre 1% a 1.8%.  Nótese que usar estimados más bajos de IFR
+        produce estimados más altos de casos sin detectar; optimismo respecto a IFR = pesimismo respecto
+        a detección.</p>
 </div>
 
 

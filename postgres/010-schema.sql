@@ -646,6 +646,34 @@ GROUP BY bulletin_date, ranges.lo, ranges.hi, ranges.tier
 ORDER BY bulletin_date DESC, ranges.lo ASC;
 
 
+CREATE VIEW products.lagged_cfr AS
+SELECT
+	cases.bulletin_date,
+	cases.datum_date collected_date,
+	deaths.datum_date death_date,
+	avg(cases.confirmed_cases) OVER datum
+		+ avg(COALESCE(cases.probable_cases, 0)) OVER datum
+		AS smoothed_cases,
+	avg(deaths.deaths) OVER datum
+		AS smoothed_deaths,
+	avg(deaths.deaths) OVER datum
+		/ (avg(cases.confirmed_cases) OVER datum
+			+ avg(COALESCE(cases.probable_cases, 0)) OVER datum)
+		AS lagged_cfr
+FROM bitemporal_agg cases
+INNER JOIN bitemporal_agg deaths
+	ON cases.bulletin_date = deaths.bulletin_date
+	AND deaths.datum_date = cases.datum_date + 16
+WINDOW datum AS (
+	PARTITION BY cases.bulletin_date
+	ORDER BY cases.datum_date
+	RANGE '13 days' PRECEDING
+)
+ORDER BY cases.bulletin_date DESC, cases.datum_date DESC;
+
+COMMENT ON VIEW products.lagged_cfr IS 'Lagged case fatality rate';
+
+
 CREATE VIEW products.covimetro AS
 WITH terms AS (
 	SELECT
