@@ -975,7 +975,7 @@ class CaseFatalityRate(AbstractChart):
         ).encode(
             x=alt.X('collected_date:T', title='Fecha de muestras'),
             y=alt.Y('lagged_cfr:Q', title='Letalidad (CFR, 14 días)',
-                    axis=alt.Axis(format='%'), scale=alt.Scale(type='log', domain=[0.01, 0.1])),
+                    axis=alt.Axis(format='%'), scale=alt.Scale(type='log', domain=[0.01, 1.0])),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', title='Datos hasta',
                                       legend=alt.Legend(orient='top', titleOrient='left',
                                                         symbolStrokeWidth=3, symbolSize=300)),
