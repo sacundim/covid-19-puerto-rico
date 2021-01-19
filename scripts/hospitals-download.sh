@@ -45,3 +45,8 @@ CSV_URL="$(wget -O - "${STATE_JSON_URL}" |jq -r '.result[0].resources[0].url')"
 wget --compress=gzip -O - "${CSV_URL}" \
   | xsv search --select state '^PR$' \
   > "${TMP}"/reported_hospital_utilization_timeseries-PuertoRico.csv
+
+
+mv "${TMP}"/reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries-PuertoRico.csv \
+  "${TMP}"/reported_hospital_utilization_timeseries-PuertoRico.csv \
+  "${REPO_ROOT}"/assets/data/HHS/
