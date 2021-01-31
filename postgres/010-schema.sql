@@ -663,7 +663,7 @@ SELECT
 FROM bitemporal_agg cases
 INNER JOIN bitemporal_agg deaths
 	ON cases.bulletin_date = deaths.bulletin_date
-	AND deaths.datum_date = cases.datum_date + 16
+	AND deaths.datum_date = cases.datum_date + 14
 WINDOW datum AS (
 	PARTITION BY cases.bulletin_date
 	ORDER BY cases.datum_date
