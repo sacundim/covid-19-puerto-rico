@@ -80,7 +80,11 @@ CREATE TABLE covid_pr_etl.bioportal_orders_basic WITH (
     bucketed_by = ARRAY['downloaded_date'],
     bucket_count = 1
 ) AS
-WITH first_clean AS (
+WITH downloads AS (
+	SELECT
+		max(downloadedAt) max_downloaded_at
+	FROM covid_pr_sources.orders_basic_parquet_v1
+), first_clean AS (
 	SELECT
 	    CAST(from_iso8601_timestamp(downloadedAt) AS TIMESTAMP)
 	        AS downloaded_at,
@@ -119,10 +123,8 @@ WITH first_clean AS (
 	    result,
 	    COALESCE(result, '') LIKE '%Positive%' AS positive
 	FROM covid_pr_sources.orders_basic_parquet_v1 tests
-	WHERE downloadedAt IN (
-	    SELECT max(downloadedAt) max_downloaded_at
-	    FROM covid_pr_sources.orders_basic_parquet_v1
-    )
+	INNER JOIN downloads
+	    ON downloads.max_downloaded_at = tests.downloadedAt
 )
 SELECT
     *,
