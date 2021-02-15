@@ -11,41 +11,50 @@ Esta lista fue compilada por el Dr. Rafael Irizarry (@rafalab) y
 * Formato: application/json
 
 ## Endpoints
-* Cantidades totales de pruebas reportadas:
+1. Cantidades totales de pruebas reportadas:
 ```/administration/reports/total```
 
-* Pruebas únicas con información mínima:
+2. Pruebas únicas con información mínima:
 ```/administration/reports/minimal-info-unique-tests```
 
-* Pruebas únicas con información mínima incluyend fecha de entrade al Bioportal:
+3. Pruebas únicas con información mínima:
+```/administration/reports/minimal-info```
+
+4. Pruebas únicas con información mínima incluyendo fecha de entrada al Bioportal:
 ```/administration/reports/orders/basic```
 
-* Pruebas por fecha de colección:
+5. Pruebas diarias para gráfica de dashboard de Salud:
+```/administration/orders/dashboard-daily-testing```
+
+6. Pruebas por fecha de colección:
 ```/administration/reports/tests-by-collected-date```
 
-* Pruebas por fecha de reporte:
+7. Pruebas por fecha de reporte:
 ```/administration/reports/tests-by-reported-date```
 
-* Pruebas por fecha de colección y entidad:
+8. Pruebas por fecha de colección y entidad:
 ```/administration/reports/tests-by-collected-date-and-entity```
 
-* Total de TDF por fecha reportada de llegada:
+9. Total de TDF por fecha reportada de llegada:
 ```/administration/reports/travels/total-forms-by-reported-arrival-date```
 
-* Total de TDF por municipio:
+10. Total de TDF por municipio:
 ```/administration/reports/travels/total-forms-by-municipalities```
 
-* Casos por fecha de colección:
+11. Casos por fecha de colección:
 ```/administration/reports/cases/grouped-by-collected-date```
 
-* Casos por fecha de creación en sistema:
+12. Casos por fecha de creación en sistema:
 ```/administration/reports/cases/dashboard-daily```
 
-* Casos por grupo de edad:
+13. Casos por grupo de edad:
 ```/administration/reports/cases/dashboard-age-group```
 
-* Casos por ciudad:
+14. Casos por ciudad:
 ```/administration/reports/cases/dashboard-city```
 
-* Casos por region:
+15. Casos por region:
 ```/administration/reports/cases/dashboard-region```
+    
+16. Resumen de Escuelas Públicas y Privadas:
+```/administration/reports/education/general-summary```
