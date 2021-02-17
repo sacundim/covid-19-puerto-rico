@@ -149,3 +149,33 @@ WHERE test_type IN ('Molecular', 'Antígeno')
 AND collected_age <= 14
 GROUP BY bulletins.since_bulletin_date, bulletins.until_bulletin_date, test_type
 ORDER BY test_type;
+
+--
+-- Confirmed cases curve with and without antigen dates
+--
+WITH integrated AS (
+	SELECT
+		bulletin_date,
+		collected_date,
+		sum(cases) integrated
+	FROM covid_pr_etl.bioportal_curve_agg
+	WHERE molecular_date IS NOT NULL
+	GROUP BY bulletin_date, collected_date
+), molecular_only AS (
+	SELECT
+		bulletin_date,
+		molecular_date AS collected_date,
+		sum(cases) molecular
+	FROM covid_pr_etl.bioportal_curve_agg
+	WHERE molecular_date IS NOT NULL
+	GROUP BY bulletin_date, molecular_date
+)
+SELECT
+	collected_date,
+	molecular,
+	integrated,
+	molecular - integrated inflation
+FROM integrated
+	FULL OUTER JOIN molecular_only
+	USING (bulletin_date, collected_date)
+ORDER BY bulletin_date DESC, collected_date ASC;
