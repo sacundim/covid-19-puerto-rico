@@ -27,7 +27,7 @@
         periodísticas reportan los mismos datos a base de la fecha de publicación.</p>
 
     <ul>
-        <li><a href="#NewCases_section">Tendencia de casos nuevos por fecha de evento (promedios 7 días)</a></li>
+        <li><a href="#NewCases_section">Curva de casos nuevos (Bioportal)</a></li>
         <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
         <li><a href="#CurrentDeltas_section">Cambio entre boletín actual y anterior</a></li>
         <li><a href="#DailyDeltas_section">Cambios entre boletines recientes</a></li>
@@ -57,7 +57,7 @@
 </div>
 
 <div class="section" id="NewCases_section">
-    <h1>Tendencia de casos nuevos por fecha de evento (promedios 7 días)</h1>
+    <h1>Curva de casos nuevos (Bioportal)</h1>
 
     <div id="NewCases"></div>
     <script type="text/javascript">
@@ -66,8 +66,8 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>La tendencia de los casos nuevos por prueba viral diagnóstica y las muertes,
-        vista por medio de:</p>
+    <p>La tendencia de los casos nuevos por prueba viral diagnóstica (= tanto molecular
+        como antígeno) y las muertes, vista por medio de:</p>
 
     <ul>
         <li>La fecha en que se tomó la muestra o se dio el fallecimiento (no
@@ -88,29 +88,51 @@
         recibidos hace una semana, de hecho tienden a ilustrar esto.</p>
 
 
-    <h3>Oficial vs. Bioportal</h3>
+    <h3>Informe oficial vs. Bioportal</h3>
 
-    <p>Se trazan dos curvas de casos, una (en azul) usando los casos confirmados y probables
-        tal se reportan en el boletín diario oficial del Departmento de Salud de Puerto Rico,
-        y la otra (en gris) a partir de datos descargados de Bioportal, el sistema de
-        reporte de datos de pruebas del Departmento de Salud de Puerto Rico.</p>
+    <p>En esta gráfica hemos optado por ilustrar los casos a partir de datos públicos del
+        API del Bioportal del Departamento de Salud de Puerto Rico, en vez del informe
+        oficial diario. Esta decisión requiere sopesar una serie de motivos a favor y en
+        contra:</p>
 
-    <p>Hay que entender que:</p>
+    <ol>
+        <li>En esta gráfica optamos por dar igual peso a pruebas positivas moleculares y
+            de antígenos, por entender que resultados positivos en ambas apuntan a la
+            presencia corriente del virus.  Pero los datos del informe oficial no permiten
+            trazar una curva correcta de casos confirmados y probables por fecha de la muestra
+            más temprana, porque cuando un caso originalmente probable (= por antígeno) se
+            confirma por prueba molecular posterior, el informe oficial lo resta a la fecha de
+            la prueba de antígeno original y se lo suma a la fecha de la prueba molecular más
+            tardía.  Esto infla los casos recientes a costa de las fechas más tempranas.</li>
+
+        <li>El reporte oficial suele dar números de casos un poco más pequeños que los que
+            arroja Bioportal.  En el pasado hemos entendido se debe a que para el informe
+            oficial se debe a una depuración más cuidadosa para eliminar casos duplicados, y aún
+            así suponemos, pero ya ha llegado el punto que las diferencias atribuíbles a este
+            factor quedan opacadas por la inflación de fechas recientes por los casos probables
+            que posteriormente se confirman (#1).</li>
+
+        <li>Existe una discrepancia bien grande en el número de casos confirmados (= molecular)
+            entre 7/ago/2020 y 6/sep/2020, en que Bioportal arroja más de mil casos por encima
+            que los informes oficiales, que nunca se ha explicado.</li>
+
+        <li>Bioportal siempre tiene datos más recientes, como por 2-3 días.</li>
+    </ol>
+
+    <p>Esta página anteriormente optaba por trazar ambas curvas y recomendar la oficial como
+        la más autoritativa y la de Bioportal como suplemental para dar aviso temprano de
+        cuántos casos estaban por anunciarse, pero:</p>
 
     <ul>
-        <li>El reporte oficial siempre tiene números un tanto más bajos que Bioportal, que
-            a mi entender se debe a que el oficial hace un análisis más cuidadoso para
-            identificar y restar casos duplicados;</li>
-        <li>Bioportal siempre tiene datos más al día que el reporte oficial, por varios
-            días.</li>
+        <li>A febrero del 2021 el peso de los factores se ha virado y juzgamos que la curva
+            de Bioportal es más correcta;</li>
+        <li>Mostrar las dos curvas en la misma gráfica la hace más difícil de leer.</li>
     </ul>
 
-    <p>Por eso recomiendo <strong>usar la curva oficial como la más autoritativa</strong>, y
-        la de Biorpotal como un indicador temprano de la dirección de la oficial en los
-        próximos días.</p>
+    <p>Así que ahora solo trazamos la curva por moleculares y antígenos en Bioportal.</p>
 
 
-    <h3>Casos descartados</h3>
+    <h3>Casos descartados (curva verde)</h3>
 
     <p>Esta curva muestra el volumen de casos que:</p>
 
@@ -128,6 +150,17 @@
     <p>Vale también apuntar que al momento no cuento negativos en prueba de antígenos como
         caso descartado, debido a la sensibilidad mucho menor de estas y la consecuente
         práctica común de confirmar negativos por antígeno con molecular.</p>
+
+    <p>Esta curva de casos descartados tiene dos usos principales:</p>
+
+    <ul>
+        <li>Ayuda a evaluar la tendencia de la positividad. Como trazamos las curvas en
+            escala logarítmica, la distancia entre la curva de descartados y la de casos
+            refleja la razón entre estos.</li>
+        <li>Se puede tomar como una aproximación al número de pruebas moleculares que se
+            hizo alrededor de las fechas graficadas, para evaluar a ojo cuán completos están
+            los datos recientes.</li>
+    </ul>
 </div>
 
 

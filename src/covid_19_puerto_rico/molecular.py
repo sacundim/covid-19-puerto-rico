@@ -28,44 +28,21 @@ class NewCases(AbstractMolecularChart):
                                  schema='covid_pr_etl', autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.datum_date,
-                        table.c.official_cases.label('Casos (oficial)'),
-                        table.c.bioportal_cases.label('Casos (Bioportal)'),
-                        table.c.bioportal_rejections.label('Descartados (Bioportal)'),
+                        table.c.rejections.label('Descartados'),
+                        table.c.bioportal.label('Casos'),
                         table.c.deaths.label('Muertes')])\
             .where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
                         table.c.bulletin_date <= max(bulletin_dates)))
         df = pd.read_sql_query(query, connection,
                                parse_dates=["bulletin_date", "datum_date"])
-        assert(df['bulletin_date'].max() == pd.to_datetime(max(bulletin_dates)))
-
-        melted = pd.melt(df, ["bulletin_date", "datum_date"])
-        max_bulletin_date = max(bulletin_dates)
-        self.assert_good_df(melted, max_bulletin_date)
-        logging.debug("NewCases: melted df is good for %s", max_bulletin_date)
-
-        return melted
-
-    def assert_good_df(self, df, bulletin_date):
-        """There's a weird nondeterministic bug where the most recent bulletin_date gets dropped"""
-        deaths = df.loc[df['variable'] == 'Muertes']
-        most_recent = deaths['bulletin_date'].max()
-        newest = deaths.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
-        logging.debug('NewCases bulletin_date = %s, most_recent: %s',
-                      bulletin_date, most_recent)
-        assert(most_recent == pd.to_datetime(bulletin_date))
-        return df
+        return pd.melt(df, ["bulletin_date", "datum_date"])
 
     def filter_data(self, df, bulletin_date):
         week_ago = bulletin_date - datetime.timedelta(days=7)
-        filtered = df.loc[(df['bulletin_date'] == pd.to_datetime(bulletin_date))
-                          | (df['bulletin_date'] == pd.to_datetime(week_ago))]
-        self.assert_good_df(filtered, bulletin_date)
-        logging.debug("NewCases: filtered df is good for %s", bulletin_date)
-        return filtered
+        return df.loc[(df['bulletin_date'] == pd.to_datetime(bulletin_date))
+                      | (df['bulletin_date'] == pd.to_datetime(week_ago))]
 
     def make_chart(self, df, bulletin_date):
-        self.assert_good_df(df, bulletin_date)
-        logging.debug("NewCases: make_chart df is good for %s", bulletin_date)
         return alt.Chart(df.dropna()).transform_window(
             groupby=['variable', 'bulletin_date'],
             sort=[{'field': 'datum_date'}],
@@ -103,12 +80,11 @@ class NewCases(AbstractMolecularChart):
                 alt.Tooltip('mean_7day:Q', format=',.1f', title='Promedio 7 días'),
                 alt.Tooltip('mean_7day_100k:Q', format=',.1f', title='Promedio 7 días (/100k)')],
             color=alt.Color('variable:N', title=None,
-                            scale=alt.Scale(range=['#4c78a8', 'darkgray', '#54a24b', '#e45756']),
+                            scale=alt.Scale(range=['#54a24b', '#4c78a8', '#e45756']),
                             legend=alt.Legend(orient='top', labelLimit=250,
                                               symbolStrokeWidth=3, symbolSize=300),
-                            sort=['Casos (oficial)',
-                                  'Casos (Bioportal)',
-                                  'Descartados (Bioportal)',
+                            sort=['Descartados',
+                                  'Casos',
                                   'Muertes']),
             strokeDash=alt.StrokeDash('bulletin_date:T', title='Datos hasta', sort='descending',
                                       legend=alt.Legend(orient='bottom-right', symbolSize=300,
@@ -117,7 +93,7 @@ class NewCases(AbstractMolecularChart):
                                                         padding=7.5))
         ).properties(
             width=585, height=475
-        )
+        ).interactive()
 
 
 class ConfirmationsVsRejections(AbstractMolecularChart):

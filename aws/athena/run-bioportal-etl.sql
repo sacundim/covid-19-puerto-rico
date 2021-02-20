@@ -535,11 +535,12 @@ CREATE OR REPLACE VIEW covid_pr_etl.new_daily_cases AS
 SELECT
     bio.bulletin_date,
 	bio.collected_date AS datum_date,
+	followups.tests,
+    followups.rejections,
 	nullif(coalesce(bul.confirmed_cases, 0)
     	    + coalesce(bul.probable_cases, 0), 0)
-	    AS official_cases,
-	bio.cases AS bioportal_cases,
-    followups.rejections AS bioportal_rejections,
+	    AS official,
+	bio.cases AS bioportal,
 	bul.deaths AS deaths
 FROM covid_pr_etl.bioportal_curve bio
 INNER JOIN covid_pr_etl.bioportal_followups_collected_agg followups
