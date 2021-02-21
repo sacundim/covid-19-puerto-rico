@@ -93,7 +93,7 @@ class NewCases(AbstractMolecularChart):
                                                         padding=7.5))
         ).properties(
             width=585, height=475
-        ).interactive()
+        )
 
 
 class ConfirmationsVsRejections(AbstractMolecularChart):
@@ -109,12 +109,10 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
             table.c.bulletin_date,
             table.c.collected_date,
             table.c.rejections,
-            table.c.cases.label('Casos oficiales'),
-            table.c.novels.label('Bioportal')
+            table.c.novels
         ]).where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
                       table.c.bulletin_date <= max(bulletin_dates)))
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
-        return pd.melt(df, ['bulletin_date', 'collected_date', 'rejections'])
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
 
     def filter_data(self, df, bulletin_date):
         effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
@@ -124,16 +122,16 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
 
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df.dropna()).transform_window(
-            groupby=['bulletin_date', 'variable'],
+            groupby=['bulletin_date'],
             sort=[{'field': 'collected_date'}],
             frame=[-6, 0],
-            sum_value='sum(value)',
+            sum_novels='sum(novels)',
             sum_rejections='sum(rejections)'
         ).transform_calculate(
-            rate=alt.datum.sum_value / (alt.datum.sum_value + alt.datum.sum_rejections),
-            ratio=alt.datum.sum_rejections / alt.datum.sum_value
+            rate=alt.datum.sum_novels / (alt.datum.sum_novels + alt.datum.sum_rejections),
+            ratio=alt.datum.sum_rejections / alt.datum.sum_novels
         ).transform_filter(
-            alt.datum.sum_value > 0
+            alt.datum.sum_novels > 0
         ).mark_line(
             point='transparent'
         ).encode(
@@ -141,14 +139,10 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
             y=alt.Y('rate:Q', title='% episodios que se confirma (7 días)',
                     scale=alt.Scale(type='log', domain=[0.001, 1.0]),
                     axis=alt.Axis(format='%')),
-            color=alt.Color('variable:N', sort=self.SORT_ORDER,
-                            legend=alt.Legend(orient='top', titleOrient='left',
-                                              title='Según:', labelLimit=320)),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
             tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
-                     alt.Tooltip('variable:N', title='Según'),
-                     alt.Tooltip('ratio:Q', format=".1f", title='Rechazados / confirmados (7 días)'),
+                     alt.Tooltip('ratio:Q', format=".1f", title='Descartados / confirmados (7 días)'),
                      alt.Tooltip('rate:Q', format=".3p", title='% episodios que se confirma (7 días)')]
         ).properties(
             width=580, height=350

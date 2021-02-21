@@ -532,22 +532,30 @@
         de esto sería subestimar qué cantidad de pruebas son de seguimiento.</p>
 
 
-    <h3>Bioportal vs. oficial</h3>
+    <h3>Prueba molecular vs. antígeno</h3>
 
-    <p>Para el numerador de casos confirmados existen en los datos de Salud dos cifras
-        discrepantes que se pueden usar, y hemos optado por visualizar ambas:</p>
+    <p>Usamos para este cálculo solo las pruebas moleculares por estos motivos:</p>
 
     <ul>
-        <li>El número de pruebas iniciales positivas según los datos del API de Bioportal
-            del Departamento de Salud de Puerto Rico;</li>
-        <li>El número de casos confirmados según los boletines oficiales diarios del
-            Departamento de Salud.</li>
+        <li>Las de antígeno tienen menor sensibilidad y muchas veces dan negativo
+            en pacientes que dan positivo a molecular;</li>
+        <li>Las de antígeno en Puerto Rico se usan mucho en eventos de pruebas
+            masivas abiertos a todo el público, que es una población que se entiende
+            tiene probabilidad previa más baja.</li>
     </ul>
 
-    <p>La segunda de estas es la cifra oficial, pero también la más baja.  No tengo información
-        firme que explique esta discrepancia pero mi conjetura provisional es que la cifra oficial
-        disfruta de análisis más cuidadoso para identificar pacientes duplicados que lo que
-        se expone en el campo de <code>patientId</code> en Bioportal.</p>
+    <p>Alternativas que hemos contemplado pero no adoptado:</p>
+
+    <ul>
+        <li>Contar pruebas de antígeno positivas como casos detectados por enterse fiables
+            para ello, pero no las negativas como descartados debido a su menor sensibilidad.
+            El problema entonces sería que la positividad sesgaría hacia arriba cuando aumenta
+            la proporción de pruebas de antígeno vs. molecular, y esto es disparatado porque
+            hacer más pruebas de antígenos es bueno, y sería como penalizarlo.</li>
+        <li>No contar las pruebas de antígeno ni como detectados ni como descartados, pero sí
+            usar las positivas para adjudicar moleculares subsiguientes al mismo paciente como
+            seguimiento.  Posibilidad interesante, pero que quizás no amerita el esfuerzo.</li>
+    </ul>
 </div>
 
 
