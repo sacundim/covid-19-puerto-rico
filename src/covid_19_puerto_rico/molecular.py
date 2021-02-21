@@ -70,7 +70,7 @@ class RecentCases(AbstractMolecularChart):
                 alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
                 alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                 alt.Tooltip('variable:N', title='Variable'),
-                alt.Tooltip('value:Q', title='Valor crudo'),
+                alt.Tooltip('value:Q', format=',d', title='Valor crudo'),
                 alt.Tooltip('sum_14day:Q', format=',d', title='Suma 14 días'),
                 alt.Tooltip('sum_14day_100k:Q', format=',.1f', title='Suma 14 días (/100k)'),
                 alt.Tooltip('mean_14day:Q', format=',.1f', title='Promedio 14 días'),
