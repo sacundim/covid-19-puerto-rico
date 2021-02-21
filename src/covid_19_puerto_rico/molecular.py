@@ -20,6 +20,91 @@ class AbstractMolecularChart(charts.AbstractChart):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
 
+class RecentCases(AbstractMolecularChart):
+    POPULATION_100K = 31.93694
+    SORT_ORDER=['Pruebas', 'Casos', 'Muertes']
+
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('recent_daily_cases', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.datum_date,
+                        table.c.tests.label('Pruebas'),
+                        table.c.cases.label('Casos'),
+                        table.c.deaths.label('Muertes')])\
+            .where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
+                        table.c.bulletin_date <= max(bulletin_dates)))
+        df = pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"])
+        return pd.melt(df, ["bulletin_date", "datum_date"])
+
+    def filter_data(self, df, bulletin_date):
+        week_ago = bulletin_date - datetime.timedelta(days=7)
+        return df.loc[(df['bulletin_date'] == pd.to_datetime(bulletin_date))
+                      | (df['bulletin_date'] == pd.to_datetime(week_ago))]
+
+    def make_chart(self, df, bulletin_date):
+        base = alt.Chart(df).transform_window(
+            groupby=['variable', 'bulletin_date'],
+            sort=[{'field': 'datum_date'}],
+            frame=[-6, 0],
+            mean_7day='mean(value)',
+            sum_7day = 'sum(value)'
+        ).transform_window(
+            groupby=['variable', 'bulletin_date'],
+            sort=[{'field': 'datum_date'}],
+            frame=[-13, 0],
+            mean_14day = 'mean(value)',
+            sum_14day='sum(value)'
+        ).transform_calculate(
+            mean_7day_100k=alt.datum.mean_7day / self.POPULATION_100K,
+            sum_7day_100k=alt.datum.sum_7day / self.POPULATION_100K,
+            mean_14day_100k=alt.datum.mean_14day / self.POPULATION_100K,
+            sum_14day_100k=alt.datum.sum_14day / self.POPULATION_100K
+        ).transform_filter(
+            alt.datum.datum_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=90))
+        ).encode(
+            x=alt.X('datum_date:T', title='Fecha de muestra o deceso', axis=alt.Axis(format='%d/%m')),
+            color=alt.Color('variable:N', legend=None, sort=self.SORT_ORDER,
+                            scale=alt.Scale(range=['#54a24b', '#4c78a8', '#e45756'])),
+            tooltip=[
+                alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
+                alt.Tooltip('bulletin_date:T', title='Datos hasta'),
+                alt.Tooltip('variable:N', title='Variable'),
+                alt.Tooltip('value:Q', title='Valor crudo'),
+                alt.Tooltip('sum_14day:Q', format=',d', title='Suma 14 días'),
+                alt.Tooltip('sum_14day_100k:Q', format=',.1f', title='Suma 14 días (/100k)'),
+                alt.Tooltip('mean_14day:Q', format=',.1f', title='Promedio 14 días'),
+                alt.Tooltip('mean_14day_100k:Q', format=',.1f', title='Promedio 14 días (/100k)'),
+                alt.Tooltip('sum_7day:Q', format=',d', title='Suma 7 días'),
+                alt.Tooltip('sum_7day_100k:Q', format=',.1f', title='Suma 7 días (/100k)'),
+                alt.Tooltip('mean_7day:Q', format=',.1f', title='Promedio 7 días'),
+                alt.Tooltip('mean_7day_100k:Q', format=',.1f', title='Promedio 7 días (/100k)')
+            ]
+        )
+
+        bars = base.transform_filter(
+            alt.datum.bulletin_date == util.altair_date_expr(bulletin_date)
+        ).mark_bar(opacity=0.33).encode(
+            y=alt.Y('value:Q', title='Diario')
+        )
+
+        line = base.mark_line().encode(
+            y=alt.Y('mean_7day:Q', title='Diario'),
+            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending',
+                                      title='Datos hasta',
+                                      legend=alt.Legend(orient='bottom', titleOrient='left'))
+        )
+
+        return alt.layer(bars, line).properties(
+            width=585, height=100
+        ).facet(
+            columns=1,
+            facet=alt.Facet('variable:N', title=None, sort=self.SORT_ORDER)
+        ).resolve_scale(
+            y='independent'
+        )
+
+
 class NewCases(AbstractMolecularChart):
     POPULATION_100K = 31.93694
 

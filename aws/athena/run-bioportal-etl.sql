@@ -695,3 +695,30 @@ WHERE test_type = 'Molecular'
 AND bulletin_date >= DATE '2020-07-18'
 GROUP BY bulletin_date, ranges.lo, ranges.hi, ranges.tier
 ORDER BY bulletin_date DESC, ranges.lo ASC;
+
+
+CREATE OR REPLACE VIEW covid_pr_etl.recent_daily_cases AS
+WITH tests AS (
+	SELECT
+		bulletin_date,
+		collected_date,
+		sum(tests) AS tests
+	FROM covid_pr_etl.bioportal_collected_agg
+	WHERE test_type IN ('Molecular', 'Antígeno')
+	AND collected_date >= date_add('day', -97, bulletin_date)
+	GROUP BY bulletin_date, collected_date
+)
+SELECT
+    cases.bulletin_date,
+    cases.datum_date,
+    tests.tests,
+	cases.bioportal AS cases,
+	cases.deaths
+FROM covid_pr_etl.new_daily_cases cases
+INNER JOIN tests
+	ON cases.bulletin_date = tests.bulletin_date
+	AND cases.datum_date = tests.collected_date
+-- We want 90 days of data, so we fetch 97 because we need to
+-- calculate a 7-day average 90 days ago:
+WHERE cases.datum_date >= date_add('day', -97, cases.bulletin_date)
+ORDER BY bulletin_date DESC, datum_date DESC;
