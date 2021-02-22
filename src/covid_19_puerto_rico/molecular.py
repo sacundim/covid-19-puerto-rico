@@ -755,3 +755,44 @@ class MolecularLatenessTiers(AbstractMolecularChart):
         )
 
         return alt.vconcat(absolute, normalized, spacing=5)
+
+
+class CaseFatalityRate(AbstractMolecularChart):
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('lagged_cfr', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.collected_date,
+            table.c.smoothed_cases,
+            table.c.death_date,
+            table.c.smoothed_deaths,
+            table.c.lagged_cfr
+        ]).where(table.c.bulletin_date <= max(bulletin_dates))
+        return pd.read_sql_query(query, connection,
+                                 parse_dates=['bulletin_date', 'collected_date', 'death_date'])
+
+    def filter_data(self, df, bulletin_date):
+        week_ago = bulletin_date - datetime.timedelta(days=7)
+        return df.loc[(df['bulletin_date'] == pd.to_datetime(bulletin_date))
+                      | ((df['bulletin_date'] == pd.to_datetime(week_ago)))]
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df).mark_line(clip=True).transform_filter(
+            alt.datum.lagged_cfr > 0.0
+        ).encode(
+            x=alt.X('collected_date:T', title='Fecha de muestras'),
+            y=alt.Y('lagged_cfr:Q', title='Letalidad (CFR, 14 días)',
+                    axis=alt.Axis(format='%'), scale=alt.Scale(type='log', domain=[0.01, 1.0])),
+            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', title='Datos hasta',
+                                      legend=alt.Legend(orient='top', titleOrient='left',
+                                                        symbolStrokeWidth=3, symbolSize=300)),
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Datos hasta'),
+                     alt.Tooltip('collected_date:T', title='Fecha de muestras'),
+                     alt.Tooltip('smoothed_cases:Q', format=",.1f", title='Casos (promedio 14 días)'),
+                     alt.Tooltip('death_date:T', title='Fecha de deceso'),
+                     alt.Tooltip('smoothed_deaths:Q', format=",.1f", title='Muertes (promedio 14 días)'),
+                     alt.Tooltip('lagged_cfr:Q', format=".2%", title='Letalidad (CFR, 14 días)')]
+        ).properties(
+            width=585, height=275
+        )
