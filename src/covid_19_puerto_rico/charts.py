@@ -737,7 +737,7 @@ class ICUsByHospital(AbstractChart):
         # the domain manually on all.
         min_date = df['until_date'].min()
         max_date = df['until_date'].max()
-        facet_width = 160
+        facet_width = 240
         return alt.Chart(df).mark_bar().encode(
             x=alt.X('until_date:T', title=None, axis=alt.Axis(format='%b'),
                     scale=alt.Scale(domain=[min_date, max_date])),
@@ -756,7 +756,7 @@ class ICUsByHospital(AbstractChart):
         ).properties(
             width=facet_width, height=80
         ).facet(
-            columns=3,
+            columns=2,
             facet=alt.Facet('hospital_name:N', title=None,
                             header=alt.Header(labelLimit=facet_width, labelFontSize=8))
         ).resolve_scale(
@@ -795,7 +795,7 @@ class ICUsByRegion(AbstractChart):
         # the domain manually on all.
         min_date = df['until_date'].min()
         max_date = df['until_date'].max()
-        facet_width = 160
+        facet_width = 240
         return alt.Chart(df).mark_bar().encode(
             x=alt.X('until_date:T', title=None, axis=alt.Axis(format='%b'),
                     scale=alt.Scale(domain=[min_date, max_date])),
@@ -813,7 +813,7 @@ class ICUsByRegion(AbstractChart):
         ).properties(
             width=facet_width, height=100
         ).facet(
-            columns=3,
+            columns=2,
             facet=alt.Facet('region:N', title=None,
                             header=alt.Header(labelLimit=facet_width))
         ).resolve_scale(
