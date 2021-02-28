@@ -655,56 +655,6 @@ class MunicipalMap(AbstractChart):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
 
-class HospitalizationsCovid19Tracking(AbstractChart):
-    """A hospitalizations chart based on the Covid !9 Tracking Project API"""
-
-    API_URL = 'https://api.covidtracking.com/v1/states/pr/daily.csv'
-    SORT_ORDER = ['Hospitalizados', 'Cuidado intensivo', 'Ventilador']
-
-    def fetch_data(self, connection, bulletin_dates):
-        def parse_date(n):
-            """Parse Covid19Tracking's weird numeric dates to Pandas timestamp"""
-            return pd.Timestamp(year=n // 10_000,
-                                month=(n // 100) % 100,
-                                day=n % 100)
-
-        logging.info("Fetching hospitalizations data from: %s", self.API_URL)
-        df = pd.read_csv(self.API_URL)
-        df['date'] = df['date'].apply(parse_date)
-        df = df[['date', 'hospitalizedCurrently', 'inIcuCurrently', 'onVentilatorCurrently']]
-        df = df.rename(columns={
-            'hospitalizedCurrently': 'Hospitalizados',
-            'inIcuCurrently': 'Cuidado intensivo',
-            'onVentilatorCurrently': 'Ventilador'
-        })
-        return pd.melt(df, ['date']).dropna()
-
-    def filter_data(self, df, bulletin_date):
-        return df.loc[df['date'] <= pd.to_datetime(bulletin_date + datetime.timedelta(days=1))]
-
-    def make_chart(self, df, bulletin_date):
-        return alt.Chart(df).transform_window(
-            sort=[{'field': 'date'}],
-            frame=[-6, 0],
-            mean_value='mean(value)',
-            groupby=['variable']
-        ).mark_line(point='transparent').encode(
-            x=alt.X('date:T', title='Fecha'),
-            y=alt.Y('mean_value:Q', title='Promedio 7 días', scale=alt.Scale(type='log')),
-            color=alt.Color('variable:N', title=None,
-                            sort=self.SORT_ORDER,
-                            legend=alt.Legend(orient='top')),
-            tooltip=[
-                alt.Tooltip('date:T', title='Fecha'),
-                alt.Tooltip('variable:N', title='Variable'),
-                alt.Tooltip('value:Q', title='Valor'),
-                alt.Tooltip('mean_value:Q', title='Promedio 7 días', format=',.1f')
-            ]
-        ).properties(
-            width=575, height=350
-        )
-
-
 class ICUsByHospital(AbstractChart):
     """Hospitalizations based on HHS data, by hospital"""
 

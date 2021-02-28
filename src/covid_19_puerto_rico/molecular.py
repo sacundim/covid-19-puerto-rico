@@ -796,3 +796,45 @@ class CaseFatalityRate(AbstractMolecularChart):
         ).properties(
             width=585, height=275
         )
+
+
+class Hospitalizations(AbstractMolecularChart):
+    """Hospitalizations, based on HHS data we download."""
+
+    SORT_ORDER = ['Hospitalizados', 'Cuidado intensivo']
+
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('hospitalizations', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.date,
+            table.c.inpatient_beds_used_covid.label('Hospitalizados'),
+            table.c.staffed_icu_adult_patients_confirmed_and_suspected_covid.label('Cuidado intensivo'),
+        ]).where(table.c.date <= max(bulletin_dates))
+        df = pd.read_sql_query(query, connection, parse_dates=['date'])
+        return pd.melt(df, ['date']).dropna()
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['date'] <= pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df).transform_window(
+            sort=[{'field': 'date'}],
+            frame=[-6, 0],
+            mean_value='mean(value)',
+            groupby=['variable']
+        ).mark_line(point='transparent').encode(
+            x=alt.X('date:T', title='Fecha'),
+            y=alt.Y('mean_value:Q', title='Promedio 7 días', scale=alt.Scale(type='log')),
+            color=alt.Color('variable:N', title=None,
+                            sort=self.SORT_ORDER,
+                            legend=alt.Legend(orient='top')),
+            tooltip=[
+                alt.Tooltip('date:T', title='Fecha'),
+                alt.Tooltip('variable:N', title='Variable'),
+                alt.Tooltip('value:Q', title='Valor'),
+                alt.Tooltip('mean_value:Q', title='Promedio 7 días', format=',.1f')
+            ]
+        ).properties(
+            width=575, height=350
+        )

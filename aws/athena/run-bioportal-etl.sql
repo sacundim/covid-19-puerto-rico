@@ -73,6 +73,32 @@ FROM cleaned;
 
 
 --
+-- HHS hospitals data set
+--
+CREATE TABLE covid_pr_etl.hhs_hospitals WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['date'],
+    bucket_count = 1
+) AS
+WITH max_timeseries_date AS (
+	SELECT
+		max(file_timestamp) AS max_file_timestamp,
+		max(date) AS max_date
+	FROM covid_hhs_sources.reported_hospital_utilization_timeseries_PR
+)
+SELECT *
+FROM covid_hhs_sources.reported_hospital_utilization_timeseries_PR
+INNER JOIN max_timeseries_date
+	ON file_timestamp = max_file_timestamp
+UNION ALL
+SELECT *
+FROM covid_hhs_sources.reported_hospital_utilization_PR
+INNER JOIN max_timeseries_date
+	ON date > max_date
+ORDER BY date DESC;
+
+
+--
 -- The `orders/basic` row-per-test dataset.
 --
 CREATE TABLE covid_pr_etl.bioportal_orders_basic WITH (
@@ -774,3 +800,20 @@ INNER JOIN deaths
 	AND deaths.datum_date = date_add('day', 14, cases.collected_date)
 ORDER BY cases.bulletin_date DESC, cases.collected_date DESC;
 
+
+--
+-- COVID-19 hospitalization and ICU occupancy, using HHS data
+--
+CREATE OR REPLACE VIEW covid_pr_etl.hospitalizations AS
+SELECT
+	date,
+	inpatient_beds_used_covid,
+	-- The HHS data before this date is really messed up for
+	-- this field
+	CASE WHEN date >= DATE '2020-07-29'
+	THEN staffed_icu_adult_patients_confirmed_and_suspected_covid
+	END AS staffed_icu_adult_patients_confirmed_and_suspected_covid
+FROM covid_pr_etl.hhs_hospitals
+-- The HHS data before this date is really messed up
+WHERE date >= DATE '2020-06-23'
+ORDER BY date DESC;
