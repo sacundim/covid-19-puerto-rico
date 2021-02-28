@@ -808,8 +808,8 @@ class Hospitalizations(AbstractMolecularChart):
                                  schema='covid_pr_etl', autoload=True)
         query = select([
             table.c.date,
-            table.c.inpatient_beds_used_covid.label('Hospitalizados'),
-            table.c.staffed_icu_adult_patients_confirmed_and_suspected_covid.label('Cuidado intensivo'),
+            table.c.hospitalized_currently.label('Hospitalizados'),
+            table.c.in_icu_currently.label('Cuidado intensivo'),
         ]).where(table.c.date <= max(bulletin_dates))
         df = pd.read_sql_query(query, connection, parse_dates=['date'])
         return pd.melt(df, ['date']).dropna()

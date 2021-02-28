@@ -803,17 +803,29 @@ ORDER BY cases.bulletin_date DESC, cases.collected_date DESC;
 
 --
 -- COVID-19 hospitalization and ICU occupancy, using HHS data
+-- for recent dates, backfilling bad older HHS data with
+-- COVID Tracking Project.
 --
 CREATE OR REPLACE VIEW covid_pr_etl.hospitalizations AS
+WITH cutoff AS (
+	SELECT DATE '2020-12-07' AS cutoff
+)
 SELECT
 	date,
-	inpatient_beds_used_covid,
-	-- The HHS data before this date is really messed up for
-	-- this field
-	CASE WHEN date >= DATE '2020-07-29'
-	THEN staffed_icu_adult_patients_confirmed_and_suspected_covid
-	END AS staffed_icu_adult_patients_confirmed_and_suspected_covid
+	hospitalized_currently,
+	in_icu_currently
+FROM covid_hhs_sources.covid_tracking_hospitalizations
+INNER JOIN cutoff
+	ON date < cutoff
+UNION ALL
+SELECT
+	date,
+	inpatient_beds_used_covid
+		AS hospitalized_currently,
+	staffed_icu_adult_patients_confirmed_and_suspected_covid
+		AS in_icu_currently
 FROM covid_pr_etl.hhs_hospitals
--- The HHS data before this date is really messed up
-WHERE date >= DATE '2020-06-23'
+INNER JOIN cutoff
+	-- Older HHS data is kinda messed up
+	ON date >= cutoff
 ORDER BY date DESC;
