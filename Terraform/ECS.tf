@@ -11,6 +11,21 @@ resource "aws_ecs_cluster" "main" {
   }
 }
 
+resource "aws_cloudwatch_log_group" "covid_19_puerto_rico" {
+  name = "covid-19-puerto-rico"
+  retention_in_days = 30
+  tags = {
+    Project = var.project_name
+  }
+}
+
+
+#################################################################################
+#################################################################################
+##
+## Bioportal daily download task
+##
+
 resource "aws_ecs_task_definition" "bioportal_download_and_sync" {
   family = "bioportal-download-and-sync"
   tags = {
@@ -72,6 +87,51 @@ resource "aws_cloudwatch_event_target" "bioportal_daily_download" {
       security_groups = [aws_security_group.outbound_only.id]
     }
   }
+}
+
+
+
+#################################################################################
+#################################################################################
+##
+## HHS daily download task
+##
+
+resource "aws_ecs_task_definition" "hhs_download_and_sync" {
+  family = "hhs-download-and-sync"
+  tags = {
+    Project = var.project_name
+  }
+  requires_compatibilities = ["FARGATE"]
+  task_role_arn = aws_iam_role.ecs_task_role.arn
+  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  cpu = 1024
+  memory = 2048
+  network_mode = "awsvpc"
+  container_definitions = jsonencode([
+    {
+      name = "hhs-downloader",
+      image = "${data.aws_ecr_image.scripts.registry_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${data.aws_ecr_image.scripts.repository_name}:${data.aws_ecr_image.scripts.image_tag}"
+      cpu = 1024,
+      memoryReservation = 2048,
+      essential = true,
+      command = ["hhs-download-and-sync.sh"],
+      environment = [
+        {
+          name = "S3_DATA_URL",
+          value = "s3://${aws_s3_bucket.data_bucket.bucket}"
+        }
+      ],
+      logConfiguration = {
+        "logDriver" = "awslogs",
+        "options" = {
+          "awslogs-group" = aws_cloudwatch_log_group.covid_19_puerto_rico.name,
+          "awslogs-region" = "us-west-2",
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
+    }
+  ])
 }
 
 
