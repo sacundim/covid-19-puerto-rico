@@ -567,7 +567,12 @@ SELECT
     	    + coalesce(bul.probable_cases, 0), 0)
 	    AS official,
 	bio.cases AS bioportal,
-	bul.deaths AS deaths
+	bul.deaths AS deaths,
+	hosp.previous_day_admission_adult_covid_confirmed
+		+ hosp.previous_day_admission_adult_covid_suspected
+		+ hosp.previous_day_admission_pediatric_covid_confirmed
+		+ hosp.previous_day_admission_pediatric_covid_suspected
+		AS hospital_admissions
 FROM covid_pr_etl.bioportal_curve bio
 INNER JOIN covid_pr_etl.bioportal_followups_collected_agg followups
 	ON followups.bulletin_date = bio.bulletin_date
@@ -576,6 +581,9 @@ INNER JOIN covid_pr_etl.bioportal_followups_collected_agg followups
 LEFT OUTER JOIN covid_pr_etl.bulletin_cases bul
 	ON bul.bulletin_date = bio.bulletin_date
 	AND bul.datum_date = bio.collected_date
+LEFT OUTER JOIN covid_pr_etl.hhs_hospitals hosp
+	ON bio.collected_date = hosp.date
+	AND hosp.date >= DATE '2020-07-28'
 ORDER BY bio.bulletin_date DESC, bio.collected_date DESC;
 
 CREATE OR REPLACE VIEW covid_pr_etl.molecular_tests_vs_confirmed_cases AS

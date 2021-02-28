@@ -46,10 +46,10 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        molecular.NewCases(athena, args.output_dir, output_formats),
         molecular.Hospitalizations(athena, args.output_dir, output_formats),
         molecular.CaseFatalityRate(athena, args.output_dir, output_formats),
         molecular.RecentCases(athena, args.output_dir, output_formats),
-        molecular.NewCases(athena, args.output_dir, output_formats),
         charts.ICUsByRegion(postgres, args.output_dir, output_formats),
         charts.ICUsByHospital(postgres, args.output_dir, output_formats),
         molecular.NewDailyTestsPerCapita(athena, args.output_dir, output_formats),

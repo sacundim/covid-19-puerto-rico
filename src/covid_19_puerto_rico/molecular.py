@@ -115,6 +115,7 @@ class NewCases(AbstractMolecularChart):
                         table.c.datum_date,
                         table.c.rejections.label('Descartados'),
                         table.c.bioportal.label('Casos'),
+                        table.c.hospital_admissions.label('Hospitalizados'),
                         table.c.deaths.label('Muertes')])\
             .where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
                         table.c.bulletin_date <= max(bulletin_dates)))
@@ -165,11 +166,12 @@ class NewCases(AbstractMolecularChart):
                 alt.Tooltip('mean_7day:Q', format=',.1f', title='Promedio 7 días'),
                 alt.Tooltip('mean_7day_100k:Q', format=',.1f', title='Promedio 7 días (/100k)')],
             color=alt.Color('variable:N', title=None,
-                            scale=alt.Scale(range=['#54a24b', '#4c78a8', '#e45756']),
+                            scale=alt.Scale(range=['#54a24b', '#4c78a8', '#f58518', '#e45756']),
                             legend=alt.Legend(orient='top', labelLimit=250,
                                               symbolStrokeWidth=3, symbolSize=300),
                             sort=['Descartados',
                                   'Casos',
+                                  'Hospitalizados',
                                   'Muertes']),
             strokeDash=alt.StrokeDash('bulletin_date:T', title='Datos hasta', sort='descending',
                                       legend=alt.Legend(orient='bottom-right', symbolSize=300,
