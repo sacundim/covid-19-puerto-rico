@@ -54,7 +54,7 @@ resource "aws_ecs_task_definition" "bioportal_download_and_sync" {
       logConfiguration = {
         "logDriver" = "awslogs",
         "options" = {
-          "awslogs-group" = "/ecs/bioportal-download-and-sync",
+          "awslogs-group" = aws_cloudwatch_log_group.covid_19_puerto_rico.name,
           "awslogs-region" = "us-west-2",
           "awslogs-stream-prefix" = "ecs"
         }
