@@ -134,6 +134,33 @@ resource "aws_ecs_task_definition" "hhs_download_and_sync" {
   ])
 }
 
+resource "aws_cloudwatch_event_rule" "hhs_daily_download" {
+  name        = "hhs-daily-download"
+  description = "Run the daily HHS download."
+  schedule_expression = "cron(55 18 * * ? *)"
+}
+
+resource "aws_cloudwatch_event_target" "hhs_daily_download" {
+  target_id = "hhs-daily-download"
+  rule = aws_cloudwatch_event_rule.hhs_daily_download.name
+  arn = aws_ecs_cluster.main.arn
+  role_arn = aws_iam_role.ecs_events_role.arn
+
+  ecs_target {
+    launch_type         = "FARGATE"
+    platform_version    = "LATEST"
+    task_count          = 1
+    task_definition_arn = aws_ecs_task_definition.hhs_download_and_sync.arn
+
+    network_configuration {
+      assign_public_ip = true
+      subnets = aws_subnet.subnet.*.id
+      security_groups = [aws_security_group.outbound_only.id]
+    }
+  }
+}
+
+
 
 #################################################################################
 #################################################################################
