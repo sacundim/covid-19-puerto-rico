@@ -115,6 +115,10 @@ class NewCases(AbstractMolecularChart):
                         table.c.datum_date,
                         table.c.rejections.label('Descartados'),
                         table.c.bioportal.label('Casos'),
+                        # I don't trust the data for this one.
+                        # Note for when/if I reenable: the color is
+                        # '#f58518' (tableau10 orange)
+                        # table.c.hospital_admissions.label('Hospitalizados'),
                         table.c.deaths.label('Muertes')])\
             .where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
                         table.c.bulletin_date <= max(bulletin_dates)))
@@ -170,7 +174,7 @@ class NewCases(AbstractMolecularChart):
                                               symbolStrokeWidth=3, symbolSize=300),
                             sort=['Descartados',
                                   'Casos',
-                                  'Muertes']),
+                                  'Muertes',]),
             strokeDash=alt.StrokeDash('bulletin_date:T', title='Datos hasta', sort='descending',
                                       legend=alt.Legend(orient='bottom-right', symbolSize=300,
                                                         symbolStrokeWidth=2, symbolStrokeColor='black',
@@ -795,4 +799,46 @@ class CaseFatalityRate(AbstractMolecularChart):
                      alt.Tooltip('lagged_cfr:Q', format=".2%", title='Letalidad (CFR, 14 días)')]
         ).properties(
             width=585, height=275
+        )
+
+
+class Hospitalizations(AbstractMolecularChart):
+    """Hospitalizations, based on HHS data we download."""
+
+    SORT_ORDER = ['Hospitalizados', 'Cuidado intensivo']
+
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('hospitalizations', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.date,
+            table.c.hospitalized_currently.label('Hospitalizados'),
+            table.c.in_icu_currently.label('Cuidado intensivo'),
+        ]).where(table.c.date <= max(bulletin_dates))
+        df = pd.read_sql_query(query, connection, parse_dates=['date'])
+        return pd.melt(df, ['date']).dropna()
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['date'] <= pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df).transform_window(
+            sort=[{'field': 'date'}],
+            frame=[-6, 0],
+            mean_value='mean(value)',
+            groupby=['variable']
+        ).mark_line(point='transparent').encode(
+            x=alt.X('date:T', title='Fecha'),
+            y=alt.Y('mean_value:Q', title='Promedio 7 días', scale=alt.Scale(type='log')),
+            color=alt.Color('variable:N', title=None,
+                            sort=self.SORT_ORDER,
+                            legend=alt.Legend(orient='top')),
+            tooltip=[
+                alt.Tooltip('date:T', title='Fecha'),
+                alt.Tooltip('variable:N', title='Variable'),
+                alt.Tooltip('value:Q', title='Valor'),
+                alt.Tooltip('mean_value:Q', title='Promedio 7 días', format=',.1f')
+            ]
+        ).properties(
+            width=575, height=350
         )

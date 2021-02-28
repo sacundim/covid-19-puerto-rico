@@ -13,6 +13,61 @@ LOCATION 's3://covid-19-puerto-rico-data/HHS/';
 
 
 --
+-- Covid Tracking Project has more correct data for earlier dates.
+--
+--
+-- Covid Tracking Project has more correct data for earlier dates.
+--
+CREATE EXTERNAL TABLE covid_hhs_sources.covid_tracking_csv (
+    `date` STRING,
+    `state` STRING,
+    `death` STRING,
+    `deathConfirmed` STRING,
+    `deathIncrease` STRING,
+    `deathProbable` STRING,
+    `hospitalized` STRING,
+    `hospitalizedCumulative` STRING,
+    `hospitalizedCurrently` STRING,
+    `hospitalizedIncrease` STRING,
+    `inIcuCumulative` STRING,
+    `inIcuCurrently` STRING,
+    `negative` STRING,
+    `negativeIncrease` STRING,
+    `negativeTestsAntibody` STRING,
+    `negativeTestsPeopleAntibody` STRING,
+    `negativeTestsViral` STRING,
+    `onVentilatorCumulative` STRING,
+    `onVentilatorCurrently` STRING,
+    `positive` STRING,
+    `positiveCasesViral` STRING,
+    `positiveIncrease` STRING,
+    `positiveScore` STRING,
+    `positiveTestsAntibody` STRING,
+    `positiveTestsAntigen` STRING,
+    `positiveTestsPeopleAntibody` STRING,
+    `positiveTestsPeopleAntigen` STRING,
+    `positiveTestsViral` STRING,
+    `recovered` STRING,
+    `totalTestEncountersViral` STRING,
+    `totalTestEncountersViralIncrease` STRING,
+    `totalTestResults` STRING,
+    `totalTestResultsIncrease` STRING,
+    `totalTestsAntibody` STRING,
+    `totalTestsAntigen` STRING,
+    `totalTestsPeopleAntibody` STRING,
+    `totalTestsPeopleAntigen` STRING,
+    `totalTestsPeopleViral` STRING,
+    `totalTestsPeopleViralIncrease` STRING,
+    `totalTestsViral` STRING,
+    `totalTestsViralIncrease` STRING
+) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+LOCATION 's3://covid-19-puerto-rico-data/CovidTracking/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
+
+--
 -- https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-state-timeseries
 --
 CREATE EXTERNAL TABLE covid_hhs_sources.reported_hospital_utilization_timeseries (
@@ -255,6 +310,17 @@ LOCATION 's3://covid-19-puerto-rico-data/HHS/reported_hospital_capacity_admissio
 -- Minimal cleanup and type handling, plus filtering to Puerto Rico
 --
 
+CREATE OR REPLACE VIEW covid_hhs_sources.covid_tracking_hospitalizations AS
+SELECT
+	CAST(date AS DATE) AS date,
+	CAST(NULLIF(hospitalizedCurrently, '') AS INTEGER)
+		AS hospitalized_currently,
+	CAST(NULLIF(inIcuCurrently, '') AS INTEGER)
+		AS in_icu_currently
+FROM covid_hhs_sources.covid_tracking_csv
+WHERE state = 'PR';
+
+
 CREATE OR REPLACE VIEW covid_hhs_sources.reported_hospital_utilization_timeseries_PR AS
 SELECT
 	date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
@@ -353,4 +419,3 @@ SELECT
 FROM covid_hhs_sources.reported_hospital_utilization
 WHERE state = 'PR'
 ORDER BY "$path" DESC;
-

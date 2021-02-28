@@ -73,6 +73,32 @@ FROM cleaned;
 
 
 --
+-- HHS hospitals data set
+--
+CREATE TABLE covid_pr_etl.hhs_hospitals WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['date'],
+    bucket_count = 1
+) AS
+WITH max_timeseries_date AS (
+	SELECT
+		max(file_timestamp) AS max_file_timestamp,
+		max(date) AS max_date
+	FROM covid_hhs_sources.reported_hospital_utilization_timeseries_PR
+)
+SELECT *
+FROM covid_hhs_sources.reported_hospital_utilization_timeseries_PR
+INNER JOIN max_timeseries_date
+	ON file_timestamp = max_file_timestamp
+UNION ALL
+SELECT *
+FROM covid_hhs_sources.reported_hospital_utilization_PR
+INNER JOIN max_timeseries_date
+	ON date > max_date
+ORDER BY date DESC;
+
+
+--
 -- The `orders/basic` row-per-test dataset.
 --
 CREATE TABLE covid_pr_etl.bioportal_orders_basic WITH (
@@ -541,7 +567,12 @@ SELECT
     	    + coalesce(bul.probable_cases, 0), 0)
 	    AS official,
 	bio.cases AS bioportal,
-	bul.deaths AS deaths
+	bul.deaths AS deaths,
+	hosp.previous_day_admission_adult_covid_confirmed
+		+ hosp.previous_day_admission_adult_covid_suspected
+		+ hosp.previous_day_admission_pediatric_covid_confirmed
+		+ hosp.previous_day_admission_pediatric_covid_suspected
+		AS hospital_admissions
 FROM covid_pr_etl.bioportal_curve bio
 INNER JOIN covid_pr_etl.bioportal_followups_collected_agg followups
 	ON followups.bulletin_date = bio.bulletin_date
@@ -550,6 +581,9 @@ INNER JOIN covid_pr_etl.bioportal_followups_collected_agg followups
 LEFT OUTER JOIN covid_pr_etl.bulletin_cases bul
 	ON bul.bulletin_date = bio.bulletin_date
 	AND bul.datum_date = bio.collected_date
+LEFT OUTER JOIN covid_pr_etl.hhs_hospitals hosp
+	ON bio.collected_date = hosp.date
+	AND hosp.date >= DATE '2020-07-28'
 ORDER BY bio.bulletin_date DESC, bio.collected_date DESC;
 
 CREATE OR REPLACE VIEW covid_pr_etl.molecular_tests_vs_confirmed_cases AS
@@ -774,3 +808,32 @@ INNER JOIN deaths
 	AND deaths.datum_date = date_add('day', 14, cases.collected_date)
 ORDER BY cases.bulletin_date DESC, cases.collected_date DESC;
 
+
+--
+-- COVID-19 hospitalization and ICU occupancy, using HHS data
+-- for recent dates, backfilling bad older HHS data with
+-- COVID Tracking Project.
+--
+CREATE OR REPLACE VIEW covid_pr_etl.hospitalizations AS
+WITH cutoff AS (
+	SELECT DATE '2020-12-07' AS cutoff
+)
+SELECT
+	date,
+	hospitalized_currently,
+	in_icu_currently
+FROM covid_hhs_sources.covid_tracking_hospitalizations
+INNER JOIN cutoff
+	ON date < cutoff
+UNION ALL
+SELECT
+	date,
+	inpatient_beds_used_covid
+		AS hospitalized_currently,
+	staffed_icu_adult_patients_confirmed_and_suspected_covid
+		AS in_icu_currently
+FROM covid_pr_etl.hhs_hospitals
+INNER JOIN cutoff
+	-- Older HHS data is kinda messed up
+	ON date >= cutoff
+ORDER BY date DESC;
