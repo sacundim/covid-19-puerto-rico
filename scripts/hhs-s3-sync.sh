@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# Deploy Bioportal downloaded assets to S3 data bucket.
+# Deploy HHS downloaded assets to S3 data bucket.
 #
+
 set -e -o pipefail
 
 # Set environment variable externally to override this default
@@ -12,6 +13,6 @@ REPO_ROOT="${HERE}/.."
 S3_SYNC_DIR="${REPO_ROOT}/s3-bucket-sync/covid-19-puerto-rico-data"
 
 
-echo "$(date): Syncing ${S3_SYNC_DIR} to ${S3_DATA_URL}"
-time aws s3 sync --quiet $* --exclude '*.DS_Store' \
-  "${S3_SYNC_DIR}" "${S3_DATA_URL}"
+echo "$(date): Syncing ${S3_SYNC_DIR}/HHS/ to ${S3_DATA_URL}/HHS/"
+time aws s3 sync $* --exclude '*.DS_Store' \
+  "${S3_SYNC_DIR}"/HHS/ "${S3_DATA_URL}"/HHS/
