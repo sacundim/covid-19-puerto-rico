@@ -37,17 +37,28 @@ do
   for csv_url in ${csv_urls}
   do
     echo "$(date): Downloading $(basename "${csv_url}") from ${csv_url}..."
-    wget --no-verbose "${csv_url}"
+    time wget --no-verbose "${csv_url}"
 
     filename="$(basename "${csv_url}")"
 
+    echo "$(date): Converting ${filename} to Parquet..."
+    cat "${filename}" \
+      | time csv2parquet --codec gzip --row-group-size 10000000 \
+          --output /dev/stdout \
+          /dev/stdin \
+          > "${filename%.csv}".parquet
+
     echo "$(date): Compressing ${filename}..."
-    bzip2 -9 "${filename}"
+    time bzip2 -9 "${filename}"
 
     syncdir="$(echo -n "${filename}" |sed -E 's/^([a-z19_\-]+)_202[012].*$/\1/')"
     echo "$(date): Moving ${filename}.bz2 to sync directory ${HHS_SYNC_DIR}/${syncdir}..."
-    mkdir -p "${HHS_SYNC_DIR}/${syncdir}"
-    mv "${filename}".bz2 "${HHS_SYNC_DIR}/${syncdir}"/
+    mkdir -p \
+      "${HHS_SYNC_DIR}/${syncdir}" \
+      "${HHS_SYNC_DIR}/${syncdir}/csv" \
+      "${HHS_SYNC_DIR}/${syncdir}/parquet"
+    mv "${filename}".bz2 "${HHS_SYNC_DIR}/${syncdir}"/csv/
+    mv "${filename%.csv}".parquet "${HHS_SYNC_DIR}/${syncdir}"/parquet/
   done
 done
 
