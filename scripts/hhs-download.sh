@@ -42,11 +42,10 @@ do
     filename="$(basename "${csv_url}")"
 
     echo "$(date): Converting ${filename} to Parquet..."
-    cat "${filename}" \
-      | time csv2parquet --codec gzip --row-group-size 10000000 \
-          --output /dev/stdout \
-          /dev/stdin \
-          > "${filename%.csv}".parquet
+    time csv2parquet \
+        --codec gzip \
+        --row-group-size 10000000 \
+        "${filename}"
 
     echo "$(date): Compressing ${filename}..."
     time bzip2 -9 "${filename}"
