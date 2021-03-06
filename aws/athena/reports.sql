@@ -21,10 +21,30 @@ SELECT
 	sum(delta_positive_tests) FILTER (WHERE collected_age > threshold.value)
 		AS late_positive_tests
 FROM covid_pr_etl.bioportal_collected_agg
-CROSS JOIN (VALUES (10)) AS threshold (value)
-WHERE test_type = 'Molecular'
+CROSS JOIN (VALUES (5)) AS threshold (value)
+WHERE test_type IN ('Molecular', 'Antígeno')
 GROUP BY test_type, bulletin_date, threshold.value
 ORDER BY bulletin_date DESC, test_type DESC;
+
+
+--
+-- Bioportal curve.
+--
+WITH bulletins AS (
+	SELECT max(bulletin_date) AS max_bulletin_date
+	FROM covid_pr_etl.bioportal_curve
+)
+SELECT
+	max_bulletin_date "Datos",
+	bio.collected_date AS "Muestras",
+	bio.cases "Casos (Bioportal)",
+	(bio.cumulative_cases - lag(bio.cumulative_cases, 7) OVER (
+		ORDER BY bio.collected_date
+	)) / 7.0 AS "Promedio (7 días)"
+FROM covid_pr_etl.bioportal_curve bio
+INNER JOIN bulletins
+	ON bulletins.max_bulletin_date = bio.bulletin_date
+ORDER BY bio.collected_date DESC;
 
 
 --
