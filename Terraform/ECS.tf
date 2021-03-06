@@ -137,12 +137,22 @@ resource "aws_ecs_task_definition" "hhs_download_and_sync" {
 resource "aws_cloudwatch_event_rule" "hhs_daily_download" {
   name        = "hhs-daily-download"
   description = "Run the daily HHS download."
-  schedule_expression = "cron(55 15,18,20 * * ? *)"
+  schedule_expression = "cron(55 15 * * ? *)"
+}
+
+resource "aws_cloudwatch_event_rule" "hhs_weekend_download" {
+  name        = "hhs-weekend-download"
+  description = "Run the additional weekend HHS downloads (since data is often late)."
+  schedule_expression = "cron(00 19,21 ? * SUN,SAT *)"
 }
 
 resource "aws_cloudwatch_event_target" "hhs_daily_download" {
+  for_each = toset([
+    aws_cloudwatch_event_rule.hhs_daily_download.name,
+    aws_cloudwatch_event_rule.hhs_weekend_download.name])
+
   target_id = "hhs-daily-download"
-  rule = aws_cloudwatch_event_rule.hhs_daily_download.name
+  rule = each.key
   arn = aws_ecs_cluster.main.arn
   role_arn = aws_iam_role.ecs_events_role.arn
 
