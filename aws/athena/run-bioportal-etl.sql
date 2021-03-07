@@ -75,6 +75,7 @@ FROM cleaned;
 --
 -- HHS hospitals data set
 --
+DROP TABLE covid_pr_etl.hhs_hospitals;
 CREATE TABLE covid_pr_etl.hhs_hospitals WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['date'],
@@ -86,13 +87,13 @@ WITH max_timeseries_date AS (
 		max(date) AS max_date
 	FROM covid_hhs_sources.reported_hospital_utilization_timeseries_PR
 )
-SELECT *
-FROM covid_hhs_sources.reported_hospital_utilization_timeseries_PR
+SELECT hist.*
+FROM covid_hhs_sources.reported_hospital_utilization_timeseries_PR hist
 INNER JOIN max_timeseries_date
 	ON file_timestamp = max_file_timestamp
 UNION ALL
-SELECT *
-FROM covid_hhs_sources.reported_hospital_utilization_PR
+SELECT daily.*
+FROM covid_hhs_sources.reported_hospital_utilization_PR daily
 INNER JOIN max_timeseries_date
 	ON date > max_date
 ORDER BY date DESC;

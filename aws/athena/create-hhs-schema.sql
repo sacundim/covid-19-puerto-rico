@@ -326,6 +326,10 @@ SELECT
 	date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
 		AS file_timestamp,
 	date(date) AS date,
+	CAST(NULLIF(hospital_onset_covid, '') AS INTEGER)
+		AS hospital_onset_covid,
+	CAST(NULLIF(hospital_onset_covid_coverage , '') AS INTEGER)
+		AS hospital_onset_covid_coverage,
 	CAST(NULLIF(inpatient_beds_used, '') AS INTEGER)
 		AS inpatient_beds_used,
 	CAST(NULLIF(inpatient_beds_used_coverage , '') AS INTEGER)
@@ -376,6 +380,10 @@ SELECT
 		AS file_timestamp,
 	date(date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i'))
 		AS date,
+	CAST(NULLIF(hospital_onset_covid, '') AS INTEGER)
+		AS hospital_onset_covid,
+	CAST(NULLIF(hospital_onset_covid_coverage , '') AS INTEGER)
+		AS hospital_onset_covid_coverage,
 	CAST(NULLIF(inpatient_beds_used, '') AS INTEGER)
 		AS inpatient_beds_used,
 	CAST(NULLIF(inpatient_beds_used_coverage , '') AS INTEGER)
