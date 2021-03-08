@@ -40,3 +40,4 @@ COPY \
 RUN chmod +x ./scripts/*.sh
 
 ENV PATH=/root/.local/bin:/covid-19-puerto-rico/scripts:$PATH
+ENTRYPOINT ["hhs-download-and-sync.sh"]
