@@ -111,7 +111,7 @@ resource "aws_ecs_task_definition" "hhs_download_and_sync" {
   container_definitions = jsonencode([
     {
       name = "hhs-downloader",
-      image = "${data.aws_ecr_image.scripts.registry_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${data.aws_ecr_image.scripts.repository_name}:${data.aws_ecr_image.scripts.image_tag}"
+      image = "${data.aws_ecr_image.downloader.registry_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${data.aws_ecr_image.downloader.repository_name}:${data.aws_ecr_image.downloader.image_tag}"
       cpu = 1024,
       memoryReservation = 2048,
       essential = true,
