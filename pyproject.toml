@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "covid-19-puerto-rico-downloader"
+version = "0.1.0"
+description = "Data downloader application for Puerto Rico-related COVID-19 data"
+authors = ["sacundim <anybody@sacundim.org>"]
+packages = [{ include = "covid_19_puerto_rico_downloader", from = "src"}]
+
+[tool.poetry.scripts]
+hhs-downloader = 'covid_19_puerto_rico_downloader:main'
+
+[tool.poetry.dependencies]
+python = "^3.7"
+requests = "^2.25.1"
+boto3 = "^1.17.22"
+csv2parquet = "^0.0.9"
+pyarrow = "^3.0.0"
+sodapy = "^2.1.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

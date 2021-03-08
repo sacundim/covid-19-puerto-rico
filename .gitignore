@@ -1,0 +1,9 @@
+.idea/
+.venv
+*.egg-info
+*.pyc
+dist/
+s3-bucket-sync/
+tmp/
+.DS_Store
+*.iml

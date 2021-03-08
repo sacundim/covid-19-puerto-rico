@@ -1,0 +1,6 @@
+.git/
+.idea/
+.venv/
+dist/
+s3-bucket-sync/
+tmp/
