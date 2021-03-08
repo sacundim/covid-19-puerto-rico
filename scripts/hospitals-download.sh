@@ -2,7 +2,8 @@
 #
 # Download the current data sets from here and extract Puerto Rico:
 #
-# * https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-facility
+# * https://beta.healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/anag-cw7u
+# * https://dev.socrata.com/foundry/beta.healthdata.gov/anag-cw7u
 #
 set -eu -o pipefail
 
@@ -17,15 +18,7 @@ TMP="${REPO_ROOT}/tmp"
 # Facilities data set
 #
 
-if [ $# -eq 0 ]
-then
-  # This is a JSON document from which we can fetch the URL
-  # of the download, which changes every week.
-  JSON_URL="https://healthdata.gov/api/3/action/package_show?id=d475cc4e-83cd-4c16-be57-9105f300e0bc&page=0"
-  CSV_URL="$(wget -O - "${JSON_URL}" |jq -r '.result[0].resources[0].url')"
-else
-  CSV_URL="${1}"
-fi
+CSV_URL='https://beta.healthdata.gov/api/views/anag-cw7u/rows.csv?accessType=DOWNLOAD&api_foundry=true'
 
 wget --compress=gzip -O - "${CSV_URL}" \
   | xsv search --select state '^PR$' \

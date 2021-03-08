@@ -111,6 +111,7 @@ CREATE TABLE hhs_hospital_history (
     "previous_day_admission_pediatric_covid_suspected_7_day_sum" INTEGER,
     "previous_day_total_ED_visits_7_day_sum" INTEGER,
     "previous_day_admission_influenza_confirmed_7_day_sum" INTEGER,
+    "geocoded_hospital_address" TEXT,
     PRIMARY KEY ("hospital_pk", "collection_week")
 );
 
