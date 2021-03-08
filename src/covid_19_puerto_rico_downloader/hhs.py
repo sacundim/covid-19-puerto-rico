@@ -24,13 +24,14 @@ def hhs_downloader():
     args = process_arguments()
 
     datasets = [
-        Asset('reported_hospital_utilization', '6xf2-c3ie'),
-        Asset('reported_hospital_utilization_timeseries', 'g62h-syeh'),
-        Asset('reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries', 'anag-cw7u'),
+        Asset('covid-19_community_profile_report_county', 'di4u-7yu6'),
+        Asset('covid-19_diagnostic_lab_testing', 'j8mb-icvb'),
         Asset('estimated_icu', '7ctx-gtb7'),
         Asset('estimated_inpatient_all', 'jjp9-htie'),
         Asset('estimated_inpatient_covid', 'py8k-j5rq'),
-        Asset('covid-19_diagnostic_lab_testing', 'j8mb-icvb'),
+        Asset('reported_hospital_utilization', '6xf2-c3ie'),
+        Asset('reported_hospital_utilization_timeseries', 'g62h-syeh'),
+        Asset('reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries', 'anag-cw7u'),
     ]
     with Socrata('beta.healthdata.gov', None, timeout=60) as client:
         for dataset in datasets:

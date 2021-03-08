@@ -10,6 +10,7 @@ to S3.
 
 ### United States Department of Health and Human Services
 
+* [COVID-19 Community Profile Report - County-Level](https://dev.socrata.com/foundry/beta.healthdata.gov/di4u-7yu6)
 * [COVID-19 Diagnostic Laboratory Testing (PCR Testing) Time Series](https://dev.socrata.com/foundry/beta.healthdata.gov/j8mb-icvb)
 * [COVID-19 Reported Patient Impact and Hospital Capacity by State](https://dev.socrata.com/foundry/beta.healthdata.gov/6xf2-c3ie)
 * [COVID-19 Reported Patient Impact and Hospital Capacity by State Timeseries](https://dev.socrata.com/foundry/beta.healthdata.gov/g62h-syeh)
