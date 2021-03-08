@@ -70,8 +70,8 @@ def main():
             subprocess.run(['bzip2', '-f', '-9', csv_file])
             s3_sync_dir = pathlib.Path(args.s3_sync_dir)
             s3_sync_dir.mkdir(exist_ok=True)
-            hhs_sync_dir = pathlib.Path(f'{s3_sync_dir}/HHS')
-            hhs_sync_dir.mkdir(exist_ok=True)
+            hhs_sync_dir = pathlib.Path(f'{s3_sync_dir}/HHS/v2')
+            hhs_sync_dir.mkdir(exist_ok=True, parents=True)
 
             logging.info('Copying files to target...')
             dataset_dir = pathlib.Path(f'{hhs_sync_dir}/{dataset.name}')
