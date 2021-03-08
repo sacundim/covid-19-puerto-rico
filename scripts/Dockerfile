@@ -34,9 +34,6 @@ COPY \
     bioportal-download-and-sync.sh \
     bioportal-download.sh \
     bioportal-s3-sync.sh \
-    hhs-download-and-sync.sh \
-    hhs-download.sh \
-    hhs-s3-sync.sh \
     ./scripts/
 RUN chmod +x ./scripts/*.sh
 
