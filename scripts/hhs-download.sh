@@ -54,10 +54,10 @@ do
     echo "$(date): Moving ${filename}.bz2 to sync directory ${HHS_SYNC_DIR}/${syncdir}..."
     mkdir -p \
       "${HHS_SYNC_DIR}/${syncdir}" \
-      "${HHS_SYNC_DIR}/${syncdir}/csv" \
-      "${HHS_SYNC_DIR}/${syncdir}/parquet"
-    mv "${filename}".bz2 "${HHS_SYNC_DIR}/${syncdir}"/csv/
-    mv "${filename%.csv}".parquet "${HHS_SYNC_DIR}/${syncdir}"/parquet/
+      "${HHS_SYNC_DIR}/${syncdir}"/v1/csv \
+      "${HHS_SYNC_DIR}/${syncdir}"/v1/parquet
+    mv "${filename}".bz2 "${HHS_SYNC_DIR}/${syncdir}"/v1/csv/
+    mv "${filename%.csv}".parquet "${HHS_SYNC_DIR}/${syncdir}"/v1/parquet/
   done
 done
 
