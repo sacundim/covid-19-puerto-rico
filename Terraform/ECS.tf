@@ -137,7 +137,7 @@ resource "aws_ecs_task_definition" "hhs_download_and_sync" {
 resource "aws_cloudwatch_event_rule" "hhs_daily_download" {
   name        = "hhs-daily-download"
   description = "Run the daily HHS download."
-  schedule_expression = "cron(55 15 * * ? *)"
+  schedule_expression = "cron(55 3,15 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_rule" "hhs_weekend_download" {
