@@ -737,7 +737,11 @@ WITH tests AS (
 	SELECT
 		bulletin_date,
 		collected_date,
-		sum(tests) AS tests
+		sum(tests) AS tests,
+		sum(tests) FILTER (WHERE test_type = 'Molecular')
+			AS pcr,
+		sum(tests) FILTER (WHERE test_type = 'Antígeno')
+			AS antigens
 	FROM covid_pr_etl.bioportal_collected_agg
 	WHERE test_type IN ('Molecular', 'Antígeno')
     -- We want 90 days of data, so we fetch 104 because we need to
@@ -749,8 +753,30 @@ SELECT
     cases.bulletin_date,
     cases.datum_date,
     tests.tests,
+    sum(tests.tests) OVER (
+    	PARTITION BY cases.bulletin_date
+    	ORDER BY cases.datum_date
+    ) cumulative_tests,
+    tests.pcr,
+    sum(tests.pcr) OVER (
+    	PARTITION BY cases.bulletin_date
+    	ORDER BY cases.datum_date
+    ) cumulative_pcr,
+    tests.antigens,
+    sum(tests.antigens) OVER (
+    	PARTITION BY cases.bulletin_date
+    	ORDER BY cases.datum_date
+    ) cumulative_antigens,
 	cases.bioportal AS cases,
-	cases.deaths
+    sum(cases.bioportal) OVER (
+    	PARTITION BY cases.bulletin_date
+    	ORDER BY cases.datum_date
+    ) cumulative_cases,
+	cases.deaths,
+    sum(cases.deaths) OVER (
+    	PARTITION BY cases.bulletin_date
+    	ORDER BY cases.datum_date
+    ) cumulative_deaths
 FROM covid_pr_etl.new_daily_cases cases
 INNER JOIN tests
 	ON cases.bulletin_date = tests.bulletin_date

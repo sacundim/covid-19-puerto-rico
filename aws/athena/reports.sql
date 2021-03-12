@@ -36,15 +36,23 @@ WITH bulletins AS (
 )
 SELECT
 	max_bulletin_date "Datos",
-	bio.collected_date AS "Muestras",
+	bio.datum_date AS "Muestras",
+	bio.pcr "Moleculares",
+	(bio.cumulative_pcr - lag(bio.cumulative_pcr, 7) OVER (
+		ORDER BY bio.datum_date
+	)) / 7.0 AS "Promedio 7 días",
+	bio.antigens "Antígeno",
+	(bio.cumulative_antigens - lag(bio.cumulative_antigens, 7) OVER (
+		ORDER BY bio.datum_date
+	)) / 7.0 AS "Promedio 7 días",
 	bio.cases "Casos (Bioportal)",
 	(bio.cumulative_cases - lag(bio.cumulative_cases, 7) OVER (
-		ORDER BY bio.collected_date
-	)) / 7.0 AS "Promedio (7 días)"
-FROM covid_pr_etl.bioportal_curve bio
+		ORDER BY bio.datum_date
+	)) / 7.0 AS "Promedio 7 días"
+FROM covid_pr_etl.recent_daily_cases bio
 INNER JOIN bulletins
 	ON bulletins.max_bulletin_date = bio.bulletin_date
-ORDER BY bio.collected_date DESC;
+ORDER BY bio.datum_date DESC;
 
 
 --
