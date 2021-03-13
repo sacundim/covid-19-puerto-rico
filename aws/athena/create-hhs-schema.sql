@@ -132,7 +132,7 @@ CREATE EXTERNAL TABLE covid_hhs_sources.reported_hospital_utilization_timeseries
     adult_icu_bed_utilization_numerator STRING,
     adult_icu_bed_utilization_denominator STRING
 ) STORED AS PARQUET
-LOCATION 's3://covid-19-puerto-rico-data/HHS/reported_hospital_utilization_timeseries/v1/parquet/';
+LOCATION 's3://covid-19-puerto-rico-data/HHS/reported_hospital_utilization_timeseries/v2/parquet/';
 
 
 --
@@ -200,7 +200,7 @@ CREATE EXTERNAL TABLE covid_hhs_sources.reported_hospital_utilization (
     adult_icu_bed_utilization_denominator STRING,
     reporting_cutoff_start STRING
 ) STORED AS PARQUET
-LOCATION 's3://covid-19-puerto-rico-data/HHS/reported_hospital_utilization/v1/parquet/';
+LOCATION 's3://covid-19-puerto-rico-data/HHS/reported_hospital_utilization/v2/parquet/';
 
 --
 -- https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-facility
@@ -300,7 +300,7 @@ CREATE EXTERNAL TABLE covid_hhs_sources.reported_hospital_capacity_admissions_fa
     `previous_day_total_ED_visits_7_day_sum` STRING,
     `previous_day_admission_influenza_confirmed_7_day_sum` STRING
 ) STORED AS PARQUET
-LOCATION 's3://covid-19-puerto-rico-data/HHS/reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries/v1/parquet/'
+LOCATION 's3://covid-19-puerto-rico-data/HHS/reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries/v2/parquet/'
 ;
 
 
@@ -325,9 +325,7 @@ CREATE OR REPLACE VIEW covid_hhs_sources.reported_hospital_utilization_timeserie
 SELECT
 	date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
 		AS file_timestamp,
-    -- TODO: switch to this when the v2/ datasets really work
-	-- date(date_parse(date, '%m/%d/%Y %h:%i:%s %p')) AS date,
-	date(date) AS date,
+	date(date_parse(date, '%Y/%m/%d')) AS date,
 	CAST(NULLIF(hospital_onset_covid, '') AS INTEGER)
 		AS hospital_onset_covid,
 	CAST(NULLIF(hospital_onset_covid_coverage , '') AS INTEGER)
