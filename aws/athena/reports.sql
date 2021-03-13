@@ -56,6 +56,18 @@ ORDER BY bio.datum_date DESC;
 
 
 --
+-- Datos básicos de hospitalizaciones
+--
+SELECT
+	file_timestamp AS "Datos",
+	date AS "Fecha",
+	inpatient_beds_used_covid AS "Camas ocupadas por COVID",
+	staffed_adult_icu_bed_occupancy AS "Camas UCI ocupadas (cualquier causa)"
+FROM covid_pr_etl.hhs_hospitals
+ORDER BY date DESC;
+
+
+--
 -- Compare the curves computed from the official report
 -- and from Bioportal.
 --
