@@ -226,7 +226,7 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
         ).encode(
             x=alt.X('collected_date:T', title='Fecha de muestra'),
             y=alt.Y('rate:Q', title='% episodios que se confirma (7 días)',
-                    scale=alt.Scale(type='log', domain=[0.001, 1.0]),
+                    scale=alt.Scale(type='log', domain=[0.002, 0.2]),
                     axis=alt.Axis(format='%')),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
             tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
@@ -259,14 +259,14 @@ class NaivePositiveRate(AbstractMolecularChart):
             alt.datum.sum_value > 0
         ).transform_calculate(
             method="datum.variable + ' ÷ pruebas (' + datum.test_type + ')'"
-        ).mark_line().encode(
+        ).mark_line(clip=True).encode(
             x=alt.X('collected_date:T', title='Fecha de muestra',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('rate:Q', title='Positividad',
-                    scale=alt.Scale(type='log', domain=[0.001, 1.0]),
+                    scale=alt.Scale(type='log', domain=[0.002, 0.2]),
                     axis=alt.Axis(format='%')),
             color=alt.Color('method:N', sort=self.SORT_ORDER,
-                            legend=alt.Legend(orient='none', legendX=50, legendY=4,
+                            legend=alt.Legend(orient='bottom-right', legendX=50, legendY=4,
                                               fillColor='white', padding=7.5,
                                               symbolStrokeWidth=3, symbolSize=250,
                                               title='Método de cálculo', labelLimit=320)),
@@ -787,7 +787,7 @@ class CaseFatalityRate(AbstractMolecularChart):
         ).encode(
             x=alt.X('collected_date:T', title='Fecha de muestras'),
             y=alt.Y('lagged_cfr:Q', title='Letalidad (CFR, 14 días)',
-                    axis=alt.Axis(format='%'), scale=alt.Scale(type='log', domain=[0.01, 1.0])),
+                    axis=alt.Axis(format='%'), scale=alt.Scale(type='log', domain=[0.007, 0.2])),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', title='Datos hasta',
                                       legend=alt.Legend(orient='top', titleOrient='left',
                                                         symbolStrokeWidth=3, symbolSize=300)),
@@ -829,7 +829,8 @@ class Hospitalizations(AbstractMolecularChart):
             groupby=['variable']
         ).mark_line(point='transparent').encode(
             x=alt.X('date:T', title='Fecha'),
-            y=alt.Y('mean_value:Q', title='Promedio 7 días', scale=alt.Scale(type='log')),
+            y=alt.Y('mean_value:Q', title='Promedio 7 días',
+                    scale=alt.Scale(type='log', domain=[5, 1000])),
             color=alt.Color('variable:N', title=None,
                             sort=self.SORT_ORDER,
                             legend=alt.Legend(orient='top')),
