@@ -100,7 +100,7 @@ class RecentCases(AbstractMolecularChart):
         )
 
         return alt.layer(bars, line).properties(
-            width=270, height=100
+            width=270, height=108
         ).facet(
             columns=2,
             facet=alt.Facet('variable:N', title=None, sort=self.SORT_ORDER,
