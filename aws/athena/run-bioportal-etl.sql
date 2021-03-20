@@ -744,9 +744,9 @@ WITH tests AS (
 			AS antigens
 	FROM covid_pr_etl.bioportal_collected_agg
 	WHERE test_type IN ('Molecular', 'Antígeno')
-    -- We want 90 days of data, so we fetch 104 because we need to
-    -- calculate a 14-day average 90 days ago:
-	AND collected_date >= date_add('day', -104, bulletin_date)
+    -- We want 42 days of data, so we fetch 56 because we need to
+    -- calculate a 14-day average 42 days ago:
+	AND collected_date >= date_add('day', -56, bulletin_date)
 	GROUP BY bulletin_date, collected_date
 )
 SELECT
@@ -772,6 +772,11 @@ SELECT
     	PARTITION BY cases.bulletin_date
     	ORDER BY cases.datum_date
     ) cumulative_cases,
+    cases.hospital_admissions AS admissions,
+    sum(cases.hospital_admissions) OVER (
+    	PARTITION BY cases.bulletin_date
+    	ORDER BY cases.datum_date
+    ) cumulative_admissions,
 	cases.deaths,
     sum(cases.deaths) OVER (
     	PARTITION BY cases.bulletin_date
@@ -781,9 +786,9 @@ FROM covid_pr_etl.new_daily_cases cases
 INNER JOIN tests
 	ON cases.bulletin_date = tests.bulletin_date
 	AND cases.datum_date = tests.collected_date
--- We want 90 days of data, so we fetch 104 because we need to
--- calculate a 14-day average 90 days ago:
-WHERE cases.datum_date >= date_add('day', -104, cases.bulletin_date)
+-- We want 42 days of data, so we fetch 56 because we need to
+-- calculate a 14-day average 42 days ago:
+WHERE cases.datum_date >= date_add('day', -56, cases.bulletin_date)
 ORDER BY bulletin_date DESC, datum_date DESC;
 
 

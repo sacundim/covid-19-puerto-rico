@@ -46,10 +46,12 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        # We always generate png for this because they're our Twitter cards
+        molecular.RecentCases(athena, args.output_dir, frozenset(['json', 'svg', 'png'])),
+
         molecular.NewCases(athena, args.output_dir, output_formats),
         molecular.Hospitalizations(athena, args.output_dir, output_formats),
         molecular.CaseFatalityRate(athena, args.output_dir, output_formats),
-        molecular.RecentCases(athena, args.output_dir, output_formats),
         charts.ICUsByRegion(postgres, args.output_dir, output_formats),
         charts.ICUsByHospital(postgres, args.output_dir, output_formats),
         molecular.NewDailyTestsPerCapita(athena, args.output_dir, output_formats),
@@ -69,9 +71,7 @@ def main():
         charts.WeekdayBias(postgres, args.output_dir, output_formats),
         charts.DailyDeltas(postgres, args.output_dir, output_formats),
         charts.LatenessDaily(postgres, args.output_dir, output_formats),
-
-        # We always generate png for this because they're our Twitter cards
-        charts.Lateness7Day(postgres, args.output_dir, frozenset(['json', 'svg', 'png']))
+        charts.Lateness7Day(postgres, args.output_dir, output_formats)
     ]
     if args.website:
         site = website.Website(args)

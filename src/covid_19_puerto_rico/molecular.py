@@ -22,7 +22,7 @@ class AbstractMolecularChart(charts.AbstractChart):
 
 class RecentCases(AbstractMolecularChart):
     POPULATION_100K = 31.93694
-    SORT_ORDER=['Pruebas', 'Casos', 'Muertes']
+    SORT_ORDER=['Pruebas', 'Casos', 'Internados', 'Muertes']
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('recent_daily_cases', self.metadata,
@@ -31,6 +31,7 @@ class RecentCases(AbstractMolecularChart):
                         table.c.datum_date,
                         table.c.tests.label('Pruebas'),
                         table.c.cases.label('Casos'),
+                        table.c.admissions.label('Internados'),
                         table.c.deaths.label('Muertes')])\
             .where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
                         table.c.bulletin_date <= max(bulletin_dates)))
@@ -61,13 +62,13 @@ class RecentCases(AbstractMolecularChart):
             mean_14day_100k=alt.datum.mean_14day / self.POPULATION_100K,
             sum_14day_100k=alt.datum.sum_14day / self.POPULATION_100K
         ).transform_filter(
-            alt.datum.datum_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=90))
+            alt.datum.datum_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
         ).encode(
-            x=alt.X('datum_date:T', title='Fecha de muestra o deceso', axis=alt.Axis(format='%d/%m')),
+            x=alt.X('datum_date:T', title=None, axis=alt.Axis(format='%d/%m')),
             color=alt.Color('variable:N', legend=None, sort=self.SORT_ORDER,
-                            scale=alt.Scale(range=['#54a24b', '#4c78a8', '#e45756'])),
+                            scale=alt.Scale(range=['#54a24b', '#4c78a8', '#f58518', '#e45756'])),
             tooltip=[
-                alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
+                alt.Tooltip('datum_date:T', title='Fecha'),
                 alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                 alt.Tooltip('variable:N', title='Variable'),
                 alt.Tooltip('value:Q', format=',d', title='Valor crudo'),
@@ -85,24 +86,25 @@ class RecentCases(AbstractMolecularChart):
         bars = base.transform_filter(
             alt.datum.bulletin_date == util.altair_date_expr(bulletin_date)
         ).mark_bar(opacity=0.33).encode(
-            y=alt.Y('value:Q', title='Diario')
+            y=alt.Y('value:Q', title=None, axis=alt.Axis(minExtent=30))
         )
 
         line = base.mark_line().encode(
-            y=alt.Y('mean_7day:Q', title='Diario'),
-            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending',
-                                      title='Datos hasta',
-                                      legend=alt.Legend(orient='bottom', titleOrient='left'))
+            y=alt.Y('mean_7day:Q', title=None, axis=alt.Axis(minExtent=30)),
+            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', title='Datos hasta',
+                                      legend=alt.Legend(orient='bottom', titleOrient='left',
+                                                        symbolSize=480, symbolStrokeWidth=2))
         )
 
         return alt.layer(bars, line).properties(
-            width=585, height=100
+            width=270, height=100
         ).facet(
-            columns=1,
-            facet=alt.Facet('variable:N', title=None, sort=self.SORT_ORDER)
+            columns=2,
+            facet=alt.Facet('variable:N', title=None, sort=self.SORT_ORDER,
+                            header=alt.Header(labelPadding=6))
         ).resolve_scale(
             y='independent'
-        )
+        ).configure_facet(spacing=10)
 
 
 class NewCases(AbstractMolecularChart):

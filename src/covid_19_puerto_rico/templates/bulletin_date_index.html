@@ -8,7 +8,7 @@
 <meta name="twitter:description"
       content="Análisis de rezagos de pruebas a partir de los boletines de COVID-19 del Departamento de Salud de Puerto Rico.">
 <meta name="twitter:image"
-      content="https://sacundim.github.io/covid-19-puerto-rico/{{ bulletin_date }}/{{ bulletin_date }}_Lateness7Day.png">
+      content="https://sacundim.github.io/covid-19-puerto-rico/{{ bulletin_date }}/{{ bulletin_date }}_RecentCases.png">
 {% endblock %}
 
 {% block title %}Análisis boletín {{ bulletin_date }}{% endblock %}
@@ -67,10 +67,15 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Una guía rápida de cuántas pruebas, casos y muertes diarias se han dado los últimos
-        90 días, mostrando tanto valores diarios crudos (barras) como promedio móvil de
-        7 días (línea).  Pruebas y casos son con datos del Bioportal de Salud; muertes por
-        el informe diario de casos.</p>
+    <p>Una guía rápida de cuántas pruebas, casos, pacientes internados y muertes diarias se
+        han dado las últimas 6 semanas mostrando tanto valores diarios crudos (barras) como
+        promedio móvil de 7 días (línea).  Pruebas y casos son datos del Bioportal del
+        Departamento de Salud de Puerto Rico; pacientes internados según reportes del
+        Departamento de Salud y Servicios Humanos de los Estados Unidos
+        (<a href="https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/g62h-syeh">semanal</a>
+        de preferencia, y <a href="https://healthdata.gov/dataset/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/6xf2-c3ie">diario</a>
+        las fechas más recientes); muertes por el <a href="http://www.salud.gov.pr/Estadisticas-Registros-y-Publicaciones/Pages/COVID-19.aspx">informe
+            diario de casos del Departamento de Salud de Puerto Rico</a>.</p>
 
     <dl>
         <dt>Pruebas</dt>
@@ -80,6 +85,10 @@
 
         <dt>Casos</dt>
         <dd>Por prueba molecular o de antígenos, usando la fecha de la muestra más temprana.</dd>
+
+        <dt>Internados</dt>
+        <dd>Suma de pacientes adultos y pediátricos admitidos a hospital por COVID-19 confirmado
+            o sospechado, según informes de Salud federal.</dd>
 
         <dt>Muertes</dt>
         <dd>Por fecha de deceso.</dd>
