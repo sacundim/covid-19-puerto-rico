@@ -86,14 +86,17 @@ class RecentCases(AbstractMolecularChart):
         bars = base.transform_filter(
             alt.datum.bulletin_date == util.altair_date_expr(bulletin_date)
         ).mark_bar(opacity=0.33).encode(
-            y=alt.Y('value:Q', title=None, axis=alt.Axis(minExtent=30))
+            y=alt.Y('value:Q', title=None,
+                    axis=alt.Axis(minExtent=30, labelExpr="if(datum.value > 0, datum.label, '')"))
         )
 
         line = base.mark_line().encode(
-            y=alt.Y('mean_7day:Q', title=None, axis=alt.Axis(minExtent=30)),
+            y=alt.Y('mean_7day:Q', title=None,
+                    axis=alt.Axis(minExtent=30, labelExpr="if(datum.value > 0, datum.label, '')")),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', title='Datos hasta',
                                       legend=alt.Legend(orient='bottom', titleOrient='left',
-                                                        symbolSize=480, symbolStrokeWidth=2))
+                                                        symbolSize=480, symbolStrokeWidth=2,
+                                                        offset=10))
         )
 
         return alt.layer(bars, line).properties(
@@ -101,7 +104,7 @@ class RecentCases(AbstractMolecularChart):
         ).facet(
             columns=2,
             facet=alt.Facet('variable:N', title=None, sort=self.SORT_ORDER,
-                            header=alt.Header(labelPadding=6))
+                            header=alt.Header(labelPadding=7.5))
         ).resolve_scale(
             y='independent'
         ).configure_facet(spacing=10)
