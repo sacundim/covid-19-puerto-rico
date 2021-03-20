@@ -87,12 +87,14 @@ class RecentCases(AbstractMolecularChart):
             alt.datum.bulletin_date == util.altair_date_expr(bulletin_date)
         ).mark_bar(opacity=0.33).encode(
             y=alt.Y('value:Q', title=None,
-                    axis=alt.Axis(minExtent=30, labelExpr="if(datum.value > 0, datum.label, '')"))
+                    axis=alt.Axis(minExtent=30, format='s',
+                                  labelExpr="if(datum.value > 0, datum.label, '')"))
         )
 
         line = base.mark_line().encode(
             y=alt.Y('mean_7day:Q', title=None,
-                    axis=alt.Axis(minExtent=30, labelExpr="if(datum.value > 0, datum.label, '')")),
+                    axis=alt.Axis(minExtent=30, format='s',
+                                  labelExpr="if(datum.value > 0, datum.label, '')")),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', title='Datos hasta',
                                       legend=alt.Legend(orient='bottom', titleOrient='left',
                                                         symbolSize=480, symbolStrokeWidth=2,
@@ -160,7 +162,7 @@ class NewCases(AbstractMolecularChart):
             x=alt.X('yearmonthdate(datum_date):T', title='Fecha de muestra o deceso',
                     axis=alt.Axis(format='%d/%m')),
             y = alt.Y('mean_7day:Q', title='Nuevos (promedio 7 días)',
-                      scale=alt.Scale(type='log')),
+                      scale=alt.Scale(type='log'), axis=alt.Axis(format='s')),
             tooltip = [
                 alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
                 alt.Tooltip('bulletin_date:T', title='Datos hasta'),
@@ -400,9 +402,13 @@ class CumulativeTestsVsCases(AbstractMolecularChart):
 #            distance=alt.expr.sqrt(alt.expr.pow(alt.datum.smoothed_daily_tests, 2) +
 #                                   alt.expr.pow(alt.datum.smoothed_daily_cases, 2))
         ).mark_point().encode(
-            y=alt.Y('tests_per_million:Q', scale=alt.Scale(domain=[0, max_y]),
+            y=alt.Y('tests_per_million:Q',
+                    scale=alt.Scale(domain=[0, max_y]),
+                    axis=alt.Axis(format='s'),
                     title='Total de pruebas por millón de habitantes'),
-            x=alt.X('cases_per_million:Q', scale=alt.Scale(domain=[0, max_x]),
+            x=alt.X('cases_per_million:Q',
+                    scale=alt.Scale(domain=[0, max_x]),
+                    axis=alt.Axis(format='s'),
                     title='Total de casos por millón de habitantes'),
             order=alt.Order('collected_date:T'),
             tooltip=[alt.Tooltip('yearmonthdate(collected_date):T', title='Fecha de muestra'),
@@ -750,7 +756,7 @@ class MolecularLatenessTiers(AbstractMolecularChart):
             x=alt.X('bulletin_date:T', title=None, axis=alt.Axis(ticks=False, labels=False)),
             y=alt.Y('mean_count:Q', title='Resultados moleculares (promedio 7 días)',
                     scale=alt.Scale(domain=[0, max_y]),
-                    axis=alt.Axis(labelExpr="if(datum.value > 0, datum.label, '')")),
+                    axis=alt.Axis(format='s', labelExpr="if(datum.value > 0, datum.label, '')")),
         ).properties(
             width=575, height=275
         )
@@ -835,7 +841,8 @@ class Hospitalizations(AbstractMolecularChart):
         ).mark_line(point='transparent').encode(
             x=alt.X('date:T', title='Fecha'),
             y=alt.Y('mean_value:Q', title='Promedio 7 días',
-                    scale=alt.Scale(type='log', domain=[5, 1000])),
+                    scale=alt.Scale(type='log', domain=[5, 1000]),
+                    axis=alt.Axis(format='s')),
             color=alt.Color('variable:N', title=None,
                             sort=self.SORT_ORDER,
                             legend=alt.Legend(orient='top')),
