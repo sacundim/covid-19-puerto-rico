@@ -181,20 +181,27 @@ FROM first_clean;
 
 
 --
--- This is data set computed off `bioportal_orders_basic` is our
--- analysis of which tests are likely to be followups of
--- earlier positive tests.
+-- This table takes all the antigen and PCR tests (no serology)
+-- and does the following cleanup and enrichment:
 --
--- We classify a test as a "followup" if the same `patient_id`
--- has an earlier positive test that was collected within three
--- months.  We use a three month cutoff following the Council of
+-- 1. Eliminates duplicate tests for the same patient on the
+--    same date. If any of the tests on one day is positive,
+--    we classify the patient as a positive on that day.  We
+--    call these "test encounters," a term used by the COVID
+--    Tracking Project.
+--
+-- 2. Flags "followup" tests—tests such that the same patient
+--    had a positive test no more than 90 days earlier.
+--
+-- For #2 we use a three month cutoff following the Council of
 -- State and Territorial Epidemiologists (CSTE)'s 2020 Interim
 -- Case Definition (Interim-20-ID-02, approved August 5, 2020),
 -- which recommends this criterion for distinguishing new cases
 -- from existing ones.
 --
 -- https://wwwn.cdc.gov/nndss/conditions/coronavirus-disease-2019-covid-19/case-definition/2020/08/05/
-CREATE TABLE covid_pr_etl.bioportal_followups WITH (
+--
+CREATE TABLE covid_pr_etl.bioportal_encounters WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['downloaded_date'],
     bucket_count = 1
@@ -206,14 +213,18 @@ WITH downloads AS (
 	FROM covid_pr_etl.bioportal_orders_basic
 )
 SELECT
-	cur.test_type,
 	cur.downloaded_at,
 	cur.downloaded_date,
 	cur.received_date,
 	cur.collected_date,
 	cur.reported_date,
 	cur.patient_id,
-	cur.positive,
+	bool_or(cur.positive) positive,
+	-- Note that it's possible for a patient to take both
+	-- PCR and antigens on the same date, so `has_molecular`
+	-- and `has_antigens` can be both true same day:
+	bool_or(cur.test_type = 'Molecular') has_molecular,
+	bool_or(cur.test_type = 'Antígeno') has_antigens,
 	COALESCE(bool_or(prev.collected_date >= date_add('day', -90, cur.collected_date)
 			            AND prev.positive),
              FALSE)
@@ -223,20 +234,18 @@ INNER JOIN downloads
     ON cur.downloaded_at = downloads.max_downloaded_at
     AND cur.downloaded_date = downloads.max_downloaded_date
 LEFT OUTER JOIN covid_pr_etl.bioportal_orders_basic prev
-	ON prev.test_type = cur.test_type
-	AND prev.downloaded_at = cur.downloaded_at
+	ON prev.downloaded_at = cur.downloaded_at
 	AND prev.downloaded_date = cur.downloaded_date
 	AND prev.patient_id = cur.patient_id
 	AND prev.collected_date < cur.collected_date
+WHERE cur.test_type IN ('Molecular', 'Antígeno')
 GROUP BY
-	cur.test_type,
 	cur.downloaded_at,
 	cur.downloaded_date,
 	cur.received_date,
 	cur.collected_date,
 	cur.reported_date,
-	cur.patient_id,
-	cur.positive;
+	cur.patient_id;
 
 
 ----------------------------------------------------------
@@ -364,7 +373,10 @@ FROM covid_pr_etl.bioportal_tritemporal_deltas
 GROUP BY test_type, bulletin_date, reported_date;
 
 
-CREATE TABLE covid_pr_etl.bioportal_followups_collected_agg WITH (
+--
+-- Encounters cube
+--
+CREATE TABLE covid_pr_etl.bioportal_encounters_agg WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
@@ -382,119 +394,79 @@ WITH downloads AS (
 	CROSS JOIN UNNEST(date_array) AS t2(date_column)
 	INNER JOIN downloads
 	    ON CAST(date_column AS DATE) < downloads.max_downloaded_date
-), dailies AS (
-	SELECT
-		test_type,
-		bulletins.bulletin_date,
-		collected_date,
-		count(*) tests,
-		count(*) FILTER (WHERE positive)
-			AS positives,
-		count(*) FILTER (WHERE positive AND NOT followup)
-			AS novels,
-		count(*) FILTER (WHERE NOT positive AND NOT followup)
-			AS rejections,
-		count(*) FILTER (WHERE followup)
-			AS followups
-	FROM covid_pr_etl.bioportal_followups followups
-    INNER JOIN downloads
-        ON followups.downloaded_at = downloads.max_downloaded_at
-	INNER JOIN bulletins
-	    ON bulletins.bulletin_date < downloads.max_downloaded_date
-	    AND followups.received_date <= bulletins.bulletin_date
-	WHERE DATE '2020-03-01' <= collected_date
-	AND collected_date <= received_date
-	AND DATE '2020-03-01' <= reported_date
-	AND reported_date <= received_date
-	GROUP BY test_type, bulletins.bulletin_date, collected_date
 )
 SELECT
-	*,
-	sum(tests) OVER (
-		PARTITION BY test_type,  bulletin_date
-		ORDER BY collected_date
-	) AS cumulative_tests,
-	sum(positives) OVER (
-		PARTITION BY test_type,  bulletin_date
-		ORDER BY collected_date
-	) AS cumulative_positives,
-	sum(novels) OVER (
-		PARTITION BY test_type,  bulletin_date
-		ORDER BY collected_date
-	) AS cumulative_novels,
-	sum(rejections) OVER (
-		PARTITION BY test_type,  bulletin_date
-		ORDER BY collected_date
-	) AS cumulative_rejections,
-	sum(followups) OVER (
-		PARTITION BY test_type,  bulletin_date
-		ORDER BY collected_date
-	) AS cumulative_followups
-FROM dailies;
-
-
---
--- Counts of Bioportal cases (patients with at least one positive
--- molecular or antigen test) grouped by earliest molecular, antigen
--- and combined date.  This is intended for computing case curves
--- either with or without antigens
---
-CREATE TABLE covid_pr_etl.bioportal_curve_agg WITH (
-    format = 'PARQUET',
-    bucketed_by = ARRAY['bulletin_date'],
-    bucket_count = 1
-) AS
-WITH downloads AS (
-	SELECT
-		max(downloaded_at) max_downloaded_at,
-		max(downloaded_date) max_downloaded_date
-	FROM covid_pr_etl.bioportal_orders_basic
-), bulletins AS (
-	SELECT CAST(date_column AS DATE) AS bulletin_date
-	FROM (
-		VALUES (SEQUENCE(DATE '2020-04-24', DATE '2021-12-31', INTERVAL '1' DAY))
-	) AS date_array (date_array)
-	CROSS JOIN UNNEST(date_array) AS t2(date_column)
-	INNER JOIN downloads
-	    ON CAST(date_column AS DATE) < downloads.max_downloaded_date
-), cases AS (
-	SELECT
-		bulletins.bulletin_date AS bulletin_date,
-		min(collected_date) collected_date,
-		min(collected_date) FILTER (
-			WHERE test_type = 'Antígeno'
-		) AS antigens_date,
-		min(collected_date) FILTER (
-			WHERE test_type = 'Molecular'
-		) AS molecular_date
-	FROM covid_pr_etl.bioportal_orders_basic tests
-	INNER JOIN downloads
-		ON tests.downloaded_at = downloads.max_downloaded_at
-	INNER JOIN bulletins
-		ON bulletins.bulletin_date < downloads.max_downloaded_date
-		AND tests.received_date <= bulletins.bulletin_date
-	WHERE test_type IN ('Molecular', 'Antígeno')
-	AND DATE '2020-03-01' <= collected_date
-	AND collected_date <= received_date
-	AND DATE '2020-03-01' <= reported_date
-	AND reported_date <= received_date
-    AND positive
-	GROUP BY
-		bulletin_date,
-		patient_id
-)
-SELECT
-	bulletin_date,
-	collected_date,
-	antigens_date,
-	molecular_date,
-	count(*) cases
-FROM cases
+	bulletins.bulletin_date,
+	tests.collected_date,
+	tests.received_date,
+	count(*) AS encounters,
+	count(*) FILTER (
+		WHERE tests.positive
+		AND NOT tests.followup
+	) cases,
+	count(*) FILTER (
+		WHERE tests.has_molecular
+		AND NOT tests.positive
+		AND NOT tests.followup
+	) rejections,
+	-- Note that `has_antigens` and `has_molecular` don't
+	-- have to add up to `encounters` because a person may
+	-- get both test types the same day. Similar remarks
+	-- apply to many of the sums below.
+	count(*) FILTER (
+		WHERE tests.has_antigens
+	) has_antigens,
+	count(*) FILTER (
+		WHERE tests.has_molecular
+	) has_molecular,
+	count(*) FILTER (
+		WHERE NOT tests.followup
+		AND tests.has_molecular
+	) AS initial_molecular,
+	count(*) FILTER (
+		WHERE NOT tests.followup
+		AND tests.has_molecular
+		AND tests.positive
+	) AS initial_molecular_positives
+FROM covid_pr_etl.bioportal_encounters tests
+INNER JOIN downloads
+	ON tests.downloaded_at = downloads.max_downloaded_at
+INNER JOIN bulletins
+	ON bulletins.bulletin_date < downloads.max_downloaded_date
+	AND tests.received_date <= bulletins.bulletin_date
+AND DATE '2020-03-01' <= tests.collected_date
+AND tests.collected_date <= tests.received_date
+AND DATE '2020-03-01' <= tests.reported_date
+AND tests.reported_date <= tests.received_date
 GROUP BY
+	bulletins.bulletin_date,
+	tests.collected_date,
+	tests.received_date
+ORDER BY
+	bulletins.bulletin_date,
+	tests.collected_date,
+	tests.received_date;
+
+
+CREATE TABLE covid_pr_etl.bioportal_encounters_collected_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
+SELECT
 	bulletin_date,
 	collected_date,
-	antigens_date,
-	molecular_date;
+	sum(encounters) AS encounters,
+	sum(cases) AS cases,
+	sum(rejections) AS rejections,
+	sum(has_antigens) AS has_antigens,
+	sum(has_molecular) AS has_molecular,
+	sum(initial_molecular) AS initial_molecular,
+	sum(initial_molecular_positives) AS initial_molecular_positives
+FROM covid_pr_etl.bioportal_encounters_agg
+GROUP BY bulletin_date, collected_date
+ORDER BY bulletin_date, collected_date;
+
 
 
 --
@@ -525,31 +497,9 @@ SELECT
 		PARTITION BY collected_date
 		ORDER BY bulletin_date
 	), 0) AS delta_cases
-FROM covid_pr_etl.bioportal_curve_agg
+FROM covid_pr_etl.bioportal_encounters_agg
 GROUP BY bulletin_date, collected_date
 ORDER BY bulletin_date DESC, collected_date DESC;
-
-
---
--- Case curve but only with molecular test results.
---
-CREATE OR REPLACE VIEW covid_pr_etl.bioportal_curve_molecular AS
-SELECT
-	bulletin_date,
-	molecular_date AS collected_date,
-	sum(cases) cases,
-    sum(sum(cases)) OVER (
-		PARTITION BY bulletin_date
-		ORDER BY molecular_date
-	) AS cumulative_cases,
-	sum(cases) - lag(sum(cases)) OVER (
-		PARTITION BY molecular_date
-		ORDER BY bulletin_date
-	) AS delta_cases
-FROM covid_pr_etl.bioportal_curve_agg
-WHERE molecular_date IS NOT NULL
-GROUP BY bulletin_date, molecular_date
-ORDER BY bulletin_date DESC, molecular_date DESC;
 
 
 ----------------------------------------------------------
@@ -562,8 +512,7 @@ CREATE OR REPLACE VIEW covid_pr_etl.new_daily_cases AS
 SELECT
     bio.bulletin_date,
 	bio.collected_date AS datum_date,
-	followups.tests,
-    followups.rejections,
+    encounters.rejections,
 	nullif(coalesce(bul.confirmed_cases, 0)
     	    + coalesce(bul.probable_cases, 0), 0)
 	    AS official,
@@ -575,10 +524,9 @@ SELECT
 		+ hosp.previous_day_admission_pediatric_covid_suspected
 		AS hospital_admissions
 FROM covid_pr_etl.bioportal_curve bio
-INNER JOIN covid_pr_etl.bioportal_followups_collected_agg followups
-	ON followups.bulletin_date = bio.bulletin_date
-	AND followups.collected_date = bio.collected_date
-	AND followups.test_type = 'Molecular'
+INNER JOIN covid_pr_etl.bioportal_encounters_collected_agg encounters
+	ON encounters.bulletin_date = bio.bulletin_date
+	AND encounters.collected_date = bio.collected_date
 LEFT OUTER JOIN covid_pr_etl.bulletin_cases bul
 	ON bul.bulletin_date = bio.bulletin_date
 	AND bul.datum_date = bio.collected_date
@@ -586,6 +534,7 @@ LEFT OUTER JOIN covid_pr_etl.hhs_hospitals hosp
 	ON bio.collected_date = hosp.date
 	AND hosp.date >= DATE '2020-07-28'
 ORDER BY bio.bulletin_date DESC, bio.collected_date DESC;
+
 
 CREATE OR REPLACE VIEW covid_pr_etl.molecular_tests_vs_confirmed_cases AS
 SELECT
@@ -691,21 +640,13 @@ ORDER BY test_type, bulletin_date DESC, collected_date DESC;
 --
 CREATE OR REPLACE VIEW covid_pr_etl.confirmed_vs_rejected AS
 SELECT
-	molecular.test_type,
-	molecular.bulletin_date,
+	bulletin_date,
 	collected_date,
-	molecular.tests,
-	molecular.positives,
-	molecular.novels,
-	molecular.rejections,
-	cases.confirmed_cases AS cases
-FROM covid_pr_etl.bioportal_followups_collected_agg molecular
-INNER JOIN covid_pr_etl.bulletin_cases cases
-	ON cases.bulletin_date = molecular.bulletin_date
-	AND cases.datum_date = molecular.collected_date
-WHERE molecular.test_type = 'Molecular'
-AND molecular.bulletin_date > DATE '2020-04-24'
-ORDER BY test_type, bulletin_date DESC, collected_date DESC;
+	initial_molecular_positives AS novels,
+	rejections
+FROM covid_pr_etl.bioportal_encounters_collected_agg
+WHERE bulletin_date > DATE '2020-04-24'
+ORDER BY bulletin_date DESC, collected_date DESC;
 
 
 CREATE OR REPLACE VIEW covid_pr_etl.molecular_lateness_tiers AS
