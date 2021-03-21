@@ -168,7 +168,7 @@ class NewCases(AbstractMolecularChart):
             x=alt.X('yearmonthdate(datum_date):T', title='Fecha de muestra o deceso',
                     axis=alt.Axis(format='%d/%m')),
             y = alt.Y('mean_7day:Q', title='Nuevos (promedio 7 días)',
-                      scale=alt.Scale(type='log'), axis=alt.Axis(format='s')),
+                      scale=alt.Scale(type='log'), axis=alt.Axis(format=',')),
             tooltip = [
                 alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
                 alt.Tooltip('bulletin_date:T', title='Datos hasta'),
