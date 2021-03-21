@@ -53,11 +53,22 @@ que quien tenga el conocimiento técnico y se pueda tapar un poco la nariz podr�
 servirse.
 
 
-## Esquema bitemporal
+## Análisis de datos de Bioportal
 
-Esta colección de datos se ha enfocado en presentar los datos de 
-los gráficos en un llamado **esquema bitemporal**, donde se 
-clasifica cada punto por **dos** fechas:
+El ordenamiento y análisis de datos del Bioportal de Salud está construido 
+usando [Amazon Athena](https://aws.amazon.com/athena/), un servicio de SQL 
+en la nube. El "script" principal de limpieza y análisis de datos está
+aquí:
+
+* [`aws/athena/run-bioportal-etl.sql`](aws/athena/run-bioportal-etl.sql)
+
+
+## Colección de datos de informes diarios del Departamento de Salud de Puerto Rico
+
+También se provee una colección de datos de los informes diarios de 
+COVID-19 del Departamento de Salud de Puerto Rico.  Esta colección 
+se ha enfocado en capturar los datos en un llamado **esquema bitemporal**, 
+donde se clasifica cada punto por **dos** fechas:
 
 * La fecha de publicación de la cifra (columna `bulletin_date`);
 * La fecha del evento que la cifra pretende describir (columna
