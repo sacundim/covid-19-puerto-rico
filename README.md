@@ -15,12 +15,12 @@ Los datos provienen principalmente de:
  
 1. Los [informes de Casos Positivos COVID-19](http://www.salud.gov.pr/Estadisticas-Registros-y-Publicaciones/Pages/COVID-19.aspx)
    del Departamento de Salud de Puerto Rico;
-2. Descargas diarias del [API del Bioportal del Departamento de Salud de Puerto Rico](Bioportal.md);
+2. Descargas diarias del [API del Bioportal del Departamento de Salud de Puerto Rico](Bioportal.md).
 3. Publicaciones de datos (principalmente hospitalarios) de [la página HealthData.gov del
-   Departamento de Salud y Servicios Humanos de los Estados Unidos](https://healthdata.gov/)
+   Departamento de Salud y Servicios Humanos de los Estados Unidos](https://healthdata.gov/).
 4. El [COVID Tracking Project](https://covidtracking.com/) (hospitalizaciones),
    que a su vez los obtuvo del Departamento de Salud de Puerto Rico y del Departamento de 
-   Salud y Servicios Humanos de los Estados Unidos;
+   Salud y Servicios Humanos de los Estados Unidos.
 5. Fuentes misceláneas como reportes de prensa o informes y gráficas del Departamento de 
    Salud de Puerto Rico que no aparecen en esos enlaces pero que se han compartido con 
    periodistas.
@@ -103,6 +103,14 @@ Así que el archivo bitemporal reporta:
 
 De nuevo, esta recopilación de datos intenta facilitar tales
 observaciones.
+
+
+## Descargador de datos de Salud federal
+
+El código que realiza las descargas periódicas de datos de Salud federal
+está en este otro repositorio:
+
+* https://github.com/sacundim/covid-19-puerto-rico-downloader
 
 
 ## Información técnica
