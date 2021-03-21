@@ -101,15 +101,29 @@
         entrecortadas ilustrando cómo da el promedio móvil cuando excluimos los datos recibidos
         los últimos 7 días.</p>
 
-    <h3>Adjudicación de casos a fechas</h3>
+    <h3>Adjudicación de casos y fechas</h3>
 
-    <p>Los informes diarios de Salud publican dos gráficas y tablas de datos aparte para casos
-        confirmados por prueba molecular y casos probables por prueba de antígeno.  Estas tablas,
-        sin embargo, sufren de un desperfecto, que es que los casos confirmados que cuentan también
-        con una prueba de antígeno se adjudican a la fecha de la prueba molecular, a pesar de que
-        esta suele ser más tardía.  En esta gráfica usamos datos del Bioportal para corregir
-        esto y adjudicar esos casos a la fecha más temprana, que mejor refleja cuándo se contagió
-        el paciente.</p>
+    <p>Adjudicamos un caso cuando encontramos una combinación de paciente y fecha tal que a
+        ese paciente se le tomó en esa fecha una muestra, igual sea de antígeno o molecular,
+        que arrojó positivo, y que no exista en los 90 días anteriores otra tal prueba
+        positiva.  Este criterio lo adoptamos a partir de
+        <a href="https://wwwn.cdc.gov/nndss/conditions/coronavirus-disease-2019-covid-19/case-definition/2020/08/05/">la
+            definición interina de casos de COVID-19 del 5 de agosto del 2020 del Consejo de
+            Epidemiólogos Estatales y Territoriales</a>, que recomienda:</p>
+
+    <blockquote>
+        Una prueba positiva repetida para ARN de SARS-CoV-2 usando una prueba de detección de
+        amplificación molecular dentro de tres meses del reporte inicial no debe ser enumerada
+        como caso nuevo para propósitos de vigilancia.
+    </blockquote>
+
+    <p>Vale apuntar que los informes diarios de Salud publican dos gráficas y tablas de datos
+        aparte para casos confirmados por prueba molecular y casos probables por prueba de antígeno.
+        Estas tablas, sin embargo, sufren de un desperfecto, que es que los casos confirmados que
+        cuentan también con una prueba de antígeno se adjudican a la fecha de la prueba molecular,
+        a pesar de que esta suele ser más tardía.  En esta gráfica usamos datos del Bioportal para
+        corregir esto y adjudicar esos casos a la fecha más temprana, que mejor refleja cuándo se
+        contagió el paciente.</p>
 </div>
 
 
