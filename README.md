@@ -16,9 +16,12 @@ Los datos provienen principalmente de:
 1. Los [informes de Casos Positivos COVID-19](http://www.salud.gov.pr/Estadisticas-Registros-y-Publicaciones/Pages/COVID-19.aspx)
    del Departamento de Salud de Puerto Rico;
 2. Descargas diarias del [API del Bioportal del Departamento de Salud de Puerto Rico](Bioportal.md);
-3. El [COVID Tracking Project](https://covidtracking.com/) (datos de hospitalizaciones),
-   que a su vez los obtiene del Departamento de Salud de Puerto Rico;
-4. Fuentes misceláneas como reportes de prensa o informes y gráficas del Departamento de 
+3. Publicaciones de datos (principalmente hospitalarios) de [la página HealthData.gov del
+   Departamento de Salud y Servicios Humanos de los Estados Unidos](https://healthdata.gov/)
+4. El [COVID Tracking Project](https://covidtracking.com/) (hospitalizaciones),
+   que a su vez los obtuvo del Departamento de Salud de Puerto Rico y del Departamento de 
+   Salud y Servicios Humanos de los Estados Unidos;
+5. Fuentes misceláneas como reportes de prensa o informes y gráficas del Departamento de 
    Salud de Puerto Rico que no aparecen en esos enlaces pero que se han compartido con 
    periodistas.
 
