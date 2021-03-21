@@ -215,10 +215,10 @@ WITH downloads AS (
 SELECT
 	cur.downloaded_at,
 	cur.downloaded_date,
-	cur.received_date,
 	cur.collected_date,
-	cur.reported_date,
 	cur.patient_id,
+	min(cur.received_date) AS min_received_date,
+	max(cur.received_date) AS max_received_date,
 	bool_or(cur.positive) positive,
 	-- Note that it's possible for a patient to take both
 	-- PCR and antigens on the same date, so `has_molecular`
@@ -238,13 +238,19 @@ LEFT OUTER JOIN covid_pr_etl.bioportal_orders_basic prev
 	AND prev.downloaded_date = cur.downloaded_date
 	AND prev.patient_id = cur.patient_id
 	AND prev.collected_date < cur.collected_date
+	AND DATE '2020-03-01' <= prev.collected_date
+	AND prev.collected_date <= prev.received_date
+	AND DATE '2020-03-01' <= prev.reported_date
+	AND prev.reported_date <= prev.received_date
 WHERE cur.test_type IN ('Molecular', 'Antígeno')
+AND DATE '2020-03-01' <= cur.collected_date
+AND cur.collected_date <= cur.received_date
+AND DATE '2020-03-01' <= cur.reported_date
+AND cur.reported_date <= cur.received_date
 GROUP BY
 	cur.downloaded_at,
 	cur.downloaded_date,
-	cur.received_date,
 	cur.collected_date,
-	cur.reported_date,
 	cur.patient_id;
 
 
@@ -398,7 +404,6 @@ WITH downloads AS (
 SELECT
 	bulletins.bulletin_date,
 	tests.collected_date,
-	tests.received_date,
 	count(*) AS encounters,
 	count(*) FILTER (
 		WHERE tests.positive
@@ -433,40 +438,13 @@ INNER JOIN downloads
 	ON tests.downloaded_at = downloads.max_downloaded_at
 INNER JOIN bulletins
 	ON bulletins.bulletin_date < downloads.max_downloaded_date
-	AND tests.received_date <= bulletins.bulletin_date
-AND DATE '2020-03-01' <= tests.collected_date
-AND tests.collected_date <= tests.received_date
-AND DATE '2020-03-01' <= tests.reported_date
-AND tests.reported_date <= tests.received_date
+	AND tests.min_received_date <= bulletins.bulletin_date
 GROUP BY
 	bulletins.bulletin_date,
-	tests.collected_date,
-	tests.received_date
+	tests.collected_date
 ORDER BY
 	bulletins.bulletin_date,
-	tests.collected_date,
-	tests.received_date;
-
-
-CREATE TABLE covid_pr_etl.bioportal_encounters_collected_agg WITH (
-    format = 'PARQUET',
-    bucketed_by = ARRAY['bulletin_date'],
-    bucket_count = 1
-) AS
-SELECT
-	bulletin_date,
-	collected_date,
-	sum(encounters) AS encounters,
-	sum(cases) AS cases,
-	sum(rejections) AS rejections,
-	sum(has_antigens) AS has_antigens,
-	sum(has_molecular) AS has_molecular,
-	sum(initial_molecular) AS initial_molecular,
-	sum(initial_molecular_positives) AS initial_molecular_positives
-FROM covid_pr_etl.bioportal_encounters_agg
-GROUP BY bulletin_date, collected_date
-ORDER BY bulletin_date, collected_date;
-
+	tests.collected_date;
 
 
 --
@@ -488,17 +466,16 @@ CREATE OR REPLACE VIEW covid_pr_etl.bioportal_curve AS
 SELECT
 	bulletin_date,
 	collected_date,
-	sum(cases) cases,
-    sum(sum(cases)) OVER (
+	cases,
+    sum(cases) OVER (
 		PARTITION BY bulletin_date
 		ORDER BY collected_date
 	) AS cumulative_cases,
-	sum(cases) - coalesce(lag(sum(cases)) OVER (
+	cases - coalesce(lag(cases) OVER (
 		PARTITION BY collected_date
 		ORDER BY bulletin_date
 	), 0) AS delta_cases
 FROM covid_pr_etl.bioportal_encounters_agg
-GROUP BY bulletin_date, collected_date
 ORDER BY bulletin_date DESC, collected_date DESC;
 
 
@@ -524,7 +501,7 @@ SELECT
 		+ hosp.previous_day_admission_pediatric_covid_suspected
 		AS hospital_admissions
 FROM covid_pr_etl.bioportal_curve bio
-INNER JOIN covid_pr_etl.bioportal_encounters_collected_agg encounters
+INNER JOIN covid_pr_etl.bioportal_encounters_agg encounters
 	ON encounters.bulletin_date = bio.bulletin_date
 	AND encounters.collected_date = bio.collected_date
 LEFT OUTER JOIN covid_pr_etl.bulletin_cases bul
@@ -572,10 +549,10 @@ ORDER BY bulletin_date DESC, date DESC, test_type, date_type;
 
 
 --
--- We call this the "naïve" positive rates chart because it uses the 
+-- We call this the "naïve" positive rates chart because it uses the
 -- simpler, more common metrics that don't account for followup test
 -- load.
--- 
+--
 CREATE OR REPLACE VIEW covid_pr_etl.naive_positive_rates AS
 SELECT
 	bioportal.test_type,
@@ -644,7 +621,7 @@ SELECT
 	collected_date,
 	initial_molecular_positives AS novels,
 	rejections
-FROM covid_pr_etl.bioportal_encounters_collected_agg
+FROM covid_pr_etl.bioportal_encounters_agg
 WHERE bulletin_date > DATE '2020-04-24'
 ORDER BY bulletin_date DESC, collected_date DESC;
 
