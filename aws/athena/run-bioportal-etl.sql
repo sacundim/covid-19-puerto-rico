@@ -234,7 +234,8 @@ INNER JOIN downloads
     ON cur.downloaded_at = downloads.max_downloaded_at
     AND cur.downloaded_date = downloads.max_downloaded_date
 LEFT OUTER JOIN covid_pr_etl.bioportal_orders_basic prev
-	ON prev.downloaded_at = cur.downloaded_at
+	ON prev.test_type IN ('Molecular', 'Antígeno')
+	AND prev.downloaded_at = cur.downloaded_at
 	AND prev.downloaded_date = cur.downloaded_date
 	AND prev.patient_id = cur.patient_id
 	AND prev.collected_date < cur.collected_date
