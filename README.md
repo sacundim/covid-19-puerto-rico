@@ -62,6 +62,10 @@ aquí:
 
 * [`aws/athena/run-bioportal-etl.sql`](aws/athena/run-bioportal-etl.sql)
 
+Las visualizaciones finales generalmente hacen otros cálculos adicionales 
+a los que hace el código aquí enlazado; especialmente, los cálculos de 
+promedios móviles generalmente están en las visualizaciones en vez del SQL.
+
 
 ## Esquema bitemporal
 
