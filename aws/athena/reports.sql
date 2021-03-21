@@ -101,33 +101,6 @@ INNER JOIN covid_pr_etl.bulletin_cases bul
 	AND bul.datum_date = bio.collected_date
 ORDER BY bio.collected_date DESC;
 
---
--- Compare Bioportal molecular-only curve with molecular + antigens
---
-WITH bulletins AS (
-	SELECT max(bulletin_date) AS max_bulletin_date
-	FROM covid_pr_etl.bioportal_collected_agg
-)
-SELECT
-	max_bulletin_date "Datos hasta",
-	molecular.collected_date "Fecha muestra",
-	molecular.cases "Por molecular",
-	(molecular.cumulative_cases - lag(molecular.cumulative_cases, 7) OVER (
-		ORDER BY molecular.collected_date
-	)) / 7.0 AS "Promedio (7 días)",
-	antigens.cases - molecular.cases "Por antígenos",
-	antigens.cases "Combinado",
-	(antigens.cumulative_cases - lag(antigens.cumulative_cases, 7) OVER (
-		ORDER BY molecular.collected_date
-	)) / 7.0 AS "Promedio (7 días)"
-FROM covid_pr_etl.bioportal_curve_molecular molecular
-INNER JOIN bulletins
-	ON bulletins.max_bulletin_date = molecular.bulletin_date
-INNER JOIN covid_pr_etl.bioportal_curve antigens
-	ON antigens.bulletin_date = molecular.bulletin_date
-	AND antigens.collected_date = molecular.collected_date
-ORDER BY "Fecha muestra" DESC;
-
 
 --
 -- Recent history of antigen test volume and positive rates
@@ -189,33 +162,3 @@ WHERE test_type IN ('Molecular', 'Antígeno')
 AND collected_age <= 14
 GROUP BY bulletins.since_bulletin_date, bulletins.until_bulletin_date, test_type
 ORDER BY test_type;
-
---
--- Confirmed cases curve with and without antigen dates
---
-WITH integrated AS (
-	SELECT
-		bulletin_date,
-		collected_date,
-		sum(cases) integrated
-	FROM covid_pr_etl.bioportal_curve_agg
-	WHERE molecular_date IS NOT NULL
-	GROUP BY bulletin_date, collected_date
-), molecular_only AS (
-	SELECT
-		bulletin_date,
-		molecular_date AS collected_date,
-		sum(cases) molecular
-	FROM covid_pr_etl.bioportal_curve_agg
-	WHERE molecular_date IS NOT NULL
-	GROUP BY bulletin_date, molecular_date
-)
-SELECT
-	collected_date,
-	molecular,
-	integrated,
-	molecular - integrated inflation
-FROM integrated
-	FULL OUTER JOIN molecular_only
-	USING (bulletin_date, collected_date)
-ORDER BY bulletin_date DESC, collected_date ASC;

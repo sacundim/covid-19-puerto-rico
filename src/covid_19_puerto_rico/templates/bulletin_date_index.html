@@ -101,15 +101,29 @@
         entrecortadas ilustrando cómo da el promedio móvil cuando excluimos los datos recibidos
         los últimos 7 días.</p>
 
-    <h3>Adjudicación de casos a fechas</h3>
+    <h3>Adjudicación de casos y fechas</h3>
 
-    <p>Los informes diarios de Salud publican dos gráficas y tablas de datos aparte para casos
-        confirmados por prueba molecular y casos probables por prueba de antígeno.  Estas tablas,
-        sin embargo, sufren de un desperfecto, que es que los casos confirmados que cuentan también
-        con una prueba de antígeno se adjudican a la fecha de la prueba molecular, a pesar de que
-        esta suele ser más tardía.  En esta gráfica usamos datos del Bioportal para corregir
-        esto y adjudicar esos casos a la fecha más temprana, que mejor refleja cuándo se contagió
-        el paciente.</p>
+    <p>Adjudicamos un caso cuando encontramos una combinación de paciente y fecha tal que a
+        ese paciente se le tomó en esa fecha una muestra, igual sea de antígeno o molecular,
+        que arrojó positivo, y que no exista en los 90 días anteriores otra tal prueba
+        positiva.  Este criterio lo adoptamos a partir de
+        <a href="https://wwwn.cdc.gov/nndss/conditions/coronavirus-disease-2019-covid-19/case-definition/2020/08/05/">la
+            definición interina de casos de COVID-19 del 5 de agosto del 2020 del Consejo de
+            Epidemiólogos Estatales y Territoriales</a>, que recomienda:</p>
+
+    <blockquote>
+        Una prueba positiva repetida para ARN de SARS-CoV-2 usando una prueba de detección de
+        amplificación molecular dentro de tres meses del reporte inicial no debe ser enumerada
+        como caso nuevo para propósitos de vigilancia.
+    </blockquote>
+
+    <p>Vale apuntar que los informes diarios de Salud publican dos gráficas y tablas de datos
+        aparte para casos confirmados por prueba molecular y casos probables por prueba de antígeno.
+        Estas tablas, sin embargo, sufren de un desperfecto, que es que los casos confirmados que
+        cuentan también con una prueba de antígeno se adjudican a la fecha de la prueba molecular,
+        a pesar de que esta suele ser más tardía.  En esta gráfica usamos datos del Bioportal para
+        corregir esto y adjudicar esos casos a la fecha más temprana, que mejor refleja cuándo se
+        contagió el paciente.</p>
 </div>
 
 
@@ -200,9 +214,9 @@
     </ul>
 
     <p>Como prueba de seguimiento cuento toda esta que se realice a la misma persona dentro
-        de un periodo de 90 días luego que esta tuviera una prueba molecular positiva.  La
-        idea de descartar estas de esta curva es que las pruebas de seguimiento no ayudan
-        a descartar potenciales casos nuevos.</p>
+        de un periodo de 90 días luego que esta tuviera una prueba de antígeno o molecular
+        positiva.  La idea de descartar estas de esta curva es que las pruebas de seguimiento
+        no ayudan a descartar potenciales casos nuevos.</p>
 
     <p>Vale también apuntar que al momento no cuento negativos en prueba de antígenos como
         caso descartado, debido a la sensibilidad mucho menor de estas y la consecuente
@@ -555,16 +569,16 @@
         <li><strong>Evaluación inicial</strong>, que se administran a pacientes que no
             se sabe si tienen o no COVID-19 para confirmar o descartar esa hipótesis;</li>
         <li><strong>Seguimiento</strong>, que se administran a pacientes que ya se ha
-            confirmado que tienen COVID-19 para darle seguimiento a sus casos.</li>
+            detectado que tienen COVID-19 para darle seguimiento a sus casos.</li>
     </ul>
 
     <p>La idea es monitorear la razón de casos descartados a casos confirmados pero <strong>solo
-        contando pruebas de evaluación inicial</strong>, porque las de seguimiento no aportan al
-        propósito que se cita comunmente para las tasas de positividad: evaluar si el volumen de
-        pruebas se queda corto para detectar contagios nuevos.  Como las pruebas de seguimiento no
-        contribuyen a confirmar o descartar nuevos casos, incluirlas en el cálculo de tasas de
-        positividad es (entiendo yo) un defecto común en los métodos más usuales para calcular
-        positividad.</p>
+        contando pruebas moleculares de evaluación inicial</strong>, porque las de seguimiento
+        no aportan al propósito que se cita comunmente para las tasas de positividad: evaluar si
+        el volumen de pruebas se queda corto para detectar contagios nuevos.  Como las pruebas
+        de seguimiento no contribuyen a confirmar o descartar nuevos casos, incluirlas en el
+        cálculo de tasas de positividad es (entiendo yo) un defecto común en los métodos más
+        usuales para calcular positividad.</p>
 
     <p>Este autor favorecería expresar este concepto como la razón de casos descartados a
         confirmados, e.g., 95 casos descartados por cada 5 confirmados, pero como el "porcentaje
@@ -586,8 +600,9 @@
     <h3>Criterio para prueba inicial vs. seguimiento</h3>
 
     <p>Catalogamos una prueba (negativa o positiva) como seguimiento si el mismo paciente
-        (según el campo <code>patientId</code> en Bioportal) ha tenido una prueba positiva
-        en los 90 días anteriores.  Este criterio lo adoptamos a partir de
+        (según el campo <code>patientId</code> en Bioportal) ha tenido una prueba molecular
+        o de antígenos positiva en los 90 días anteriores.  Este criterio lo adoptamos a
+        partir de
         <a href="https://wwwn.cdc.gov/nndss/conditions/coronavirus-disease-2019-covid-19/case-definition/2020/08/05/">la
             definición interina de casos de COVID-19 del 5 de agosto del 2020 del Consejo de
             Epidemiólogos Estatales y Territoriales</a>, que recomienda:</p>
@@ -607,14 +622,22 @@
 
     <h3>Prueba molecular vs. antígeno</h3>
 
-    <p>Usamos para este cálculo solo las pruebas moleculares por estos motivos:</p>
+    <p>Este cálculo usa las pruebas moleculares y de antígeno de una forma un tanto sutil:</p>
 
     <ul>
-        <li>Las de antígeno tienen menor sensibilidad y muchas veces dan negativo
+        <li>Una prueba de antígeno positiva cuenta para adjudicar como prueba de
+            seguimiento a cualquier prueba al mismo paciente los próximos 90 días;</li>
+        <li>Pero el numerador y denominador del cálculo solo usan pruebas moleculares.</li>
+    </ul>
+
+    <p>Hacemos así por estos motivos:</p>
+
+    <ul>
+        <li>Las pruebas de antígeno tienen menor sensibilidad y muchas veces dan negativo
             en pacientes que dan positivo a molecular;</li>
         <li>Las de antígeno en Puerto Rico se usan mucho en eventos de pruebas
             masivas abiertos a todo el público, que es una población que se entiende
-            tiene probabilidad previa más baja.</li>
+            tiene probabilidad previa más baja;</li>
     </ul>
 
     <p>Alternativas que hemos contemplado pero no adoptado:</p>
@@ -625,9 +648,8 @@
             El problema entonces sería que la positividad sesgaría hacia arriba cuando aumenta
             la proporción de pruebas de antígeno vs. molecular, y esto es disparatado porque
             hacer más pruebas de antígenos es bueno, y sería como penalizarlo.</li>
-        <li>No contar las pruebas de antígeno ni como detectados ni como descartados, pero sí
-            usar las positivas para adjudicar moleculares subsiguientes al mismo paciente como
-            seguimiento.  Posibilidad interesante, pero que quizás no amerita el esfuerzo.</li>
+        <li>Una versión anterior de este cálculo no usaba las pruebas de antígeno para
+            adjudicar seguimiento.  No parece hacer grandísima diferencia.</li>
     </ul>
 </div>
 

@@ -168,7 +168,7 @@ class NewCases(AbstractMolecularChart):
             x=alt.X('yearmonthdate(datum_date):T', title='Fecha de muestra o deceso',
                     axis=alt.Axis(format='%d/%m')),
             y = alt.Y('mean_7day:Q', title='Nuevos (promedio 7 días)',
-                      scale=alt.Scale(type='log'), axis=alt.Axis(format='s')),
+                      scale=alt.Scale(type='log'), axis=alt.Axis(format=',')),
             tooltip = [
                 alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
                 alt.Tooltip('bulletin_date:T', title='Datos hasta'),
@@ -234,14 +234,16 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
             ratio=alt.datum.sum_rejections / alt.datum.sum_novels
         ).transform_filter(
             alt.datum.sum_novels > 0
-        ).mark_line(
-            point='transparent'
-        ).encode(
+        ).mark_line().encode(
             x=alt.X('collected_date:T', title='Fecha de muestra'),
             y=alt.Y('rate:Q', title='% episodios que se confirma (7 días)',
                     scale=alt.Scale(type='log', domain=[0.002, 0.2]),
                     axis=alt.Axis(format='%')),
-            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
+            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending',
+                                      legend=alt.Legend(orient='bottom-right', symbolSize=300,
+                                                        symbolStrokeWidth=2, symbolStrokeColor='black',
+                                                        direction='vertical', fillColor='white',
+                                                        padding=7.5)),
             tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('ratio:Q', format=".1f", title='Descartados / confirmados (7 días)'),
