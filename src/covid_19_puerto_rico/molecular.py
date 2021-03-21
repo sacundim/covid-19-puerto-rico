@@ -234,14 +234,16 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
             ratio=alt.datum.sum_rejections / alt.datum.sum_novels
         ).transform_filter(
             alt.datum.sum_novels > 0
-        ).mark_line(
-            point='transparent'
-        ).encode(
+        ).mark_line().encode(
             x=alt.X('collected_date:T', title='Fecha de muestra'),
             y=alt.Y('rate:Q', title='% episodios que se confirma (7 días)',
                     scale=alt.Scale(type='log', domain=[0.002, 0.2]),
                     axis=alt.Axis(format='%')),
-            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', legend=None),
+            strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending',
+                                      legend=alt.Legend(orient='bottom-right', symbolSize=300,
+                                                        symbolStrokeWidth=2, symbolStrokeColor='black',
+                                                        direction='vertical', fillColor='white',
+                                                        padding=7.5)),
             tooltip=[alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('ratio:Q', format=".1f", title='Descartados / confirmados (7 días)'),
