@@ -337,7 +337,7 @@ class NewDailyTestsPerCapita(AbstractMolecularChart):
         ).mark_line().encode(
             x=alt.X('date:T', title=None,
                     axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('per_thousand:Q', title='Pruebas (por 1K)'),
+            y=alt.Y('mean_tests:Q', title='Pruebas diarias', axis=alt.Axis(format='s')),
             color=alt.Color('test_type:N', title='Tipo de prueba', sort=self.TEST_TYPE_SORT_ORDER,
                             legend=alt.Legend(orient='bottom', titleOrient='top', direction='vertical',
                                               padding=7.5, symbolStrokeWidth=3, symbolSize=300)),
