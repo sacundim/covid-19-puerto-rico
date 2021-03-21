@@ -17,7 +17,8 @@ LOCATION 's3://covid-19-puerto-rico-athena/';
 --
 
 --
--- The bitemporal daily bulletin cases table
+-- The bitemporal daily bulletin cases table, with data
+-- from the PRDoH daily PDF report
 --
 DROP TABLE IF EXISTS covid_pr_etl.bulletin_cases;
 CREATE TABLE covid_pr_etl.bulletin_cases WITH (
@@ -100,7 +101,7 @@ ORDER BY date DESC;
 
 
 --
--- The `orders/basic` row-per-test dataset.
+-- The `orders/basic` row-per-test dataset from Bioportal.
 --
 CREATE TABLE covid_pr_etl.bioportal_orders_basic WITH (
     format = 'PARQUET',
@@ -261,6 +262,19 @@ GROUP BY
 -- Aggregates off which we run most of our analyses.
 --
 
+--
+-- Counts of tests from Bioportal, classified along three
+-- time axes:
+--
+-- * `bulletin_date`, which is the data as-of date (that
+--   allows us to "rewind" data to earlier state);
+--
+-- * `collected_date`, which is when test samples were taken
+--
+-- * `reported_date`, which is when the laboratory knew the
+--   test result (but generally earlier than it communicated
+--   it to PRDoH).
+--
 CREATE TABLE covid_pr_etl.bioportal_tritemporal_counts WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
@@ -301,6 +315,11 @@ AND reported_date <= received_date
 GROUP BY test_type, bulletins.bulletin_date, collected_date, reported_date;
 
 
+--
+-- Same data as `bioportal_tritemporal_counts`, but enriched with
+-- daily data changes (how many tests were reported from one
+-- `bulletin_date` to the next).
+--
 CREATE TABLE covid_pr_etl.bioportal_tritemporal_deltas WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
@@ -326,6 +345,10 @@ WHERE collected_date <= bulletin_date
 AND reported_date <= bulletin_date;
 
 
+--
+-- Same data as `bioportal_tritemporal_deltas`, but aggregated
+-- to `collected_date` (i.e., removes `reported_date`)
+--
 CREATE TABLE covid_pr_etl.bioportal_collected_agg WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
@@ -353,6 +376,10 @@ FROM covid_pr_etl.bioportal_tritemporal_deltas
 GROUP BY test_type, bulletin_date, collected_date;
 
 
+--
+-- Same data as `bioportal_tritemporal_deltas`, but aggregated
+-- to `reported_date` (i.e., removes `collected_date`)
+--
 CREATE TABLE covid_pr_etl.bioportal_reported_agg WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
@@ -381,7 +408,7 @@ GROUP BY test_type, bulletin_date, reported_date;
 
 
 --
--- Encounters cube
+-- An aggregates table built off `bioportal_encounters`
 --
 CREATE TABLE covid_pr_etl.bioportal_encounters_agg WITH (
     format = 'PARQUET',
