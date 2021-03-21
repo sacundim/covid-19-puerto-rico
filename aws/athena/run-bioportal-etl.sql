@@ -608,36 +608,6 @@ ORDER BY test_type, bulletin_date DESC, collected_date DESC;
 
 
 --
--- We don't use this one in the dashboard but we keep it around because
--- we're sometimes curious to know.
---
-CREATE OR REPLACE VIEW covid_pr_etl.naive_serological_positive_rates AS
-SELECT
-	serological.test_type,
-	serological.bulletin_date,
-	collected_date,
-	(serological.cumulative_tests - lag(serological.cumulative_tests, 7) OVER (
-		PARTITION BY serological.test_type, serological.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_tests,
-	(serological.cumulative_positives - lag(serological.cumulative_positives, 7) OVER (
-		PARTITION BY serological.test_type, serological.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_positive_tests,
-	(cases.cumulative_confirmed_cases - lag(cases.cumulative_confirmed_cases, 7) OVER (
-		PARTITION BY serological.test_type, serological.bulletin_date
-		ORDER BY collected_date
-	)) / 7.0 AS smoothed_daily_cases
-FROM covid_pr_etl.bioportal_collected_agg serological
-INNER JOIN covid_pr_etl.bulletin_cases cases
-	ON cases.bulletin_date = serological.bulletin_date
-	AND cases.datum_date = serological.collected_date
-WHERE serological.test_type = 'Serológica'
-AND serological.bulletin_date > DATE '2020-04-24'
-ORDER BY test_type, bulletin_date DESC, collected_date DESC;
-
-
---
 -- This is our more sophisticated "positive rate" analysis, which we
 -- prefer to call the confirmed vs. rejected cases rate.  The key idea
 -- is we don't count followup tests, i.e. test administered to patients
@@ -667,9 +637,9 @@ SELECT
 	), 0) AS positive
 FROM covid_pr_etl.bioportal_collected_agg
 INNER JOIN (VALUES (0, 3, '0-3'),
-				   (4, 7, '4-7'),
-				   (8, 14, '8-14'),
-				   (14, NULL, '> 14')) AS ranges (lo, hi, tier)
+                   (4, 7, '4-7'),
+                   (8, 14, '8-14'),
+                   (14, NULL, '> 14')) AS ranges (lo, hi, tier)
 	ON ranges.lo <= collected_age
 	AND collected_age <= COALESCE(ranges.hi, 2147483647)
 WHERE test_type = 'Molecular'
