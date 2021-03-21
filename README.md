@@ -63,12 +63,11 @@ aquí:
 * [`aws/athena/run-bioportal-etl.sql`](aws/athena/run-bioportal-etl.sql)
 
 
-## Colección de datos de informes diarios del Departamento de Salud de Puerto Rico
+## Esquema bitemporal
 
-También se provee una colección de datos de los informes diarios de 
-COVID-19 del Departamento de Salud de Puerto Rico.  Esta colección 
-se ha enfocado en capturar los datos en un llamado **esquema bitemporal**, 
-donde se clasifica cada punto por **dos** fechas:
+La colección aquí presente de informes diarios de COVID-19 del Departamento 
+de Salud de Puerto Rico se ha enfocado en capturar los datos en un llamado 
+**esquema bitemporal**, donde se clasifica cada punto por **dos** fechas:
 
 * La fecha de publicación de la cifra (columna `bulletin_date`);
 * La fecha del evento que la cifra pretende describir (columna
