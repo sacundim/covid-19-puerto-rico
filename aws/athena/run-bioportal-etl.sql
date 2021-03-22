@@ -515,30 +515,27 @@ ORDER BY bulletin_date DESC, collected_date DESC;
 
 CREATE OR REPLACE VIEW covid_pr_etl.new_daily_cases AS
 SELECT
-    bio.bulletin_date,
-	bio.collected_date AS datum_date,
+    encounters.bulletin_date,
+	encounters.collected_date AS datum_date,
     encounters.rejections,
 	nullif(coalesce(bul.confirmed_cases, 0)
     	    + coalesce(bul.probable_cases, 0), 0)
 	    AS official,
-	bio.cases AS bioportal,
+	encounters.cases AS bioportal,
 	bul.deaths AS deaths,
 	hosp.previous_day_admission_adult_covid_confirmed
 		+ hosp.previous_day_admission_adult_covid_suspected
 		+ hosp.previous_day_admission_pediatric_covid_confirmed
 		+ hosp.previous_day_admission_pediatric_covid_suspected
 		AS hospital_admissions
-FROM covid_pr_etl.bioportal_curve bio
-INNER JOIN covid_pr_etl.bioportal_encounters_agg encounters
-	ON encounters.bulletin_date = bio.bulletin_date
-	AND encounters.collected_date = bio.collected_date
+FROM covid_pr_etl.bioportal_encounters_agg encounters
 LEFT OUTER JOIN covid_pr_etl.bulletin_cases bul
-	ON bul.bulletin_date = bio.bulletin_date
-	AND bul.datum_date = bio.collected_date
+	ON bul.bulletin_date = encounters.bulletin_date
+	AND bul.datum_date = encounters.collected_date
 LEFT OUTER JOIN covid_pr_etl.hhs_hospitals hosp
-	ON bio.collected_date = hosp.date
+	ON encounters.collected_date = hosp.date
 	AND hosp.date >= DATE '2020-07-28'
-ORDER BY bio.bulletin_date DESC, bio.collected_date DESC;
+ORDER BY encounters.bulletin_date DESC, encounters.collected_date DESC;
 
 
 CREATE OR REPLACE VIEW covid_pr_etl.molecular_tests_vs_confirmed_cases AS
@@ -649,63 +646,57 @@ ORDER BY bulletin_date DESC, ranges.lo ASC;
 
 
 CREATE OR REPLACE VIEW covid_pr_etl.recent_daily_cases AS
-WITH tests AS (
-	SELECT
-		bulletin_date,
-		collected_date,
-		sum(tests) AS tests,
-		sum(tests) FILTER (WHERE test_type = 'Molecular')
-			AS pcr,
-		sum(tests) FILTER (WHERE test_type = 'Antígeno')
-			AS antigens
-	FROM covid_pr_etl.bioportal_collected_agg
-	WHERE test_type IN ('Molecular', 'Antígeno')
-    -- We want 42 days of data, so we fetch 56 because we need to
-    -- calculate a 14-day average 42 days ago:
-	AND collected_date >= date_add('day', -56, bulletin_date)
-	GROUP BY bulletin_date, collected_date
-)
 SELECT
-    cases.bulletin_date,
-    cases.datum_date,
-    tests.tests,
-    sum(tests.tests) OVER (
-    	PARTITION BY cases.bulletin_date
-    	ORDER BY cases.datum_date
+    encounters.bulletin_date,
+	encounters.collected_date AS datum_date,
+	encounters.encounters AS tests,
+    sum(encounters.encounters) OVER (
+    	PARTITION BY encounters.bulletin_date
+    	ORDER BY encounters.collected_date
     ) cumulative_tests,
-    tests.pcr,
-    sum(tests.pcr) OVER (
-    	PARTITION BY cases.bulletin_date
-    	ORDER BY cases.datum_date
+	encounters.has_molecular AS pcr,
+    sum(encounters.has_molecular) OVER (
+    	PARTITION BY encounters.bulletin_date
+    	ORDER BY encounters.collected_date
     ) cumulative_pcr,
-    tests.antigens,
-    sum(tests.antigens) OVER (
-    	PARTITION BY cases.bulletin_date
-    	ORDER BY cases.datum_date
+	encounters.has_antigens AS antigens,
+    sum(encounters.has_antigens) OVER (
+    	PARTITION BY encounters.bulletin_date
+    	ORDER BY encounters.collected_date
     ) cumulative_antigens,
-	cases.bioportal AS cases,
-    sum(cases.bioportal) OVER (
-    	PARTITION BY cases.bulletin_date
-    	ORDER BY cases.datum_date
+	encounters.cases,
+    sum(encounters.cases) OVER (
+    	PARTITION BY encounters.bulletin_date
+    	ORDER BY encounters.collected_date
     ) cumulative_cases,
-    cases.hospital_admissions AS admissions,
-    sum(cases.hospital_admissions) OVER (
-    	PARTITION BY cases.bulletin_date
-    	ORDER BY cases.datum_date
-    ) cumulative_admissions,
-	cases.deaths,
-    sum(cases.deaths) OVER (
-    	PARTITION BY cases.bulletin_date
-    	ORDER BY cases.datum_date
+	hosp.previous_day_admission_adult_covid_confirmed
+		+ hosp.previous_day_admission_adult_covid_suspected
+		+ hosp.previous_day_admission_pediatric_covid_confirmed
+		+ hosp.previous_day_admission_pediatric_covid_suspected
+		AS admissions,
+	sum(hosp.previous_day_admission_adult_covid_confirmed
+		+ hosp.previous_day_admission_adult_covid_suspected
+		+ hosp.previous_day_admission_pediatric_covid_confirmed
+		+ hosp.previous_day_admission_pediatric_covid_suspected) OVER (
+    	PARTITION BY encounters.bulletin_date
+    	ORDER BY encounters.collected_date
+    ) AS cumulative_admissions,
+	bul.deaths AS deaths,
+    sum(bul.deaths) OVER (
+    	PARTITION BY encounters.bulletin_date
+    	ORDER BY encounters.collected_date
     ) cumulative_deaths
-FROM covid_pr_etl.new_daily_cases cases
-INNER JOIN tests
-	ON cases.bulletin_date = tests.bulletin_date
-	AND cases.datum_date = tests.collected_date
+FROM covid_pr_etl.bioportal_encounters_agg encounters
+LEFT OUTER JOIN covid_pr_etl.bulletin_cases bul
+	ON bul.bulletin_date = encounters.bulletin_date
+	AND bul.datum_date = encounters.collected_date
+LEFT OUTER JOIN covid_pr_etl.hhs_hospitals hosp
+	ON encounters.collected_date = hosp.date
+	AND hosp.date >= DATE '2020-07-28'
 -- We want 42 days of data, so we fetch 56 because we need to
 -- calculate a 14-day average 42 days ago:
-WHERE cases.datum_date >= date_add('day', -56, cases.bulletin_date)
-ORDER BY bulletin_date DESC, datum_date DESC;
+WHERE encounters.collected_date >= date_add('day', -56, encounters.bulletin_date)
+ORDER BY encounters.bulletin_date DESC, encounters.collected_date DESC;
 
 
 --
