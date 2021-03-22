@@ -181,6 +181,10 @@ SELECT
 FROM first_clean;
 
 
+----------------------------------------------------------
+----------------------------------------------------------
+--
+-- # Encounters and followup analysis
 --
 -- This table takes all the antigen and PCR tests (no serology)
 -- and does the following cleanup and enrichment:
@@ -191,16 +195,17 @@ FROM first_clean;
 --    call these "test encounters," a term used by the COVID
 --    Tracking Project.
 --
+-- See: https://covidtracking.com/analysis-updates/test-positivity-in-the-us-is-a-mess
+--
 -- 2. Flags "followup" tests—tests such that the same patient
---    had a positive test no more than 90 days earlier.
+--    had a positive test no more than 90 days earlier. We use
+--    a three month cutoff following the Council of State and
+--    Territorial Epidemiologists (CSTE)'s 2020 Interim Case
+--    Definition (Interim-20-ID-02, approved August 5, 2020),
+--    which recommends this criterion for distinguishing new
+--    cases from previous ones for the same patient.
 --
--- For #2 we use a three month cutoff following the Council of
--- State and Territorial Epidemiologists (CSTE)'s 2020 Interim
--- Case Definition (Interim-20-ID-02, approved August 5, 2020),
--- which recommends this criterion for distinguishing new cases
--- from existing ones.
---
--- https://wwwn.cdc.gov/nndss/conditions/coronavirus-disease-2019-covid-19/case-definition/2020/08/05/
+-- See: https://wwwn.cdc.gov/nndss/conditions/coronavirus-disease-2019-covid-19/case-definition/2020/08/05/
 --
 CREATE TABLE covid_pr_etl.bioportal_encounters WITH (
     format = 'PARQUET',
@@ -256,10 +261,118 @@ GROUP BY
 	cur.patient_id;
 
 
+--
+-- An aggregates table built off `bioportal_encounters`
+--
+CREATE TABLE covid_pr_etl.bioportal_encounters_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
+WITH downloads AS (
+	SELECT
+		max(downloaded_at) max_downloaded_at,
+		max(downloaded_date) max_downloaded_date
+	FROM covid_pr_etl.bioportal_orders_basic
+), bulletins AS (
+	SELECT CAST(date_column AS DATE) AS bulletin_date
+	FROM (
+		VALUES (SEQUENCE(DATE '2020-04-24', DATE '2021-12-31', INTERVAL '1' DAY))
+	) AS date_array (date_array)
+	CROSS JOIN UNNEST(date_array) AS t2(date_column)
+	INNER JOIN downloads
+	    ON CAST(date_column AS DATE) < downloads.max_downloaded_date
+)
+SELECT
+	bulletins.bulletin_date,
+	tests.collected_date,
+	count(*) AS encounters,
+	count(*) FILTER (
+		WHERE tests.positive
+		AND NOT tests.followup
+	) cases,
+	count(*) FILTER (
+		WHERE tests.has_molecular
+		AND NOT tests.positive
+		AND NOT tests.followup
+	) rejections,
+	-- Note that `has_antigens` and `has_molecular` don't
+	-- have to add up to `encounters` because a person may
+	-- get both test types the same day. Similar remarks
+	-- apply to many of the sums below.
+	count(*) FILTER (
+		WHERE tests.has_antigens
+	) has_antigens,
+	count(*) FILTER (
+		WHERE tests.has_molecular
+	) has_molecular,
+	count(*) FILTER (
+		WHERE NOT tests.followup
+		AND tests.has_molecular
+	) AS initial_molecular,
+	count(*) FILTER (
+		WHERE NOT tests.followup
+		AND tests.has_molecular
+		AND tests.positive
+	) AS initial_molecular_positives
+FROM covid_pr_etl.bioportal_encounters tests
+INNER JOIN downloads
+	ON tests.downloaded_at = downloads.max_downloaded_at
+INNER JOIN bulletins
+	ON bulletins.bulletin_date < downloads.max_downloaded_date
+	AND tests.min_received_date <= bulletins.bulletin_date
+GROUP BY
+	bulletins.bulletin_date,
+	tests.collected_date
+ORDER BY
+	bulletins.bulletin_date,
+	tests.collected_date;
+
+
+--
+-- A case curve from Bioportal data. This doesn't agree with the
+-- official reports' cases curve for a few reasons:
+--
+-- 1. The deduplication in Bioportal's `patientId` field doesn't
+--    work the same as the official bulletin, and in fact gives
+--    very different results;
+-- 2. Bioportal has fresher data than the official bulletin,
+--    routinely by 2-3 days;
+-- 3. This curve strives to use all data that Bioportal provides,
+--    not just molecular test results; we will definitely count
+--    antigen positives toward cases, and [TODO] count serological
+--    tests toward adjudicating the earliest collected_date for
+--    a case if there is molecular confirmation soon thereafter.
+--
+CREATE OR REPLACE VIEW covid_pr_etl.bioportal_curve AS
+SELECT
+	bulletin_date,
+	collected_date,
+	cases,
+    sum(cases) OVER (
+		PARTITION BY bulletin_date
+		ORDER BY collected_date
+	) AS cumulative_cases,
+	cases - coalesce(lag(cases) OVER (
+		PARTITION BY collected_date
+		ORDER BY bulletin_date
+	), 0) AS delta_cases
+FROM covid_pr_etl.bioportal_encounters_agg
+ORDER BY bulletin_date DESC, collected_date DESC;
+
+
+
 ----------------------------------------------------------
 ----------------------------------------------------------
 --
--- Aggregates off which we run most of our analyses.
+-- # Specimens analysis
+--
+-- These perform fairly straightforward aggregation of
+-- Bioportal data, without deduplicating test specimens
+-- taken during the same test encounter.  For a definition
+-- of "specimen" vs. "encounter" see:
+--
+-- * https://covidtracking.com/analysis-updates/test-positivity-in-the-us-is-a-mess
 --
 
 --
@@ -406,105 +519,6 @@ SELECT
 FROM covid_pr_etl.bioportal_tritemporal_deltas
 GROUP BY test_type, bulletin_date, reported_date;
 
-
---
--- An aggregates table built off `bioportal_encounters`
---
-CREATE TABLE covid_pr_etl.bioportal_encounters_agg WITH (
-    format = 'PARQUET',
-    bucketed_by = ARRAY['bulletin_date'],
-    bucket_count = 1
-) AS
-WITH downloads AS (
-	SELECT
-		max(downloaded_at) max_downloaded_at,
-		max(downloaded_date) max_downloaded_date
-	FROM covid_pr_etl.bioportal_orders_basic
-), bulletins AS (
-	SELECT CAST(date_column AS DATE) AS bulletin_date
-	FROM (
-		VALUES (SEQUENCE(DATE '2020-04-24', DATE '2021-12-31', INTERVAL '1' DAY))
-	) AS date_array (date_array)
-	CROSS JOIN UNNEST(date_array) AS t2(date_column)
-	INNER JOIN downloads
-	    ON CAST(date_column AS DATE) < downloads.max_downloaded_date
-)
-SELECT
-	bulletins.bulletin_date,
-	tests.collected_date,
-	count(*) AS encounters,
-	count(*) FILTER (
-		WHERE tests.positive
-		AND NOT tests.followup
-	) cases,
-	count(*) FILTER (
-		WHERE tests.has_molecular
-		AND NOT tests.positive
-		AND NOT tests.followup
-	) rejections,
-	-- Note that `has_antigens` and `has_molecular` don't
-	-- have to add up to `encounters` because a person may
-	-- get both test types the same day. Similar remarks
-	-- apply to many of the sums below.
-	count(*) FILTER (
-		WHERE tests.has_antigens
-	) has_antigens,
-	count(*) FILTER (
-		WHERE tests.has_molecular
-	) has_molecular,
-	count(*) FILTER (
-		WHERE NOT tests.followup
-		AND tests.has_molecular
-	) AS initial_molecular,
-	count(*) FILTER (
-		WHERE NOT tests.followup
-		AND tests.has_molecular
-		AND tests.positive
-	) AS initial_molecular_positives
-FROM covid_pr_etl.bioportal_encounters tests
-INNER JOIN downloads
-	ON tests.downloaded_at = downloads.max_downloaded_at
-INNER JOIN bulletins
-	ON bulletins.bulletin_date < downloads.max_downloaded_date
-	AND tests.min_received_date <= bulletins.bulletin_date
-GROUP BY
-	bulletins.bulletin_date,
-	tests.collected_date
-ORDER BY
-	bulletins.bulletin_date,
-	tests.collected_date;
-
-
---
--- A case curve from Bioportal data. This doesn't agree with the
--- official reports' cases curve for a few reasons:
---
--- 1. The deduplication in Bioportal's `patientId` field doesn't
---    work the same as the official bulletin, and in fact gives
---    very different results;
--- 2. Bioportal has fresher data than the official bulletin,
---    routinely by 2-3 days;
--- 3. This curve strives to use all data that Bioportal provides,
---    not just molecular test results; we will definitely count
---    antigen positives toward cases, and [TODO] count serological
---    tests toward adjudicating the earliest collected_date for
---    a case if there is molecular confirmation soon thereafter.
---
-CREATE OR REPLACE VIEW covid_pr_etl.bioportal_curve AS
-SELECT
-	bulletin_date,
-	collected_date,
-	cases,
-    sum(cases) OVER (
-		PARTITION BY bulletin_date
-		ORDER BY collected_date
-	) AS cumulative_cases,
-	cases - coalesce(lag(cases) OVER (
-		PARTITION BY collected_date
-		ORDER BY bulletin_date
-	), 0) AS delta_cases
-FROM covid_pr_etl.bioportal_encounters_agg
-ORDER BY bulletin_date DESC, collected_date DESC;
 
 
 ----------------------------------------------------------
