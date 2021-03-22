@@ -35,7 +35,7 @@
         <li><a href="#LatenessDaily_section">Rezago de datos de cada boletín</a></li>
         <li><a href="#Lateness7Day_section">Tendencia de rezago de datos</a></li>
         <li><a href="#LatenessTiers_section">Rezago de casos por renglones</a></li>
-        <li><a href="#NewDailyTestsPerCapita_section">Pruebas per cápita (promedio 7 días)</a></li>
+        <li><a href="#NewTestSpecimens_section">Especímenes de prueba diarios</a></li>
         <li><a href="#NaivePositiveRate_section">Positividad (promedio 7 días)</a></li>
         <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados</a></li>
         <li><a href="#CaseFatalityRate_section">Tasa de letalidad (CFR) rezagada</a></li>
@@ -80,7 +80,7 @@
     <dl>
         <dt>Pruebas</dt>
         <dd>Usamos el número de personas únicas que se tomó muestra para molecular o antígeno
-            por cada fecha de muestra. (Tenemos <a href="#NewDailyTestsPerCapita_section">otra
+            por cada fecha de muestra. (Tenemos <a href="#NewTestSpecimens_section">otra
                 gráfica con desglose por molecular vs. antígeno</a>.)</dd>
 
         <dt>Casos</dt>
@@ -439,12 +439,12 @@
 </div>
 
 
-<div class="section" id="NewDailyTestsPerCapita_section">
-    <h1>Especímenes de prueba (promedio 7 días)</h1>
+<div class="section" id="NewTestSpecimens_section">
+    <h1>Especímenes de prueba diarios</h1>
 
-    <div id="NewDailyTestsPerCapita"></div>
+    <div id="NewTestSpecimens"></div>
     <script type="text/javascript">
-        embedChart('NewDailyTestsPerCapita', bulletin_date);
+        embedChart('NewTestSpecimens', bulletin_date);
     </script>
 
     <h3>¿Qué es esto?</h3>
@@ -454,6 +454,10 @@
         que el laboratorio obtuvo el resultado).  Las líneas sólidas son con datos hasta la fecha
         de este boletín; las líneas entrecortadas son con datos solo hasta siete días antes de
         dicha fecha.</p>
+
+    <p>Esta gráfica, al mostrar los datos tanto por fecha de muestra como de reporte, permite en
+        algunas ocasiones ver ataponamientos en el procesamiento de muestras de pruebas moleculares,
+        que son especialmente evidentes en julio y agosto del 2020.</p>
 
     <h3>Advertencias</h3>
 

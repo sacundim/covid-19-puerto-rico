@@ -320,7 +320,8 @@ class NaivePositiveRate(AbstractMolecularChart):
         return pd.melt(df, ['test_type', 'bulletin_date', 'collected_date', 'tests']).dropna()
 
 
-class NewDailyTestsPerCapita(AbstractMolecularChart):
+class NewTestSpecimens(AbstractMolecularChart):
+    """The original tests chart, counting test specimens naïvely out of Bioportal."""
     POPULATION = 3_193_694
     POPULATION_THOUSANDS = POPULATION / 1_000.0
     TEST_TYPE_SORT_ORDER = ['Molecular', 'Serológica', 'Antígeno']
@@ -337,7 +338,7 @@ class NewDailyTestsPerCapita(AbstractMolecularChart):
         ).mark_line().encode(
             x=alt.X('date:T', title=None,
                     axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('mean_tests:Q', title='Pruebas diarias', axis=alt.Axis(format='s')),
+            y=alt.Y('mean_tests:Q', title='Especímenes diarios', axis=alt.Axis(format='s')),
             color=alt.Color('test_type:N', title='Tipo de prueba', sort=self.TEST_TYPE_SORT_ORDER,
                             legend=alt.Legend(orient='bottom', titleOrient='top', direction='vertical',
                                               padding=7.5, symbolStrokeWidth=3, symbolSize=300)),
@@ -348,9 +349,9 @@ class NewDailyTestsPerCapita(AbstractMolecularChart):
             tooltip=[alt.Tooltip('test_type:N', title='Tipo de prueba'),
                      alt.Tooltip('date:T', title='Fecha'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
-                     alt.Tooltip('mean_tests:Q', format=",.1f", title='Pruebas (promedio 7 días)'),
+                     alt.Tooltip('mean_tests:Q', format=",.1f", title='Especímenes (promedio 7 días)'),
                      alt.Tooltip('per_thousand:Q', format=".2f",
-                                 title='Pruebas por mil habitantes')]
+                                 title='Especímenes por mil habitantes')]
         ).properties(
             width=585, height=175
         ).facet(

@@ -54,7 +54,7 @@ def main():
         molecular.CaseFatalityRate(athena, args.output_dir, output_formats),
         charts.ICUsByRegion(postgres, args.output_dir, output_formats),
         charts.ICUsByHospital(postgres, args.output_dir, output_formats),
-        molecular.NewDailyTestsPerCapita(athena, args.output_dir, output_formats),
+        molecular.NewTestSpecimens(athena, args.output_dir, output_formats),
         molecular.ConfirmationsVsRejections(athena, args.output_dir, output_formats),
         molecular.NaivePositiveRate(athena, args.output_dir, output_formats),
         molecular.MolecularLatenessTiers(athena, args.output_dir, output_formats),
