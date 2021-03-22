@@ -79,9 +79,9 @@
 
     <dl>
         <dt>Pruebas</dt>
-        <dd>Usamos la suma de pruebas moleculares y antígenos, por fecha de muestra.
-            (Tenemos <a href="#NewDailyTestsPerCapita_section">otra gráfica con desglose
-                por molecular vs. antígeno</a>.)</dd>
+        <dd>Usamos el número de personas únicas que se tomó muestra para molecular o antígeno
+            por cada fecha de muestra. (Tenemos <a href="#NewDailyTestsPerCapita_section">otra
+                gráfica con desglose por molecular vs. antígeno</a>.)</dd>
 
         <dt>Casos</dt>
         <dd>Por prueba molecular o de antígenos, usando la fecha de la muestra más temprana.</dd>
@@ -94,12 +94,33 @@
         <dd>Por fecha de deceso.</dd>
     </dl>
 
+
     <h3>Advertencia de datos incompletos</h3>
 
     <p>Como esta gráfica usa datos por fecha de muestra o de deceso, las fechas más recientes
         normalmente adolecen de datos incompletos.  Para ilustrar esto, trazamos líneas
         entrecortadas ilustrando cómo da el promedio móvil cuando excluimos los datos recibidos
         los últimos 7 días.</p>
+
+
+    <h3>Método de conteo de pruebas</h3>
+
+    <p>El conteo de pruebas en esta gráfica es, para cada fecha, el número de personas únicas
+        que se le tomó una muestra de antígeno o molecular.  Este número es menos que el número
+        de "pruebas" que arroja inocentemente Bioportal porque existen muchas ocasiones en
+        que a una misma persona le toman más de una muestra el mismo día y se reportan
+        como pruebas aparte.  Y en adición a esto, si a la misma persona le hacen tanto
+        prueba de antígeno como molecular el mismo día, lo contamos como una sola prueba.</p>
+
+    <p>Este método es una variante de lo que <a href="https://covidtracking.com/analysis-updates/test-positivity-in-the-us-is-a-mess">lo
+            que recomienda el COVID Tracking Project</a> bajo la rúbrica de "encuentros de prueba"
+        ("test encounters"), contrario a lo que reporta Bioportal que son "especímenes de prueba"
+        ("test specimens") en la nomenclatura de COVID Tracking.</p>
+
+    <p>Y generalmente tiene más sentido, porque la mayor parte del tiempo lo que nos interesa
+        es saber cuántas personas hemos evaluado si tienen COVID-19, no cuántos especímenes
+        se tomaron.</p>
+
 
     <h3>Adjudicación de casos y fechas</h3>
 
@@ -419,7 +440,7 @@
 
 
 <div class="section" id="NewDailyTestsPerCapita_section">
-    <h1>Pruebas diarias (promedio 7 días)</h1>
+    <h1>Especímenes de prueba (promedio 7 días)</h1>
 
     <div id="NewDailyTestsPerCapita"></div>
     <script type="text/javascript">
@@ -428,7 +449,7 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Cuántas pruebas diarias (promedio de 7 días) se realizaron, tanto por fecha de toma de
+    <p>Cuántos especímenes de pruebas (promedio de 7 días) se realizaron, tanto por fecha de toma de
         muestra como fecha de "reporte" (<code>reportedDate</code>, que se entiende la fecha en
         que el laboratorio obtuvo el resultado).  Las líneas sólidas son con datos hasta la fecha
         de este boletín; las líneas entrecortadas son con datos solo hasta siete días antes de
@@ -442,8 +463,10 @@
         recientes, tiende a ilustrar este efecto.</p>
 
     <p>Los números son más o menos los crudos de Bioportal, y no corrigen por ejemplo
-        múltiples pruebas reportadas para la misma persona (como hacen algunas otras
-        gráficas en esta página).</p>
+        múltiples pruebas reportadas para la misma persona el mismo día. En
+        <a href="https://covidtracking.com/analysis-updates/test-positivity-in-the-us-is-a-mess">la
+            clasificación que propone el COVID Tracking Project</a>, esto son "especímenes de
+        prueba" ("test specimens") y no "encuentros de prueba" ("test encounters").</p>
 
     <h3>Comparación internacional</h3>
 
