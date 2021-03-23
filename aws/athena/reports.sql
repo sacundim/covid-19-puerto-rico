@@ -36,23 +36,23 @@ WITH bulletins AS (
 )
 SELECT
 	max_bulletin_date "Datos",
-	bio.datum_date AS "Muestras",
-	bio.pcr "Moleculares",
-	(bio.cumulative_pcr - lag(bio.cumulative_pcr, 7) OVER (
-		ORDER BY bio.datum_date
+	bio.collected_date AS "Muestras",
+	bio.molecular "Moleculares",
+	(bio.cumulative_molecular - lag(bio.cumulative_molecular, 7) OVER (
+		ORDER BY bio.collected_date
 	)) / 7.0 AS "Promedio 7 días",
 	bio.antigens "Antígeno",
 	(bio.cumulative_antigens - lag(bio.cumulative_antigens, 7) OVER (
-		ORDER BY bio.datum_date
+		ORDER BY bio.collected_date
 	)) / 7.0 AS "Promedio 7 días",
 	bio.cases "Casos (Bioportal)",
 	(bio.cumulative_cases - lag(bio.cumulative_cases, 7) OVER (
-		ORDER BY bio.datum_date
+		ORDER BY bio.collected_date
 	)) / 7.0 AS "Promedio 7 días"
-FROM covid_pr_etl.recent_daily_cases bio
+FROM covid_pr_etl.bioportal_encounters_agg bio
 INNER JOIN bulletins
 	ON bulletins.max_bulletin_date = bio.bulletin_date
-ORDER BY bio.datum_date DESC;
+ORDER BY bio.collected_date DESC;
 
 
 --
@@ -62,7 +62,15 @@ SELECT
 	file_timestamp AS "Datos",
 	date AS "Fecha",
 	inpatient_beds_used_covid AS "Camas ocupadas por COVID",
-	staffed_adult_icu_bed_occupancy AS "Camas UCI ocupadas (cualquier causa)"
+	previous_day_admission_adult_covid_confirmed
+		+ previous_day_admission_adult_covid_suspected
+		+ previous_day_admission_pediatric_covid_confirmed
+		+ previous_day_admission_pediatric_covid_suspected
+		AS "Admisiones por COVID",
+	staffed_icu_adult_patients_confirmed_and_suspected_covid
+		AS "Camas UCI ocupadas por COVID",
+	staffed_adult_icu_bed_occupancy AS "Camas UCI ocupadas (cualquier causa)",
+	total_staffed_adult_icu_beds AS "Total camas UCI"
 FROM covid_pr_etl.hhs_hospitals
 ORDER BY date DESC;
 
@@ -93,7 +101,7 @@ SELECT
 		- COALESCE(bul.confirmed_cases, 0)
 		- COALESCE(bul.probable_cases, 0)
 		AS "Exceso Bioportal"
-FROM covid_pr_etl.bioportal_curve bio
+FROM covid_pr_etl.bioportal_encounters_agg bio
 INNER JOIN bulletins
 	ON bulletins.max_bulletin_date = bio.bulletin_date
 INNER JOIN covid_pr_etl.bulletin_cases bul
