@@ -225,12 +225,29 @@ SELECT
 	cur.patient_id,
 	min(cur.received_date) AS min_received_date,
 	max(cur.received_date) AS max_received_date,
+	-- True if and only if at least one specimen for that
+	-- patient on that date came back positive, irrespective
+	-- of the type of test.
 	bool_or(cur.positive) positive,
-	-- Note that it's possible for a patient to take both
-	-- PCR and antigens on the same date, so `has_molecular`
-	-- and `has_antigens` can be both true same day:
+	-- These two are true if and only if there is at least one
+	-- specimen for that patient on that date was of the respective
+	-- type, irrespective of positive and negative.
 	bool_or(cur.test_type = 'Molecular') has_molecular,
 	bool_or(cur.test_type = 'Antígeno') has_antigens,
+	-- These two true are if and only if there is at least one
+	-- specimen that is both of the respective type and came
+	-- back positive.  Note that for example this means that
+	-- `has_positive_antigens` is't synonymous with
+	-- `positive AND has_antigens`, because that could be true 
+	-- because the patient has a negative antigen and a positive
+	-- molecular test on that date.
+	bool_or(cur.test_type = 'Molecular' AND cur.positive)
+	    AS has_positive_molecular,
+	bool_or(cur.test_type = 'Antígeno' AND cur.positive)
+	    AS has_positive_antigens,
+    -- A followup test is any test—positive or negative—such
+    -- that the same patient had a positive test in the 90
+    -- days before. 
 	COALESCE(bool_or(prev.collected_date >= date_add('day', -90, cur.collected_date)
 			            AND prev.positive),
              FALSE)
@@ -282,51 +299,111 @@ WITH downloads AS (
 	CROSS JOIN UNNEST(date_array) AS t2(date_column)
 	INNER JOIN downloads
 	    ON CAST(date_column AS DATE) < downloads.max_downloaded_date
+), grouped AS (
+    SELECT
+        bulletins.bulletin_date,
+        tests.collected_date,
+        count(*) AS encounters,
+        -- A case is a test encounter that had a positive test and
+        -- is not a followup to an earlier positive encounter.
+        count(*) FILTER (
+            WHERE tests.positive
+            AND NOT tests.followup
+        ) cases,
+        -- A rejected case is a non-followup encounter that had no 
+        -- positive tests and at least one of the tests is PCR.
+        count(*) FILTER (
+            WHERE tests.has_molecular
+            AND NOT tests.positive
+            AND NOT tests.followup
+        ) rejections,
+        -- Note that `has_antigens` and `has_molecular` don't
+        -- have to add up to `encounters` because a person may
+        -- get both test types the same day. Similar remarks
+        -- apply to many of the sums below.
+        count(*) FILTER (
+            WHERE tests.has_antigens
+        ) antigens,
+        count(*) FILTER (
+            WHERE tests.has_molecular
+        ) molecular,
+        -- These two are encounters where there was at least one 
+        -- positive test of the respective type.  Note that for
+        -- example `has_positive_antigens` isn't synonymos with
+        -- `positive AND has_antigens`, because a patient could
+        -- have a negative antigen and a positive PCR the same day.
+        count(*) FILTER (
+            WHERE tests.has_positive_antigens
+        ) positive_antigens,
+        count(*) FILTER (
+            WHERE tests.has_positive_molecular
+        ) positive_molecular,
+        -- Non-followup test encounters where there was at least
+        -- one molecular test.  These are, I claim, the most 
+        -- appropriate for a positive rate calculation.
+        count(*) FILTER (
+            WHERE NOT tests.followup
+            AND tests.has_molecular
+        ) AS initial_molecular,
+        -- Non-followup test encounters where there was at least
+        -- one molecular test that came back positive.  These are,
+        -- I claim, the most appropriate for a positive rate calculation.
+        count(*) FILTER (
+            WHERE NOT tests.followup
+            AND tests.has_positive_molecular
+        ) AS initial_positive_molecular
+    FROM covid_pr_etl.bioportal_encounters tests
+    INNER JOIN downloads
+        ON tests.downloaded_at = downloads.max_downloaded_at
+    INNER JOIN bulletins
+        ON bulletins.bulletin_date < downloads.max_downloaded_date
+        AND tests.min_received_date <= bulletins.bulletin_date
+    GROUP BY
+        bulletins.bulletin_date,
+        tests.collected_date
 )
 SELECT
-	bulletins.bulletin_date,
-	tests.collected_date,
-	count(*) AS encounters,
-	count(*) FILTER (
-		WHERE tests.positive
-		AND NOT tests.followup
-	) cases,
-	count(*) FILTER (
-		WHERE tests.has_molecular
-		AND NOT tests.positive
-		AND NOT tests.followup
-	) rejections,
-	-- Note that `has_antigens` and `has_molecular` don't
-	-- have to add up to `encounters` because a person may
-	-- get both test types the same day. Similar remarks
-	-- apply to many of the sums below.
-	count(*) FILTER (
-		WHERE tests.has_antigens
-	) has_antigens,
-	count(*) FILTER (
-		WHERE tests.has_molecular
-	) has_molecular,
-	count(*) FILTER (
-		WHERE NOT tests.followup
-		AND tests.has_molecular
-	) AS initial_molecular,
-	count(*) FILTER (
-		WHERE NOT tests.followup
-		AND tests.has_molecular
-		AND tests.positive
-	) AS initial_molecular_positives
-FROM covid_pr_etl.bioportal_encounters tests
-INNER JOIN downloads
-	ON tests.downloaded_at = downloads.max_downloaded_at
-INNER JOIN bulletins
-	ON bulletins.bulletin_date < downloads.max_downloaded_date
-	AND tests.min_received_date <= bulletins.bulletin_date
-GROUP BY
-	bulletins.bulletin_date,
-	tests.collected_date
+    *,
+    sum(encounters) OVER (
+        PARTITION BY bulletin_date
+        ORDER BY collected_date
+    ) AS cumulative_encounters,
+    sum(cases) OVER (
+        PARTITION BY bulletin_date
+        ORDER BY collected_date
+    ) AS cumulative_cases,
+    sum(rejections) OVER (
+        PARTITION BY bulletin_date
+        ORDER BY collected_date
+    ) AS cumulative_rejections,
+    sum(antigens) OVER (
+        PARTITION BY bulletin_date
+        ORDER BY collected_date
+    ) AS cumulative_antigens,
+    sum(molecular) OVER (
+        PARTITION BY bulletin_date
+        ORDER BY collected_date
+    ) AS cumulative_molecular,
+    sum(positive_antigens) OVER (
+        PARTITION BY bulletin_date
+        ORDER BY collected_date
+    ) AS cumulative_positive_antigens,
+    sum(positive_molecular) OVER (
+        PARTITION BY bulletin_date
+        ORDER BY collected_date
+    ) AS cumulative_positive_molecular,
+    sum(initial_molecular) OVER (
+        PARTITION BY bulletin_date
+        ORDER BY collected_date
+    ) AS cumulative_initial_molecular,
+    sum(initial_positive_molecular) OVER (
+        PARTITION BY bulletin_date
+        ORDER BY collected_date
+    ) AS cumulative_initial_positive_molecular
+FROM grouped
 ORDER BY
-	bulletins.bulletin_date,
-	tests.collected_date;
+	bulletin_date,
+	collected_date;
 
 
 --
@@ -628,7 +705,7 @@ CREATE OR REPLACE VIEW covid_pr_etl.confirmed_vs_rejected AS
 SELECT
 	bulletin_date,
 	collected_date,
-	initial_molecular_positives AS novels,
+	initial_positive_molecular AS novels,
 	rejections
 FROM covid_pr_etl.bioportal_encounters_agg
 WHERE bulletin_date > DATE '2020-04-24'
@@ -668,13 +745,13 @@ SELECT
     	PARTITION BY encounters.bulletin_date
     	ORDER BY encounters.collected_date
     ) cumulative_tests,
-	encounters.has_molecular AS pcr,
-    sum(encounters.has_molecular) OVER (
+	encounters.molecular AS pcr,
+    sum(encounters.molecular) OVER (
     	PARTITION BY encounters.bulletin_date
     	ORDER BY encounters.collected_date
     ) cumulative_pcr,
-	encounters.has_antigens AS antigens,
-    sum(encounters.has_antigens) OVER (
+	encounters.antigens AS antigens,
+    sum(encounters.antigens) OVER (
     	PARTITION BY encounters.bulletin_date
     	ORDER BY encounters.collected_date
     ) cumulative_antigens,
