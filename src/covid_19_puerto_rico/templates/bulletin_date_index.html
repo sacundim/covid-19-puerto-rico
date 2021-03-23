@@ -493,7 +493,7 @@
 
 
 <div class="section" id="NaivePositiveRate_section">
-    <h1>Tasa ingenua de especímenes positivos</h1>
+    <h1>Tasa de especímenes positivos</h1>
 
     <div id="NaivePositiveRate"></div>
     <script type="text/javascript">
@@ -504,20 +504,21 @@
 
     <p>Porcentaje de especímenes de prueba positivos entre todos los especímenes de pruebas,
         promedios de 7 días por fecha de toma de muestra, según datos del API de Bioportal
-        del Departamento de Salud de Puerto Rico, con poca depuración mínima.  Denominamos
-        esto de positividad "ingenua" porque entendemos que no es la mejor forma de calcular
-        positividad, pero la calculamos de todos modos como servicio al público ya que es un
-        cálculo que por ejemplo usan los CDC de los Estados Unidos.</p>
+        del Departamento de Salud de Puerto Rico, con depuración mínima.  Entendemos que no
+        es la mejor forma de calcular positividad, pero la calculamos de todos modos como
+        servicio al público ya que es un cálculo que por ejemplo usan los CDC de los Estados
+        Unidos.</p>
 
     <p>Las líneas sólidas son con datos recibidos hasta la fecha de boletín de este dashboard.
         Las líneas entrecortadas excluyen los datos recibidos durante las 7 fechas de boletín
         más recientes, a fin de ilustrar cómo los datos recibidos recientes revisan fechas más
         viejas.</p>
 
-        <p>Se calcula aquí también una tasa de positividad de pruebas de antígenos, aparte de las
-        de moleculares. Hay que entender que la positividad de antígenos no puede compararse
-        ingenuamente con la de moleculares. Las pruebas moleculares son más sensibles y tienen
-        una ventana de detección más amplia, por lo tanto la expectativa de antemano es que:</p>
+        <p>Se calculan aquí también tasas aparte para pruebas moleculares y de antígenos. Hay
+            que entender que la positividad de antígenos no puede compararse ingenuamente con
+            la de moleculares. Las moleculares son más sensibles y tienen una ventana de
+            detección más amplia, por lo tanto la expectativa de antemano y que se confirma en
+            los datos es que:</p>
 
     <center>
         positividad moleculares > positividad antígenos
@@ -525,25 +526,6 @@
 
     <p>Y encima de esto las moleculares vs. las de antígenos se administran a grupos de la
         población sesgados de manera distinta, que dificulta aún más la comparación.</p>
-
-    <h3>Datos incompletos</h3>
-
-    <p>Otra advertencia es que el cálculo dado aquí para Puerto Rico hace uso de datos por
-        fecha de toma de muestra, y no de registro de resultados como hacen muchas colecciones
-        de datos o informes.  Esto da números que reflejan la realidad más cercanamente, pero
-        acarrea dos desventajas:</p>
-
-    <ol>
-        <li>Las cifras dadas para cualquier fecha no son finales, porque mañana pueden recibirse
-            nuevos resultados de muestras tomadas en esas mismas fechas, y que llevarán
-            a que se revisen los valores aquí calculados;</li>
-        <li>Un caso especial muy importante de esto es que <b>caídas o subidas repentinas al final
-            de la curva no son fiables</b>, porque para las fechas más recientes se espera que se
-            los datos estén menos completos.</li>
-    </ol>
-
-    <p>Las líneas entrecortadas, cuyo cálculo excluye los datos recibidos en los 7 días más
-        recientes, tienden a ilustrar estos efectos.</p>
 
     <h3>Advertencias</h3>
 
@@ -558,7 +540,8 @@
 
     <ul>
         <li>Kissane, Erin y Jessica Malaty Rivera.  2020.  "Test positivity in the US is
-            a mess." <i>COVID Tracking Project</i>, 8 de octubre del 2020. Página web:
+            a mess." <i>COVID Tracking Project</i>, 8 de octubre del 2020. Página web,
+            consultada el 23 de marzo del 2021:
             <a href="https://covidtracking.com/analysis-updates/test-positivity-in-the-us-is-a-mess">
                 https://covidtracking.com/analysis-updates/test-positivity-in-the-us-is-a-mess
             </a></li>
