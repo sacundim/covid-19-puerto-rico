@@ -36,7 +36,7 @@
         <li><a href="#Lateness7Day_section">Tendencia de rezago de datos</a></li>
         <li><a href="#LatenessTiers_section">Rezago de casos por renglones</a></li>
         <li><a href="#NewTestSpecimens_section">Especímenes de prueba diarios</a></li>
-        <li><a href="#NaivePositiveRate_section">Positividad (promedio 7 días)</a></li>
+        <li><a href="#NaivePositiveRate_section">Positividad ingenua</a></li>
         <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados</a></li>
         <li><a href="#CaseFatalityRate_section">Tasa de letalidad (CFR) rezagada</a></li>
         <li><a href="#CumulativeTestsVsCases_section">Pruebas vs. casos (acumulado)</a></li>
@@ -493,7 +493,7 @@
 
 
 <div class="section" id="NaivePositiveRate_section">
-    <h1>Positividad sencilla (promedio 7 días)</h1>
+    <h1>Positividad ingenua</h1>
 
     <div id="NaivePositiveRate"></div>
     <script type="text/javascript">
@@ -502,11 +502,16 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Tasas de positividad por fecha de toma de muestra, según datos del API de Bioportal del
-        Departamento de Salud de Puerto Rico y del boletín diario de casos. Las líneas sólidas son
-        con datos recibidos hasta la fecha de boletín de este dashboard.  Las líneas entrecortadas
-        excluyen los datos recibidos durante las 7 fechas de boletín más recientes, a fin de ilustrar
-        cómo los datos recibidos recientes revisan fechas más viejas.</p>
+    <p>Tasas de positividad por fecha de toma de muestra, según datos del API de Bioportal
+        del Departamento de Salud de Puerto Rico y del boletín diario de casos, con depuración
+        mínima.  Denominamos esto de positividad "ingenua" porque entendemos que no es la mejor
+        forma de calcular positividad, pero la calculamos de todos modos como servicio al
+        público.</p>
+
+    <p>Las líneas sólidas son con datos recibidos hasta la fecha de boletín de este dashboard.
+        Las líneas entrecortadas excluyen los datos recibidos durante las 7 fechas de boletín
+        más recientes, a fin de ilustrar cómo los datos recibidos recientes revisan fechas más
+        viejas.</p>
 
     <p>Se calcula aquí la tasa de positividad de dos maneras distintas:</p>
 
