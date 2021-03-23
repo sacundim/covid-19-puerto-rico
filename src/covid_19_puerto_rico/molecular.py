@@ -331,7 +331,11 @@ class NewTestSpecimens(AbstractMolecularChart):
         ).mark_line().encode(
             x=alt.X('date:T', title=None,
                     axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('mean_tests:Q', title='Especímenes diarios', axis=alt.Axis(format='s')),
+            y=alt.Y('mean_tests:Q', title='Especímenes diarios',
+                    # We use axis tick increments of 3k because the population of
+                    # Puerto Rico is about 3M, and this way we can easily read a
+                    # rough per-capita figure
+                    axis=alt.Axis(format='s', values=[0, 3000, 6000, 9000, 12000, 15000])),
             color=alt.Color('test_type:N', title='Tipo de prueba', sort=self.TEST_TYPE_SORT_ORDER,
                             legend=alt.Legend(orient='bottom', titleOrient='top', direction='vertical',
                                               padding=7.5, symbolStrokeWidth=3, symbolSize=300)),
