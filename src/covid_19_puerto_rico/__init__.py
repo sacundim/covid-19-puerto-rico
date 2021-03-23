@@ -61,7 +61,6 @@ def main():
         molecular.MolecularLatenessTiers(athena, args.output_dir, output_formats),
         molecular.MolecularCurrentDeltas(athena, args.output_dir, output_formats),
         molecular.MolecularDailyDeltas(athena, args.output_dir, output_formats),
-        molecular.CumulativeTestsVsCases(athena, args.output_dir, output_formats),
         charts.LatenessTiers(postgres, args.output_dir, output_formats),
         charts.AgeGroups(postgres, args.output_dir, output_formats),
         charts.BulletinChartMismatch(postgres, args.output_dir, output_formats),

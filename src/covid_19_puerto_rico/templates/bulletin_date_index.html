@@ -721,53 +721,6 @@
 </div>
 
 
-<div class="section" id="CumulativeTestsVsCases_section">
-    <h1>Pruebas vs. casos (acumulado)</h1>
-
-    <div id="CumulativeTestsVsCases"></div>
-    <script type="text/javascript">
-        embedChart('CumulativeTestsVsCases', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Otra forma de visualizar la positividad: trazando el número de pruebas moleculares
-        acumuladas en el eje vertical y los casos confirmados acumulados en el horizontal.
-        Las líneas entrecortadas brindan una referencia de cómo se traduce a positividad
-        acumulada (que vale advertir, no es lo mismo que positividad promedio de 7 días).</p>
-
-    <p>Curvas que se mueven hacia arriba son buenas; curvas que se mueven a la derecha son
-        malas. Giros súbitos justo al final de la curva no son fiables porque probablemente
-        representan fechas para las cuales solo hay datos parciales.</p>
-
-    <p>Ventaja de esta gráfica: te muestra las pruebas y casos per cápita acumulados
-        actuales de manera bien compacta, y la evolución de la positividad acumulada.
-        Desventaja: no tiene eje de tiempo como tal, aunque como son cifras acumuladas
-        puntos más arriba o a la derecha son generalmente más tardíos.</p>
-
-
-    <h3>Comparaciones internacionales</h3>
-
-    <p>Estas gráficas de <a href="https://ourworldindata.org/">Our World in Data</a> puede
-        ayudar a poner estas cifras en contexto internacional:</p>
-
-    <div class="chart">
-        <iframe src="https://ourworldindata.org/grapher/covid-19-positive-rate-bar?tab=map&year={{bulletin_date}}&time=2020-03-15..{{bulletin_date}}"
-                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
-    </div>
-
-    <div class="chart">
-    <iframe src="https://ourworldindata.org/grapher/full-list-cumulative-total-tests-per-thousand-map?year={{bulletin_date}}&time=2020-03-15..{{bulletin_date}}"
-            loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
-    </div>
-
-    <div class="chart">
-        <iframe src="https://ourworldindata.org/grapher/covid-19-tests-vs-cases-per-million-positivity-comparisons?xScale=linear&yScale=linear&time=2020-03-15..{{next_date}}"
-                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
-    </div>
-</div>
-
-
 <div class="section" id="MolecularCurrentDeltas_section">
     <h1>Pruebas añadidas a Bioportal</h1>
 
