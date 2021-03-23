@@ -36,7 +36,7 @@
         <li><a href="#Lateness7Day_section">Tendencia de rezago de datos</a></li>
         <li><a href="#LatenessTiers_section">Rezago de casos por renglones</a></li>
         <li><a href="#NewTestSpecimens_section">Especímenes de prueba diarios</a></li>
-        <li><a href="#NaivePositiveRate_section">Positividad ingenua</a></li>
+        <li><a href="#NaivePositiveRate_section">Tasa de especímenes positivos</a></li>
         <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados</a></li>
         <li><a href="#CaseFatalityRate_section">Tasa de letalidad (CFR) rezagada</a></li>
         <li><a href="#CumulativeTestsVsCases_section">Pruebas vs. casos (acumulado)</a></li>
@@ -469,7 +469,7 @@
     <p>Los números son más o menos los crudos de Bioportal, y no corrigen por ejemplo
         múltiples pruebas reportadas para la misma persona el mismo día. En
         <a href="https://covidtracking.com/analysis-updates/test-positivity-in-the-us-is-a-mess">la
-            clasificación que propone el COVID Tracking Project</a>, esto son "especímenes de
+            clasificación que propone el COVID Tracking Project</a>, estos son "especímenes de
         prueba" ("test specimens") y no "encuentros de prueba" ("test encounters").</p>
 
     <h3>Comparación internacional</h3>
@@ -493,7 +493,7 @@
 
 
 <div class="section" id="NaivePositiveRate_section">
-    <h1>Positividad ingenua</h1>
+    <h1>Tasa ingenua de especímenes positivos</h1>
 
     <div id="NaivePositiveRate"></div>
     <script type="text/javascript">
@@ -502,38 +502,19 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Tasas de positividad por fecha de toma de muestra, según datos del API de Bioportal
-        del Departamento de Salud de Puerto Rico y del boletín diario de casos, con depuración
-        mínima.  Denominamos esto de positividad "ingenua" porque entendemos que no es la mejor
-        forma de calcular positividad, pero la calculamos de todos modos como servicio al
-        público.</p>
+    <p>Porcentaje de especímenes de prueba positivos entre todos los especímenes de pruebas,
+        promedios de 7 días por fecha de toma de muestra, según datos del API de Bioportal
+        del Departamento de Salud de Puerto Rico, con poca depuración mínima.  Denominamos
+        esto de positividad "ingenua" porque entendemos que no es la mejor forma de calcular
+        positividad, pero la calculamos de todos modos como servicio al público ya que es un
+        cálculo que por ejemplo usan los CDC de los Estados Unidos.</p>
 
     <p>Las líneas sólidas son con datos recibidos hasta la fecha de boletín de este dashboard.
         Las líneas entrecortadas excluyen los datos recibidos durante las 7 fechas de boletín
         más recientes, a fin de ilustrar cómo los datos recibidos recientes revisan fechas más
         viejas.</p>
 
-    <p>Se calcula aquí la tasa de positividad de dos maneras distintas:</p>
-
-    <ol>
-        <li>Número de pruebas positivas dividido entre número total de pruebas;</li>
-        <li>Número de casos confirmados únicos (tomado de los informes regulares de Salud)
-            dividido entre número total de pruebas PCR.</li>
-    </ol>
-
-    <p>La segunda de estas muchos entienden (con poca razón a mi entender) que es una división un
-        poco de "chinas con botellas" (i.e., cantidades que en realidad no deberían compararse),
-        pero he optado por incluirla porque muchas colecciones de datos en EEUU (e.g., Johns
-        Hopkins) e internacionales (e.g., Our World In Data) calculan así o parecido para muchos
-        locales.  Lo cual quiere decir que a la hora de comparar el dato de Puerto Rico con el de
-        otro país hay que tener cuidado cuál definición se habla.  Más generalmente, <strong>no
-            existe ningún consenso sobre cómo calcular positividad, así que mucho cuidado con
-            comparar las cifras que ofrecen fuentes distintas</strong>.</p>
-
-
-    <h3>Pruebas de antígenos</h3>
-
-    <p>Se calcula aquí también una tasa de positividad de pruebas de antígenos, aparte de las
+        <p>Se calcula aquí también una tasa de positividad de pruebas de antígenos, aparte de las
         de moleculares. Hay que entender que la positividad de antígenos no puede compararse
         ingenuamente con la de moleculares. Las pruebas moleculares son más sensibles y tienen
         una ventana de detección más amplia, por lo tanto la expectativa de antemano es que:</p>
@@ -544,7 +525,6 @@
 
     <p>Y encima de esto las moleculares vs. las de antígenos se administran a grupos de la
         población sesgados de manera distinta, que dificulta aún más la comparación.</p>
-
 
     <h3>Datos incompletos</h3>
 
@@ -565,23 +545,35 @@
     <p>Las líneas entrecortadas, cuyo cálculo excluye los datos recibidos en los 7 días más
         recientes, tienden a ilustrar estos efectos.</p>
 
+    <h3>Advertencias</h3>
 
-    <h3>Comparación internacional</h3>
-
-    <p>Esta gráfica de <a href="https://ourworldindata.org/">Our World in Data</a> puede
-        ayudar a poner estas cifras en contexto internacional:</p>
-
-    <div class="chart">
-        <iframe src="https://ourworldindata.org/grapher/positive-rate-daily-smoothed?tab=map&year={{bulletin_date}}&time=2020-03-15..{{bulletin_date}}"
-                loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
-    </div>
-
-    <h3>Revisiones</h3>
+    <p>Los cálculos de positividad son un campo minado en el cual no existen estándares
+        verdaderos y distintas jurisdicciones, organizaciones y personas la calculan de
+        maneras distintas, idiosincráticas y a veces francamente erróneas.  <b>Ningún
+            cálculo de positividad hecho por dos partes distintas debe compararse
+            ingenuamente sin analizar a fondo los métodos que usan</b>, y vale más mirar
+        la tendencia de una curva que los valores puntuales que arroja, que en realidad
+        poco significan.  Una excelente discusión de los problemas e inconsistencias que
+        suelen sufrir estos cálculos se puede hallar en este artículo:</p>
 
     <ul>
-        <li>El cálculo de las líneas entrecortadas se ve afectado por la
-            <a href="#Revisions_2020-11-14">revisión del 14 de noviembre del 2020</a> y
-            otras anteriores.</li>
+        <li>Kissane, Erin y Jessica Malaty Rivera.  2020.  "Test positivity in the US is
+            a mess." <i>COVID Tracking Project</i>, 8 de octubre del 2020. Página web:
+            <a href="https://covidtracking.com/analysis-updates/test-positivity-in-the-us-is-a-mess">
+                https://covidtracking.com/analysis-updates/test-positivity-in-the-us-is-a-mess
+            </a></li>
+    </ul>
+
+    <p>Este cálculo de positividad también hay que advertir que se realiza a partir de
+        <b>especímenes de prueba</b> y no personas evaluadas ni de "encuentros de prueba"
+        (concepto que explica en artículo citado).  Esto quiere decir que:</p>
+
+    <ul>
+        <li>en cada fecha generalmente existe una porción de personas a las que se les
+        tomó más de un especímen, y este cálculo ingenuo no corrige ese factor;</li>
+        <li>Este cálculo tampoco hace ningún esfuerzo por corregir por pruebas administradas
+            a las mismas personas en fechas distintas, otro muy conocido factor que infla
+            cálculos ingenuos como este.</li>
     </ul>
 </div>
 
@@ -598,35 +590,30 @@
 
     <p>Lo que el autor de esta página entiende es una mejor manera de medir la tan mentada
         "positividad de pruebas" a partir de los datos disponibles del Departamento de
-        Salud de Puerto Rico.  El concepto consiste en distinguir entre pruebas de:</p>
+        Salud de Puerto Rico.  El concepto consiste de dos pasos.  El primero es depurar
+        los datos crudos de <i>especímenes de prueba</i> para identificar personas que los
+        datos reportan que se les evaluó más de un especímen en la misma fecha, para contar
+        este conjunto de especímenes tomados a la misma persona como un solo "encuentro de
+        prueba" (según
+        <a href="https://covidtracking.com/analysis-updates/test-positivity-in-the-us-is-a-mess">
+            la clasificación propuesta por el COVID Tracking Project</a>).</p>
+
+    <p>El segundo paso consiste en distinguir entre:</p>
 
     <ul>
-        <li><strong>Evaluación inicial</strong>, que se administran a pacientes que no
-            se sabe si tienen o no COVID-19 para confirmar o descartar esa hipótesis;</li>
-        <li><strong>Seguimiento</strong>, que se administran a pacientes que ya se ha
-            detectado que tienen COVID-19 para darle seguimiento a sus casos.</li>
+        <li>Encuentros de <strong>evaluación inicial</strong> a pacientes que no se sabe si
+            tienen o no COVID-19 para confirmar o descartar esa hipótesis;</li>
+        <li>Encuentros de <strong>seguimiento</strong> a pacientes que ya se había detectado
+            que tienen COVID-19 por prueba en fecha anterior.</li>
     </ul>
 
     <p>La idea es monitorear la razón de casos descartados a casos confirmados pero <strong>solo
         contando pruebas moleculares de evaluación inicial</strong>, porque las de seguimiento
         no aportan al propósito que se cita comunmente para las tasas de positividad: evaluar si
-        el volumen de pruebas se queda corto para detectar contagios nuevos.  Como las pruebas
-        de seguimiento no contribuyen a confirmar o descartar nuevos casos, incluirlas en el
-        cálculo de tasas de positividad es (entiendo yo) un defecto común en los métodos más
-        usuales para calcular positividad.</p>
-
-    <p>Este autor favorecería expresar este concepto como la razón de casos descartados a
-        confirmados, e.g., 95 casos descartados por cada 5 confirmados, pero como el "porcentaje
-        de positividad" anda tan difundido, me he conformado por así expresarlo, mediante la
-        fórmula:</p>
-
-    <center>
-        positividad = confirmados / (confirmados + descartados)
-    </center>
-
-    <p>...que en el ejemplo dado sería 5 / (5 + 95) = 5%.  La unidad del numerador y el
-        denominador se entiende que es episodios evaluados para confirmar o descartar
-        si hay infección de COVID-19.</p>
+        el número de personas evaluadas se queda corto para detectar contagios nuevos.  Como las
+        pruebas de seguimiento no contribuyen a confirmar o descartar nuevos casos, incluirlas en
+        el cálculo es (entiendo yo) un defecto común en los métodos más usuales para calcular
+        positividad.</p>
 
     <p>El valor para cada fecha en el eje horizontal es un promedio a partir de las
         muestras tomadas en los 7 días que desembocan en esa fecha.</p>

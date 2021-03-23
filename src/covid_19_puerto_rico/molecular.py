@@ -254,45 +254,40 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
 
 
 class NaivePositiveRate(AbstractMolecularChart):
-    SORT_ORDER = [
-        'Positivas ÷ pruebas (Molecular)',
-        'Casos ÷ pruebas (Molecular)',
-        'Positivas ÷ pruebas (Antigens)'
-    ]
+    SORT_ORDER = ['Molecular', 'Antígeno']
+    COLORS = ['#4c78a8', '#e45756']
 
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df).transform_window(
-            groupby=['test_type', 'bulletin_date', 'variable'],
+            groupby=['test_type', 'bulletin_date'],
             sort=[{'field': 'collected_date'}],
             frame=[-6, 0],
-            sum_value='sum(value)',
+            sum_positives='sum(positives)',
             sum_tests='sum(tests)'
         ).transform_calculate(
-            rate=alt.datum.sum_value / alt.datum.sum_tests,
-            ratio=alt.datum.sum_tests / alt.datum.sum_value
+            rate=alt.datum.sum_positives / alt.datum.sum_tests,
+            ratio=alt.datum.sum_tests / alt.datum.sum_positives
         ).transform_filter(
-            alt.datum.sum_value > 0
-        ).transform_calculate(
-            method="datum.variable + ' ÷ pruebas (' + datum.test_type + ')'"
+            alt.datum.sum_positives > 0
         ).mark_line(clip=True).encode(
             x=alt.X('collected_date:T', title='Fecha de muestra',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('rate:Q', title='Positividad',
-                    scale=alt.Scale(type='log', domain=[0.002, 0.2]),
+                    scale=alt.Scale(type='log', domain=[0.003, 0.2]),
                     axis=alt.Axis(format='%')),
-            color=alt.Color('method:N', sort=self.SORT_ORDER,
+            color=alt.Color('test_type:N', sort=self.SORT_ORDER, scale=alt.Scale(range=self.COLORS),
                             legend=alt.Legend(orient='bottom-right', legendX=50, legendY=4,
                                               fillColor='white', padding=7.5,
                                               symbolStrokeWidth=3, symbolSize=250,
-                                              title='Método de cálculo', labelLimit=320)),
+                                              title='Tipo de prueba', labelLimit=320)),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending',
-                                      legend=alt.Legend(orient='bottom-right', fillColor='white', padding=7.5,
-                                              symbolStrokeWidth=2, symbolSize=250,
-                                              title='Datos hasta', labelLimit=320)),
+                                      legend=alt.Legend(orient='bottom-right',
+                                                        fillColor='white', padding=7.5,
+                                                        symbolStrokeWidth=2, symbolSize=250,
+                                                        title='Datos hasta', labelLimit=320)),
             tooltip=[alt.Tooltip('test_type:O', title='Tipo de prueba'),
                      alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                      alt.Tooltip('bulletin_date:T', title='Datos hasta'),
-                     alt.Tooltip('variable:N', title='Método de cálculo'),
                      alt.Tooltip('ratio:Q', format=".1f", title='Razón de pruebas (7 días)'),
                      alt.Tooltip('rate:Q', format=".2%", title='Positividad (7 días)')]
         ).properties(
@@ -312,12 +307,10 @@ class NaivePositiveRate(AbstractMolecularChart):
             table.c.bulletin_date,
             table.c.collected_date,
             table.c.tests,
-            table.c.positives.label('Positivas'),
-            table.c.cases.label('Casos')
+            table.c.positives
         ]).where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
                       table.c.bulletin_date <= max(bulletin_dates)))
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
-        return pd.melt(df, ['test_type', 'bulletin_date', 'collected_date', 'tests']).dropna()
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
 
 
 class NewTestSpecimens(AbstractMolecularChart):

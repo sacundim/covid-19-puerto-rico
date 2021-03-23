@@ -46,6 +46,8 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        molecular.NaivePositiveRate(athena, args.output_dir, output_formats),
+
         # We always generate png for this because they're our Twitter cards
         molecular.RecentCases(athena, args.output_dir, frozenset(['json', 'svg', 'png'])),
 
@@ -56,7 +58,6 @@ def main():
         charts.ICUsByHospital(postgres, args.output_dir, output_formats),
         molecular.NewTestSpecimens(athena, args.output_dir, output_formats),
         molecular.ConfirmationsVsRejections(athena, args.output_dir, output_formats),
-        molecular.NaivePositiveRate(athena, args.output_dir, output_formats),
         molecular.MolecularLatenessTiers(athena, args.output_dir, output_formats),
         molecular.MolecularCurrentDeltas(athena, args.output_dir, output_formats),
         molecular.MolecularDailyDeltas(athena, args.output_dir, output_formats),
