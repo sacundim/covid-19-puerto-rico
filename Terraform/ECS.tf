@@ -115,7 +115,7 @@ resource "aws_ecs_task_definition" "hhs_download_and_sync" {
       cpu = 1024,
       memoryReservation = 2048,
       essential = true,
-      command = ["hhs-download-and-sync.sh"],
+      command = ["hhs-download"],
       environment = [
         {
           name = "S3_DATA_URL",
@@ -161,6 +161,76 @@ resource "aws_cloudwatch_event_target" "hhs_daily_download" {
     platform_version    = "LATEST"
     task_count          = 1
     task_definition_arn = aws_ecs_task_definition.hhs_download_and_sync.arn
+
+    network_configuration {
+      assign_public_ip = true
+      subnets = aws_subnet.subnet.*.id
+      security_groups = [aws_security_group.outbound_only.id]
+    }
+  }
+}
+
+
+#################################################################################
+#################################################################################
+##
+## covid19datos.salud.gov.pr daily download task
+##
+
+resource "aws_ecs_task_definition" "covid19datos_download_and_sync" {
+  family = "covid19datos-download-and-sync"
+  tags = {
+    Project = var.project_name
+  }
+  requires_compatibilities = ["FARGATE"]
+  task_role_arn = aws_iam_role.ecs_task_role.arn
+  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  cpu = 512
+  memory = 1024
+  network_mode = "awsvpc"
+  container_definitions = jsonencode([
+    {
+      name = "covid19datos-downloader",
+      image = "${data.aws_ecr_image.downloader.registry_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${data.aws_ecr_image.downloader.repository_name}:${data.aws_ecr_image.downloader.image_tag}"
+      cpu = 512,
+      memoryReservation = 1024,
+      essential = true,
+      command = ["covid19datos-download"],
+      environment = [
+        {
+          name = "S3_DATA_URL",
+          value = "s3://${aws_s3_bucket.data_bucket.bucket}"
+        }
+      ],
+      logConfiguration = {
+        "logDriver" = "awslogs",
+        "options" = {
+          "awslogs-group" = aws_cloudwatch_log_group.covid_19_puerto_rico.name,
+          "awslogs-region" = "us-west-2",
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
+    }
+  ])
+}
+
+resource "aws_cloudwatch_event_rule" "covid19datos_daily_download" {
+  name        = "covid19datos-daily-download"
+  description = "Run the daily covid19datos download."
+  schedule_expression = "cron(55 3,15 * * ? *)"
+}
+
+resource "aws_cloudwatch_event_target" "covid19datos_daily_download" {
+  target_id = "covid19datos-daily-download"
+  rule = aws_cloudwatch_event_rule.covid19datos_daily_download.name
+  arn = aws_ecs_cluster.main.arn
+  role_arn = aws_iam_role.ecs_events_role.arn
+
+  ecs_target {
+    launch_type         = "FARGATE"
+    platform_version    = "LATEST"
+    task_count          = 1
+    task_definition_arn = aws_ecs_task_definition.covid19datos_download_and_sync.arn
 
     network_configuration {
       assign_public_ip = true
