@@ -18,7 +18,7 @@ def process_arguments():
     return parser.parse_args()
 
 
-def hhs_downloader():
+def hhs_download():
     """Entry point for HHS download code."""
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
     args = process_arguments()

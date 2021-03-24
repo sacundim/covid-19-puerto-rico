@@ -6,7 +6,8 @@ authors = ["sacundim <anybody@sacundim.org>"]
 packages = [{ include = "covid_19_puerto_rico_downloader", from = "src"}]
 
 [tool.poetry.scripts]
-hhs-downloader = 'covid_19_puerto_rico_downloader:hhs_downloader'
+hhs-download = 'covid_19_puerto_rico_downloader:hhs_download'
+covid19datos-download = 'covid_19_puerto_rico_downloader:covid19datos'
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -15,6 +16,7 @@ boto3 = "^1.17.22"
 csv2parquet = "^0.0.9"
 pyarrow = "^3.0.0"
 sodapy = "^2.1.0"
+pytz = "^2021.1"
 
 [tool.poetry.dev-dependencies]
 

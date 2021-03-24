@@ -33,11 +33,8 @@ RUN mkdir -p \
     s3-bucket-sync/covid-19-puerto-rico-data \
     scripts \
     tmp
-COPY \
-    scripts/hhs-download-and-sync.sh \
-    scripts/hhs-s3-sync.sh \
-    ./scripts/
+COPY scripts/*.sh ./scripts/
 RUN chmod +x ./scripts/*.sh
 
 ENV PATH=/root/.local/bin:/covid-19-puerto-rico/scripts:$PATH
-ENTRYPOINT ["hhs-download-and-sync.sh"]
+ENTRYPOINT ["run-and-sync.sh"]
