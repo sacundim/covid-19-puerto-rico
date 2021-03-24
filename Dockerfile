@@ -27,6 +27,13 @@ COPY --from=requirements /covid-19-puerto-rico/requirements.txt ./
 RUN pip install -r requirements.txt \
  && rm requirements.txt
 COPY --from=build /covid-19-puerto-rico/dist/covid_19_puerto_rico_downloader-*.whl .
+
+# `covid19datos.salud.gov.pr` has a sketchy SSL certificate,
+# so we install the intermediate cert that it needs:
+COPY certs/*.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+ENV REQUESTS_CA_BUNDLE="/etc/ssl/certs/ca-certificates.crt"
+
 RUN pip install covid_19_puerto_rico_downloader-*.whl \
  && rm covid_19_puerto_rico_downloader-*.whl
 RUN mkdir -p \
