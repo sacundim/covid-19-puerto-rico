@@ -13,5 +13,5 @@ S3_SYNC_DIR="${REPO_ROOT}/s3-bucket-sync/covid-19-puerto-rico-data"
 
 
 echo "$(date): Syncing ${S3_SYNC_DIR} to ${S3_DATA_URL}"
-time aws s3 sync --quiet $* --exclude '*.DS_Store' \
+time aws s3 sync --no-progress $* --exclude '*.DS_Store' \
   "${S3_SYNC_DIR}" "${S3_DATA_URL}"
