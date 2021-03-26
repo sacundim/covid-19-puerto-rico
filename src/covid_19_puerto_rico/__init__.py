@@ -46,6 +46,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        molecular.AgeGroups(athena, args.output_dir, output_formats),
         molecular.NaivePositiveRate(athena, args.output_dir, output_formats),
 
         # We always generate png for this because they're our Twitter cards
@@ -62,7 +63,6 @@ def main():
         molecular.MolecularCurrentDeltas(athena, args.output_dir, output_formats),
         molecular.MolecularDailyDeltas(athena, args.output_dir, output_formats),
         charts.LatenessTiers(postgres, args.output_dir, output_formats),
-        charts.AgeGroups(postgres, args.output_dir, output_formats),
         charts.BulletinChartMismatch(postgres, args.output_dir, output_formats),
         charts.ConsecutiveBulletinMismatch(postgres, args.output_dir, output_formats),
         charts.MunicipalMap(postgres, args.output_dir, output_formats),

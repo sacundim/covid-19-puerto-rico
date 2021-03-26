@@ -756,3 +756,55 @@ class Hospitalizations(AbstractMolecularChart):
         ).properties(
             width=575, height=350
         )
+
+
+class AgeGroups(AbstractMolecularChart):
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('cases_by_age', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.collected_date,
+            table.c.youngest,
+            table.c.cases,
+            table.c.cases_1m
+        ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
+                      table.c.bulletin_date <= max(bulletin_dates)))
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df, bulletin_date):
+        WIDTH = 600
+        return alt.Chart(df).transform_window(
+            groupby=['youngest', 'bulletin_date'],
+            sort=[{'field': 'collected_date'}],
+            frame=[-6, 0],
+            mean_cases='mean(cases)',
+            mean_cases_1m='mean(cases_1m)'
+        ).transform_calculate(
+            oldest='if(datum.youngest < 85, datum.youngest + 4, null)',
+            edades="if(datum.oldest == null, '≤ ' + datum.youngest, datum.youngest + ' a ' + datum.oldest)"
+        ).mark_rect().encode(
+            x=alt.X('collected_date:T', timeUnit='yearmonthdate', title='Fecha de muestra',
+                    axis=alt.Axis(
+                        labelExpr="[timeFormat(datum.value, '%b'),"
+                                  " timeFormat(datum.value, '%m') == '01'"
+                                    " ? timeFormat(datum.value, '%Y')"
+                                    " : '']")),
+            y=alt.Y('youngest:O', title='Edad',
+                    axis=alt.Axis(labelBaseline='line-bottom', tickBand='extent')),
+            color=alt.Color('mean_cases_1m:Q', title='Casos diarios por millón',
+                            scale=alt.Scale(scheme='lightmulti', type='sqrt'),
+                            legend=alt.Legend(orient='top', gradientLength=WIDTH)),
+            tooltip=[
+                alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                alt.Tooltip('collected_date:T', title='Fecha de muestra'),
+                alt.Tooltip('edades:N', title='Edad'),
+                alt.Tooltip('mean_cases:Q', format='.1f', title='Casos diarios (7 días)'),
+                alt.Tooltip('mean_cases_1m:Q', format='.1f', title='Casos (7 días, por millón)')
+            ]
+        ).properties(
+            width=WIDTH, height=350
+        )

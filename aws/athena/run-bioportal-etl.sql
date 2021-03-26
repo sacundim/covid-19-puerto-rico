@@ -76,7 +76,7 @@ FROM cleaned;
 --
 -- HHS hospitals data set
 --
-DROP TABLE covid_pr_etl.hhs_hospitals;
+DROP TABLE IF EXISTS covid_pr_etl.hhs_hospitals;
 CREATE TABLE covid_pr_etl.hhs_hospitals WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['date'],
@@ -502,6 +502,46 @@ SELECT
 FROM covid_pr_etl.bioportal_encounters_agg
 ORDER BY bulletin_date DESC, collected_date DESC;
 
+
+--
+-- Cases by age group, both as raw numbers and by million population.
+-- And when I say million population, I mean using Census Bureau
+-- estimate of the population size for that age group.
+--
+-- This would normally be a view, but it's just very slightly
+-- costly and we rerun this often...
+--
+CREATE TABLE covid_pr_etl.cases_by_age WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
+SELECT
+	bulletin_date,
+	collected_date,
+	acs.age_range,
+	acs.youngest,
+	acs.oldest,
+	sum(cases) AS cases,
+	1e6 * sum(cases) / acs.population
+		AS cases_1m
+FROM covid_pr_etl.bioportal_encounters_cube bio
+INNER JOIN covid_pr_sources.bioportal_to_acs_age_ranges reln
+	ON reln.bioportal_age_range = bio.age_range
+INNER JOIN covid_pr_sources.acs_2019_1y_age_ranges acs
+	ON acs.youngest = reln.acs_youngest
+WHERE collected_date >= DATE '2020-03-13'
+GROUP BY
+	bulletin_date,
+	collected_date,
+	acs.age_range,
+	acs.youngest,
+	acs.oldest,
+	acs.population
+ORDER BY
+	bulletin_date DESC,
+	collected_date DESC,
+	acs.youngest;
 
 
 ----------------------------------------------------------
@@ -932,36 +972,3 @@ INNER JOIN cutoff
 	-- Older HHS data is kinda messed up
 	ON date >= cutoff
 ORDER BY date DESC;
-
-
---
--- Cases by age group, both as raw numbers and by million population.
--- And when I say million population, I mean using Census Bureau
--- estimate of the population size for that age group.
---
-CREATE OR REPLACE VIEW covid_pr_etl.cases_by_age AS
-SELECT
-	bulletin_date,
-	collected_date,
-	acs.age_range,
-	acs.youngest,
-	acs.oldest,
-	sum(cases) AS cases,
-	1e6 * sum(cases) / acs.population
-		AS cases_1m
-FROM covid_pr_etl.bioportal_encounters_cube bio
-INNER JOIN covid_pr_sources.bioportal_to_acs_age_ranges reln
-	ON reln.bioportal_age_range = bio.age_range
-INNER JOIN covid_pr_sources.acs_2019_1y_age_ranges acs
-	ON acs.youngest = reln.acs_youngest
-GROUP BY
-	bulletin_date,
-	collected_date,
-	acs.age_range,
-	acs.youngest,
-	acs.oldest,
-	acs.population
-ORDER BY
-	bulletin_date DESC,
-	collected_date DESC,
-	acs.youngest;
