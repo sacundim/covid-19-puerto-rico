@@ -74,20 +74,9 @@ LOCATION 's3://covid-19-puerto-rico-data/bioportal/minimal-info/parquet_v1/';
 CREATE EXTERNAL TABLE covid_pr_sources.acs_2019_1y_age_ranges_csv (
 	age_range STRING,
 	population STRING,
-	youngest STRING,
-	oldest STRING
+	youngest STRING
 )  ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
 LOCATION 's3://covid-19-puerto-rico-data/Census/acs_2019_1y_age_ranges/'
-TBLPROPERTIES (
-    "skip.header.line.count"="1"
-);
-
-CREATE EXTERNAL TABLE covid_pr_sources.bioportal_to_acs_age_ranges_csv (
-	bioportal_age_range STRING,
-	acs_age_range STRING,
-	acs_youngest STRING
-)  ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-LOCATION 's3://covid-19-puerto-rico-data/Census/bioportal_to_acs_age_ranges/'
 TBLPROPERTIES (
     "skip.header.line.count"="1"
 );
@@ -95,14 +84,42 @@ TBLPROPERTIES (
 CREATE VIEW covid_pr_sources.acs_2019_1y_age_ranges AS
 SELECT
 	age_range,
-	CAST(NULLIF(population, '') AS INTEGER) AS population,
-	CAST(NULLIF(youngest, '') AS INTEGER) AS youngest,
-	CAST(NULLIF(oldest, '') AS INTEGER) AS oldest
+	CAST(population AS INTEGER) AS population,
+	CAST(youngest AS INTEGER) AS youngest
 FROM covid_pr_sources.acs_2019_1y_age_ranges_csv;
 
-CREATE VIEW covid_pr_sources.bioportal_to_acs_age_ranges AS
+
+CREATE EXTERNAL TABLE covid_pr_sources.bioportal_age_ranges_csv (
+	bioportal_age_range STRING,
+	bioportal_youngest STRING
+)  ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+LOCATION 's3://covid-19-puerto-rico-data/Census/bioportal_age_ranges/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
+CREATE VIEW covid_pr_sources.bioportal_age_ranges AS
 SELECT
-	acs_age_range,
 	bioportal_age_range,
-	CAST(NULLIF(acs_youngest, '') AS INTEGER) AS acs_youngest
-FROM covid_pr_sources.bioportal_to_acs_age_ranges_csv;
+	CAST(bioportal_youngest AS INTEGER) AS bioportal_youngest
+FROM covid_pr_sources.bioportal_age_ranges_csv;
+
+
+CREATE EXTERNAL TABLE covid_pr_sources.age_range_reln_csv (
+	bioportal_youngest STRING,
+	acs_youngest STRING,
+	prdoh_youngest STRING,
+	four_band_youngest STRING
+)  ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+LOCATION 's3://covid-19-puerto-rico-data/Census/age_range_reln/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
+CREATE VIEW covid_pr_sources.age_range_reln AS
+SELECT
+	CAST(bioportal_youngest AS INTEGER) AS bioportal_youngest,
+	CAST(acs_youngest AS INTEGER) AS acs_youngest,
+	CAST(prdoh_youngest AS INTEGER) AS prdoh_youngest,
+	CAST(four_band_youngest AS INTEGER) AS four_band_youngest
+FROM covid_pr_sources.age_range_reln_csv;

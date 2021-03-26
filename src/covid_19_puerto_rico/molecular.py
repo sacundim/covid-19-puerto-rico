@@ -760,7 +760,7 @@ class Hospitalizations(AbstractMolecularChart):
 
 class AgeGroups(AbstractMolecularChart):
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('cases_by_age', self.metadata,
+        table = sqlalchemy.Table('cases_by_age_10y', self.metadata,
                                  schema='covid_pr_etl', autoload=True)
         query = select([
             table.c.bulletin_date,
@@ -784,7 +784,7 @@ class AgeGroups(AbstractMolecularChart):
             mean_cases='mean(cases)',
             mean_cases_1m='mean(cases_1m)'
         ).transform_calculate(
-            oldest='if(datum.youngest < 85, datum.youngest + 4, null)',
+            oldest='if(datum.youngest < 80, datum.youngest + 9, null)',
             edades="if(datum.oldest == null, '≤ ' + datum.youngest, datum.youngest + ' a ' + datum.oldest)"
         ).mark_rect().encode(
             x=alt.X('collected_date:T', timeUnit='yearmonthdate', title='Fecha de muestra',
@@ -806,5 +806,5 @@ class AgeGroups(AbstractMolecularChart):
                 alt.Tooltip('mean_cases_1m:Q', format='.1f', title='Casos (7 días, por millón)')
             ]
         ).properties(
-            width=WIDTH, height=350
+            width=WIDTH, height=175
         )
