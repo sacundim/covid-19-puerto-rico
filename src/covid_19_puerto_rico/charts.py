@@ -774,7 +774,7 @@ class ICUsByRegion(AbstractChart):
 
 class AgeGroups(AbstractChart):
     ORDER = ['< 10', '10-19', '20-29', '30-39', '40-49',
-             '50-59', '60-69', '70-79', '≥ 80','No disponible']
+             '50-59', '60-69', '70-79', '≥ 80']
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('age_groups_agg', self.metadata, autoload=True)
@@ -815,10 +815,15 @@ class AgeGroups(AbstractChart):
                 alt.expr.isNumber(alt.datum.total2019),
                 (alt.datum.smoothed_daily_cases * 1_000_000) / alt.datum.total2019,
                 None)
-        ).mark_area().encode(
-            x=alt.X('bulletin_date:T', title='Fecha de boletín'),
-            y=alt.Y('smoothed_daily_cases_1m:Q', title=None),
-            color=alt.Color('age_range:N', title='Edad', sort=self.ORDER, legend=None),
+        ).mark_rect().encode(
+            x=alt.X('bulletin_date:T', timeUnit='yearmonthdate', title='Fecha de boletín',
+                    axis=alt.Axis(format='%-d/%-m')),
+            y=alt.Y('age_range:N', title='Edad', sort=self.ORDER,
+                    axis=alt.Axis(labelOverlap=True, tickBand='extent')),
+            color=alt.Color('smoothed_daily_cases_1m:Q',
+                            scale=alt.Scale(scheme='lightmulti'),
+                            legend=alt.Legend(orient='top'),
+                            title='Casos por millón'),
             tooltip=[
                 alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                 alt.Tooltip('age_range:N', title='Edad'),
@@ -828,11 +833,7 @@ class AgeGroups(AbstractChart):
                             title='Casos (7 días, por millón)')
             ]
         ).properties(
-            width=300, height=75
-        ).facet(
-            columns=2,
-            facet=alt.Facet('age_range:N', sort=self.ORDER,
-                            title='Casos nuevos por edad (por millón de habitantes, promedio 7 días)')
+            width=580, height=125
         )
 
 class LatenessTiers(AbstractChart):
