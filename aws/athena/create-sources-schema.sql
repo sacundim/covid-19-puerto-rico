@@ -63,3 +63,46 @@ CREATE EXTERNAL TABLE covid_pr_sources.minimal_info_parquet_v1 (
     createdAt STRING
 ) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/bioportal/minimal-info/parquet_v1/';
+
+
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+--
+-- Tables and views to join Bioportal age_range data to Census Bureau population
+--
+
+CREATE EXTERNAL TABLE covid_pr_sources.acs_2019_1y_age_ranges_csv (
+	age_range STRING,
+	population STRING,
+	youngest STRING,
+	oldest STRING
+)  ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+LOCATION 's3://covid-19-puerto-rico-data/Census/acs_2019_1y_age_ranges/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
+CREATE EXTERNAL TABLE covid_pr_sources.bioportal_to_acs_age_ranges_csv (
+	bioportal_age_range STRING,
+	acs_age_range STRING,
+	acs_youngest STRING
+)  ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+LOCATION 's3://covid-19-puerto-rico-data/Census/bioportal_to_acs_age_ranges/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
+CREATE VIEW covid_pr_sources.acs_2019_1y_age_ranges AS
+SELECT
+	age_range,
+	CAST(NULLIF(population, '') AS INTEGER) AS population,
+	CAST(NULLIF(youngest, '') AS INTEGER) AS youngest,
+	CAST(NULLIF(oldest, '') AS INTEGER) AS oldest
+FROM covid_pr_sources.acs_2019_1y_age_ranges_csv;
+
+CREATE VIEW covid_pr_sources.bioportal_to_acs_age_ranges AS
+SELECT
+	acs_age_range,
+	bioportal_age_range,
+	CAST(NULLIF(acs_youngest, '') AS INTEGER) AS acs_youngest
+FROM covid_pr_sources.bioportal_to_acs_age_ranges_csv;

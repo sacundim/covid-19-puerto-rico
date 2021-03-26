@@ -223,6 +223,8 @@ SELECT
 	cur.downloaded_date,
 	cur.collected_date,
 	cur.patient_id,
+	max_by(cur.age_range, cur.received_date) AS age_range,
+	max_by(cur.region, cur.received_date) AS region,
 	min(cur.received_date) AS min_received_date,
 	max(cur.received_date) AS max_received_date,
 	-- True if and only if at least one specimen for that
@@ -279,9 +281,10 @@ GROUP BY
 
 
 --
--- An aggregates table built off `bioportal_encounters`
+-- Aggregates tables built off `bioportal_encounters`
 --
-CREATE TABLE covid_pr_etl.bioportal_encounters_agg WITH (
+
+CREATE TABLE covid_pr_etl.bioportal_encounters_cube WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
@@ -303,6 +306,7 @@ WITH downloads AS (
     SELECT
         bulletins.bulletin_date,
         tests.collected_date,
+        tests.age_range,
         count(*) AS encounters,
         -- A case is a test encounter that had a positive test and
         -- is not a followup to an earlier positive encounter.
@@ -360,48 +364,109 @@ WITH downloads AS (
         AND tests.min_received_date <= bulletins.bulletin_date
     GROUP BY
         bulletins.bulletin_date,
-        tests.collected_date
+        tests.collected_date,
+        tests.age_range
 )
 SELECT
     *,
     sum(encounters) OVER (
-        PARTITION BY bulletin_date
+        PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
     ) AS cumulative_encounters,
     sum(cases) OVER (
-        PARTITION BY bulletin_date
+        PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
     ) AS cumulative_cases,
     sum(rejections) OVER (
-        PARTITION BY bulletin_date
+        PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
     ) AS cumulative_rejections,
     sum(antigens) OVER (
-        PARTITION BY bulletin_date
+        PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
     ) AS cumulative_antigens,
     sum(molecular) OVER (
-        PARTITION BY bulletin_date
+        PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
     ) AS cumulative_molecular,
     sum(positive_antigens) OVER (
-        PARTITION BY bulletin_date
+        PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
     ) AS cumulative_positive_antigens,
     sum(positive_molecular) OVER (
-        PARTITION BY bulletin_date
+        PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
     ) AS cumulative_positive_molecular,
     sum(initial_molecular) OVER (
-        PARTITION BY bulletin_date
+        PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
     ) AS cumulative_initial_molecular,
     sum(initial_positive_molecular) OVER (
-        PARTITION BY bulletin_date
+        PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
     ) AS cumulative_initial_positive_molecular
 FROM grouped
 ORDER BY
+	bulletin_date,
+	collected_date,
+	age_range;
+
+
+CREATE TABLE covid_pr_etl.bioportal_encounters_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
+SELECT
+    bulletin_date,
+	collected_date,
+	sum(encounters) encounters,
+	sum(cases) cases,
+	sum(rejections) rejections,
+	sum(antigens) antigens,
+	sum(molecular) molecular,
+	sum(positive_antigens) positive_antigens,
+	sum(positive_molecular) positive_molecular,
+	sum(initial_molecular) initial_molecular,
+	sum(initial_positive_molecular) initial_positive_molecular,
+	sum(sum(encounters)) OVER (
+	    PARTITION BY bulletin_date
+	    ORDER BY collected_date
+	) AS cumulative_encounters,
+	sum(sum(cases)) OVER (
+	    PARTITION BY bulletin_date
+	    ORDER BY collected_date
+	) AS cumulative_cases,
+	sum(sum(rejections)) OVER (
+	    PARTITION BY bulletin_date
+	    ORDER BY collected_date
+	) AS cumulative_rejections,
+	sum(sum(antigens)) OVER (
+	    PARTITION BY bulletin_date
+	    ORDER BY collected_date
+	) AS cumulative_antigens,
+	sum(sum(molecular)) OVER (
+	    PARTITION BY bulletin_date
+	    ORDER BY collected_date
+	) AS cumulative_molecular,
+	sum(sum(positive_antigens)) OVER (
+	    PARTITION BY bulletin_date
+	    ORDER BY collected_date
+	) AS cumulative_positive_antigens,
+	sum(sum(positive_molecular)) OVER (
+	    PARTITION BY bulletin_date
+	    ORDER BY collected_date
+	) AS cumulative_positive_molecular,
+	sum(sum(initial_molecular)) OVER (
+	    PARTITION BY bulletin_date
+	    ORDER BY collected_date
+	) AS cumulative_initial_molecular,
+	sum(sum(initial_positive_molecular)) OVER (
+	    PARTITION BY bulletin_date
+	    ORDER BY collected_date
+	) AS cumulative_initial_positive_molecular
+FROM covid_pr_etl.bioportal_encounters_cube
+GROUP BY
 	bulletin_date,
 	collected_date;
 
@@ -867,3 +932,36 @@ INNER JOIN cutoff
 	-- Older HHS data is kinda messed up
 	ON date >= cutoff
 ORDER BY date DESC;
+
+
+--
+-- Cases by age group, both as raw numbers and by million population.
+-- And when I say million population, I mean using Census Bureau
+-- estimate of the population size for that age group.
+--
+CREATE OR REPLACE VIEW covid_pr_etl.cases_by_age AS
+SELECT
+	bulletin_date,
+	collected_date,
+	acs.age_range,
+	acs.youngest,
+	acs.oldest,
+	sum(cases) AS cases,
+	1e6 * sum(cases) / acs.population
+		AS cases_1m
+FROM covid_pr_etl.bioportal_encounters_cube bio
+INNER JOIN covid_pr_sources.bioportal_to_acs_age_ranges reln
+	ON reln.bioportal_age_range = bio.age_range
+INNER JOIN covid_pr_sources.acs_2019_1y_age_ranges acs
+	ON acs.youngest = reln.acs_youngest
+GROUP BY
+	bulletin_date,
+	collected_date,
+	acs.age_range,
+	acs.youngest,
+	acs.oldest,
+	acs.population
+ORDER BY
+	bulletin_date DESC,
+	collected_date DESC,
+	acs.youngest;
