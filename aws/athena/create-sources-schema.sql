@@ -63,3 +63,63 @@ CREATE EXTERNAL TABLE covid_pr_sources.minimal_info_parquet_v1 (
     createdAt STRING
 ) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/bioportal/minimal-info/parquet_v1/';
+
+
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+--
+-- Tables and views to join Bioportal age_range data to Census Bureau population
+--
+
+CREATE EXTERNAL TABLE covid_pr_sources.acs_2019_1y_age_ranges_csv (
+	age_range STRING,
+	population STRING,
+	youngest STRING
+)  ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+LOCATION 's3://covid-19-puerto-rico-data/Census/acs_2019_1y_age_ranges/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
+CREATE VIEW covid_pr_sources.acs_2019_1y_age_ranges AS
+SELECT
+	age_range,
+	CAST(population AS INTEGER) AS population,
+	CAST(youngest AS INTEGER) AS youngest
+FROM covid_pr_sources.acs_2019_1y_age_ranges_csv;
+
+
+CREATE EXTERNAL TABLE covid_pr_sources.bioportal_age_ranges_csv (
+	bioportal_age_range STRING,
+	bioportal_youngest STRING
+)  ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+LOCATION 's3://covid-19-puerto-rico-data/Census/bioportal_age_ranges/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
+CREATE VIEW covid_pr_sources.bioportal_age_ranges AS
+SELECT
+	bioportal_age_range,
+	CAST(bioportal_youngest AS INTEGER) AS bioportal_youngest
+FROM covid_pr_sources.bioportal_age_ranges_csv;
+
+
+CREATE EXTERNAL TABLE covid_pr_sources.age_range_reln_csv (
+	bioportal_youngest STRING,
+	acs_youngest STRING,
+	prdoh_youngest STRING,
+	four_band_youngest STRING
+)  ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+LOCATION 's3://covid-19-puerto-rico-data/Census/age_range_reln/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
+CREATE VIEW covid_pr_sources.age_range_reln AS
+SELECT
+	CAST(bioportal_youngest AS INTEGER) AS bioportal_youngest,
+	CAST(acs_youngest AS INTEGER) AS acs_youngest,
+	CAST(prdoh_youngest AS INTEGER) AS prdoh_youngest,
+	CAST(four_band_youngest AS INTEGER) AS four_band_youngest
+FROM covid_pr_sources.age_range_reln_csv;

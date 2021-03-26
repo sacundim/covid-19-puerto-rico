@@ -26,6 +26,10 @@ cp -p "${BULLETIN_CASES_FROM}" "${BULLETIN_CASES_TMP}"
 echo "$(date): Syncing ${BULLETIN_CASES_FROM} to ${BULLETIN_CASES_TO}"
 aws s3 sync $* "${BULLETIN_CASES_TMP}" "${BULLETIN_CASES_TO}"
 
+echo "$(date): Syncing ${ASSETS_DIR}/data/Census/ to ${S3_DATA_URL}/Census/"
+time aws s3 sync $* --exclude '*.DS_Store' \
+  "${ASSETS_DIR}/data/Census/" "${S3_DATA_URL}/Census/"
+
 echo "$(date): Syncing ${ASSETS_DIR}/data/CovidTracking/ to ${S3_DATA_URL}/CovidTracking/"
 time aws s3 sync $* --exclude '*.DS_Store' \
   "${ASSETS_DIR}/data/CovidTracking/" "${S3_DATA_URL}/CovidTracking/"
