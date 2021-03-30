@@ -1,4 +1,4 @@
-age_range,population,youngest,next
+age_range,population,age_gte,age_lt
 Under 5 years,115403,0,5
 5 to 9 years,153900,5,10
 10 to 14 years,189662,10,15
