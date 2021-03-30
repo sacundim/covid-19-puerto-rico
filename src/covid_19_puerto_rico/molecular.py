@@ -783,6 +783,16 @@ class AgeGroups(AbstractMolecularChart):
             frame=[-6, 0],
             mean_cases='mean(cases)',
             mean_cases_1m='mean(cases_1m)'
+        ).transform_impute(
+            impute='mean_cases_1m',
+            key='collected_date',
+            groupby=['youngest'],
+            value=0
+        ).transform_impute(
+            impute='mean_cases',
+            key='collected_date',
+            groupby=['youngest'],
+            value=0
         ).transform_calculate(
             oldest='if(datum.youngest < 80, datum.youngest + 9, null)',
             edades="if(datum.oldest == null, '≤ ' + datum.youngest, datum.youngest + ' a ' + datum.oldest)"
@@ -796,7 +806,7 @@ class AgeGroups(AbstractMolecularChart):
             y=alt.Y('youngest:O', title='Edad',
                     axis=alt.Axis(labelBaseline='line-bottom', tickBand='extent')),
             color=alt.Color('mean_cases_1m:Q', title='Casos diarios por millón',
-                            scale=alt.Scale(scheme='lightmulti', type='sqrt'),
+                            scale=alt.Scale(scheme='turbo', type='sqrt'),
                             legend=alt.Legend(orient='top', gradientLength=WIDTH)),
             tooltip=[
                 alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
