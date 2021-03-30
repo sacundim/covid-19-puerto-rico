@@ -816,5 +816,5 @@ class AgeGroups(AbstractMolecularChart):
                 alt.Tooltip('mean_cases_1m:Q', format='.1f', title='Casos (7 días, por millón)')
             ]
         ).properties(
-            width=WIDTH, height=350
+            width=WIDTH, height=175
         )
