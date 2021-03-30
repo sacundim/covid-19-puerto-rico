@@ -74,7 +74,8 @@ LOCATION 's3://covid-19-puerto-rico-data/bioportal/minimal-info/parquet_v1/';
 CREATE EXTERNAL TABLE covid_pr_sources.acs_2019_1y_age_ranges_csv (
 	age_range STRING,
 	population STRING,
-	youngest STRING
+	youngest STRING,
+	next STRING
 )  ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
 LOCATION 's3://covid-19-puerto-rico-data/Census/acs_2019_1y_age_ranges/'
 TBLPROPERTIES (
@@ -85,13 +86,15 @@ CREATE VIEW covid_pr_sources.acs_2019_1y_age_ranges AS
 SELECT
 	age_range,
 	CAST(population AS INTEGER) AS population,
-	CAST(youngest AS INTEGER) AS youngest
+	CAST(youngest AS INTEGER) AS youngest,
+	CAST(nullif(next, '') AS INTEGER) AS next
 FROM covid_pr_sources.acs_2019_1y_age_ranges_csv;
 
 
 CREATE EXTERNAL TABLE covid_pr_sources.bioportal_age_ranges_csv (
-	bioportal_age_range STRING,
-	bioportal_youngest STRING
+	age_range STRING,
+	youngest STRING,
+	next STRING
 )  ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
 LOCATION 's3://covid-19-puerto-rico-data/Census/bioportal_age_ranges/'
 TBLPROPERTIES (
@@ -100,8 +103,9 @@ TBLPROPERTIES (
 
 CREATE VIEW covid_pr_sources.bioportal_age_ranges AS
 SELECT
-	bioportal_age_range,
-	CAST(bioportal_youngest AS INTEGER) AS bioportal_youngest
+	age_range,
+	CAST(youngest AS INTEGER) AS youngest,
+	CAST(nullif(next, '') AS INTEGER) AS next
 FROM covid_pr_sources.bioportal_age_ranges_csv;
 
 
@@ -123,3 +127,21 @@ SELECT
 	CAST(prdoh_youngest AS INTEGER) AS prdoh_youngest,
 	CAST(four_band_youngest AS INTEGER) AS four_band_youngest
 FROM covid_pr_sources.age_range_reln_csv;
+
+
+CREATE EXTERNAL TABLE covid_pr_sources.prdoh_age_ranges_csv (
+	age_range STRING,
+	youngest STRING,
+	next STRING
+)  ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+LOCATION 's3://covid-19-puerto-rico-data/Census/prdoh_age_ranges/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
+CREATE VIEW covid_pr_sources.prdoh_age_ranges AS
+SELECT
+    age_range,
+	CAST(youngest AS INTEGER) AS youngest,
+	CAST(nullif(next, '') AS INTEGER) AS next
+FROM covid_pr_sources.prdoh_age_ranges_csv;

@@ -943,93 +943,68 @@ CREATE OR REPLACE VIEW covid_pr_etl.cases_by_age_5y AS
 SELECT
 	bulletin_date,
 	collected_date,
-	reln.acs_youngest AS youngest,
-	lead(reln.acs_youngest) OVER (
-		PARTITION BY bulletin_date, collected_date
-		ORDER BY reln.acs_youngest
-	) - 1 AS oldest,
+	age_dim.youngest,
+	age_dim.next - 1 AS oldest,
+	age_dim.population,
 	sum(cases) AS cases,
-	1e6 * sum(cases) / acs.population
+	1e6 * sum(cases) / age_dim.population
 		AS cases_1m
 FROM covid_pr_etl.bioportal_encounters_cube encounters
 INNER JOIN covid_pr_sources.bioportal_age_ranges bio
-	ON bio.bioportal_age_range = encounters.age_range
-INNER JOIN covid_pr_sources.age_range_reln reln
-	USING (bioportal_youngest)
-INNER JOIN covid_pr_sources.acs_2019_1y_age_ranges acs
-	ON acs.youngest = reln.acs_youngest
+	ON bio.age_range = encounters.age_range
+INNER JOIN covid_pr_sources.acs_2019_1y_age_ranges age_dim
+	ON age_dim.youngest <= bio.youngest
+	AND bio.youngest < COALESCE(age_dim.next, 9999)
 WHERE collected_date >= DATE '2020-03-13'
 GROUP BY
 	bulletin_date,
 	collected_date,
-	reln.acs_youngest,
-	acs.population
+	age_dim.youngest,
+	age_dim.next,
+	age_dim.population
 ORDER BY
 	bulletin_date DESC,
 	collected_date DESC,
-	reln.acs_youngest;
+	age_dim.youngest;
 
 --
 -- Version with 10-year age bands instead of 5-year:
 --
 CREATE OR REPLACE VIEW covid_pr_etl.cases_by_age_10y AS
+WITH age_dim AS (
+	SELECT
+		prdoh.youngest,
+		prdoh.next,
+		sum(acs.population) population
+	FROM covid_pr_sources.prdoh_age_ranges prdoh
+	INNER JOIN covid_pr_sources.acs_2019_1y_age_ranges acs
+		ON prdoh.youngest <= acs.youngest
+		AND acs.youngest < COALESCE(prdoh.next, 9999)
+	GROUP BY prdoh.youngest, prdoh.next
+)
 SELECT
 	bulletin_date,
 	collected_date,
-	reln.prdoh_youngest AS youngest,
-	lead(reln.prdoh_youngest) OVER (
-		PARTITION BY bulletin_date, collected_date
-		ORDER BY reln.prdoh_youngest
-	) - 1 AS oldest,
+	age_dim.youngest,
+	age_dim.next - 1 AS oldest,
+	age_dim.population,
 	sum(cases) AS cases,
-	1e6 * sum(cases) / acs.population
+	1e6 * sum(cases) / age_dim.population
 		AS cases_1m
 FROM covid_pr_etl.bioportal_encounters_cube encounters
 INNER JOIN covid_pr_sources.bioportal_age_ranges bio
-	ON bio.bioportal_age_range = encounters.age_range
-INNER JOIN covid_pr_sources.age_range_reln reln
-	USING (bioportal_youngest)
-INNER JOIN covid_pr_sources.acs_2019_1y_age_ranges acs
-	ON acs.youngest = reln.acs_youngest
+	ON bio.age_range = encounters.age_range
+INNER JOIN age_dim
+	ON age_dim.youngest <= bio.youngest
+	AND bio.youngest < COALESCE(age_dim.next, 9999)
 WHERE collected_date >= DATE '2020-03-13'
 GROUP BY
 	bulletin_date,
 	collected_date,
-	reln.prdoh_youngest,
-	acs.population
+	age_dim.youngest,
+	age_dim.next,
+	age_dim.population
 ORDER BY
 	bulletin_date DESC,
 	collected_date DESC,
-	reln.prdoh_youngest;
-
---
--- A 4-band version (0-19, 20-39, 40-59 and ≤ 60):
---
-CREATE OR REPLACE VIEW covid_pr_etl.cases_by_age_4band AS
-SELECT
-	bulletin_date,
-	collected_date,
-	reln.four_band_youngest AS youngest,
-	lead(reln.four_band_youngest) OVER (
-		PARTITION BY bulletin_date, collected_date
-		ORDER BY reln.four_band_youngest
-	) - 1 AS oldest,
-	sum(cases) AS cases,
-	1e6 * sum(cases) / sum(acs.population)
-		AS cases_1m
-FROM covid_pr_etl.bioportal_encounters_cube encounters
-INNER JOIN covid_pr_sources.bioportal_age_ranges bio
-	ON bio.bioportal_age_range = encounters.age_range
-INNER JOIN covid_pr_sources.age_range_reln reln
-	USING (bioportal_youngest)
-INNER JOIN covid_pr_sources.acs_2019_1y_age_ranges acs
-	ON acs.youngest = reln.acs_youngest
-WHERE collected_date >= DATE '2020-03-13'
-GROUP BY
-	bulletin_date,
-	collected_date,
-	reln.four_band_youngest
-ORDER BY
-	bulletin_date DESC,
-	collected_date DESC,
-	reln.four_band_youngest;
+	age_dim.youngest;
