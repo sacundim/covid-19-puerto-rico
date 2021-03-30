@@ -806,7 +806,7 @@ class AgeGroups(AbstractMolecularChart):
             y=alt.Y('youngest:O', title='Edad',
                     axis=alt.Axis(labelBaseline='line-bottom', tickBand='extent')),
             color=alt.Color('mean_cases_1m:Q', title='Casos diarios por millón',
-                            scale=alt.Scale(scheme='turbo', type='sqrt'),
+                            sort='descending', scale=alt.Scale(scheme='spectral', type='sqrt'),
                             legend=alt.Legend(orient='top', gradientLength=WIDTH)),
             tooltip=[
                 alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
