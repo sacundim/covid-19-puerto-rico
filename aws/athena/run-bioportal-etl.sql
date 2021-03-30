@@ -1008,3 +1008,44 @@ ORDER BY
 	bulletin_date DESC,
 	collected_date DESC,
 	age_dim.youngest;
+
+CREATE OR REPLACE VIEW covid_pr_etl.cases_by_age_four_band AS
+WITH age_dim AS (
+	SELECT
+		four_band.youngest,
+		four_band.next,
+		sum(acs.population) population
+	FROM covid_pr_sources.acs_2019_1y_age_ranges acs
+	INNER JOIN (
+		VALUES (0, 20), (20, 40), (40, 60), (60, null)
+	) AS four_band (youngest, next)
+		ON four_band.youngest <= acs.youngest
+		AND acs.youngest < COALESCE(four_band.next, 9999)
+	GROUP BY four_band.youngest, four_band.next
+)
+SELECT
+	bulletin_date,
+	collected_date,
+	age_dim.youngest,
+	age_dim.next - 1 AS oldest,
+	age_dim.population,
+	sum(cases) AS cases,
+	1e6 * sum(cases) / age_dim.population
+		AS cases_1m
+FROM covid_pr_etl.bioportal_encounters_cube encounters
+INNER JOIN covid_pr_sources.bioportal_age_ranges bio
+	ON bio.age_range = encounters.age_range
+INNER JOIN age_dim
+	ON age_dim.youngest <= bio.youngest
+	AND bio.youngest < COALESCE(age_dim.next, 9999)
+WHERE collected_date >= DATE '2020-03-13'
+GROUP BY
+	bulletin_date,
+	collected_date,
+	age_dim.youngest,
+	age_dim.next,
+	age_dim.population
+ORDER BY
+	bulletin_date DESC,
+	collected_date DESC,
+	age_dim.youngest;
