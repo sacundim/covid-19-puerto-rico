@@ -949,7 +949,7 @@ SELECT
 		ORDER BY reln.acs_youngest
 	) - 1 AS oldest,
 	sum(cases) AS cases,
-	1e6 * sum(cases) / sum(acs.population)
+	1e6 * sum(cases) / acs.population
 		AS cases_1m
 FROM covid_pr_etl.bioportal_encounters_cube encounters
 INNER JOIN covid_pr_sources.bioportal_age_ranges bio
@@ -962,7 +962,8 @@ WHERE collected_date >= DATE '2020-03-13'
 GROUP BY
 	bulletin_date,
 	collected_date,
-	reln.acs_youngest
+	reln.acs_youngest,
+	acs.population
 ORDER BY
 	bulletin_date DESC,
 	collected_date DESC,
@@ -981,7 +982,7 @@ SELECT
 		ORDER BY reln.prdoh_youngest
 	) - 1 AS oldest,
 	sum(cases) AS cases,
-	1e6 * sum(cases) / sum(acs.population)
+	1e6 * sum(cases) / acs.population
 		AS cases_1m
 FROM covid_pr_etl.bioportal_encounters_cube encounters
 INNER JOIN covid_pr_sources.bioportal_age_ranges bio
@@ -994,7 +995,8 @@ WHERE collected_date >= DATE '2020-03-13'
 GROUP BY
 	bulletin_date,
 	collected_date,
-	reln.prdoh_youngest
+	reln.prdoh_youngest,
+	acs.population
 ORDER BY
 	bulletin_date DESC,
 	collected_date DESC,
