@@ -30,25 +30,25 @@
         <li><a href="#RecentCases_section">Pruebas, casos y muertes recientes</a></li>
         <li><a href="#NewCases_section">Curva de casos nuevos (Bioportal)</a></li>
         <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
+        <li><a href="#AgeGroups_section">Casos por edad (per cápita)</a></li>
+        <li><a href="#NewTestSpecimens_section">Especímenes de prueba diarios</a></li>
+        <li><a href="#NaivePositiveRate_section">Tasa de especímenes positivos</a></li>
+        <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados</a></li>
+        <li><a href="#CaseFatalityRate_section">Tasa de letalidad (CFR) rezagada</a></li>
+        <li><a href="#MolecularCurrentDeltas_section">Pruebas añadidas a Bioportal</a></li>
+        <li><a href="#MolecularDailyDeltas_section">Historial de pruebas en Bioportal</a></li>
+        <li><a href="#MolecularLatenessTiers_section">Rezagos de resultados de pruebas moleculares</a></li>
+        <li><a href="#ICUsByRegion_section">Historial de cuidado intensivo, regiones</a></li>
+        <li><a href="#ICUsByHospital_section">Historial de cuidado intensivo, hospitales individuales</a></li>
+
         <li><a href="#CurrentDeltas_section">Cambio entre boletín actual y anterior</a></li>
         <li><a href="#DailyDeltas_section">Cambios entre boletines recientes</a></li>
         <li><a href="#LatenessDaily_section">Rezago de datos de cada boletín</a></li>
         <li><a href="#Lateness7Day_section">Tendencia de rezago de datos</a></li>
         <li><a href="#LatenessTiers_section">Rezago de casos por renglones</a></li>
-        <li><a href="#NewTestSpecimens_section">Especímenes de prueba diarios</a></li>
-        <li><a href="#NaivePositiveRate_section">Tasa de especímenes positivos</a></li>
-        <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados</a></li>
-        <li><a href="#CaseFatalityRate_section">Tasa de letalidad (CFR) rezagada</a></li>
-        <li><a href="#CumulativeTestsVsCases_section">Pruebas vs. casos (acumulado)</a></li>
-        <li><a href="#MolecularCurrentDeltas_section">Pruebas añadidas a Bioportal</a></li>
-        <li><a href="#MolecularDailyDeltas_section">Historial de pruebas en Bioportal</a></li>
-        <li><a href="#MolecularLatenessTiers_section">Rezagos de resultados de pruebas moleculares</a></li>
         <li><a href="#WeekdayBias_section">Tendencias por día de semana</a></li>
-        <li><a href="#AgeGroups_section">Casos por edad (per cápita, 7 días)</a></li>
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
         <li><a href="#Municipal_section">Historial de casos por municipio (fecha de boletín)</a></li>
-        <li><a href="#ICUsByRegion_section">Historial de cuidado intensivo, regiones</a></li>
-        <li><a href="#ICUsByHospital_section">Historial de cuidado intensivo, hospitales individuales</a></li>
         <li><a href="#ConsecutiveBulletinMismatch_section">Descuadre de encabezado de boletín</a></li>
         <li><a href="#BulletinChartMismatch_section">Descuadre de boletín y gráficas</a></li>
         <li><a href="#Revisions_section">Revisiones</a></li>
@@ -288,140 +288,21 @@
 </div>
 
 
-<div class="section" id="CurrentDeltas_section">
-    <h1>Cambio entre boletín actual y anterior</h1>
+<div class="section" id="AgeGroups_section">
+    <h1>Casos por edad (per cápita)</h1>
 
-    <div id="CurrentDeltas" class="chart"></div>
-    <script type="text/javascript" class="chart">
-      embedChart('CurrentDeltas', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Una gráfica que muestra, para los dos boletines más recientes, los
-        resultados de tomar los números de sus gráficas como esta:</p>
-
-    <figure>
-        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_confirmed.jpg">
-        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
-    </figure>
-
-    <p>...y restarle sus contrapartes del boletín anterior:</p>
-
-    <figure>
-        <img class="figure_chart" src="../source_material/{{ previous_date_month }}/{{ previous_date }}/{{ previous_date }}_confirmed.jpg">
-        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
-    </figure>
-
-    <p>Esto nos da un desglose aproximado, para el nuevo boletín, de a qué fecha se le
-        atribuyeron los casos nuevos que reporta este.</p>
-
-    <p>Hay que notar que frecuentemente se ven fechas que salen números negativos.
-        La información que brinda el Departamento de Salud de Puerto Rico no deja claro
-        qué motiva esto en cada caso; algunas posibilidades podrían ser:</p>
-
-    <ul>
-        <li>Casos probables que luego se recibió resultado confirmatoria (positiva o negativa);</li>
-        <li>Llegada de resultado positivo más antiguo para la misma persona;</li>
-        <li>Corrección de errores clericales en los récords.</li>
-    </ul>
-
-    <p>La existencia de números negativos también complica la interpretación de este
-        modo: las fechas que dan positivos no sabemos si hubo resta de casos.  Una
-        fecha que diga que un boletín la subió por siete casos bien pudiera ser que
-        se registraron 8 casos nuevos y se restó uno.</p>
-</div>
-
-<div class="section" id="DailyDeltas_section">
-    <h1>Cambios entre boletines recientes</h1>
-
-    <div id="DailyDeltas" class="chart"></div>
-    <script type="text/javascript" class="chart">
-      embedChart('DailyDeltas', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>El mismo análisis que la gráfica anterior, pero para los 14 boletines
-        más recientes, cosa que require hacer los númeritos bien chiquititos.</p>
-</div>
-
-
-<div class="section" id="LatenessDaily_section">
-    <h1>Rezago de datos de cada boletín</h1>
-
-    <div id="LatenessDaily" class="chart"></div>
+    <div id="AgeGroups"></div>
     <script type="text/javascript">
-      embedChart('LatenessDaily', bulletin_date);
+      embedChart('AgeGroups', bulletin_date);
     </script>
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Un estimado, para los boletines más recientes, de cuánto tiempo
-        atrás en promedio se tomaron las muestras que añade y las muertes
-        que reporta.</p>
-
-    <p>Este estimado se elabora a partir de los datos arriba de los cambios
-        entre boletines consecutivos. Por el asunto de los números negativos
-        en esos datos, no se puede esperar que estos rezagos estimados
-        sean los valores exactos que calcularíamos si tuvieramos mejor datos.</p>
-</div>
-
-
-<div class="section" id="Lateness7Day_section">
-    <h1>Tendencia de rezago de datos</h1>
-
-    <div id="Lateness7Day" class="chart"></div>
-    <script type="text/javascript">
-      embedChart('Lateness7Day', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Un estimado de rezagos similar al anterior, pero en vez de evaluar
-        los casos de cada boletín aparte, se agrupan en ventanas rodantes
-        de siete días.  O sea, la cifra que se reporta para cada fecha de
-        boletín abarca no solo los casos nuevos reportados en ese boletín,
-        sino también los seis días anteriores.</p>
-
-    <p>El ancho de ventana se fijó en siete días para eliminar los ciclos
-        semanales que son evidentes en los datos de fuente, como se aprecia
-        fácil en esta gráfica del boletín:</p>
-
-    <figure>
-        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_confirmed.jpg">
-        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
-    </figure>
-
-    <p>Las fechas como el 18, 19, 25 y 26 de abril, que reportan bien pocos
-        casos, es que son fines de semana.</p>
-
-    <p>Vale añadir que de los ocho puntos que muestran estas líneas, solo el
-        primero y el último son estadísticamente independientes.  Por ejemplo
-        la cifra más reciente y la anterior son calculadas a partir de ventanas
-        de siete días que coinciden en seis de estos.</p>
-</div>
-
-
-<div class="section" id="LatenessTiers_section">
-    <h1>Rezago de casos por renglones</h1>
-
-    <div id="LatenessTiers" class="chart"></div>
-    <script type="text/javascript">
-      embedChart('LatenessTiers', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Una gráfica de dos paneles que muestra promedios de siete días de casos confirmados
-        nuevos, por fecha de boletín (¡no de muestra!), divididos en renglones de rezago
-        (tiempo entre toma de muestra e incorporación en el conteo).  El panel superior muestra
-        los volúmenes absolutos; el panel inferior es los mismos datos, pero en porcentajes.</p>
-
-    <p>La forma de la curva superior se parece una gráfica de casos nuevos por fecha que se
-        incorporan al conteo, pero <strong>alerta</strong>, no cuenta muchas <em>restas</em> de
-        casos al conteo (porque las restas dañan los estimados de rezagos, hacen que den negativo).
-        Por esto la curva es en realidad más alta que los números verdaderos de casos confirmados.</p>
+    <p>Casos por molecular o antígeno por edad, promedios de 7 días por fecha de muestra,
+        ajustado al estimado poblacional en cada grupo de edades. Los casos son a partir
+        de la curva que calculamos con datos de Bioportal.  Usamos datos del Puerto
+        Rico Community Survey del 2019 del Censo de los Estados Unidos para ajustar a la
+        población de cada edad.</p>
 </div>
 
 
@@ -757,126 +638,6 @@
 </div>
 
 
-<div class="section" id="WeekdayBias_section">
-    <h1>Tendencias por día de semana</h1>
-
-    <div id="WeekdayBias" class="chart"></div>
-    <script type="text/javascript">
-      embedChart('WeekdayBias', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Casos de los 21 boletines anteriores al actual, reportados con no más
-        de 14 días de rezago respecto a cada boletín, agrupados por la
-        combinación de:</p>
-
-    <ul>
-        <li>Día de la semana que se tomó la muestra (o falleció el paciente);</li>
-        <li>Día de la semana del boletín en que se añadió el caso.</li>
-    </ul>
-
-    <p>La intensidad del color de cada cuadro refleja cuántos casos se registraron
-        para esa combinación. Los histogramas marginales muestran los datos agrupados
-        por un sólo eje.</p>
-
-    <p><b>ADVERTENCIAS:</b></p>
-    <ul>
-        <li>Los boletines siempre salen la mañana del día posterior al que cuyos datos
-            reportan.  Así que los datos que esta gráfica atribuye, por ejemplo, a boletín
-            de martes, corresponden a anuncio de miércoles.</li>
-        <li>Esta gráfica no incorpora los datos del boletín actual, porque su
-            intención es contextualizar este respecto a la tendencia de los
-            21 boletines anteriores.</li>
-        <li>El análisis excluye casos reportados con más de 14 días de rezago, por
-            entenderse que estos reflejan eventos irregulares que tienden a confundir
-            verdaderos ciclos semanales.</li>
-        <li>Se excluyen también combinaciones que dan cero o negativo (que sí existen
-            si se consideran todos los datos). Tales combinaciones aparecen en blanco.</li>
-    </ul>
-</div>
-
-
-<div class="section" id="AgeGroups_section">
-    <h1>Casos por edad (per cápita, 7 días)</h1>
-
-    <div id="AgeGroups"></div>
-    <script type="text/javascript">
-      embedChart('AgeGroups', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Casos por molecular o antígeno por edad, promedios de 7 días por fecha de muestra,
-        ajustado al estimado poblacional en cada grupo de edades. Los casos son a partir
-        de la curva que calculamos con datos de Bioportal.  Usamos datos del Puerto
-        Rico Community Survey del 2019 del Censo de los Estados Unidos para ajustar a la
-        población de cada edad.</p>
-</div>
-
-
-<div class="section" id="MunicipalMap_section">
-    <h1>Mapas municipales de casos recientes</h1>
-
-    <div id="MunicipalMap"></div>
-    <script type="text/javascript">
-      embedChart('MunicipalMap', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Casos confirmados y probables nuevos reportados por municipio, visto de cuatro
-        formas:</p>
-
-    <ol>
-        <li>Número de casos nuevos registrados en el boletín más reciente;</li>
-        <li>Número de casos nuevos registrados en los siete boletines más recientes;</li>
-        <li>Crecida del número de casos nuevos registrados en el boletín más reciente,
-            respecto a los casos registrados en los siete anteriores a este;</li>
-        <li>Crecida del número de casos nuevos registrados en los siete boletines más
-            recientes, respecto a los casos registrados en los siete anteriores a estos.</li>
-    </ol>
-
-    <p>La primera ayuda identificar dónde son los casos reportados en el nuevo boletín;
-        las demás a identificar municipios que pudieran haber experimentado brotes
-        recientemente.</p>
-
-    <p>Los tonos rojáceos indican valores positivos, y los grisáceos o negros valores
-        negativos, porque sí, a veces boletines posteriores le restan casos confirmados
-        a municipios. Cuando el denominador de las divisiones sería cero (porque no hay
-        casos recientes en el municipio) se sustituye por uno.</p>
-
-    <p>Nótese que esto es por fecha de boletín, no de muestra, y que por lo tanto
-        esta gráfica nos dice cuándo se detectaron los casos, no cuándo sucedieron.</p>
-</div>
-
-
-<div class="section" id="Municipal_section">
-    <h1>Historial de casos por municipio (fecha de boletín)</h1>
-
-    <p>Historial de números de casos confirmados y probables nuevos para cada municipio en
-        cada una de las 35 fechas más recientes, interpretándose estas como fecha de boletín.
-        Nótese que esto último quiere decir que esta gráfica no nos dice cuándo sucedieron los
-        casos, sino cuándo se añadieron al conteo.</p>
-
-    <p>Esto es una
-        <a href="https://flowingdata.com/2015/07/02/changing-price-of-food-items-and-horizon-graphs/">gráfica
-        de horizonte</a>, que hay que leer un poco al respecto para intepretar. Aquí se ha optado
-        por:</p>
-
-    <ul>
-        <li>Tonos rojos: valores positivos (más intenso, mayor el valor)</li>
-        <li>Tonos grises: valores negativos</li>
-        <li>Bandas de 0-6, 8-12 y 12-18</li>
-    </ul>
-
-    <div id="Municipal"></div>
-    <script type="text/javascript">
-      embedChart('Municipal', bulletin_date);
-    </script>
-</div>
-
-
 <div class="section" id="ICUsByRegion_section">
     <h1>Historial de cuidado intensivo, regiones</h1>
 
@@ -947,6 +708,246 @@
     <div id="ICUsByHospital"></div>
     <script type="text/javascript">
       embedChart('ICUsByHospital', bulletin_date);
+    </script>
+</div>
+
+
+<div class="section" id="CurrentDeltas_section">
+    <h1>Cambio entre boletín actual y anterior</h1>
+
+    <div id="CurrentDeltas" class="chart"></div>
+    <script type="text/javascript" class="chart">
+      embedChart('CurrentDeltas', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Una gráfica que muestra, para los dos boletines más recientes, los
+        resultados de tomar los números de sus gráficas como esta:</p>
+
+    <figure>
+        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_confirmed.jpg">
+        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
+    </figure>
+
+    <p>...y restarle sus contrapartes del boletín anterior:</p>
+
+    <figure>
+        <img class="figure_chart" src="../source_material/{{ previous_date_month }}/{{ previous_date }}/{{ previous_date }}_confirmed.jpg">
+        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
+    </figure>
+
+    <p>Esto nos da un desglose aproximado, para el nuevo boletín, de a qué fecha se le
+        atribuyeron los casos nuevos que reporta este.</p>
+
+    <p>Hay que notar que frecuentemente se ven fechas que salen números negativos.
+        La información que brinda el Departamento de Salud de Puerto Rico no deja claro
+        qué motiva esto en cada caso; algunas posibilidades podrían ser:</p>
+
+    <ul>
+        <li>Casos probables que luego se recibió resultado confirmatoria (positiva o negativa);</li>
+        <li>Llegada de resultado positivo más antiguo para la misma persona;</li>
+        <li>Corrección de errores clericales en los récords.</li>
+    </ul>
+
+    <p>La existencia de números negativos también complica la interpretación de este
+        modo: las fechas que dan positivos no sabemos si hubo resta de casos.  Una
+        fecha que diga que un boletín la subió por siete casos bien pudiera ser que
+        se registraron 8 casos nuevos y se restó uno.</p>
+</div>
+
+
+<div class="section" id="DailyDeltas_section">
+    <h1>Cambios entre boletines recientes</h1>
+
+    <div id="DailyDeltas" class="chart"></div>
+    <script type="text/javascript" class="chart">
+      embedChart('DailyDeltas', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>El mismo análisis que la gráfica anterior, pero para los 14 boletines
+        más recientes, cosa que require hacer los númeritos bien chiquititos.</p>
+</div>
+
+
+<div class="section" id="LatenessDaily_section">
+    <h1>Rezago de datos de cada boletín</h1>
+
+    <div id="LatenessDaily" class="chart"></div>
+    <script type="text/javascript">
+      embedChart('LatenessDaily', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Un estimado, para los boletines más recientes, de cuánto tiempo
+        atrás en promedio se tomaron las muestras que añade y las muertes
+        que reporta.</p>
+
+    <p>Este estimado se elabora a partir de los datos arriba de los cambios
+        entre boletines consecutivos. Por el asunto de los números negativos
+        en esos datos, no se puede esperar que estos rezagos estimados
+        sean los valores exactos que calcularíamos si tuvieramos mejor datos.</p>
+</div>
+
+
+<div class="section" id="Lateness7Day_section">
+    <h1>Tendencia de rezago de datos</h1>
+
+    <div id="Lateness7Day" class="chart"></div>
+    <script type="text/javascript">
+      embedChart('Lateness7Day', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Un estimado de rezagos similar al anterior, pero en vez de evaluar
+        los casos de cada boletín aparte, se agrupan en ventanas rodantes
+        de siete días.  O sea, la cifra que se reporta para cada fecha de
+        boletín abarca no solo los casos nuevos reportados en ese boletín,
+        sino también los seis días anteriores.</p>
+
+    <p>El ancho de ventana se fijó en siete días para eliminar los ciclos
+        semanales que son evidentes en los datos de fuente, como se aprecia
+        fácil en esta gráfica del boletín:</p>
+
+    <figure>
+        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_confirmed.jpg">
+        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
+    </figure>
+
+    <p>Las fechas como el 18, 19, 25 y 26 de abril, que reportan bien pocos
+        casos, es que son fines de semana.</p>
+
+    <p>Vale añadir que de los ocho puntos que muestran estas líneas, solo el
+        primero y el último son estadísticamente independientes.  Por ejemplo
+        la cifra más reciente y la anterior son calculadas a partir de ventanas
+        de siete días que coinciden en seis de estos.</p>
+</div>
+
+
+<div class="section" id="LatenessTiers_section">
+    <h1>Rezago de casos por renglones</h1>
+
+    <div id="LatenessTiers" class="chart"></div>
+    <script type="text/javascript">
+      embedChart('LatenessTiers', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Una gráfica de dos paneles que muestra promedios de siete días de casos confirmados
+        nuevos, por fecha de boletín (¡no de muestra!), divididos en renglones de rezago
+        (tiempo entre toma de muestra e incorporación en el conteo).  El panel superior muestra
+        los volúmenes absolutos; el panel inferior es los mismos datos, pero en porcentajes.</p>
+
+    <p>La forma de la curva superior se parece una gráfica de casos nuevos por fecha que se
+        incorporan al conteo, pero <strong>alerta</strong>, no cuenta muchas <em>restas</em> de
+        casos al conteo (porque las restas dañan los estimados de rezagos, hacen que den negativo).
+        Por esto la curva es en realidad más alta que los números verdaderos de casos confirmados.</p>
+</div>
+
+
+<div class="section" id="WeekdayBias_section">
+    <h1>Tendencias por día de semana</h1>
+
+    <div id="WeekdayBias" class="chart"></div>
+    <script type="text/javascript">
+      embedChart('WeekdayBias', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Casos de los 21 boletines anteriores al actual, reportados con no más
+        de 14 días de rezago respecto a cada boletín, agrupados por la
+        combinación de:</p>
+
+    <ul>
+        <li>Día de la semana que se tomó la muestra (o falleció el paciente);</li>
+        <li>Día de la semana del boletín en que se añadió el caso.</li>
+    </ul>
+
+    <p>La intensidad del color de cada cuadro refleja cuántos casos se registraron
+        para esa combinación. Los histogramas marginales muestran los datos agrupados
+        por un sólo eje.</p>
+
+    <p><b>ADVERTENCIAS:</b></p>
+    <ul>
+        <li>Los boletines siempre salen la mañana del día posterior al que cuyos datos
+            reportan.  Así que los datos que esta gráfica atribuye, por ejemplo, a boletín
+            de martes, corresponden a anuncio de miércoles.</li>
+        <li>Esta gráfica no incorpora los datos del boletín actual, porque su
+            intención es contextualizar este respecto a la tendencia de los
+            21 boletines anteriores.</li>
+        <li>El análisis excluye casos reportados con más de 14 días de rezago, por
+            entenderse que estos reflejan eventos irregulares que tienden a confundir
+            verdaderos ciclos semanales.</li>
+        <li>Se excluyen también combinaciones que dan cero o negativo (que sí existen
+            si se consideran todos los datos). Tales combinaciones aparecen en blanco.</li>
+    </ul>
+</div>
+
+
+<div class="section" id="MunicipalMap_section">
+    <h1>Mapas municipales de casos recientes</h1>
+
+    <div id="MunicipalMap"></div>
+    <script type="text/javascript">
+      embedChart('MunicipalMap', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Casos confirmados y probables nuevos reportados por municipio, visto de cuatro
+        formas:</p>
+
+    <ol>
+        <li>Número de casos nuevos registrados en el boletín más reciente;</li>
+        <li>Número de casos nuevos registrados en los siete boletines más recientes;</li>
+        <li>Crecida del número de casos nuevos registrados en el boletín más reciente,
+            respecto a los casos registrados en los siete anteriores a este;</li>
+        <li>Crecida del número de casos nuevos registrados en los siete boletines más
+            recientes, respecto a los casos registrados en los siete anteriores a estos.</li>
+    </ol>
+
+    <p>La primera ayuda identificar dónde son los casos reportados en el nuevo boletín;
+        las demás a identificar municipios que pudieran haber experimentado brotes
+        recientemente.</p>
+
+    <p>Los tonos rojáceos indican valores positivos, y los grisáceos o negros valores
+        negativos, porque sí, a veces boletines posteriores le restan casos confirmados
+        a municipios. Cuando el denominador de las divisiones sería cero (porque no hay
+        casos recientes en el municipio) se sustituye por uno.</p>
+
+    <p>Nótese que esto es por fecha de boletín, no de muestra, y que por lo tanto
+        esta gráfica nos dice cuándo se detectaron los casos, no cuándo sucedieron.</p>
+</div>
+
+
+<div class="section" id="Municipal_section">
+    <h1>Historial de casos por municipio (fecha de boletín)</h1>
+
+    <p>Historial de números de casos confirmados y probables nuevos para cada municipio en
+        cada una de las 35 fechas más recientes, interpretándose estas como fecha de boletín.
+        Nótese que esto último quiere decir que esta gráfica no nos dice cuándo sucedieron los
+        casos, sino cuándo se añadieron al conteo.</p>
+
+    <p>Esto es una
+        <a href="https://flowingdata.com/2015/07/02/changing-price-of-food-items-and-horizon-graphs/">gráfica
+        de horizonte</a>, que hay que leer un poco al respecto para intepretar. Aquí se ha optado
+        por:</p>
+
+    <ul>
+        <li>Tonos rojos: valores positivos (más intenso, mayor el valor)</li>
+        <li>Tonos grises: valores negativos</li>
+        <li>Bandas de 0-6, 8-12 y 12-18</li>
+    </ul>
+
+    <div id="Municipal"></div>
+    <script type="text/javascript">
+      embedChart('Municipal', bulletin_date);
     </script>
 </div>
 
