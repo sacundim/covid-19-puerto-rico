@@ -981,7 +981,7 @@ SELECT
 	cases,
 	1e6 * cases / population
 		AS cases_1m
-FROM covid_pr_etl.bioportal_age_curve
+FROM covid_pr_etl.bioportal_acs_age_curve
 ORDER BY
 	bulletin_date DESC,
 	collected_date DESC,
@@ -1000,7 +1000,7 @@ SELECT
 	sum(cases) AS cases,
 	1e6 * sum(cases) / sum(curve.population)
 		AS cases_1m
-FROM covid_pr_etl.bioportal_age_curve curve
+FROM covid_pr_etl.bioportal_acs_age_curve curve
 INNER JOIN covid_pr_sources.prdoh_age_ranges age_dim
 	ON age_dim.age_gte <= curve.age_gte
 	AND curve.age_gte < COALESCE(age_dim.age_lt, 9999)
