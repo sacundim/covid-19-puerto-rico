@@ -113,13 +113,6 @@ está en este otro repositorio:
 * https://github.com/sacundim/covid-19-puerto-rico-downloader
 
 
-## Información técnica
-
-Si se diera el triste caso que a este autor se lo llevaran arrestado
-o lo atropellara un tren, o que algún loquitx quisiera reproducir estas 
-páginas, [hay instrucciones bien malas aquí](INSTRUCCIONES.md).
-
-
 ## Agradecimientos
 
 A Robby Cortés (@RobbyCortes en Twitter) y Angélica Serrano-Román
