@@ -22,7 +22,7 @@ class AbstractMolecularChart(charts.AbstractChart):
 
 class RecentCases(AbstractMolecularChart):
     POPULATION_100K = 31.93694
-    SORT_ORDER=['Pruebas', 'Casos', 'Admisiones a hospital', 'Muertes']
+    SORT_ORDER=['Pruebas', 'Casos', 'Camas ocupadas por COVID', 'Muertes']
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('recent_daily_cases', self.metadata,
@@ -31,7 +31,8 @@ class RecentCases(AbstractMolecularChart):
                         table.c.datum_date,
                         table.c.tests.label('Pruebas'),
                         table.c.cases.label('Casos'),
-                        table.c.admissions.label('Admisiones a hospital'),
+                        table.c.inpatient_beds_used_covid
+                            .label('Camas ocupadas por COVID'),
                         table.c.deaths.label('Muertes')])\
             .where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
                         table.c.bulletin_date <= max(bulletin_dates)))
