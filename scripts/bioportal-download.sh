@@ -6,6 +6,7 @@ set -o pipefail
 TESTS_ENDPOINT="https://bioportal.salud.gov.pr/api/administration/reports/minimal-info-unique-tests"
 ORDERS_ENDPOINT="https://bioportal.salud.gov.pr/api/administration/reports/orders/basic"
 timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+ts_seconds="$(date -u +"%s")"
 tests_basename="minimal-info-unique-tests_${timestamp}"
 orders_basename="orders-basic_${timestamp}"
 
@@ -56,22 +57,26 @@ echo "$(date): Converting tests to parquet..."
 # in the `csv2parquet` tool, but the files have weird date/time formats
 # better fixed in a different tool.
 time "${HERE}"/bioportal-tests-to-csv.sh "${timestamp}" "${TESTS_JSON_TMP}" \
-  | time csv2parquet --codec gzip --row-group-size 10000000 \
-      --output /dev/stdout \
-      /dev/stdin \
-    > "${TESTS_PARQUET_TMP}"
+  > "${TMP}/minimal-info-unique-tests_${ts_seconds}.csv"
+
+# PyArrow tends to barf on filenames with colons (thinks they're URLs),
+# so we have to generate a weird filename and rename it. Also, we used to
+# just pipe data through csv2parquet, but we've hit problems that I think
+# were unflushed buffers so we write a CSV and convert it.
+time csv2parquet --codec gzip --row-group-size 10000000 \
+  "${TMP}/minimal-info-unique-tests_${ts_seconds}.csv"
+mv "${TMP}/minimal-info-unique-tests_${ts_seconds}.parquet" "${TESTS_PARQUET_TMP}"
 echo "$(date): Wrote output to ${TESTS_PARQUET_TMP}"
 
+
 echo "$(date): Converting orders-basic to parquet..."
-# TRICKY: One is tempted to use the timestamp data type option
-# in the `csv2parquet` tool, but Athena can't read the timestamps
-# it produces, because Parquet is a horrible mess.
 time "${HERE}"/bioportal-basic-to-csv.sh "${timestamp}" "${ORDERS_JSON_TMP}" \
-  | time csv2parquet --codec gzip --row-group-size 10000000 \
-      --output /dev/stdout \
-      /dev/stdin \
-  > "${ORDERS_PARQUET_TMP}"
+  > "${TMP}/orders-basic_${ts_seconds}.csv"
+time csv2parquet --codec gzip --row-group-size 10000000 \
+  "${TMP}/orders-basic_${ts_seconds}.csv"
+mv "${TMP}/orders-basic_${ts_seconds}.parquet" "${ORDERS_PARQUET_TMP}"
 echo "$(date): Wrote output to ${ORDERS_PARQUET_TMP}"
+
 
 echo "$(date): File sizes:"
 du -h "${TESTS_JSON_TMP}" "${ORDERS_JSON_TMP}" \
