@@ -576,52 +576,44 @@ class Municipal(AbstractChart):
 
 class MunicipalMap(AbstractChart):
     def make_chart(self, df, bulletin_date):
-        left_half = self.make_half_chart(
-            df, 'd', 'Casos',
-            ['Casos nuevos (último boletín)',
-             'Casos nuevos (últimos 7)']
-        )
+        new_cases = self.make_half_chart(df, ',d', 'Casos por 100k')
+        growth = self.make_half_chart(df, '.0%', 'Tendencia semanal')
 
-        right_half = self.make_half_chart(
-            df, '.0%', 'Crecida',
-            ['Crecida (último vs 7 anteriores)',
-             'Crecida (últimos 7 vs 7 anteriores)']
-        )
-
-        return alt.vconcat(left_half, right_half).configure_view(
+        return alt.vconcat(new_cases, growth).configure_view(
             strokeWidth=0
         ).configure_concat(
             spacing=40
+        ).resolve_scale(
+            color='independent'
         )
 
-    def make_half_chart(self, df, number_format, short_title, variables):
-        municipalities = self.geography()
-
-        return alt.Chart(municipalities).transform_lookup(
-            lookup='properties.NAME',
-            from_=alt.LookupData(df, 'Municipio', variables),
-            default='0'
+    def make_half_chart(self, df, number_format, variable):
+        WIDTH = 600
+        return alt.Chart(df).transform_lookup(
+            lookup='Municipio',
+            from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
         ).mark_geoshape().encode(
-            color=alt.Color(alt.repeat('column'), type='quantitative', sort="descending",
-                            scale=alt.Scale(type='symlog', scheme='redgrey', domainMid=0,
+            color=alt.Color(variable, type='quantitative', sort="descending",
+                            scale=alt.Scale(type='sqrt', scheme='redgrey', domainMid=0,
                                             # WORKAROUND: Set the domain manually to forcibly
                                             # include zero or else we run into
                                             # https://github.com/vega/vega-lite/issues/6544
                                             domain=alt.DomainUnionWith(unionWith=[0])),
-                            legend=alt.Legend(orient='bottom', titleLimit=400,
-                                              titleOrient='bottom', format=number_format)),
-            tooltip=[alt.Tooltip(field='properties.NAME', type='nominal', title='Municipio'),
-                     alt.Tooltip(alt.repeat('column'),
-                                 type='quantitative',
-                                 format=number_format,
-                                 title=short_title)]
+                            legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
+                                              offset=-15, labelSeparation=10,
+                                              format=number_format, gradientLength=WIDTH)),
+            tooltip=[alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha de boletín'),
+                     alt.Tooltip(field='Municipio', type='nominal'),
+                     alt.Tooltip(field='Población', type='quantitative', format=',d'),
+                     alt.Tooltip(field='Casos', type='quantitative', format=',.1f',
+                                 title='Casos (prom. 7 días)'),
+                     alt.Tooltip(field='Casos por 100k', type='quantitative', format=',.1f',
+                                 title='Casos/100k (prom. 7 días)'),
+                     alt.Tooltip(field='Tendencia semanal', type='quantitative', format=',.0%',
+                                 title='Semana actual / anterior')]
         ).properties(
-            width=300,
-            height=125
-        ).repeat(
-            column=variables
-        ).resolve_scale(
-            color='independent'
+            width=WIDTH,
+            height=250
         )
 
 
@@ -634,22 +626,15 @@ class MunicipalMap(AbstractChart):
                                  schema='products', autoload=True)
         query = select([
             table.c.bulletin_date,
-            table.c.municipality,
-            table.c.new_cases,
-            table.c.new_7day_cases,
-            table.c.pct_increase_1day,
-            table.c.pct_increase_7day
+            table.c.municipality.label('Municipio'),
+            table.c.popest2019.label('Población'),
+            (table.c.new_7day_cases / 7.0).label('Casos'),
+            (1e5 * table.c.new_7day_cases / table.c.popest2019).label('Casos por 100k'),
+            table.c.pct_increase_7day.label('Tendencia semanal')
         ]).where(and_(table.c.municipality.notin_(['Total', 'No disponible', 'Otro lugar fuera de PR']),
                       min(bulletin_dates) <= table.c.bulletin_date,
                       table.c.bulletin_date <= max(bulletin_dates)))
-        df = pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
-        return df.rename(columns={
-            'municipality': 'Municipio',
-            'new_cases': 'Casos nuevos (último boletín)',
-            'new_7day_cases': 'Casos nuevos (últimos 7)',
-            'pct_increase_1day': 'Crecida (último vs 7 anteriores)',
-            'pct_increase_7day': 'Crecida (últimos 7 vs 7 anteriores)'
-        })
+        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]

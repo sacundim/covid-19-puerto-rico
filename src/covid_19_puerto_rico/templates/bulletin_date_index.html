@@ -900,16 +900,15 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Casos confirmados y probables nuevos reportados por municipio, visto de cuatro
-        formas:</p>
+    <p>Casos confirmados y probables nuevos reportados por municipio, por fecha de reporte
+        en el informe diario de casos del Depaertamento de Salud, visto de dos formas:</p>
 
     <ol>
-        <li>Número de casos nuevos registrados en el boletín más reciente;</li>
-        <li>Número de casos nuevos registrados en los siete boletines más recientes;</li>
-        <li>Crecida del número de casos nuevos registrados en el boletín más reciente,
-            respecto a los casos registrados en los siete anteriores a este;</li>
-        <li>Crecida del número de casos nuevos registrados en los siete boletines más
-            recientes, respecto a los casos registrados en los siete anteriores a estos.</li>
+        <li>Promedio de casos nuevos registrados en los siete boletines más recientes,
+            ajustados per cápita a la población de cada municipio (según estimados del 2019
+            del Censo);</li>
+        <li>Número de casos nuevos registrados en los siete boletines más recientes como
+            porciento de losregistrados en los siete anteriores a estos.</li>
     </ol>
 
     <p>La primera ayuda identificar dónde son los casos reportados en el nuevo boletín;
@@ -921,8 +920,17 @@
         a municipios. Cuando el denominador de las divisiones sería cero (porque no hay
         casos recientes en el municipio) se sustituye por uno.</p>
 
-    <p>Nótese que esto es por fecha de boletín, no de muestra, y que por lo tanto
+    <h3>Advertencias</h3>
+
+    <p>Nótese que esto es por fecha que se anuncian los casos, y no por fecha de muestra
+        como hacen casi todas las visualizaciones en esta página, y que por lo tanto
         esta gráfica nos dice cuándo se detectaron los casos, no cuándo sucedieron.</p>
+
+    <p>Además, esta visualización usa los datos del informe diario del Departamento
+        de Salud, que tiene un desperfecto en la adjudicación de fechas a casos que cuentan
+        tanto con una prueba de antígeno positiva como una molecular positiva más tardía.
+        Tales casos ese informe los adjudica a la fecha de la seguna prueba, y esto suele
+        inflar fechas recientes a costa de otras más tempranas.</p>
 </div>
 
 

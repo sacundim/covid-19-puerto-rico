@@ -46,6 +46,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        charts.MunicipalMap(postgres, args.output_dir, output_formats),
         molecular.AgeGroups(athena, args.output_dir, output_formats),
         molecular.NaivePositiveRate(athena, args.output_dir, output_formats),
 
@@ -65,7 +66,6 @@ def main():
         charts.LatenessTiers(postgres, args.output_dir, output_formats),
         charts.BulletinChartMismatch(postgres, args.output_dir, output_formats),
         charts.ConsecutiveBulletinMismatch(postgres, args.output_dir, output_formats),
-        charts.MunicipalMap(postgres, args.output_dir, output_formats),
         charts.Municipal(postgres, args.output_dir, output_formats),
         charts.CurrentDeltas(postgres, args.output_dir, output_formats),
         charts.WeekdayBias(postgres, args.output_dir, output_formats),
