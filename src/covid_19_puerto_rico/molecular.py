@@ -318,7 +318,8 @@ class NewTestSpecimens(AbstractMolecularChart):
     """The original tests chart, counting test specimens naïvely out of Bioportal."""
     POPULATION = 3_193_694
     POPULATION_THOUSANDS = POPULATION / 1_000.0
-    TEST_TYPE_SORT_ORDER = ['Molecular', 'Serológica', 'Antígeno']
+    TEST_TYPE_SORT_ORDER = ['Molecular', 'Antígeno', 'Serológica']
+    TEST_TYPE_COLORS = ['#4c78a8', '#e45756', 'lightgray']
     DATE_TYPE_SORT_ORDER = ['Fecha de muestra', 'Fecha de reporte']
 
     def make_chart(self, df, bulletin_date):
@@ -337,7 +338,9 @@ class NewTestSpecimens(AbstractMolecularChart):
                     # Puerto Rico is about 3M, and this way we can easily read a
                     # rough per-capita figure
                     axis=alt.Axis(format='s', values=[0, 3000, 6000, 9000, 12000, 15000])),
-            color=alt.Color('test_type:N', title='Tipo de prueba', sort=self.TEST_TYPE_SORT_ORDER,
+            color=alt.Color('test_type:N', title='Tipo de prueba',
+                            sort=self.TEST_TYPE_SORT_ORDER,
+                            scale=alt.Scale(range=self.TEST_TYPE_COLORS),
                             legend=alt.Legend(orient='bottom', titleOrient='top', direction='vertical',
                                               padding=7.5, symbolStrokeWidth=3, symbolSize=300)),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', title='Datos hasta',
