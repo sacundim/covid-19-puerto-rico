@@ -904,33 +904,26 @@
         en el informe diario de casos del Depaertamento de Salud, visto de dos formas:</p>
 
     <ol>
-        <li>Promedio de casos nuevos registrados en los siete boletines más recientes,
+        <li>Promedio de casos nuevos registrados en los siete informes diarios más recientes,
             ajustados per cápita a la población de cada municipio (según estimados del 2019
             del Censo);</li>
-        <li>Número de casos nuevos registrados en los siete boletines más recientes como
-            porciento de losregistrados en los siete anteriores a estos.</li>
+        <li>Comparación de esa cifra con la correspondiente a los siete informes diarios
+            anteriores, expresado como aumento o disminución porcentual, i.e., (nuevo - previo)
+            / previo.  Cuando el denominador es cero se substituye por uno.</li>
     </ol>
-
-    <p>La primera ayuda identificar dónde son los casos reportados en el nuevo boletín;
-        las demás a identificar municipios que pudieran haber experimentado brotes
-        recientemente.</p>
-
-    <p>Los tonos rojáceos indican valores positivos, y los grisáceos o negros valores
-        negativos, porque sí, a veces boletines posteriores le restan casos confirmados
-        a municipios. Cuando el denominador de las divisiones sería cero (porque no hay
-        casos recientes en el municipio) se sustituye por uno.</p>
 
     <h3>Advertencias</h3>
 
-    <p>Nótese que esto es por fecha que se anuncian los casos, y no por fecha de muestra
-        como hacen casi todas las visualizaciones en esta página, y que por lo tanto
-        esta gráfica nos dice cuándo se detectaron los casos, no cuándo sucedieron.</p>
+    <p>Contrario a las mejores visualizaciones en esta página, que se hacen con datos del
+        Bioportal del Departamento de Salud de Puerto Rico, esta se hace a partir del
+        informe diario de casos.  Esto significa que estos mapas sufren de estas desventajas:</p>
 
-    <p>Además, esta visualización usa los datos del informe diario del Departamento
-        de Salud, que tiene un desperfecto en la adjudicación de fechas a casos que cuentan
-        tanto con una prueba de antígeno positiva como una molecular positiva más tardía.
-        Tales casos ese informe los adjudica a la fecha de la seguna prueba, y esto suele
-        inflar fechas recientes a costa de otras más tempranas.</p>
+    <ul>
+        <li>Los datos municipales del informe diario son totales por fecha de actualización
+            de ese informe, y no por fecha de muestra.  Esto quiere decir que casos anunciados
+            a destiempo afectan la precisión de estos mapas.</li>
+        <li>El informe diario siempre esta 1-3 días atrasado respecto a Bioportal.</li>
+    </ul>
 </div>
 
 
