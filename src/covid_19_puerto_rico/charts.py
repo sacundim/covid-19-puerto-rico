@@ -575,10 +575,11 @@ class Municipal(AbstractChart):
 
 
 class MunicipalMap(AbstractChart):
-    def make_chart(self, df, bulletin_date):
-        new_cases = self.make_half_chart(df, ',d', 'Casos por 100k')
-        growth = self.make_half_chart(df, '.0%', 'Tendencia semanal')
+    WIDTH = 600
 
+    def make_chart(self, df, bulletin_date):
+        new_cases = self.make_cases_chart(df)
+        growth = self.make_trend_chart(df)
         return alt.vconcat(new_cases, growth).configure_view(
             strokeWidth=0
         ).configure_concat(
@@ -587,32 +588,53 @@ class MunicipalMap(AbstractChart):
             color='independent'
         )
 
-    def make_half_chart(self, df, number_format, variable):
-        WIDTH = 600
+    def make_cases_chart(self, df):
+        return self.make_subchart(
+            df,
+            alt.Color('smoothed_cases_100k', type='quantitative', sort='descending',
+                      scale=alt.Scale(type='sqrt', scheme='redgrey', domainMid=0.0,
+                                      # WORKAROUND: Set the domain manually to forcibly
+                                      # include zero or else we run into
+                                      # https://github.com/vega/vega-lite/issues/6544
+                                      domain=alt.DomainUnionWith(unionWith=[0])),
+                      legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
+                                        title='Casos diarios (promedio 7 días, por 100k de población)',
+                                        offset=-15, labelSeparation=10,
+                                        format=',d', gradientLength=self.WIDTH)))
+
+    def make_trend_chart(self, df):
+        return self.make_subchart(
+            df,
+            alt.Color('weekly_trend', type='quantitative', sort='descending',
+                      scale=alt.Scale(type='sqrt', scheme='redgrey', domainMid=0.0,
+                                      # WORKAROUND: Set the domain manually to forcibly
+                                      # include zero or else we run into
+                                      # https://github.com/vega/vega-lite/issues/6544
+                                      domain=alt.DomainUnionWith(unionWith=[0])),
+                      legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
+                                        title='Cambio semanal (7 días más recientes vs. 7 anteriores)',
+                                        offset=-15, labelSeparation=10,
+                                        format='+,.0%', gradientLength=self.WIDTH)))
+
+
+    def make_subchart(self, df, color):
         return alt.Chart(df).transform_lookup(
-            lookup='Municipio',
+            lookup='municipality',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
         ).mark_geoshape().encode(
-            color=alt.Color(variable, type='quantitative', sort="descending",
-                            scale=alt.Scale(type='sqrt', scheme='redgrey', domainMid=0,
-                                            # WORKAROUND: Set the domain manually to forcibly
-                                            # include zero or else we run into
-                                            # https://github.com/vega/vega-lite/issues/6544
-                                            domain=alt.DomainUnionWith(unionWith=[0])),
-                            legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
-                                              offset=-15, labelSeparation=10,
-                                              format=number_format, gradientLength=WIDTH)),
+            color=color,
             tooltip=[alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha de boletín'),
-                     alt.Tooltip(field='Municipio', type='nominal'),
-                     alt.Tooltip(field='Población', type='quantitative', format=',d'),
-                     alt.Tooltip(field='Casos', type='quantitative', format=',.1f',
+                     alt.Tooltip(field='municipality', type='nominal', title='Municipio'),
+                     alt.Tooltip(field='popest2019', type='quantitative', format=',d',
+                                 title='Población'),
+                     alt.Tooltip(field='smoothed_cases', type='quantitative', format=',.1f',
                                  title='Casos (prom. 7 días)'),
-                     alt.Tooltip(field='Casos por 100k', type='quantitative', format=',.1f',
+                     alt.Tooltip(field='smoothed_cases_100k', type='quantitative', format=',.1f',
                                  title='Casos/100k (prom. 7 días)'),
-                     alt.Tooltip(field='Tendencia semanal', type='quantitative', format=',.0%',
-                                 title='Semana actual / anterior')]
+                     alt.Tooltip(field='weekly_trend', type='quantitative', format='+,.0%',
+                                 title='Cambio semanal')]
         ).properties(
-            width=WIDTH,
+            width=self.WIDTH,
             height=250
         )
 
@@ -626,11 +648,11 @@ class MunicipalMap(AbstractChart):
                                  schema='products', autoload=True)
         query = select([
             table.c.bulletin_date,
-            table.c.municipality.label('Municipio'),
-            table.c.popest2019.label('Población'),
-            (table.c.new_7day_cases / 7.0).label('Casos'),
-            (1e5 * table.c.new_7day_cases / table.c.popest2019).label('Casos por 100k'),
-            table.c.pct_increase_7day.label('Tendencia semanal')
+            table.c.municipality,
+            table.c.popest2019,
+            (table.c.new_7day_cases / 7.0).label('smoothed_cases'),
+            (1e5 * table.c.new_7day_cases / table.c.popest2019).label('smoothed_cases_100k'),
+            (table.c.pct_increase_7day - 1.0).label('weekly_trend')
         ]).where(and_(table.c.municipality.notin_(['Total', 'No disponible', 'Otro lugar fuera de PR']),
                       min(bulletin_dates) <= table.c.bulletin_date,
                       table.c.bulletin_date <= max(bulletin_dates)))
