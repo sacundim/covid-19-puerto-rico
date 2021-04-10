@@ -591,14 +591,14 @@ class MunicipalMap(AbstractChart):
     def make_cases_chart(self, df):
         return self.make_subchart(
             df,
-            alt.Color('smoothed_cases_100k', type='quantitative', sort='descending',
+            alt.Color('daily_cases_100k', type='quantitative', sort='descending',
                       scale=alt.Scale(type='sqrt', scheme='redgrey', domainMid=0.0,
                                       # WORKAROUND: Set the domain manually to forcibly
                                       # include zero or else we run into
                                       # https://github.com/vega/vega-lite/issues/6544
                                       domain=alt.DomainUnionWith(unionWith=[0])),
                       legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
-                                        title='Casos diarios (promedio 7 días, por 100k de población)',
+                                        title='Casos diarios (por 100k de población, promedio 7 días)',
                                         offset=-15, labelSeparation=10,
                                         format=',d', gradientLength=self.WIDTH)))
 
@@ -618,15 +618,20 @@ class MunicipalMap(AbstractChart):
         return alt.Chart(df).transform_lookup(
             lookup='municipality',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
+        ).transform_calculate(
+            daily_cases=alt.datum.weekly_cases / 7.0,
+            daily_cases_100k=alt.datum.weekly_cases_100k / 7.0
         ).mark_geoshape().encode(
             color=color,
             tooltip=[alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha de boletín'),
                      alt.Tooltip(field='municipality', type='nominal', title='Municipio'),
                      alt.Tooltip(field='popest2019', type='quantitative', format=',d',
                                  title='Población'),
-                     alt.Tooltip(field='smoothed_cases', type='quantitative', format=',.1f',
+                     alt.Tooltip(field='weekly_cases', type='quantitative', format=',d',
+                                 title='Casos (suma 7 días)'),
+                     alt.Tooltip(field='daily_cases', type='quantitative', format=',.1f',
                                  title='Casos (prom. 7 días)'),
-                     alt.Tooltip(field='smoothed_cases_100k', type='quantitative', format=',.1f',
+                     alt.Tooltip(field='daily_cases_100k', type='quantitative', format=',.1f',
                                  title='Casos/100k (prom. 7 días)'),
                      alt.Tooltip(field='weekly_trend', type='quantitative', format='+,.0%',
                                  title='Cambio semanal')]
@@ -647,8 +652,8 @@ class MunicipalMap(AbstractChart):
             table.c.bulletin_date,
             table.c.municipality,
             table.c.popest2019,
-            (table.c.new_7day_cases / 7.0).label('smoothed_cases'),
-            (1e5 * table.c.new_7day_cases / table.c.popest2019).label('smoothed_cases_100k'),
+            (table.c.new_7day_cases).label('weekly_cases'),
+            (1e5 * table.c.new_7day_cases / table.c.popest2019).label('weekly_cases_100k'),
             (table.c.pct_increase_7day - 1.0).label('weekly_trend')
         ]).where(and_(table.c.municipality.notin_(['Total', 'No disponible', 'Otro lugar fuera de PR']),
                       min(bulletin_dates) <= table.c.bulletin_date,
