@@ -606,11 +606,8 @@ class MunicipalMap(AbstractChart):
         return self.make_subchart(
             df,
             alt.Color('weekly_trend', type='quantitative', sort='descending',
-                      scale=alt.Scale(type='sqrt', scheme='redgrey', domainMid=0.0,
-                                      # WORKAROUND: Set the domain manually to forcibly
-                                      # include zero or else we run into
-                                      # https://github.com/vega/vega-lite/issues/6544
-                                      domain=alt.DomainUnionWith(unionWith=[0])),
+                      scale=alt.Scale(type='sqrt', scheme='redgrey',
+                                      domain=[-1.0, 5.0], domainMid=0.0, clamp=True),
                       legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                         title='Cambio semanal (7 días más recientes vs. 7 anteriores)',
                                         offset=-15, labelSeparation=10,
