@@ -818,3 +818,63 @@ class AgeGroups(AbstractMolecularChart):
         ).properties(
             width=WIDTH, height=225
         )
+
+
+class VaccinationMap(AbstractMolecularChart):
+    WIDTH = 600
+
+    def geography(self):
+        return alt.InlineData(values=util.get_geojson_resource('municipalities.topojson'),
+                              format=alt.TopoDataFormat(type='topojson', feature='municipalities'))
+
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('municipal_vaccination', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.municipio,
+            table.c.population,
+            table.c.total_dosis1.label('Primera dosis'),
+            table.c.total_dosis2.label('Segunda dosis')
+        ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
+                      table.c.bulletin_date <= max(bulletin_dates)))
+        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+
+
+    def make_chart(self, df, bulletin_date):
+        dosis1 = self.make_subchart(df, 'Primera dosis')
+        dosis2 = self.make_subchart(df, 'Segunda dosis')
+        return alt.vconcat(dosis1, dosis2).configure_view(
+            strokeWidth=0
+        ).configure_concat(
+            spacing=40
+        ).resolve_scale(
+            color='independent'
+        )
+
+    def make_subchart(self, df, variable):
+        return alt.Chart(df).transform_lookup(
+            lookup='municipio',
+            from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
+        ).transform_calculate(
+            pct=alt.datum[variable] / alt.datum.population
+        ).mark_geoshape().encode(
+            color=alt.Color('pct:Q', type='quantitative',
+                            scale=alt.Scale(type='linear', scheme='redyellowgreen',
+                                            domain=[0, 1], domainMid=0.6),
+                            legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
+                                              title=variable, labelSeparation=10, format='.0%',
+                                              offset=-15, gradientLength=self.WIDTH)),
+            tooltip=[alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha'),
+                     alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
+                     alt.Tooltip(field='population', type='quantitative', format=',d', title='Población'),
+                     alt.Tooltip(field=variable, type='quantitative', format=',d'),
+                     alt.Tooltip(field='pct', type='quantitative', format='.1%', title='Porciento')]
+        ).properties(
+            width=self.WIDTH,
+            height=250
+        )
+

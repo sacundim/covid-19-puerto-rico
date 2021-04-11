@@ -30,6 +30,7 @@
         <li><a href="#RecentCases_section">Pruebas, casos y muertes recientes</a></li>
         <li><a href="#NewCases_section">Curva de casos nuevos (Bioportal)</a></li>
         <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
+        <li><a href="#VaccinationMap_section">Vacunados por municipio</a></li>
         <li><a href="#AgeGroups_section">Casos por edad (per cápita)</a></li>
         <li><a href="#NewTestSpecimens_section">Especímenes de prueba diarios</a></li>
         <li><a href="#NaivePositiveRate_section">Tasa de especímenes positivos</a></li>
@@ -284,6 +285,27 @@
                     COVID-19 Reported Patient Impact and Hospital Capacity by State Timeseries</a></li>
             </ul>
         </li>
+    </ul>
+</div>
+
+
+<div class="section" id="VaccinationMap_section">
+    <h1>Vacunados por municipio</h1>
+
+    <div id="VaccinationMap"></div>
+    <script type="text/javascript">
+      embedChart('VaccinationMap', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Qué porcentaje de la población de cada municipio ha recibido ya primera y segunda
+        dosis de la vacuna.  Fuentes de datos:</p>
+
+    <ul>
+        <li>Vacunas: <a href="https://covid19datos.salud.gov.pr/">la página de datos de COVID-19
+            del Departamento de Salud de Puerto Rico</a> (<code>covid19datos.salud.gov.pr</code>);</li>
+        <li>Población: Negociado del Censo, American Community Survey (2019, estimados 5 años).</li>
     </ul>
 </div>
 

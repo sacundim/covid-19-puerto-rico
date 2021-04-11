@@ -46,6 +46,7 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
+        molecular.VaccinationMap(athena, args.output_dir, output_formats),
         charts.MunicipalMap(postgres, args.output_dir, output_formats),
         molecular.AgeGroups(athena, args.output_dir, output_formats),
         molecular.NaivePositiveRate(athena, args.output_dir, output_formats),

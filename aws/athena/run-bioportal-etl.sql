@@ -101,6 +101,27 @@ ORDER BY date DESC;
 
 
 --
+-- Vaccination by municipality
+--
+CREATE TABLE covid_pr_etl.municipal_vaccination WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
+SELECT
+	local_date AS bulletin_date,
+	municipio,
+	fips,
+	population,
+	total_dosis1,
+	total_dosis2
+FROM covid19datos_sources.vacunaciones_municipios_totales_daily vax
+INNER JOIN covid_pr_sources.acs_2019_5y_municipal_race pop
+	ON vax.municipio = pop.municipality
+ORDER BY bulletin_date;
+
+
+--
 -- The `orders/basic` row-per-test dataset from Bioportal.
 --
 CREATE TABLE covid_pr_etl.bioportal_orders_basic WITH (
