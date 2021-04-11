@@ -862,8 +862,8 @@ class VaccinationMap(AbstractMolecularChart):
         ).transform_calculate(
             pct=alt.datum[variable] / alt.datum.population
         ).mark_geoshape().encode(
-            color=alt.Color('pct:Q', type='quantitative',
-                            scale=alt.Scale(type='linear', scheme='redyellowgreen',
+            color=alt.Color('pct:Q', type='quantitative', sort='descending',
+                            scale=alt.Scale(type='linear', scheme='blueorange',
                                             domain=[0, 1], domainMid=0.6),
                             legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                               title=variable, labelSeparation=10, format='.0%',
