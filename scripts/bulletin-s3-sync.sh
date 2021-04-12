@@ -13,18 +13,31 @@ ASSETS_DIR="${REPO_ROOT}/assets"
 S3_SYNC_DIR="${REPO_ROOT}/s3-bucket-sync/covid-19-puerto-rico-data"
 
 BULLETIN_CASES_FROM="${REPO_ROOT}/assets/data/cases/PuertoRico-bitemporal.csv"
-BULLETIN_CASES_TMP="${S3_SYNC_DIR}/bulletin/cases/"
-BULLETIN_CASES_TO="${S3_DATA_URL}/bulletin/cases/"
+MUNI_MOLECULAR_FROM="${REPO_ROOT}/assets/data/cases/Municipalities-molecular.csv"
+MUNI_ANTIGENS_FROM="${REPO_ROOT}/assets/data/cases/Municipalities-antigens.csv"
+
+BULLETIN_TMP="${S3_SYNC_DIR}/bulletin/"
+BULLETIN_TO="${S3_DATA_URL}/bulletin/"
 
 # We copy to a tmp folder then `aws s3 sync`, instead of doing a
 # straight `aws s3 cp`, because `sync` has the smarts to check if
 # the local file is newer instead of blindly uploading it.
-echo "$(date): Copying ${BULLETIN_CASES_FROM} to ${BULLETIN_CASES_TMP}"
-mkdir -p "$(dirname "${BULLETIN_CASES_TMP}")"
-cp -p "${BULLETIN_CASES_FROM}" "${BULLETIN_CASES_TMP}"
+echo "$(date): Copying daily bulletin data to ${BULLETIN_TMP}"
+mkdir -p \
+  "${BULLETIN_TMP}" \
+  "${BULLETIN_TMP}"/cases \
+  "${BULLETIN_TMP}"/municipal_molecular \
+  "${BULLETIN_TMP}"/municipal_antigens
+cp -p "${BULLETIN_CASES_FROM}" "${BULLETIN_TMP}"/cases/
+cp -p "${MUNI_MOLECULAR_FROM}" "${BULLETIN_TMP}"/municipal_molecular/
+cp -p "${MUNI_ANTIGENS_FROM}" "${BULLETIN_TMP}"/municipal_antigens/
 
-echo "$(date): Syncing ${BULLETIN_CASES_FROM} to ${BULLETIN_CASES_TO}"
-aws s3 sync $* "${BULLETIN_CASES_TMP}" "${BULLETIN_CASES_TO}"
+echo "$(date): Syncing ${BULLETIN_TMP} to ${BULLETIN_TO}"
+aws s3 sync $* "${BULLETIN_TMP}" "${BULLETIN_TO}"
+
+
+##############################################################################
+# These newer ones are laid out in an Athena-compatible directory structure.
 
 echo "$(date): Syncing ${ASSETS_DIR}/data/Census/ to ${S3_DATA_URL}/Census/"
 time aws s3 sync $* --exclude '*.DS_Store' \

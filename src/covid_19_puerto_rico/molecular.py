@@ -828,7 +828,7 @@ class VaccinationMap(AbstractMolecularChart):
                               format=alt.TopoDataFormat(type='topojson', feature='municipalities'))
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_vaccination', self.metadata,
+        table = sqlalchemy.Table('municipal_splom', self.metadata,
                                  schema='covid_pr_etl', autoload=True)
         query = select([
             table.c.bulletin_date,
@@ -878,3 +878,56 @@ class VaccinationMap(AbstractMolecularChart):
             height=250
         )
 
+
+class MunicipalSPLOM(AbstractMolecularChart):
+    VARIABLES = [
+        'Población', 'Ingreso',
+        '<$10k', '≥$200k',
+        '% blanco', '% negro',
+        '1 dosis', '2 dosis',
+        'Casos/1k'
+    ]
+
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('municipal_splom', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.municipio,
+            table.c.population.label('Población'),
+            table.c.households_median.label('Ingreso'),
+            table.c.households_lt_10k_pct.label('<$10k'),
+            table.c.households_gte_200k_pct.label('≥$200k'),
+            table.c.white_alone_pct.label('% blanco'),
+            table.c.black_alone_pct.label('% negro'),
+            table.c.total_dosis1_pct.label('1 dosis'),
+            table.c.total_dosis2_pct.label('2 dosis'),
+            table.c.cumulative_cases_1k.label('Casos/1k'),
+        ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
+                      table.c.bulletin_date <= max(bulletin_dates)))
+        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df).mark_point().encode(
+            x=alt.X(alt.repeat("column"), type='quantitative', axis=alt.Axis(labels=False)),
+            y=alt.Y(alt.repeat("row"), type='quantitative', axis=alt.Axis(labels=False)),
+            color=alt.Color('municipio:N', title='Municipio', legend=alt.Legend(symbolLimit=78)),
+            tooltip=[
+                alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha'),
+                alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
+                alt.Tooltip(field='Población', type='quantitative', format=',d'),
+                alt.Tooltip(field='Ingreso', type='quantitative', format=',d'),
+                alt.Tooltip(field='<$10k', type='quantitative', format=',.1%'),
+                alt.Tooltip(field='≥$200k', type='quantitative', format=',.1%'),
+                alt.Tooltip(field='% negro', type='quantitative', format=',.1%'),
+                alt.Tooltip(field='% blanco', type='quantitative', format=',.1%'),
+                alt.Tooltip(field='1 dosis', type='quantitative', format=',.1%'),
+                alt.Tooltip(field='2 dosis', type='quantitative', format=',.1%'),
+                alt.Tooltip(field='Casos/1k', type='quantitative', format=',.1f'),
+            ]
+        ).properties(
+            width=100, height=100
+        ).repeat(
+            row=self.VARIABLES,
+            column=list(reversed(self.VARIABLES))
+        )

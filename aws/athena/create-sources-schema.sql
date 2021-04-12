@@ -11,6 +11,13 @@ DROP DATABASE IF EXISTS covid_pr_sources CASCADE;
 CREATE DATABASE covid_pr_sources
 LOCATION 's3://covid-19-puerto-rico-data/';
 
+
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+--
+-- Daily bulletin data
+--
+
 CREATE EXTERNAL TABLE covid_pr_sources.bulletin_cases_csv (
     bulletin_date STRING,
     datum_date STRING,
@@ -24,6 +31,62 @@ LOCATION 's3://covid-19-puerto-rico-data/bulletin/cases/'
 TBLPROPERTIES (
     "skip.header.line.count"="1"
 );
+
+CREATE EXTERNAL TABLE covid_pr_sources.bulletin_municipal_molecular (
+    bulletin_date DATE,
+    municipality STRING,
+    confirmed_cases INT,
+    confirmed_cases_percent DOUBLE
+) ROW FORMAT DELIMITED
+  FIELDS TERMINATED BY ','
+  ESCAPED BY '\\'
+  LINES TERMINATED BY '\n'
+LOCATION 's3://covid-19-puerto-rico-data/bulletin/municipal_molecular/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
+CREATE EXTERNAL TABLE covid_pr_sources.bulletin_municipal_antigens (
+    bulletin_date DATE,
+    municipality STRING,
+    probable_cases INT,
+    probable_cases_percent DOUBLE
+) ROW FORMAT DELIMITED
+  FIELDS TERMINATED BY ','
+  ESCAPED BY '\\'
+  LINES TERMINATED BY '\n'
+LOCATION 's3://covid-19-puerto-rico-data/bulletin/municipal_antigens/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
+CREATE VIEW covid_pr_sources.bulletin_municipal AS
+SELECT
+	bulletin_date,
+	municipality,
+	COALESCE(confirmed_cases, 0) + COALESCE(probable_cases, 0)
+		AS cumulative_cases,
+	COALESCE(confirmed_cases, 0)
+		+ COALESCE(probable_cases, 0)
+		- COALESCE(lag(confirmed_cases, 1, 0) OVER (
+			PARTITION BY municipality
+			ORDER BY bulletin_date
+		), 0)
+		- COALESCE(lag(probable_cases, 1, 0) OVER (
+			PARTITION BY municipality
+			ORDER BY bulletin_date
+		), 0) AS delta_cases
+FROM covid_pr_sources.bulletin_municipal_molecular pcr
+FULL OUTER JOIN covid_pr_sources.bulletin_municipal_antigens anti
+	USING (bulletin_date, municipality)
+ORDER BY bulletin_date, municipality;
+
+
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+--
+-- Bioportal data
+--
 
 CREATE EXTERNAL TABLE covid_pr_sources.orders_basic_parquet_v1 (
     downloadedAt STRING,
