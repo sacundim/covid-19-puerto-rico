@@ -690,14 +690,14 @@ class ICUsByHospital(AbstractChart):
         return pd.melt(df, ['week_start', 'hospital_name', 'municipality']).dropna()
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['week_start'] <= pd.to_datetime(bulletin_date)]
+        return df.loc[df['week_start'] <= pd.to_datetime(bulletin_date) - pd.DateOffset(days=6)]
 
     def make_chart(self, df, bulletin_date):
         # We want all facets to have an x-axis scale but to have the same
         # domain. So we set resolve = independent for the facets, but set
         # the domain manually on all. And no, I don't understand the weird
         # day offsets that I had to use to get the x-axis right.
-        min_date = df['week_start'].min()+ pd.DateOffset(days=4)
+        min_date = df['week_start'].min() + pd.DateOffset(days=4)
         max_date = df['week_start'].max() + pd.DateOffset(days=2)
         return alt.Chart(df).mark_bar(opacity=0.8).transform_calculate(
             # `week_end` is inclusive endpoint, `next_week` is exclusive endpoint
@@ -756,7 +756,7 @@ class ICUsByRegion(AbstractChart):
         return pd.melt(df, ['week_start', 'region']).dropna()
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['week_start'] <= pd.to_datetime(bulletin_date)]
+        return df.loc[df['week_start'] <= pd.to_datetime(bulletin_date) - pd.DateOffset(days=6)]
 
     def make_chart(self, df, bulletin_date):
         # We want all facets to have an x-axis scale but to have the same
