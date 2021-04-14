@@ -835,7 +835,12 @@ class LatenessTiers(AbstractChart):
         )
 
         normalized = base.encode(
-            x=alt.X('bulletin_date:T', title='Fecha de boletín'),
+            x=alt.X('bulletin_date:T', timeUnit='yearmonthdate', title='Fecha de boletín',
+                    axis=alt.Axis(
+                        labelExpr="[timeFormat(datum.value, '%b'),"
+                                  " timeFormat(datum.value, '%m') == '01'"
+                                    " ? timeFormat(datum.value, '%Y')"
+                                    " : '']")),
             y=alt.Y('mean_count:Q', stack='normalize', title='% renglón',
                     axis=alt.Axis(format='%', labelExpr="if(datum.value < 1.0, datum.label, '')"))
         ).properties(

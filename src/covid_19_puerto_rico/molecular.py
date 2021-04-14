@@ -166,8 +166,12 @@ class NewCases(AbstractMolecularChart):
         ).transform_filter(
             alt.datum.mean_7day > 0.0
         ).mark_line().encode(
-            x=alt.X('yearmonthdate(datum_date):T', title='Fecha de muestra o deceso',
-                    axis=alt.Axis(format='%d/%m')),
+            x=alt.X('datum_date:T', timeUnit='yearmonthdate', title='Fecha de muestra o deceso',
+                    axis=alt.Axis(
+                        labelExpr="[timeFormat(datum.value, '%b'),"
+                                  " timeFormat(datum.value, '%m') == '01'"
+                                    " ? timeFormat(datum.value, '%Y')"
+                                    " : '']")),
             y = alt.Y('mean_7day:Q', title='Nuevos (promedio 7 días)',
                       scale=alt.Scale(type='log'), axis=alt.Axis(format=',')),
             tooltip = [
@@ -236,7 +240,12 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
         ).transform_filter(
             alt.datum.sum_novels > 0
         ).mark_line().encode(
-            x=alt.X('collected_date:T', title='Fecha de muestra'),
+            x=alt.X('collected_date:T', timeUnit='yearmonthdate', title='Fecha de muestra',
+                    axis=alt.Axis(
+                        labelExpr="[timeFormat(datum.value, '%b'),"
+                                  " timeFormat(datum.value, '%m') == '01'"
+                                    " ? timeFormat(datum.value, '%Y')"
+                                    " : '']")),
             y=alt.Y('rate:Q', title='% episodios que se confirma (7 días)',
                     scale=alt.Scale(type='log', domain=[0.002, 0.2]),
                     axis=alt.Axis(format='%')),
@@ -271,8 +280,12 @@ class NaivePositiveRate(AbstractMolecularChart):
         ).transform_filter(
             alt.datum.sum_positives > 0
         ).mark_line(clip=True).encode(
-            x=alt.X('collected_date:T', title='Fecha de muestra',
-                    axis=alt.Axis(format='%d/%m')),
+            x=alt.X('collected_date:T', timeUnit='yearmonthdate', title='Fecha de muestra',
+                    axis=alt.Axis(
+                        labelExpr="[timeFormat(datum.value, '%b'),"
+                                  " timeFormat(datum.value, '%m') == '01'"
+                                    " ? timeFormat(datum.value, '%Y')"
+                                    " : '']")),
             y=alt.Y('rate:Q', title='Positividad',
                     scale=alt.Scale(type='log', domain=[0.003, 0.2]),
                     axis=alt.Axis(format='%')),
@@ -331,8 +344,12 @@ class NewTestSpecimens(AbstractMolecularChart):
         ).transform_calculate(
             per_thousand=alt.datum.mean_tests / self.POPULATION_THOUSANDS
         ).mark_line().encode(
-            x=alt.X('date:T', title=None,
-                    axis=alt.Axis(format='%d/%m')),
+            x=alt.X('date:T', timeUnit='yearmonthdate', title=None,
+                    axis=alt.Axis(
+                        labelExpr="[timeFormat(datum.value, '%b'),"
+                                  " timeFormat(datum.value, '%m') == '01'"
+                                    " ? timeFormat(datum.value, '%Y')"
+                                    " : '']")),
             y=alt.Y('mean_tests:Q', title='Especímenes diarios',
                     # We use axis tick increments of 3k because the population of
                     # Puerto Rico is about 3M, and this way we can easily read a
@@ -667,7 +684,12 @@ class MolecularLatenessTiers(AbstractMolecularChart):
         )
 
         normalized = base.encode(
-            x=alt.X('bulletin_date:T', title='Fecha de boletín'),
+            x=alt.X('bulletin_date:T', timeUnit='yearmonthdate', title='Fecha de boletín',
+                    axis=alt.Axis(
+                        labelExpr="[timeFormat(datum.value, '%b'),"
+                                  " timeFormat(datum.value, '%m') == '01'"
+                                    " ? timeFormat(datum.value, '%Y')"
+                                    " : '']")),
             y=alt.Y('mean_count:Q', stack='normalize', title='% renglón',
                     axis=alt.Axis(format='%', labelExpr="if(datum.value < 1.0, datum.label, '')"))
         ).properties(
@@ -701,7 +723,12 @@ class CaseFatalityRate(AbstractMolecularChart):
         return alt.Chart(df).mark_line(clip=True).transform_filter(
             alt.datum.lagged_cfr > 0.0
         ).encode(
-            x=alt.X('collected_date:T', title='Fecha de muestras'),
+            x=alt.X('collected_date:T', timeUnit='yearmonthdate', title='Fecha de muestra',
+                    axis=alt.Axis(
+                        labelExpr="[timeFormat(datum.value, '%b'),"
+                                  " timeFormat(datum.value, '%m') == '01'"
+                                    " ? timeFormat(datum.value, '%Y')"
+                                    " : '']")),
             y=alt.Y('lagged_cfr:Q', title='Letalidad (CFR, 14 días)',
                     axis=alt.Axis(format='%'), scale=alt.Scale(type='log', domain=[0.007, 0.2])),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', title='Datos hasta',
@@ -744,7 +771,12 @@ class Hospitalizations(AbstractMolecularChart):
             mean_value='mean(value)',
             groupby=['variable']
         ).mark_line(point='transparent').encode(
-            x=alt.X('date:T', title='Fecha'),
+            x=alt.X('date:T', timeUnit='yearmonthdate', title='Fecha',
+                    axis=alt.Axis(
+                        labelExpr="[timeFormat(datum.value, '%b'),"
+                                  " timeFormat(datum.value, '%m') == '01'"
+                                    " ? timeFormat(datum.value, '%Y')"
+                                    " : '']")),
             y=alt.Y('mean_value:Q', title='Promedio 7 días',
                     scale=alt.Scale(type='log', domain=[5, 1000]),
                     axis=alt.Axis(format='s')),
