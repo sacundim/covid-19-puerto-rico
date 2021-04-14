@@ -158,8 +158,9 @@ $$ LANGUAGE SQL;
 
 CREATE MATERIALIZED VIEW hhs_hospital_history_cube AS
 SELECT
-	collection_week since_date,
-	collection_week + 6 until_date,
+	collection_week AS week_start,
+	collection_week + 6 AS week_end,
+	collection_week + 7 AS next_week,
 	cmn.region region,
 	cmn."name" municipality,
 	fips_code,
@@ -254,7 +255,9 @@ ORDER BY collection_week DESC, region, cmn."name", hospital_name;
 
 CREATE VIEW products.icus_by_hospital AS
 SELECT
-	until_date,
+	week_start,
+	week_end,
+	next_week,
 	hospital_name,
 	municipality,
 	total_staffed_adult_icu_beds_7_day_lo,
@@ -269,12 +272,14 @@ SELECT
 		  total_staffed_adult_icu_beds_7_day_lo)
 	  AS staffed_icu_adult_patients_covid_7_day_hi
 FROM hhs_hospital_history_cube
-ORDER BY until_date DESC, hospital_name;
+ORDER BY week_start DESC, hospital_name;
 
 
 CREATE VIEW products.icus_by_region AS
 SELECT
-	until_date,
+	week_start,
+	week_end,
+	next_week,
 	region,
 	sum(total_staffed_adult_icu_beds_7_day_lo)
 		AS total_staffed_adult_icu_beds_7_day_lo,
@@ -286,5 +291,5 @@ SELECT
 		      total_staffed_adult_icu_beds_7_day_lo))
 	  AS staffed_icu_adult_patients_covid_7_day_hi
 FROM hhs_hospital_history_cube
-GROUP BY until_date, region
-ORDER BY until_date DESC, region;
+GROUP BY week_start, week_end, next_week, region
+ORDER BY week_start DESC, region;

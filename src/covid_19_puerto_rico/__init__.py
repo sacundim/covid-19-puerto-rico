@@ -47,6 +47,8 @@ def main():
 
     targets = [
 #        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
+        charts.ICUsByRegion(postgres, args.output_dir, output_formats),
+        charts.ICUsByHospital(postgres, args.output_dir, output_formats),
         molecular.VaccinationMap(athena, args.output_dir, output_formats),
         charts.MunicipalMap(postgres, args.output_dir, output_formats),
         molecular.AgeGroups(athena, args.output_dir, output_formats),
@@ -58,8 +60,6 @@ def main():
         molecular.NewCases(athena, args.output_dir, output_formats),
         molecular.Hospitalizations(athena, args.output_dir, output_formats),
         molecular.CaseFatalityRate(athena, args.output_dir, output_formats),
-        charts.ICUsByRegion(postgres, args.output_dir, output_formats),
-        charts.ICUsByHospital(postgres, args.output_dir, output_formats),
         molecular.NewTestSpecimens(athena, args.output_dir, output_formats),
         molecular.ConfirmationsVsRejections(athena, args.output_dir, output_formats),
         molecular.MolecularLatenessTiers(athena, args.output_dir, output_formats),

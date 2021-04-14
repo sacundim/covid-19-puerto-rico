@@ -669,12 +669,14 @@ class ICUsByHospital(AbstractChart):
 
     SORT_ORDER = ['Camas', 'Ocupadas', 'COVID']
     COLORS = ["#a4d86e", "#f58518", "#d4322c"]
+    COLUMNS = 3
+    FACET_WIDTH = 160
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('icus_by_hospital', self.metadata,
                                  schema='products', autoload=True)
         query = select([
-            table.c.until_date,
+            table.c.week_start,
             table.c.hospital_name,
             table.c.municipality,
             table.c.total_staffed_adult_icu_beds_7_day_lo
@@ -683,41 +685,46 @@ class ICUsByHospital(AbstractChart):
                 .label('Ocupadas'),
             table.c.staffed_icu_adult_patients_covid_7_day_hi
                 .label('COVID')
-        ]).where(table.c.until_date <= max(bulletin_dates))
-        df = pd.read_sql_query(query, connection, parse_dates=['until_date'])
-        return pd.melt(df, ['until_date', 'hospital_name', 'municipality']).dropna()
+        ]).where(table.c.week_start <= max(bulletin_dates))
+        df = pd.read_sql_query(query, connection, parse_dates=['week_start'])
+        return pd.melt(df, ['week_start', 'hospital_name', 'municipality']).dropna()
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['until_date'] <= pd.to_datetime(bulletin_date)]
+        return df.loc[df['week_start'] <= pd.to_datetime(bulletin_date)]
 
     def make_chart(self, df, bulletin_date):
         # We want all facets to have an x-axis scale but to have the same
         # domain. So we set resolve = independent for the facets, but set
         # the domain manually on all.
-        min_date = df['until_date'].min()
-        max_date = df['until_date'].max()
-        facet_width = 240
-        return alt.Chart(df).mark_bar().encode(
-            x=alt.X('until_date:T', title=None, axis=alt.Axis(format='%b'),
+        min_date = df['week_start'].min()
+        max_date = df['week_start'].max() + pd.DateOffset(days=7)
+        return alt.Chart(df).mark_bar(opacity=0.8).transform_calculate(
+            # `week_end` is inclusive endpoint, `next_week` is exclusive endpoint
+            week_end="timeOffset('day', datum.week_start, 6)",
+            next_week="timeOffset('day', datum.week_start, 7)"
+        ).encode(
+            x=alt.X('week_start:T', title=None, axis=alt.Axis(format='%b'),
                     scale=alt.Scale(domain=[min_date, max_date])),
+            x2=alt.X2('next_week:T'),
             y=alt.Y('value:Q', title=None, stack=None,
                     axis=alt.Axis(minExtent=25, labelFlush=True)),
             color=alt.Color('variable:N', title=None, sort=self.SORT_ORDER,
                             scale=alt.Scale(range=self.COLORS),
                             legend=alt.Legend(orient='top', columns=3, labelLimit=250)),
             tooltip=[
-                alt.Tooltip('until_date:T', title='Fecha'),
+                alt.Tooltip('week_start:T', title='Desde'),
+                alt.Tooltip('week_end:T', title='Hasta'),
                 alt.Tooltip('hospital_name:N', title='Hospital'),
                 alt.Tooltip('municipality:N', title='Municipio'),
                 alt.Tooltip('variable:N', title='Categoría'),
                 alt.Tooltip('value:Q', format='.1f', title='Promedio 7 días)')
             ]
         ).properties(
-            width=facet_width, height=80
+            width=self.FACET_WIDTH, height=80
         ).facet(
-            columns=2,
+            columns=self.COLUMNS,
             facet=alt.Facet('hospital_name:N', title=None,
-                            header=alt.Header(labelLimit=facet_width, labelFontSize=8))
+                            header=alt.Header(labelLimit=self.FACET_WIDTH, labelFontSize=8))
         ).resolve_scale(
             x='independent', y='independent'
         )
@@ -728,12 +735,14 @@ class ICUsByRegion(AbstractChart):
 
     SORT_ORDER = ['Camas', 'Ocupadas', 'COVID']
     COLORS = ["#a4d86e", "#f58518", "#d4322c"]
+    COLUMNS = 2
+    FACET_WIDTH = 280
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('icus_by_region', self.metadata,
                                  schema='products', autoload=True)
         query = select([
-            table.c.until_date,
+            table.c.week_start,
             table.c.region,
             table.c.total_staffed_adult_icu_beds_7_day_lo
                 .label('Camas'),
@@ -741,40 +750,46 @@ class ICUsByRegion(AbstractChart):
                 .label('Ocupadas'),
             table.c.staffed_icu_adult_patients_covid_7_day_hi
                 .label('COVID')
-        ]).where(table.c.until_date <= max(bulletin_dates))
-        df = pd.read_sql_query(query, connection, parse_dates=['until_date'])
-        return pd.melt(df, ['until_date', 'region']).dropna()
+        ]).where(table.c.week_start <= max(bulletin_dates))
+        df = pd.read_sql_query(query, connection, parse_dates=['week_start'])
+        return pd.melt(df, ['week_start', 'region']).dropna()
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['until_date'] <= pd.to_datetime(bulletin_date)]
+        return df.loc[df['week_start'] <= pd.to_datetime(bulletin_date)]
 
     def make_chart(self, df, bulletin_date):
         # We want all facets to have an x-axis scale but to have the same
         # domain. So we set resolve = independent for the facets, but set
         # the domain manually on all.
-        min_date = df['until_date'].min()
-        max_date = df['until_date'].max()
+        min_date = df['week_start'].min()
+        max_date = df['week_start'].max() + pd.DateOffset(days=7)
         facet_width = 240
-        return alt.Chart(df).mark_bar().encode(
-            x=alt.X('until_date:T', title=None, axis=alt.Axis(format='%b'),
+        return alt.Chart(df).mark_bar(opacity=0.8).transform_calculate(
+            # `week_end` is inclusive endpoint, `next_week` is exclusive endpoint
+            week_end="timeOffset('day', datum.week_start, 6)",
+            next_week="timeOffset('day', datum.week_start, 7)"
+        ).encode(
+            x=alt.X('week_start:T', title=None, axis=alt.Axis(format='%b'),
                     scale=alt.Scale(domain=[min_date, max_date])),
+            x2=alt.X2('next_week:T'),
             y=alt.Y('value:Q', title=None, stack=None,
                     axis=alt.Axis(minExtent=30, labelFlush=True)),
             color=alt.Color('variable:N', title=None, sort=self.SORT_ORDER,
                             scale=alt.Scale(range=self.COLORS),
                             legend=alt.Legend(orient='top', columns=3, labelLimit=250)),
             tooltip=[
-                alt.Tooltip('until_date:T', title='Fecha'),
+                alt.Tooltip('week_start:T', title='Desde'),
+                alt.Tooltip('week_end:T', title='Hasta'),
                 alt.Tooltip('region:N', title='Región'),
                 alt.Tooltip('variable:N', title='Categoría'),
                 alt.Tooltip('value:Q', format='.1f', title='Promedio 7 días)')
             ]
         ).properties(
-            width=facet_width, height=100
+            width=self.FACET_WIDTH, height=100
         ).facet(
-            columns=2,
+            columns=self.COLUMNS,
             facet=alt.Facet('region:N', title=None,
-                            header=alt.Header(labelLimit=facet_width))
+                            header=alt.Header(labelLimit=self.FACET_WIDTH))
         ).resolve_scale(
             x='independent', y='independent'
         )
