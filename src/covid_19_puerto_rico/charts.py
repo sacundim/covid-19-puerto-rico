@@ -695,16 +695,16 @@ class ICUsByHospital(AbstractChart):
     def make_chart(self, df, bulletin_date):
         # We want all facets to have an x-axis scale but to have the same
         # domain. So we set resolve = independent for the facets, but set
-        # the domain manually on all. And no, I don't understand the weird
-        # day offsets that I had to use to get the x-axis right.
-        min_date = df['week_start'].min() + pd.DateOffset(days=4)
-        max_date = df['week_start'].max() + pd.DateOffset(days=2)
+        # the domain manually on all.
+        min_date = df['week_start'].min()
+        max_date = df['week_start'].max() + pd.DateOffset(days=7)
         return alt.Chart(df).mark_bar(opacity=0.8).transform_calculate(
             # `week_end` is inclusive endpoint, `next_week` is exclusive endpoint
             week_end="timeOffset('day', datum.week_start, 6)",
             next_week="timeOffset('day', datum.week_start, 7)"
         ).encode(
-            x=alt.X('week_start:T', title=None, axis=alt.Axis(format='%b'),
+            x=alt.X('week_start:T', timeUnit='yearmonthdate',
+                    title=None, axis=alt.Axis(format='%b'),
                     scale=alt.Scale(domain=[min_date, max_date])),
             x2=alt.X2('next_week:T'),
             y=alt.Y('value:Q', title=None, stack=None,
@@ -761,17 +761,17 @@ class ICUsByRegion(AbstractChart):
     def make_chart(self, df, bulletin_date):
         # We want all facets to have an x-axis scale but to have the same
         # domain. So we set resolve = independent for the facets, but set
-        # the domain manually on all. And no, I don't understand the weird
-        # day offsets that I had to use to get the x-axis right.
-        min_date = df['week_start'].min()+ pd.DateOffset(days=4)
-        max_date = df['week_start'].max() + pd.DateOffset(days=2)
+        # the domain manually on all.
+        min_date = df['week_start'].min()
+        max_date = df['week_start'].max() + pd.DateOffset(days=7)
         facet_width = 240
         return alt.Chart(df).mark_bar(opacity=0.8).transform_calculate(
             # `week_end` is inclusive endpoint, `next_week` is exclusive endpoint
             week_end="timeOffset('day', datum.week_start, 6)",
             next_week="timeOffset('day', datum.week_start, 7)"
         ).encode(
-            x=alt.X('week_start:T', title=None, axis=alt.Axis(format='%b'),
+            x=alt.X('week_start:T', timeUnit='yearmonthdate',
+                    title=None, axis=alt.Axis(format='%b'),
                     scale=alt.Scale(domain=[min_date, max_date])),
             x2=alt.X2('next_week:T'),
             y=alt.Y('value:Q', title=None, stack=None,
