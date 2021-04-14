@@ -670,7 +670,7 @@ class ICUsByHospital(AbstractChart):
     SORT_ORDER = ['Camas', 'Ocupadas', 'COVID']
     COLORS = ["#a4d86e", "#f58518", "#d4322c"]
     COLUMNS = 3
-    FACET_WIDTH = 160
+    FACET_WIDTH = 170
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('icus_by_hospital', self.metadata,
@@ -695,9 +695,10 @@ class ICUsByHospital(AbstractChart):
     def make_chart(self, df, bulletin_date):
         # We want all facets to have an x-axis scale but to have the same
         # domain. So we set resolve = independent for the facets, but set
-        # the domain manually on all.
-        min_date = df['week_start'].min()
-        max_date = df['week_start'].max() + pd.DateOffset(days=7)
+        # the domain manually on all. And no, I don't understand the weird
+        # day offsets that I had to use to get the x-axis right.
+        min_date = df['week_start'].min()+ pd.DateOffset(days=4)
+        max_date = df['week_start'].max() + pd.DateOffset(days=2)
         return alt.Chart(df).mark_bar(opacity=0.8).transform_calculate(
             # `week_end` is inclusive endpoint, `next_week` is exclusive endpoint
             week_end="timeOffset('day', datum.week_start, 6)",
@@ -760,9 +761,10 @@ class ICUsByRegion(AbstractChart):
     def make_chart(self, df, bulletin_date):
         # We want all facets to have an x-axis scale but to have the same
         # domain. So we set resolve = independent for the facets, but set
-        # the domain manually on all.
-        min_date = df['week_start'].min()
-        max_date = df['week_start'].max() + pd.DateOffset(days=7)
+        # the domain manually on all. And no, I don't understand the weird
+        # day offsets that I had to use to get the x-axis right.
+        min_date = df['week_start'].min()+ pd.DateOffset(days=4)
+        max_date = df['week_start'].max() + pd.DateOffset(days=2)
         facet_width = 240
         return alt.Chart(df).mark_bar(opacity=0.8).transform_calculate(
             # `week_end` is inclusive endpoint, `next_week` is exclusive endpoint
