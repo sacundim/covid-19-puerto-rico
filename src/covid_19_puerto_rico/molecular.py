@@ -839,7 +839,8 @@ class AgeGroups(AbstractMolecularChart):
                                   labelOverlap=True, tickBand='extent')),
             color=alt.Color('mean_cases_1m:Q', title='Casos diarios por millón',
                             sort='descending', scale=alt.Scale(scheme='spectral', type='sqrt'),
-                            legend=alt.Legend(orient='top', gradientLength=WIDTH)),
+                            legend=alt.Legend(orient='top', gradientLength=WIDTH,
+                                              labelOverlap=True, labelSeparation=5)),
             tooltip=[
                 alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                 alt.Tooltip('collected_date:T', title='Fecha de muestra'),
