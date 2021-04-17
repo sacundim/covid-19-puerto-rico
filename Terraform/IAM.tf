@@ -15,6 +15,7 @@ resource "aws_iam_policy" "data_bucket_ro" {
         Effect = "Allow",
         Action = [
           "s3:GetObject",
+          "s3:GetObjectTagging",
           "s3:ListBucket"
         ],
         Resource = [
@@ -38,7 +39,9 @@ resource "aws_iam_policy" "data_bucket_rw" {
         Effect = "Allow",
         Action = [
           "s3:PutObject",
+          "s3:PutObjectTagging",
           "s3:GetObject",
+          "s3:GetObjectTagging",
           "s3:ListBucket"
         ],
         Resource = [
@@ -63,7 +66,9 @@ resource "aws_iam_policy" "athena_bucket_rw" {
         Effect = "Allow",
         Action = [
           "s3:PutObject",
+          "s3:PutObjectTagging",
           "s3:GetObject",
+          "s3:GetObjectTagging",
           "s3:ListBucket"
         ],
         Resource = [
