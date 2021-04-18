@@ -427,3 +427,65 @@ SELECT
 FROM covid_hhs_sources.reported_hospital_utilization
 WHERE state = 'PR'
 ORDER BY "$path" DESC;
+
+
+---------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------
+--
+-- Community Profile Reports
+--
+
+CREATE EXTERNAL TABLE covid_hhs_sources.community_profile_report_county (
+	fips STRING,
+	county STRING,
+	state STRING,
+	fema_region STRING,
+	date STRING,
+	cases_last_7_days STRING,
+	cases_per_100k_last_7_days STRING,
+	total_cases STRING,
+	cases_pct_change_from_prev_week STRING,
+	deaths_last_7_days STRING,
+	deaths_per_100k_last_7_days STRING,
+	total_deaths STRING,
+	deaths_pct_change_from_prev_week STRING,
+	test_positivity_rate_last_7_days STRING,
+	total_positive_tests_last_7_days STRING,
+	total_tests_last_7_days STRING,
+	total_tests_per_100k_last_7_days STRING,
+	test_positivity_rate_pct_change_from_prev_week STRING,
+	total_tests_pct_change_from_prev_week STRING,
+	confirmed_covid_hosp_last_7_days STRING,
+	confirmed_covid_hosp_per_100_beds_last_7_days STRING,
+	confirmed_covid_hosp_per_100_beds_pct_change_from_prev_week STRING,
+	suspected_covid_hosp_last_7_days STRING,
+	suspected_covid_hosp_per_100_beds_last_7_days STRING,
+	suspected_covid_hosp_per_100_beds_pct_change_from_prev_week STRING,
+	pct_inpatient_beds_used_avg_last_7_days STRING,
+	pct_inpatient_beds_used_abs_change_from_prev_week STRING,
+	pct_inpatient_beds_used_covid_avg_last_7_days STRING,
+	pct_inpatient_beds_used_covid_abs_change_from_prev_week STRING,
+	pct_icu_beds_used_avg_last_7_days STRING,
+	pct_icu_beds_used_abs_change_from_prev_week STRING,
+	pct_icu_beds_used_covid_avg_last_7_days STRING,
+	pct_icu_beds_used_covid_abs_change_from_prev_week STRING,
+	pct_vents_used_avg_last_7_days STRING,
+	pct_vents_used_abs_change_from_prev_week STRING,
+	pct_vents_used_covid_avg_last_7_days STRING,
+	pct_vents_used_covid_abs_change_from_prev_week STRING
+) STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/HHS/covid-19_community_profile_report_county/v2/parquet/';
+
+CREATE OR REPLACE VIEW covid_hhs_sources.community_profile_report_municipios AS
+SELECT
+	date(date_parse(date, '%m/%d/%Y %h:%i:%s %p')) AS date,
+	fips,
+	county,
+	-- TODO: bring in other data fields
+	CAST(NULLIF(total_tests_last_7_days, '') AS INTEGER)
+		AS total_tests_last_7_days,
+	CAST(NULLIF(total_positive_tests_last_7_days, '') AS INTEGER)
+		AS total_positive_tests_last_7_days
+FROM covid_hhs_sources.community_profile_report_county
+WHERE state = 'PR'
+ORDER BY date DESC, county;
