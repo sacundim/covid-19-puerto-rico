@@ -16,11 +16,14 @@ resource "aws_iam_policy" "data_bucket_ro" {
         Action = [
           "s3:GetObject",
           "s3:GetObjectTagging",
-          "s3:ListBucket"
+          "s3:ListBucket",
+          "s3:DescribeJob"
         ],
         Resource = [
           aws_s3_bucket.data_bucket.arn,
-          "${aws_s3_bucket.data_bucket.arn}/*"
+          "${aws_s3_bucket.data_bucket.arn}/*",
+          aws_s3_bucket.testing_bucket.arn,
+          "${aws_s3_bucket.testing_bucket.arn}/*"
         ]
       }
     ]
@@ -42,7 +45,8 @@ resource "aws_iam_policy" "data_bucket_rw" {
           "s3:PutObjectTagging",
           "s3:GetObject",
           "s3:GetObjectTagging",
-          "s3:ListBucket"
+          "s3:ListBucket",
+          "s3:DescribeJob"
         ],
         Resource = [
           aws_s3_bucket.data_bucket.arn,
@@ -69,7 +73,8 @@ resource "aws_iam_policy" "athena_bucket_rw" {
           "s3:PutObjectTagging",
           "s3:GetObject",
           "s3:GetObjectTagging",
-          "s3:ListBucket"
+          "s3:ListBucket",
+          "s3:DescribeJob"
         ],
         Resource = [
           aws_s3_bucket.athena_bucket.arn,
