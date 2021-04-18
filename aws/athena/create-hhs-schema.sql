@@ -489,3 +489,39 @@ SELECT
 FROM covid_hhs_sources.community_profile_report_county
 WHERE state = 'PR'
 ORDER BY date DESC, county;
+
+
+---------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------
+--
+-- Diagnostic lab testing
+--
+
+CREATE EXTERNAL TABLE covid_hhs_sources.diagnostic_lab_testing (
+	state STRING,
+	state_name STRING,
+	state_fips STRING,
+	fema_region STRING,
+	overall_outcome STRING,
+	date STRING,
+	new_results_reported STRING,
+	total_results_reported STRING,
+	geocoded_state STRING
+) STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/HHS/covid-19_diagnostic_lab_testing/v2/parquet/';
+
+CREATE OR REPLACE VIEW covid_hhs_sources.diagnostic_lab_testing_PR AS
+SELECT
+	date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
+		AS file_timestamp,
+	date(date_parse(date, '%Y/%m/%d')) AS date,
+	state,
+	state_fips,
+	overall_outcome,
+	CAST(NULLIF(new_results_reported, '') AS INTEGER)
+		AS new_results_reported,
+	CAST(NULLIF(total_results_reported, '') AS INTEGER)
+		AS total_results_reported
+FROM covid_hhs_sources.diagnostic_lab_testing
+WHERE state = 'PR'
+ORDER BY file_timestamp, date;
