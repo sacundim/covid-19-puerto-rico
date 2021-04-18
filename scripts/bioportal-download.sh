@@ -6,6 +6,7 @@ set -o pipefail
 TESTS_ENDPOINT="https://bioportal.salud.gov.pr/api/administration/reports/minimal-info-unique-tests"
 ORDERS_ENDPOINT="https://bioportal.salud.gov.pr/api/administration/reports/orders/basic"
 timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+downloaded_date="${timestamp:0:10}"
 ts_seconds="$(date -u +"%s")"
 tests_basename="minimal-info-unique-tests_${timestamp}"
 orders_basename="orders-basic_${timestamp}"
@@ -24,10 +25,12 @@ ORDERS_PARQUET_TMP="${TMP}/${orders_basename}.parquet"
 
 S3_SYNC_DIR="${REPO_ROOT}/s3-bucket-sync/covid-19-puerto-rico-data"
 BIOPORTAL_SYNC_DIR="${S3_SYNC_DIR}/bioportal"
-TESTS_JSON="${BIOPORTAL_SYNC_DIR}/minimal-info-unique-tests/json_v3/${tests_basename}.json.bz2"
-TESTS_PARQUET="${BIOPORTAL_SYNC_DIR}/minimal-info-unique-tests/parquet_v3/${tests_basename}.parquet"
-ORDERS_JSON="${BIOPORTAL_SYNC_DIR}/orders-basic/json_v1/${orders_basename}.json.bz2"
-ORDERS_PARQUET="${BIOPORTAL_SYNC_DIR}/orders-basic/parquet_v1/${orders_basename}.parquet"
+TESTS_DIR="${BIOPORTAL_SYNC_DIR}/minimal-info-unique-tests"
+TESTS_JSON="${TESTS_DIR}/json_v3/${tests_basename}.json.bz2"
+TESTS_PARQUET="${TESTS_DIR}/parquet_v4/downloaded_date=${downloaded_date}/${tests_basename}.parquet"
+ORDERS_DIR="${BIOPORTAL_SYNC_DIR}/orders-basic"
+ORDERS_JSON="${ORDERS_DIR}/json_v1/${orders_basename}.json.bz2"
+ORDERS_PARQUET="${ORDERS_DIR}/parquet_v2/downloaded_date=${downloaded_date}/${orders_basename}.parquet"
 
 mkdir -p "${TMP}"
 
@@ -84,8 +87,10 @@ du -h "${TESTS_JSON_TMP}" "${ORDERS_JSON_TMP}" \
 
 echo "$(date): Moving files to the sync directory"
 mkdir -p \
+  "${TESTS_DIR}" \
   "$(dirname "${TESTS_JSON}")" \
   "$(dirname "${TESTS_PARQUET}")" \
+  "${ORDERS_DIR}" \
   "$(dirname "${ORDERS_JSON}")" \
   "$(dirname "${ORDERS_PARQUET}")"
 mv "${TESTS_JSON_TMP}" "${TESTS_JSON}"
