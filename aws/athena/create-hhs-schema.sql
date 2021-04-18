@@ -510,7 +510,7 @@ CREATE EXTERNAL TABLE covid_hhs_sources.diagnostic_lab_testing (
 ) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/covid-19_diagnostic_lab_testing/v2/parquet/';
 
-CREATE OR REPLACE VIEW covid_hhs_sources.diagnostic_lab_testing_PR AS
+CREATE OR REPLACE VIEW covid_hhs_sources.diagnostic_lab_testing_PR_downloads AS
 SELECT
 	date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
 		AS file_timestamp,
@@ -525,3 +525,45 @@ SELECT
 FROM covid_hhs_sources.diagnostic_lab_testing
 WHERE state = 'PR'
 ORDER BY file_timestamp, date;
+
+
+CREATE OR REPLACE VIEW covid_hhs_sources.diagnostic_lab_testing_PR_daily AS
+WITH downloads AS (
+	SELECT
+		date(file_timestamp AT TIME ZONE 'America/New_York') local_date,
+		max(file_timestamp) AS max_file_timestamp
+	FROM covid_hhs_sources.diagnostic_lab_testing_PR_downloads
+	GROUP BY date(file_timestamp AT TIME ZONE 'America/New_York')
+)
+SELECT
+	file_timestamp,
+	local_date AS bulletin_date,
+	date,
+	sum(new_results_reported) AS tests,
+	sum(new_results_reported) FILTER (
+		WHERE overall_outcome IN ('Positive', 'Negative')
+	) AS conclusive,
+	sum(new_results_reported) FILTER (
+		WHERE overall_outcome = 'Positive'
+	) AS positive,
+	sum(sum(new_results_reported)) OVER (
+		PARTITION BY file_timestamp
+		ORDER BY date
+	) AS cumulative_tests,
+	sum(sum(new_results_reported) FILTER (
+		WHERE overall_outcome IN ('Positive', 'Negative')
+	)) OVER (
+		PARTITION BY file_timestamp
+		ORDER BY date
+	) AS cumulative_conclusive,
+	sum(sum(new_results_reported) FILTER (
+		WHERE overall_outcome = 'Positive'
+	)) OVER (
+		PARTITION BY file_timestamp
+		ORDER BY date
+	) AS cumulative_positive
+FROM covid_hhs_sources.diagnostic_lab_testing_PR_downloads
+INNER JOIN downloads
+	ON max_file_timestamp = file_timestamp
+GROUP BY file_timestamp, local_date, date
+ORDER BY file_timestamp, local_date, date;
