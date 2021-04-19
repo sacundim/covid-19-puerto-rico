@@ -88,7 +88,7 @@ ORDER BY bulletin_date, municipality;
 -- Bioportal data
 --
 
-CREATE EXTERNAL TABLE covid_pr_sources.orders_basic_parquet_v1 (
+CREATE EXTERNAL TABLE covid_pr_sources.orders_basic_parquet_v2 (
     downloadedAt STRING,
     patientId STRING,
     collectedDate STRING,
@@ -99,11 +99,12 @@ CREATE EXTERNAL TABLE covid_pr_sources.orders_basic_parquet_v1 (
     region STRING,
     orderCreatedAt STRING,
     resultCreatedAt STRING
-) STORED AS PARQUET
-LOCATION 's3://covid-19-puerto-rico-data/bioportal/orders-basic/parquet_v1/';
+) PARTITIONED BY (downloaded_date STRING)
+STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/bioportal/orders-basic/parquet_v2/';
 
-CREATE EXTERNAL TABLE covid_pr_sources.minimal_info_unique_tests_parquet_v3 (
-    downloadedAt STRING,
+CREATE EXTERNAL TABLE covid_pr_sources.minimal_info_unique_tests_parquet_v4 (
+	downloadedAt STRING,
     collectedDate STRING,
     reportedDate STRING,
     ageRange STRING,
@@ -111,21 +112,9 @@ CREATE EXTERNAL TABLE covid_pr_sources.minimal_info_unique_tests_parquet_v3 (
     result STRING,
     city STRING,
     createdAt STRING
-) STORED AS PARQUET
-LOCATION 's3://covid-19-puerto-rico-data/bioportal/minimal-info-unique-tests/parquet_v3/';
-
-CREATE EXTERNAL TABLE covid_pr_sources.minimal_info_parquet_v1 (
-    downloadedAt STRING,
-    patientId STRING,
-    collectedDate STRING,
-    reportedDate STRING,
-    ageRange STRING,
-    testType STRING,
-    result STRING,
-    region STRING,
-    createdAt STRING
-) STORED AS PARQUET
-LOCATION 's3://covid-19-puerto-rico-data/bioportal/minimal-info/parquet_v1/';
+) PARTITIONED BY (downloaded_date STRING)
+STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/bioportal/minimal-info-unique-tests/parquet_v4/';
 
 
 -----------------------------------------------------------------------------

@@ -151,6 +151,7 @@ ORDER BY bulletin_date;
 --
 -- The `orders/basic` row-per-test dataset from Bioportal.
 --
+MSCK REPAIR TABLE covid_pr_sources.orders_basic_parquet_v2;
 CREATE TABLE covid_pr_etl.bioportal_orders_basic WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['downloaded_date'],
@@ -159,7 +160,7 @@ CREATE TABLE covid_pr_etl.bioportal_orders_basic WITH (
 WITH downloads AS (
 	SELECT
 		max(downloadedAt) max_downloaded_at
-	FROM covid_pr_sources.orders_basic_parquet_v1
+	FROM covid_pr_sources.orders_basic_parquet_v2
 ), first_clean AS (
 	SELECT
 	    CAST(from_iso8601_timestamp(downloadedAt) AS TIMESTAMP)
@@ -198,7 +199,7 @@ WITH downloads AS (
         END AS test_type,
 	    result,
 	    COALESCE(result, '') LIKE '%Positive%' AS positive
-	FROM covid_pr_sources.orders_basic_parquet_v1 tests
+	FROM covid_pr_sources.orders_basic_parquet_v2 tests
 	INNER JOIN downloads
 	    ON downloads.max_downloaded_at = tests.downloadedAt
 )
