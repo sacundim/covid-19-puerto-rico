@@ -170,3 +170,21 @@ WHERE test_type IN ('Molecular', 'Antígeno')
 AND collected_age <= 14
 GROUP BY bulletins.since_bulletin_date, bulletins.until_bulletin_date, test_type
 ORDER BY test_type;
+
+
+--
+-- HHS Community Profile Report test data for Puerto Rico,
+-- which has often been absurdly wrong.
+--
+SELECT
+	date AS "Fecha reporte federal",
+	sum(total_tests_last_7_days) / 7.0
+		AS "Pruebas diarias",
+	sum(total_positive_tests_last_7_days) / 7.0
+		AS "Positivas diarias",
+	100.0 * sum(total_positive_tests_last_7_days)
+		/ sum(total_tests_last_7_days)
+		AS "Dizque positividad"
+FROM covid_hhs_sources.community_profile_report_municipios
+GROUP BY date
+ORDER BY date ASC;
