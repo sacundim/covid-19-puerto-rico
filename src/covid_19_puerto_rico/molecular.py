@@ -795,6 +795,8 @@ class Hospitalizations(AbstractMolecularChart):
 
 
 class AgeGroups(AbstractMolecularChart):
+    WIDTH = 600
+
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('cases_by_age_5y', self.metadata,
                                  schema='covid_pr_etl', autoload=True)
@@ -802,8 +804,12 @@ class AgeGroups(AbstractMolecularChart):
             table.c.bulletin_date,
             table.c.collected_date,
             table.c.youngest,
-            table.c.cases,
-            table.c.cases_1m
+#            table.c.cases,
+            table.c.cases_1m,
+#            table.c.encounters,
+            table.c.encounters_1m,
+            table.c.novels,
+            table.c.rejections
         ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
                       table.c.bulletin_date <= max(bulletin_dates)))
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
@@ -812,15 +818,46 @@ class AgeGroups(AbstractMolecularChart):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
     def make_chart(self, df, bulletin_date):
-        WIDTH = 600
+        cases = self.make_subchart(df, alt.Color(
+            'mean_cases_1m:Q', title='Casos diarios por millón del rango etario',
+            scale=alt.Scale(scheme='spectral', type='sqrt', reverse=True),
+            legend=alt.Legend(orient='top', gradientLength=self.WIDTH,
+                              labelOverlap=True, labelSeparation=5, titleLimit=self.WIDTH)))
+        encounters = self.make_subchart(df, alt.Color(
+            'mean_encounters_1m:Q', title='Pruebas diarias (antígeno + molecular) por millón del rango etario',
+            scale=alt.Scale(scheme='spectral', type='sqrt'),
+            legend=alt.Legend(orient='top', gradientLength=self.WIDTH,
+                              labelOverlap=True, labelSeparation=5, titleLimit=self.WIDTH)))
+        positivity = self.make_subchart(df, alt.Color(
+            'positive_rate:Q', title='Positividad (moleculares, sin pruebas de seguimiento)',
+            scale=alt.Scale(scheme='spectral', type='linear', reverse=True,
+                            domain=[0.0, 0.2], domainMid=0.05, clamp=True),
+            legend=alt.Legend(orient='top', gradientLength=self.WIDTH, format='%',
+                              labelOverlap=True, labelSeparation=5, titleLimit=self.WIDTH)))
+        return alt.vconcat(cases, encounters, positivity).resolve_scale(
+            color='independent'
+        )
+
+    def make_subchart(self, df, color):
         return alt.Chart(df).transform_window(
             groupby=['youngest', 'bulletin_date'],
             sort=[{'field': 'collected_date'}],
             frame=[-6, 0],
-            mean_cases='mean(cases)',
-            mean_cases_1m='mean(cases_1m)'
+#            mean_cases='mean(cases)',
+            mean_cases_1m='mean(cases_1m)',
+#            mean_encounters = 'mean(encounters)',
+            mean_encounters_1m = 'mean(encounters_1m)',
+            sum_novels = 'sum(novels)',
+            sum_rejections = 'sum(rejections)'
+        ).transform_calculate(
+            positive_rate=alt.datum.sum_novels / (alt.datum.sum_novels + alt.datum.sum_rejections)
         ).transform_impute(
             impute='mean_cases_1m',
+            key='collected_date',
+            groupby=['youngest'],
+            value=0
+        ).transform_impute(
+            impute='mean_encounters_1m',
             key='collected_date',
             groupby=['youngest'],
             value=0
@@ -828,7 +865,7 @@ class AgeGroups(AbstractMolecularChart):
             oldest='if(datum.youngest < 80, datum.youngest + 4, null)',
             edades="if(datum.oldest == null, '≤ ' + datum.youngest, datum.youngest + ' a ' + datum.oldest)"
         ).mark_rect().encode(
-            x=alt.X('collected_date:T', timeUnit='yearmonthdate', title='Fecha de muestra',
+            x=alt.X('collected_date:T', timeUnit='yearmonthdate', title=None,
                     axis=alt.Axis(
                         labelExpr="[timeFormat(datum.value, '%b'),"
                                   " timeFormat(datum.value, '%m') == '01'"
@@ -837,19 +874,18 @@ class AgeGroups(AbstractMolecularChart):
             y=alt.Y('youngest:O', title='Edad',
                     axis=alt.Axis(labelBaseline='alphabetic',
                                   labelOverlap=True, tickBand='extent')),
-            color=alt.Color('mean_cases_1m:Q', title='Casos diarios por millón',
-                            sort='descending', scale=alt.Scale(scheme='spectral', type='sqrt'),
-                            legend=alt.Legend(orient='top', gradientLength=WIDTH,
-                                              labelOverlap=True, labelSeparation=5)),
+            color=color,
             tooltip=[
                 alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                 alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                 alt.Tooltip('edades:N', title='Edad'),
-                alt.Tooltip('mean_cases:Q', format='.1f', title='Casos diarios (7 días)'),
-                alt.Tooltip('mean_cases_1m:Q', format='.1f', title='Casos (7 días, por millón)')
+#                alt.Tooltip('mean_cases:Q', format=',.1f', title='Casos diarios (7 días)'),
+                alt.Tooltip('mean_cases_1m:Q', format=',.1f', title='Casos (7 días, por millón)'),
+#                alt.Tooltip('mean_encounters:Q', format=',.1f', title='Pruebas diarias (7 días)'),
+                alt.Tooltip('mean_encounters_1m:Q', format=',.1f', title='Pruebas (7 días, por millón)')
             ]
         ).properties(
-            width=WIDTH, height=225
+            width=self.WIDTH, height=125
         )
 
 

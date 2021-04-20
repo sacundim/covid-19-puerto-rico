@@ -587,7 +587,15 @@ SELECT
 	age_dim.age_gte,
 	age_dim.age_lt,
 	age_dim.population,
-	sum(cases) AS cases
+	sum(encounters) encounters,
+	sum(cases) cases,
+	sum(rejections) rejections,
+	sum(antigens) antigens,
+	sum(molecular) molecular,
+	sum(positive_antigens) positive_antigens,
+	sum(positive_molecular) positive_molecular,
+	sum(initial_molecular) initial_molecular,
+	sum(initial_positive_molecular) initial_positive_molecular
 FROM covid_pr_etl.bioportal_encounters_cube encounters
 INNER JOIN covid_pr_sources.bioportal_age_ranges bio
 	ON bio.age_range = encounters.age_range
@@ -1052,36 +1060,12 @@ SELECT
 	age_lt - 1 AS oldest,
 	cases,
 	1e6 * cases / population
-		AS cases_1m
+		AS cases_1m,
+    encounters,
+    initial_positive_molecular AS novels,
+	rejections
 FROM covid_pr_etl.bioportal_acs_age_curve
 ORDER BY
 	bulletin_date DESC,
 	collected_date DESC,
 	youngest;
-
---
--- Version with 10-year age bands instead of 5-year:
---
-CREATE OR REPLACE VIEW covid_pr_etl.cases_by_age_10y AS
-SELECT
-	bulletin_date,
-	collected_date,
-	age_dim.age_gte AS youngest,
-	age_dim.age_lt - 1 AS oldest,
-	sum(curve.population) AS population,
-	sum(cases) AS cases,
-	1e6 * sum(cases) / sum(curve.population)
-		AS cases_1m
-FROM covid_pr_etl.bioportal_acs_age_curve curve
-INNER JOIN covid_pr_sources.prdoh_age_ranges age_dim
-	ON age_dim.age_gte <= curve.age_gte
-	AND curve.age_gte < COALESCE(age_dim.age_lt, 9999)
-GROUP BY
-	bulletin_date,
-	collected_date,
-	age_dim.age_gte,
-	age_dim.age_lt
-ORDER BY
-	bulletin_date DESC,
-	collected_date DESC,
-	age_dim.age_gte;
