@@ -793,6 +793,69 @@ class Hospitalizations(AbstractMolecularChart):
             width=575, height=350
         )
 
+class RecentHospitalizations(AbstractMolecularChart):
+    """Hospitalizations, based on PRDoH data we scrape."""
+
+    SORT_ORDER = ['COVID', 'No COVID', 'Disponibles']
+    COLORS = ['#d4322c', '#f58518', '#a4d86e']
+
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('prdoh_hospitalizations', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.date.label('Fecha'),
+            table.c.age.label('Edad'),
+            table.c.resource.label('Tipo'),
+            table.c.total.label('Total'),
+            table.c.covid.label('COVID'),
+            table.c.nocovid.label('No COVID'),
+            table.c.disp.label('Disponibles')
+        ]).where(and_(table.c.date <= max(bulletin_dates),
+                      # Data before this date is bad:
+                      table.c.date >= datetime.date(2021, 3, 29)))
+        df = pd.read_sql_query(query, connection, parse_dates=['Fecha'])
+        return pd.melt(df, ['Fecha', 'Edad', 'Tipo', 'Total'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['Fecha'] <= pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df).transform_calculate(
+            order="if(datum.variable == 'COVID', 0, if(datum.variable == 'No COVID', 1, 2))",
+            pct=alt.datum.value / alt.datum['Total']
+        ).mark_area(opacity=0.85).encode(
+            x=alt.X('Fecha:T', title=None,
+                    axis=alt.Axis(format='%-d/%-m', labelBound=True,
+                                  labelAlign='right', labelOffset=4)),
+            y=alt.Y('value:Q', title=None, stack=True,
+                    axis=alt.Axis(minExtent=30, format='s', labelFlush=True,
+                                  labelExpr="if(datum.value > 0, datum.label, '')")),
+            color=alt.Color('variable:N', title=None, sort=self.SORT_ORDER,
+                            legend=alt.Legend(orient='top', columns=3, labelLimit=250),
+                            scale=alt.Scale(range=self.COLORS)),
+            order=alt.Order('order:O'),
+            tooltip=[
+                alt.Tooltip('Fecha:T'),
+                alt.Tooltip('Edad:N'),
+                alt.Tooltip('Tipo:N'),
+                alt.Tooltip('Total:Q', format=',d'),
+                alt.Tooltip('variable:N', title='Variable'),
+                alt.Tooltip('value:Q', format=',d', title='Valor'),
+                alt.Tooltip('pct:Q', format='.1%', title='% del total')
+            ]
+        ).properties(
+            width=275, height=150
+        ).facet(
+            row=alt.Row('Tipo:N', title=None),
+            column=alt.Column('Edad:N', title=None)
+        ).resolve_scale(
+            y='independent'
+        ).configure_facet(
+            spacing=10
+        ).configure_axis(
+            labelFontSize=12
+        )
+
 
 class AgeGroups(AbstractMolecularChart):
     def fetch_data(self, connection, bulletin_dates):

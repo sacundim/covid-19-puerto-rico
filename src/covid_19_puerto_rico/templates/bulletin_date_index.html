@@ -28,6 +28,7 @@
 
     <ul>
         <li><a href="#RecentCases_section">Pruebas, casos y muertes recientes</a></li>
+        <li><a href="#RecentHospitalizations_section">Disponibilidad hospitalaria</a></li>
         <li><a href="#NewCases_section">Curva de casos nuevos (Bioportal)</a></li>
         <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
         <li><a href="#VaccinationMap_section">Vacunados por municipio</a></li>
@@ -146,6 +147,44 @@
         a pesar de que esta suele ser más tardía.  En esta gráfica usamos datos del Bioportal para
         corregir esto y adjudicar esos casos a la fecha más temprana, que mejor refleja cuándo se
         contagió el paciente.</p>
+</div>
+
+
+<div class="section" id="RecentHospitalizations_section">
+    <h1>Disponibilidad hospitalaria</h1>
+
+    <div id="RecentHospitalizations"></div>
+    <script type="text/javascript">
+      embedChart('RecentHospitalizations', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Historial de ocupación hospitalaria de adultos y pediátricos, camas regulares y unidades
+        de cuidado intensivo (UCI), según <a href="https://covid19datos.salud.gov.pr/">la página
+            de estadísticas de COVID-19 del Departamento de Salud de Puerto Rico</a>.</p>
+
+    <h3>Advertencias</h3>
+
+    <p>En esta página se usan tres fuentes de datos distintas respecto a hospitalizaciones, que
+        arrojan números un tanto distintos:</p>
+
+    <ol>
+        <li>Datos de <a href="https://covid19datos.salud.gov.pr/"><code>covid19datos.salud.gov.pr</code></a>
+            que capturamos diario y archivamos, pero no tenemos datos más temprano que el 26 de
+            marzo del 2021.</li>
+        <li>Datos que descargamos diario de <a href="https://healthdata.gov/">HealthData.gov</a>,
+            la página de datos de COVID-19 del Departamento de Salud y Servicios Humanos del
+            gobierno federal de los Estados Unidos ("Health and Human Services" o HHS).  De esta
+            fuente contamos con datos históricos desde agosto del 2020 pero los meses tempranos
+            muestran aparentes errores.</li>
+        <li>Datos archivados del <a href="https://covidtracking.com/">COVID Tracking Project</a>,
+            que cesó operaciones el 7 de marzo del 2021.  Este proyecto primero capturó datos del
+            Departamento de Salud de Puerto Rico y luego cambió a usar los federales, y es el
+            mejor archivo público para fechas más antiguas.</li>
+    </ol>
+
+    <p>Esta gráfica usa la #1. Otras visualizaciones usan distintos, y no cuadran 100% entre sí.</p>
 </div>
 
 
