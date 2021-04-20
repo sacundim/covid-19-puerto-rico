@@ -820,7 +820,7 @@ class RecentHospitalizations(AbstractMolecularChart):
         return df.loc[df['Fecha'] <= pd.to_datetime(bulletin_date)]
 
     def make_chart(self, df, bulletin_date):
-        return alt.Chart(df).transform_calculate(
+        area = alt.Chart(df).transform_calculate(
             order="if(datum.variable == 'COVID', 0, if(datum.variable == 'No COVID', 1, 2))",
             pct=alt.datum.value / alt.datum['Total']
         ).mark_area(opacity=0.85).encode(
@@ -843,8 +843,17 @@ class RecentHospitalizations(AbstractMolecularChart):
                 alt.Tooltip('value:Q', format=',d', title='Valor'),
                 alt.Tooltip('pct:Q', format='.1%', title='% del total')
             ]
-        ).properties(
-            width=275, height=150
+        )
+
+        threshold = alt.Chart(df).transform_calculate(
+            threshold=alt.datum['Total'] * 0.70
+        ).mark_line(color='gray', strokeWidth=1, strokeDash=[5, 3]).encode(
+            x=alt.X('Fecha:T', title=None),
+            y=alt.Y('threshold:Q', title=None)
+        )
+
+        return alt.layer(area, threshold).properties(
+            width=275, height=175
         ).facet(
             row=alt.Row('Tipo:N', title=None),
             column=alt.Column('Edad:N', title=None)
