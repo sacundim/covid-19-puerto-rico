@@ -101,9 +101,10 @@ ORDER BY date DESC;
 
 
 --
--- Big municipality data table for a SPLOM chart
+-- Municipal vaccinations according to PRDoH
 --
-CREATE TABLE covid_pr_etl.municipal_splom WITH (
+DROP TABLE IF EXISTS covid_pr_etl.municipal_vaccinations;
+CREATE TABLE covid_pr_etl.municipal_vaccinations WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
@@ -111,24 +112,7 @@ CREATE TABLE covid_pr_etl.municipal_splom WITH (
 SELECT
 	local_date AS bulletin_date,
 	municipio,
-	race.fips,
 	population,
-	households_median,
-	households_lt_10k_pct / 100.0
-		AS households_lt_10k_pct,
-    households_gte_200k_pct / 100.0
-    	AS households_gte_200k_pct,
-	white_alone,
-	CAST(white_alone AS DOUBLE)
-		/ population
-		AS white_alone_pct,
-	black_alone,
-	CAST(black_alone AS DOUBLE)
-		/ population
-		AS black_alone_pct,
-	cumulative_cases,
-	1e3 * cumulative_cases / population
-		AS cumulative_cases_1k,
 	total_dosis1,
 	CAST(total_dosis1 AS DOUBLE)
 		/ population
@@ -138,13 +122,8 @@ SELECT
 		/ population
 		AS total_dosis2_pct
 FROM covid19datos_sources.vacunaciones_municipios_totales_daily vax
-INNER JOIN covid_pr_sources.bulletin_municipal cases
-	ON cases.bulletin_date = vax.local_date
-	AND cases.municipality = vax.municipio
 INNER JOIN covid_pr_sources.acs_2019_5y_municipal_race race
 	ON vax.municipio = race.municipality
-INNER JOIN covid_pr_sources.acs_2019_5y_municipal_household_income income
-	ON vax.municipio = income.municipality
 ORDER BY bulletin_date;
 
 

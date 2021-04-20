@@ -933,7 +933,7 @@ class VaccinationMap(AbstractMolecularChart):
                               format=alt.TopoDataFormat(type='topojson', feature='municipalities'))
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_splom', self.metadata,
+        table = sqlalchemy.Table('municipal_vaccinations', self.metadata,
                                  schema='covid_pr_etl', autoload=True)
         query = select([
             table.c.bulletin_date,
