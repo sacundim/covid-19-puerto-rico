@@ -810,9 +810,7 @@ class RecentHospitalizations(AbstractMolecularChart):
             table.c.covid.label('COVID'),
             table.c.nocovid.label('No COVID'),
             table.c.disp.label('Disponibles')
-        ]).where(and_(table.c.date <= max(bulletin_dates),
-                      # Data before this date is bad:
-                      table.c.date >= datetime.date(2021, 3, 29)))
+        ]).where(table.c.date <= max(bulletin_dates))
         df = pd.read_sql_query(query, connection, parse_dates=['Fecha'])
         return pd.melt(df, ['Fecha', 'Edad', 'Tipo', 'Total'])
 

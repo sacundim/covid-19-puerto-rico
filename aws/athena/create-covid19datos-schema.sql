@@ -66,17 +66,15 @@ ORDER BY downloaded_at;
 CREATE OR REPLACE VIEW covid19datos_sources.hospitales_daily AS
 WITH downloads AS (
 	SELECT
-		date(downloaded_at AT TIME ZONE 'America/Puerto_Rico') local_date,
-		max(downloaded_at) AS max_downloaded_at
+		fe_hospitalario,
+		max(downloaded_at) AS downloaded_at
 	FROM covid19datos_sources.hospitales_downloads
-	GROUP BY date(downloaded_at AT TIME ZONE 'America/Puerto_Rico')
+	GROUP BY fe_hospitalario
 )
-SELECT
-	local_date,
-	hospitales_downloads.*
+SELECT *
 FROM covid19datos_sources.hospitales_downloads
 INNER JOIN downloads
-	ON max_downloaded_at = downloaded_at;
+	USING (fe_hospitalario, downloaded_at);
 
 
 ---------------------------------------------------------------------------
