@@ -757,12 +757,12 @@ class Hospitalizations(AbstractMolecularChart):
             table.c.date,
             table.c.hospitalized_currently.label('Hospitalizados'),
             table.c.in_icu_currently.label('Cuidado intensivo'),
-        ]).where(table.c.date <= max(bulletin_dates))
+        ]).where(table.c.date <= max(bulletin_dates) + datetime.timedelta(days=1))
         df = pd.read_sql_query(query, connection, parse_dates=['date'])
         return pd.melt(df, ['date']).dropna()
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['date'] <= pd.to_datetime(bulletin_date)]
+        return df.loc[df['date'] <= pd.to_datetime(bulletin_date + datetime.timedelta(days=1))]
 
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df).transform_window(
@@ -810,12 +810,12 @@ class RecentHospitalizations(AbstractMolecularChart):
             table.c.covid.label('COVID'),
             table.c.nocovid.label('No COVID'),
             table.c.disp.label('Disponibles')
-        ]).where(table.c.date <= max(bulletin_dates))
+        ]).where(table.c.date <= max(bulletin_dates) + datetime.timedelta(days=1))
         df = pd.read_sql_query(query, connection, parse_dates=['Fecha'])
         return pd.melt(df, ['Fecha', 'Edad', 'Tipo', 'Total'])
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['Fecha'] <= pd.to_datetime(bulletin_date)]
+        return df.loc[df['Fecha'] <= pd.to_datetime(bulletin_date + datetime.timedelta(days=1))]
 
     def make_chart(self, df, bulletin_date):
         area = alt.Chart(df).transform_calculate(
