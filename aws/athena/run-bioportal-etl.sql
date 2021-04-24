@@ -470,6 +470,7 @@ CREATE TABLE covid_pr_etl.bioportal_encounters_agg WITH (
 SELECT
     bulletin_date,
 	collected_date,
+	date_diff('day', collected_date, bulletin_date) age,
 	sum(encounters) encounters,
 	sum(cases) cases,
 	sum(rejections) rejections,
@@ -514,7 +515,43 @@ SELECT
 	sum(sum(initial_positive_molecular)) OVER (
 	    PARTITION BY bulletin_date
 	    ORDER BY collected_date
-	) AS cumulative_initial_positive_molecular
+	) AS cumulative_initial_positive_molecular,
+	sum(encounters) - lag(sum(encounters), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_encounters,
+	sum(cases) - lag(sum(cases), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_cases,
+	sum(rejections) - lag(sum(rejections), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_rejections,
+	sum(antigens) - lag(sum(antigens), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_antigens,
+	sum(molecular) - lag(sum(molecular), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_molecular,
+	sum(positive_antigens) - lag(sum(positive_antigens), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_positive_antigens,
+	sum(positive_molecular) - lag(sum(positive_molecular), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_positive_molecular,
+	sum(initial_molecular) - lag(sum(initial_molecular), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_initial_molecular,
+	sum(initial_positive_molecular) - lag(sum(initial_positive_molecular), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_initial_positive_molecular
 FROM covid_pr_etl.bioportal_encounters_cube
 GROUP BY
 	bulletin_date,
