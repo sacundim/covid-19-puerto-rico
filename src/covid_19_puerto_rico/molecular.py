@@ -1070,7 +1070,10 @@ class EncounterLag(AbstractMolecularChart):
         return pd.melt(df2.reset_index(), ['bulletin_date', 'test_type', 'age_gte', 'age_lt'])
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] >= pd.to_datetime(bulletin_date - datetime.timedelta(days=49))]
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=49))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]
 
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df).transform_joinaggregate(
