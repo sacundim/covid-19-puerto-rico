@@ -1207,7 +1207,8 @@ WHERE age <= 20
 GROUP BY
 	bulletin_date,
 	CASE
-		WHEN 0 <= age AND age < 7 THEN age
+		WHEN 0 <= age AND age < 3 THEN age
+		WHEN 3 <= age AND age < 7 THEN 3
 		WHEN 7 <= age AND age < 14 THEN 14
 		WHEN 14 <= age AND age < 21 THEN 21
 	END

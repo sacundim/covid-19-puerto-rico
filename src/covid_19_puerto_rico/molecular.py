@@ -1092,16 +1092,17 @@ class EncounterLag(AbstractMolecularChart):
             smoothed_pct=alt.datum.mean_delta_value_7d / alt.datum.mean_whole_bulletin_7d
         ).transform_filter(
             alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
-        ).mark_rect().encode(
+        ).mark_area().encode(
             x=alt.X('bulletin_date:T', timeUnit='yearmonthdate', title='Fecha de datos',
                     axis=alt.Axis(format='%-d/%-m', labelOverlap=True, labelSeparation=5, labelFontSize=11)),
-            y=alt.Y('age_lt:O', sort='descending', title='Rezago (días)',
-                    axis=alt.Axis(labelFontSize=11, orient='right',
-                                  tickBand='extent', labelBaseline='line-bottom')),
-            color=alt.Color('smoothed_pct:Q', title='Añadidos (promedio 7 días)',
-                            scale=alt.Scale(scheme='spectral', reverse=True),
+            y=alt.Y('mean_delta_value_7d:Q', stack='normalize', title=None,
+                    axis=alt.Axis(labelFontSize=11, orient='right', format='%')),
+            order=alt.Order('age_gte:O'),
+            color=alt.Color('age_gte:Q', title='Rezago entre muestra y Bioportal (días)',
+                            scale=alt.Scale(scheme='redyellowgreen', reverse=True,
+                                            domain=[0, 14], domainMid=2, clamp=True),
                             legend=alt.Legend(orient='top', gradientLength=self.WIDTH,
-                                              titleLimit=self.WIDTH, format='%')),
+                                              titleLimit=self.WIDTH, format='d')),
             tooltip=[
                 alt.Tooltip('bulletin_date:T', title='Fecha de datos'),
                 alt.Tooltip('collected_since:T', title='Muestras desde'),
@@ -1120,4 +1121,6 @@ class EncounterLag(AbstractMolecularChart):
                               sort=['Todas', 'Moleculares', 'Antígenos']),
             row=alt.Row('variable:N', title=None, sort=['Pruebas', 'Casos'],
                         header=alt.Header(orient='left'))
+        ).resolve_scale(
+            y='shared'
         )
