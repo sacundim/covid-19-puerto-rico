@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import sqlalchemy
 from covid_19_puerto_rico import util
+from sqlalchemy import func
 from sqlalchemy import text
 from sqlalchemy.sql import select, and_
 from . import charts
@@ -1033,4 +1034,68 @@ class MunicipalSPLOM(AbstractMolecularChart):
         ).repeat(
             row=self.VARIABLES,
             column=list(reversed(self.VARIABLES))
+        )
+
+
+class EncounterLag(AbstractMolecularChart):
+    WIDTH = 575
+
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('bioportal_encounters_agg', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.collected_date,
+            table.c.age,
+            func.sum(table.c.delta_encounters).label('delta_encounters'),
+            func.sum(table.c.delta_cases).label('delta_cases'),
+        ]).where(
+            and_(min(bulletin_dates) - datetime.timedelta(days=42) <= table.c.bulletin_date,
+                 table.c.bulletin_date <= max(bulletin_dates),
+                 table.c.age <= 6)
+        ).group_by(
+            table.c.bulletin_date,
+            table.c.collected_date,
+            table.c.age
+        )
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] >= pd.to_datetime(bulletin_date - datetime.timedelta(days=49))]
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df).transform_joinaggregate(
+            groupby=['bulletin_date'],
+            whole_bulletin_1d='sum(delta_cases)'
+        ).transform_window(
+            groupby=['age'],
+            sort=[{'field': 'bulletin_date'}],
+            frame=[-6, 0],
+            mean_whole_bulletin_7d='mean(whole_bulletin_1d)',
+            mean_delta_cases_7d='mean(delta_cases)'
+        ).transform_calculate(
+            age_lt=alt.datum.age + 1,
+            smoothed_pct=alt.datum.mean_delta_cases_7d / alt.datum.mean_whole_bulletin_7d
+        ).transform_filter(
+            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
+        ).mark_rect().encode(
+            x=alt.X('bulletin_date:T', timeUnit='yearmonthdate', title='Fecha de datos',
+                    axis=alt.Axis(format='%-d/%-m')),
+            y=alt.Y('age_lt:O', sort='descending', title='Rezago (días)',
+                    axis=alt.Axis(labelOverlap=True, tickBand='extent', labelBaseline='bottom')),
+            color=alt.Color('smoothed_pct:Q', title='Añadidos (promedio 7 días)',
+                            scale=alt.Scale(scheme='spectral', reverse=True),
+                            legend=alt.Legend(orient='top', gradientLength=self.WIDTH,
+                                              titleLimit=self.WIDTH, format='%')),
+            tooltip=[
+                alt.Tooltip('bulletin_date:T', title='Fecha de datos'),
+                alt.Tooltip('collected_date:T', title='Fecha de muestra'),
+                alt.Tooltip('delta_cases:Q', format=',d', title='Casos añadidos (crudo)'),
+                alt.Tooltip('mean_delta_cases_7d:Q', format='.1f',
+                            title='Casos añadidos (promedio 7 días de datos)'),
+                alt.Tooltip('smoothed_pct:Q', format='.1%',
+                            title='Porciento de casos añadidos (promedio 7 días de datos)')
+            ]
+        ).properties(
+            width=self.WIDTH, height=200
         )
