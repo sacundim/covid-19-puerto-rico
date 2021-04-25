@@ -1092,7 +1092,7 @@ class EncounterLag(AbstractMolecularChart):
             smoothed_pct=alt.datum.mean_delta_value_7d / alt.datum.mean_whole_bulletin_7d
         ).transform_filter(
             alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
-        ).mark_area().encode(
+        ).mark_area(opacity=0.85).encode(
             x=alt.X('bulletin_date:T', timeUnit='yearmonthdate', title='Fecha de datos',
                     axis=alt.Axis(format='%-d/%-m', labelOverlap=True, labelSeparation=5, labelFontSize=11)),
             y=alt.Y('mean_delta_value_7d:Q', stack='normalize', title=None,
