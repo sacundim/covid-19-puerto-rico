@@ -1040,9 +1040,8 @@ class MunicipalSPLOM(AbstractMolecularChart):
 class EncounterLag(AbstractMolecularChart):
     WIDTH = 575
     SORT_ORDER = [
-        'Pruebas (todas)', 'Casos (todos)',
-        'Pruebas (antígenos)', 'Casos (antígenos)',
-        'Pruebas (moleculares)', 'Casos (moleculares)'
+        'Pruebas (todas)', 'Pruebas (antígenos)', 'Pruebas (moleculares)',
+        'Casos (todos)', 'Casos (antígenos)', 'Casos (moleculares)'
     ]
 
     def fetch_data(self, connection, bulletin_dates):
@@ -1087,9 +1086,9 @@ class EncounterLag(AbstractMolecularChart):
             alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
         ).mark_rect().encode(
             x=alt.X('bulletin_date:T', timeUnit='yearmonthdate', title='Fecha de datos',
-                    axis=alt.Axis(format='%-d/%-m')),
+                    axis=alt.Axis(format='%-d/%-m', labelOverlap=True, labelSeparation=5, labelFontSize=11)),
             y=alt.Y('age_lt:O', sort='descending', title='Rezago (días)',
-                    axis=alt.Axis(labelOverlap=True, tickBand='extent', labelBaseline='bottom')),
+                    axis=alt.Axis(labelFontSize=11, tickBand='extent', labelBaseline='line-bottom')),
             color=alt.Color('smoothed_pct:Q', title='Añadidos (promedio 7 días)',
                             scale=alt.Scale(scheme='spectral', reverse=True),
                             legend=alt.Legend(orient='top', gradientLength=self.WIDTH,
@@ -1105,8 +1104,8 @@ class EncounterLag(AbstractMolecularChart):
                 alt.Tooltip('smoothed_pct:Q', format='.1%', title='Porciento (7 días)')
             ]
         ).properties(
-            width=275, height=130
+            width=175, height=110
         ).facet(
-            columns=2,
+            columns=3,
             facet=alt.Facet('variable:N', title=None, sort=self.SORT_ORDER)
         )
