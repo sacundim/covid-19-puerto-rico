@@ -1096,7 +1096,8 @@ class EncounterLag(AbstractMolecularChart):
             x=alt.X('bulletin_date:T', timeUnit='yearmonthdate', title='Fecha de datos',
                     axis=alt.Axis(format='%-d/%-m', labelOverlap=True, labelSeparation=5, labelFontSize=11)),
             y=alt.Y('age_lt:O', sort='descending', title='Rezago (días)',
-                    axis=alt.Axis(labelFontSize=11, tickBand='extent', labelBaseline='line-bottom')),
+                    axis=alt.Axis(labelFontSize=11, orient='right',
+                                  tickBand='extent', labelBaseline='line-bottom')),
             color=alt.Color('smoothed_pct:Q', title='Añadidos (promedio 7 días)',
                             scale=alt.Scale(scheme='spectral', reverse=True),
                             legend=alt.Legend(orient='top', gradientLength=self.WIDTH,
@@ -1116,7 +1117,7 @@ class EncounterLag(AbstractMolecularChart):
             width=175, height=110
         ).facet(
             column=alt.Column('test_type:N', title=None,
-                              sort=['Todas', 'Antígenos', 'Moleculares']),
+                              sort=['Todas', 'Moleculares', 'Antígenos']),
             row=alt.Row('variable:N', title=None, sort=['Pruebas', 'Casos'],
-                        header=alt.Header(orient='right'))
+                        header=alt.Header(orient='left'))
         )
