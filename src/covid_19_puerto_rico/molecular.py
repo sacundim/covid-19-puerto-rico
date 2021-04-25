@@ -1080,6 +1080,8 @@ class EncounterLag(AbstractMolecularChart):
             mean_delta_value_7d='mean(value)'
         ).transform_calculate(
             range="if(datum.age_lt - 1 == datum.age_gte, datum.age_gte, datum.age_gte + ' a ' + (datum.age_lt - 1))",
+            collected_since="timeOffset('day', datum.bulletin_date, -datum.age_lt + 1)",
+            collected_until="timeOffset('day', datum.bulletin_date, -datum.age_gte)",
             smoothed_pct=alt.datum.mean_delta_value_7d / alt.datum.mean_whole_bulletin_7d
         ).transform_filter(
             alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
@@ -1094,6 +1096,8 @@ class EncounterLag(AbstractMolecularChart):
                                               titleLimit=self.WIDTH, format='%')),
             tooltip=[
                 alt.Tooltip('bulletin_date:T', title='Fecha de datos'),
+                alt.Tooltip('collected_since:T', title='Muestras desde'),
+                alt.Tooltip('collected_until:T', title='Muestras hasta'),
                 alt.Tooltip('variable:N', title='Variable'),
                 alt.Tooltip('range:N', title='Rezago (días)'),
                 alt.Tooltip('value:Q', format=',d', title='Añadidos (crudo)'),
