@@ -1051,18 +1051,23 @@ class EncounterLag(AbstractMolecularChart):
             table.c.bulletin_date,
             table.c.age_gte,
             table.c.age_lt,
-            table.c.delta_encounters.label('Pruebas (todas)'),
-            table.c.delta_cases.label('Casos (todos)'),
-            table.c.delta_antigens.label('Pruebas (antígenos)'),
-            table.c.delta_antigens_cases.label('Casos (antígenos)'),
-            table.c.delta_molecular.label('Pruebas (moleculares)'),
-            table.c.delta_molecular_cases.label('Casos (moleculares)')
+            table.c.delta_encounters.label('Pruebas_Todas'),
+            table.c.delta_cases.label('Casos_Todas'),
+            table.c.delta_antigens.label('Pruebas_Antígenos'),
+            table.c.delta_antigens_cases.label('Casos_Antígenos'),
+            table.c.delta_molecular.label('Pruebas_Moleculares'),
+            table.c.delta_molecular_cases.label('Casos_Moleculares')
         ]).where(
             and_(min(bulletin_dates) - datetime.timedelta(days=42) <= table.c.bulletin_date,
                  table.c.bulletin_date <= max(bulletin_dates))
         )
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
-        return pd.melt(df, ['bulletin_date', 'age_gte', 'age_lt'])
+        df1 = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+        df2 = pd.wide_to_long(
+            df1, ['Casos', 'Pruebas'],
+            i=['bulletin_date', 'age_gte', 'age_lt'],
+            j='test_type', sep='_', suffix='.*'
+        )
+        return pd.melt(df2.reset_index(), ['bulletin_date', 'test_type', 'age_gte', 'age_lt'])
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] >= pd.to_datetime(bulletin_date - datetime.timedelta(days=49))]
@@ -1097,6 +1102,7 @@ class EncounterLag(AbstractMolecularChart):
                 alt.Tooltip('bulletin_date:T', title='Fecha de datos'),
                 alt.Tooltip('collected_since:T', title='Muestras desde'),
                 alt.Tooltip('collected_until:T', title='Muestras hasta'),
+                alt.Tooltip('test_type:N', title='Tipo de prueba'),
                 alt.Tooltip('variable:N', title='Variable'),
                 alt.Tooltip('range:N', title='Rezago (días)'),
                 alt.Tooltip('value:Q', format=',d', title='Añadidos (crudo)'),
@@ -1106,6 +1112,8 @@ class EncounterLag(AbstractMolecularChart):
         ).properties(
             width=175, height=110
         ).facet(
-            columns=3,
-            facet=alt.Facet('variable:N', title=None, sort=self.SORT_ORDER)
+            column=alt.Column('test_type:N', title=None,
+                              sort=['Todas', 'Antígenos', 'Moleculares']),
+            row=alt.Row('variable:N', title=None, sort=['Pruebas', 'Casos'],
+                        header=alt.Header(orient='right'))
         )
