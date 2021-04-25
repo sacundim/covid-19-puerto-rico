@@ -364,11 +364,24 @@ WITH downloads AS (
             WHERE tests.positive
             AND NOT tests.followup
         ) cases,
-        -- A rejected case is a non-followup encounter that had no 
+        -- An antigens case is a test encounter that had a positive antigens
+        -- test and is not a followup to an earlier positive encounter.
+        count(*) FILTER (
+            WHERE tests.has_positive_antigens
+            AND NOT tests.followup
+        ) antigens_cases,
+        -- A molecular case is a test encounter that had a positive PCR
+        -- test, no positive antigen test, and is not a followup to an
+        -- earlier positive encounter.
+        count(*) FILTER (
+            WHERE tests.has_positive_molecular
+            AND NOT tests.has_positive_antigens
+            AND NOT tests.followup
+        ) molecular_cases,
+        -- A rejected case is a non-followup encounter that had no
         -- positive tests and at least one of the tests is PCR.
         count(*) FILTER (
             WHERE tests.has_molecular
-            AND NOT tests.positive
             AND NOT tests.followup
         ) rejections,
         -- Note that `has_antigens` and `has_molecular` don't
@@ -451,6 +464,14 @@ SELECT
         PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
     ) AS cumulative_initial_molecular,
+    sum(antigens_cases) OVER (
+        PARTITION BY bulletin_date, age_range
+        ORDER BY collected_date
+    ) AS cumulative_antigens_cases,
+    sum(molecular_cases) OVER (
+        PARTITION BY bulletin_date, age_range
+        ORDER BY collected_date
+    ) AS cumulative_molecular_cases,
     sum(initial_positive_molecular) OVER (
         PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
@@ -478,6 +499,8 @@ SELECT
 	sum(molecular) molecular,
 	sum(positive_antigens) positive_antigens,
 	sum(positive_molecular) positive_molecular,
+	sum(antigens_cases) antigens_cases,
+	sum(molecular_cases) molecular_cases,
 	sum(initial_molecular) initial_molecular,
 	sum(initial_positive_molecular) initial_positive_molecular,
 	sum(sum(encounters)) OVER (
@@ -508,6 +531,14 @@ SELECT
 	    PARTITION BY bulletin_date
 	    ORDER BY collected_date
 	) AS cumulative_positive_molecular,
+	sum(sum(antigens_cases)) OVER (
+	    PARTITION BY bulletin_date
+	    ORDER BY collected_date
+	) AS cumulative_antigens_cases,
+	sum(sum(molecular_cases)) OVER (
+	    PARTITION BY bulletin_date
+	    ORDER BY collected_date
+	) AS cumulative_molecular_cases,
 	sum(sum(initial_molecular)) OVER (
 	    PARTITION BY bulletin_date
 	    ORDER BY collected_date
@@ -544,6 +575,14 @@ SELECT
 	    PARTITION BY collected_date
 	    ORDER BY bulletin_date
 	) AS delta_positive_molecular,
+	sum(antigens_cases) - lag(sum(antigens_cases), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_antigens_cases,
+	sum(molecular_cases) - lag(sum(molecular_cases), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_molecular_cases,
 	sum(initial_molecular) - lag(sum(initial_molecular), 1, 0) OVER (
 	    PARTITION BY collected_date
 	    ORDER BY bulletin_date
@@ -1147,3 +1186,29 @@ ORDER BY
 	bulletin_date DESC,
 	collected_date DESC,
 	age_dim.age_gte;
+
+
+--
+-- Encounters-based test and case lag.
+--
+CREATE OR REPLACE VIEW covid_pr_etl.encounter_lag AS
+SELECT
+	bulletin_date,
+	min(age) age_gte,
+	max(age) + 1 age_lt,
+	sum(delta_encounters) delta_encounters,
+	sum(delta_cases) delta_cases,
+	sum(delta_antigens) delta_antigens,
+	sum(delta_antigens_cases) delta_antigens_cases,
+	sum(delta_molecular) delta_molecular,
+	sum(delta_molecular_cases) delta_molecular_cases
+FROM covid_pr_etl.bioportal_encounters_agg
+WHERE age <= 20
+GROUP BY
+	bulletin_date,
+	CASE
+		WHEN 0 <= age AND age < 7 THEN age
+		WHEN 7 <= age AND age < 14 THEN 14
+		WHEN 14 <= age AND age < 21 THEN 21
+	END
+ORDER BY bulletin_date DESC, age_lt;

@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import sqlalchemy
 from covid_19_puerto_rico import util
+from sqlalchemy import func
 from sqlalchemy import text
 from sqlalchemy.sql import select, and_
 from . import charts
@@ -1033,4 +1034,90 @@ class MunicipalSPLOM(AbstractMolecularChart):
         ).repeat(
             row=self.VARIABLES,
             column=list(reversed(self.VARIABLES))
+        )
+
+
+class EncounterLag(AbstractMolecularChart):
+    WIDTH = 575
+    SORT_ORDER = [
+        'Pruebas (todas)', 'Pruebas (antígenos)', 'Pruebas (moleculares)',
+        'Casos (todos)', 'Casos (antígenos)', 'Casos (moleculares)'
+    ]
+
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('encounter_lag', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.age_gte,
+            table.c.age_lt,
+            table.c.delta_encounters.label('Pruebas_Todas'),
+            table.c.delta_cases.label('Casos_Todas'),
+            table.c.delta_antigens.label('Pruebas_Antígenos'),
+            table.c.delta_antigens_cases.label('Casos_Antígenos'),
+            table.c.delta_molecular.label('Pruebas_Moleculares'),
+            table.c.delta_molecular_cases.label('Casos_Moleculares')
+        ]).where(
+            and_(min(bulletin_dates) - datetime.timedelta(days=42) <= table.c.bulletin_date,
+                 table.c.bulletin_date <= max(bulletin_dates))
+        )
+        df1 = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+        df2 = pd.wide_to_long(
+            df1, ['Casos', 'Pruebas'],
+            i=['bulletin_date', 'age_gte', 'age_lt'],
+            j='test_type', sep='_', suffix='.*'
+        )
+        return pd.melt(df2.reset_index(), ['bulletin_date', 'test_type', 'age_gte', 'age_lt'])
+
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=49))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df).transform_joinaggregate(
+            groupby=['bulletin_date'],
+            whole_bulletin_1d='sum(value)'
+        ).transform_window(
+            groupby=['age_lt'],
+            sort=[{'field': 'bulletin_date'}],
+            frame=[-6, 0],
+            mean_whole_bulletin_7d='mean(whole_bulletin_1d)',
+            mean_delta_value_7d='mean(value)'
+        ).transform_calculate(
+            range="if(datum.age_lt - 1 == datum.age_gte, datum.age_gte, datum.age_gte + ' a ' + (datum.age_lt - 1))",
+            collected_since="timeOffset('day', datum.bulletin_date, -datum.age_lt + 1)",
+            collected_until="timeOffset('day', datum.bulletin_date, -datum.age_gte)",
+            smoothed_pct=alt.datum.mean_delta_value_7d / alt.datum.mean_whole_bulletin_7d
+        ).transform_filter(
+            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
+        ).mark_rect().encode(
+            x=alt.X('bulletin_date:T', timeUnit='yearmonthdate', title='Fecha de datos',
+                    axis=alt.Axis(format='%-d/%-m', labelOverlap=True, labelSeparation=5, labelFontSize=11)),
+            y=alt.Y('age_lt:O', sort='descending', title='Rezago (días)',
+                    axis=alt.Axis(labelFontSize=11, orient='right',
+                                  tickBand='extent', labelBaseline='line-bottom')),
+            color=alt.Color('smoothed_pct:Q', title='Añadidos (promedio 7 días)',
+                            scale=alt.Scale(scheme='spectral', reverse=True),
+                            legend=alt.Legend(orient='top', gradientLength=self.WIDTH,
+                                              titleLimit=self.WIDTH, format='%')),
+            tooltip=[
+                alt.Tooltip('bulletin_date:T', title='Fecha de datos'),
+                alt.Tooltip('collected_since:T', title='Muestras desde'),
+                alt.Tooltip('collected_until:T', title='Muestras hasta'),
+                alt.Tooltip('test_type:N', title='Tipo de prueba'),
+                alt.Tooltip('variable:N', title='Variable'),
+                alt.Tooltip('range:N', title='Rezago (días)'),
+                alt.Tooltip('value:Q', format=',d', title='Añadidos (crudo)'),
+                alt.Tooltip('mean_delta_value_7d:Q', format=',.1f', title='Añadidos (promedio 7 días)'),
+                alt.Tooltip('smoothed_pct:Q', format='.1%', title='Porciento (7 días)')
+            ]
+        ).properties(
+            width=175, height=110
+        ).facet(
+            column=alt.Column('test_type:N', title=None,
+                              sort=['Todas', 'Moleculares', 'Antígenos']),
+            row=alt.Row('variable:N', title=None, sort=['Pruebas', 'Casos'],
+                        header=alt.Header(orient='left'))
         )

@@ -29,10 +29,11 @@
     <ul>
         <li><a href="#RecentCases_section">Pruebas, casos y muertes recientes</a></li>
         <li><a href="#RecentHospitalizations_section">Disponibilidad hospitalaria</a></li>
-        <li><a href="#NewCases_section">Curva de casos nuevos (Bioportal)</a></li>
-        <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
+        <li><a href="#EncounterLag_section">Rezagos de datos recientes</a></li>
         <li><a href="#VaccinationMap_section">Vacunados por municipio</a></li>
         <li><a href="#AgeGroups_section">Casos por edad (per cápita)</a></li>
+        <li><a href="#NewCases_section">Curva de casos nuevos (Bioportal)</a></li>
+        <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
         <li><a href="#NewTestSpecimens_section">Especímenes de prueba diarios</a></li>
         <li><a href="#NaivePositiveRate_section">Tasa de especímenes positivos</a></li>
         <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados</a></li>
@@ -214,6 +215,72 @@
 </div>
 
 
+<div class="section" id="EncounterLag_section">
+    <h1>Rezagos de datos recientes</h1>
+
+    <div id="EncounterLag"></div>
+    <script type="text/javascript">
+      embedChart('EncounterLag', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Para las últimas seis semanas, cuán retrasados llegaron los resultados de pruebas y de casos
+        al Bioportal del Departamento de Salud de Puerto Rico.  Los días de rezago son la diferencia
+        entre la fecha de toma de muestra (campo <code>collectedDate</code>) y la fecha de recepción
+        de resultado (campo <code>resultCreatedAt</code>).</p>
+
+    <p>Cada casilla corresponde por los ejes horizontal y vertical a una combinación de fecha de datos
+        y renglón de rezagos. El color de la casilla representa el porcentaje móvil de 7 días de cuántos
+        de los resultados añadidos cayeron en ese renglón de rezagos.  Esto quiere decir que el porcentaje
+        en cada casilla en verdad refleja no solo esa fecha, sino también las 6 anteriores.</p>
+
+    <p>El análisis solo contempla resultados que se recibieron a no más de 20 días luego de la toma
+        de muestra, por entenderse que los que tardan más reflejan procesos irregulares que no son
+        relevantes a cuán bien está funcionando el sistema de detección al presente.  Estos resultados
+        super tardíos es mejor visualizarlos en otras gráficas en esta página.</p>
+</div>
+
+
+<div class="section" id="VaccinationMap_section">
+    <h1>Vacunados por municipio</h1>
+
+    <div id="VaccinationMap"></div>
+    <script type="text/javascript">
+      embedChart('VaccinationMap', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Qué porcentaje de la población de cada municipio ha recibido ya primera y segunda
+        dosis de la vacuna.  Fuentes de datos:</p>
+
+    <ul>
+        <li>Vacunas: <a href="https://covid19datos.salud.gov.pr/">la página de datos de COVID-19
+            del Departamento de Salud de Puerto Rico</a> (<code>covid19datos.salud.gov.pr</code>);</li>
+        <li>Población: Negociado del Censo, American Community Survey (2019, estimados 5 años).</li>
+    </ul>
+</div>
+
+
+<div class="section" id="AgeGroups_section">
+    <h1>Casos por edad (per cápita)</h1>
+
+    <div id="AgeGroups"></div>
+    <script type="text/javascript">
+      embedChart('AgeGroups', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Casos por molecular o antígeno por edad, promedios de 7 días por fecha de muestra,
+        ajustado al estimado poblacional en cada grupo de edades. Los casos son a partir
+        de la curva que calculamos con datos de Bioportal.  Usamos datos del Puerto
+        Rico Community Survey del 2019 del Censo de los Estados Unidos para ajustar a la
+        población de cada edad.</p>
+</div>
+
+
 <div class="section" id="NewCases_section">
     <h1>Curva de casos nuevos (Bioportal)</h1>
 
@@ -351,45 +418,6 @@
             </ul>
         </li>
     </ul>
-</div>
-
-
-<div class="section" id="VaccinationMap_section">
-    <h1>Vacunados por municipio</h1>
-
-    <div id="VaccinationMap"></div>
-    <script type="text/javascript">
-      embedChart('VaccinationMap', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Qué porcentaje de la población de cada municipio ha recibido ya primera y segunda
-        dosis de la vacuna.  Fuentes de datos:</p>
-
-    <ul>
-        <li>Vacunas: <a href="https://covid19datos.salud.gov.pr/">la página de datos de COVID-19
-            del Departamento de Salud de Puerto Rico</a> (<code>covid19datos.salud.gov.pr</code>);</li>
-        <li>Población: Negociado del Censo, American Community Survey (2019, estimados 5 años).</li>
-    </ul>
-</div>
-
-
-<div class="section" id="AgeGroups_section">
-    <h1>Casos por edad (per cápita)</h1>
-
-    <div id="AgeGroups"></div>
-    <script type="text/javascript">
-      embedChart('AgeGroups', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Casos por molecular o antígeno por edad, promedios de 7 días por fecha de muestra,
-        ajustado al estimado poblacional en cada grupo de edades. Los casos son a partir
-        de la curva que calculamos con datos de Bioportal.  Usamos datos del Puerto
-        Rico Community Survey del 2019 del Censo de los Estados Unidos para ajustar a la
-        población de cada edad.</p>
 </div>
 
 
