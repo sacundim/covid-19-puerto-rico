@@ -227,8 +227,24 @@
 
     <p>Para las últimas seis semanas, cuán retrasados llegaron los resultados de pruebas y de casos
         al Bioportal del Departamento de Salud de Puerto Rico.  Los días de rezago son la diferencia
-        entre la fecha de toma de muestra (campo <code>collectedDate</code>) y la fecha de recepción
-        de resultado (campo <code>resultCreatedAt</code>).</p>
+        entre la fecha de toma de muestra (campo  <code>collectedDate</code> en Bioportal) y la fecha
+        de recepción de resultado (campo <code>resultCreatedAt</code>), y se agrupan por fecha de
+        recepción.  Esto último es importante, porque quiere decir que esta gráfica contesta esta
+        pregunta:</p>
+
+    <ol start="1">
+        <li>¿Cuán viejos fueron los resultados que se recibieron en tales fechas?</li>
+    </ol>
+
+    <p>...pero no esta:</p>
+
+    <ol start="2">
+        <li>¿Cuánto tardaron en recibirse los resultados de las muestras tomadas en tales fechas?</li>
+    </ol>
+
+    <p>Mucha gente ve estas gráficas y piensan que es la segunda, porque es la que a tantos en verdad
+        nos gustaría saber, pero el problema es que esa no se puede contestar firme porque mañana pueden
+        llegar resultados a destiempo para cualquier fecha pasada que cambien la respuesta.</p>
 
     <p>Los niveles en esta gráfica no son los valores crudos diarios, sino promedios móviles de siete
         fechas consecutivas, para ilustrar las tendencias.  El análisis además solo contempla resultados
