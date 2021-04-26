@@ -676,7 +676,7 @@ ORDER BY
 --
 
 --
--- Counts of tests from Bioportal, classified along three
+-- Counts of tests from Bioportal, classified along four
 -- time axes:
 --
 -- * `bulletin_date`, which is the data as-of date (that
@@ -687,6 +687,12 @@ ORDER BY
 -- * `reported_date`, which is when the laboratory knew the
 --   test result (but generally earlier than it communicated
 --   it to PRDoH).
+--
+-- * `received_date`, which is when Bioportal says they received
+--   the actual test result.
+--
+-- Yes, I know the name says "tritemporal" and now it's four
+-- time axes.  Not gonna rename it right now.
 --
 CREATE TABLE covid_pr_etl.bioportal_tritemporal_counts WITH (
     format = 'PARQUET',
@@ -712,6 +718,7 @@ SELECT
 	bulletins.bulletin_date,
 	reported_date,
 	collected_date,
+	received_date,
 	count(*) tests,
 	count(*) FILTER (WHERE positive)
 		AS positive_tests
@@ -725,7 +732,7 @@ AND DATE '2020-03-01' <= collected_date
 AND collected_date <= received_date
 AND DATE '2020-03-01' <= reported_date
 AND reported_date <= received_date
-GROUP BY test_type, bulletins.bulletin_date, collected_date, reported_date;
+GROUP BY test_type, bulletins.bulletin_date, collected_date, reported_date, received_date;
 
 
 --
@@ -741,16 +748,17 @@ CREATE TABLE covid_pr_etl.bioportal_tritemporal_deltas WITH (
 SELECT
 	test_type,
 	bulletin_date,
+	received_date,
 	reported_date,
 	collected_date,
 	tests,
 	tests - COALESCE(lag(tests) OVER (
-        PARTITION BY test_type, collected_date, reported_date
+        PARTITION BY test_type, collected_date, reported_date, received_date
 	    ORDER BY bulletin_date
     ), 0) AS delta_tests,
 	positive_tests,
 	positive_tests - COALESCE(lag(positive_tests) OVER (
-        PARTITION BY test_type, collected_date, reported_date
+        PARTITION BY test_type, collected_date, reported_date, received_date
 	    ORDER BY bulletin_date
     ), 0) AS delta_positive_tests
 FROM covid_pr_etl.bioportal_tritemporal_counts
@@ -760,7 +768,8 @@ AND reported_date <= bulletin_date;
 
 --
 -- Same data as `bioportal_tritemporal_deltas`, but aggregated
--- to `collected_date` (i.e., removes `reported_date`)
+-- to `collected_date` (i.e., removes `reported_date` and
+-- `received_date`).
 --
 CREATE TABLE covid_pr_etl.bioportal_collected_agg WITH (
     format = 'PARQUET',
@@ -791,7 +800,7 @@ GROUP BY test_type, bulletin_date, collected_date;
 
 --
 -- Same data as `bioportal_tritemporal_deltas`, but aggregated
--- to `reported_date` (i.e., removes `collected_date`)
+-- to `reported_date`.
 --
 CREATE TABLE covid_pr_etl.bioportal_reported_agg WITH (
     format = 'PARQUET',
@@ -818,6 +827,37 @@ SELECT
 	sum(delta_positive_tests) AS delta_positive_tests
 FROM covid_pr_etl.bioportal_tritemporal_deltas
 GROUP BY test_type, bulletin_date, reported_date;
+
+
+--
+-- Same data as `bioportal_tritemporal_deltas`, but aggregated
+-- to `received_date`.
+--
+CREATE TABLE covid_pr_etl.bioportal_received_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
+SELECT
+	test_type,
+	bulletin_date,
+	received_date,
+	date_diff('day', received_date, bulletin_date)
+		AS reported_age,
+	sum(tests) AS tests,
+	sum(sum(tests)) OVER (
+        PARTITION BY test_type, bulletin_date
+        ORDER BY received_date
+    ) AS cumulative_tests,
+	sum(delta_tests) AS delta_tests,
+	sum(positive_tests) AS positive_tests,
+	sum(sum(positive_tests)) OVER (
+        PARTITION BY test_type, bulletin_date
+        ORDER BY received_date
+    ) AS cumulative_positives,
+	sum(delta_positive_tests) AS delta_positive_tests
+FROM covid_pr_etl.bioportal_tritemporal_deltas
+GROUP BY test_type, bulletin_date, received_date;
 
 
 
