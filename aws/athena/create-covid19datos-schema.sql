@@ -141,6 +141,7 @@ WITH downloads AS (
 	GROUP BY date(downloaded_at AT TIME ZONE 'America/Puerto_Rico')
 )
 SELECT
+    downloaded_at,
 	local_date,
 	poblacion,
 	dosistotal,
@@ -210,6 +211,7 @@ WITH downloads AS (
 	GROUP BY date(downloaded_at AT TIME ZONE 'America/Puerto_Rico')
 )
 SELECT
+    downloaded_at,
 	local_date,
 	municipio,
 	total_dosis1,
@@ -224,7 +226,8 @@ SELECT
 	) dosis2
 FROM covid19datos_sources.vacunaciones_municipios_totales_downloads
 INNER JOIN downloads
-	ON max_downloaded_at = downloaded_at;
+	ON max_downloaded_at = downloaded_at
+ORDER BY local_date DESC, municipio, downloaded_at DESC;
 
 
 CREATE OR REPLACE VIEW covid19datos_sources.vacunaciones_municipios_dosis1_edad_downloads AS
