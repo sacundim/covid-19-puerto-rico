@@ -99,7 +99,29 @@ CREATE EXTERNAL TABLE covid19datos_sources.vacunaciones_json (
 			TX_REGISTRO: INT,
 			FE_ACTUALIZADO: DATE
 		>,
+		NOADMINISTRADAS: INT,
 		RECIBIDAS: STRUCT<
+			TX_REGISTRO: INT,
+			FE_ACTUALIZADO: DATE
+		>,
+		-- They changed the schema of this from an INT originally
+		-- to a struct:
+		REGISTRADAS: STRING,
+--		REGISTRADAS: STRUCT<
+--			TX_REGISTRO: INT,
+--			FE_ACTUALIZADO: DATE
+--		>,
+		REGISTRADAS1: INT,
+		REGISTRADAS2: INT,
+		TIBERIUS_1DOSIS: STRUCT<
+			TX_REGISTRO: INT,
+			FE_ACTUALIZADO: DATE
+		>,
+		TIBERIUS_2DOSIS: STRUCT<
+			TX_REGISTRO: INT,
+			FE_ACTUALIZADO: DATE
+		>,
+		TIBERIUS_TOTAL: STRUCT<
 			TX_REGISTRO: INT,
 			FE_ACTUALIZADO: DATE
 		>
@@ -113,6 +135,55 @@ CREATE EXTERNAL TABLE covid19datos_sources.vacunaciones_json (
 )
 ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
 LOCATION 's3://covid-19-puerto-rico-data/covid19datos.salud.gov.pr/vacunaciones/';
+
+
+--
+-- Limpieza para aplanar `vacunaciones_json` en un formato tabular.
+--
+CREATE OR REPLACE VIEW covid19datos_sources.vacunaciones_flat AS
+SELECT
+	CAST(from_iso8601_timestamp(
+		regexp_extract("$path", '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{6})[+-](\d{2}):(\d{2})'))
+		AS TIMESTAMP)
+		AS downloaded_at,
+	fe_distrib_moderna,
+	fe_distrib_pfizer,
+	fe_distrib_johnson,
+	fe_distrib_mun_d1,
+	fe_distrib_mun_d2,
+	fe_poblacion_interes,
+	data_dosis.distribuidas.tx_registro
+		AS distribuidas,
+	data_dosis.distribuidas.fe_actualizado
+		AS distribuidas_actualizado,
+	data_dosis.noadministradas
+		AS noadministradas,
+	data_dosis.recibidas.tx_registro
+		AS recibidas,
+	data_dosis.recibidas.fe_actualizado
+		AS recibidas_actualizado,
+	CAST(COALESCE(
+			json_extract_scalar(data_dosis.registradas, '$'),
+			json_extract_scalar(data_dosis.registradas, '$.tx_registro'))
+		AS INT) AS registradas,
+ 	CAST(json_extract_scalar(data_dosis.registradas, '$.fe_actualizado') AS DATE)
+ 		AS registradas_actualizado,
+	data_dosis.registradas1,
+	data_dosis.registradas2,
+ 	data_dosis.tiberius_1dosis.tx_registro
+ 		AS tiberius_1dosis,
+ 	data_dosis.tiberius_1dosis.fe_actualizado
+ 		AS tiberius_1dosis_actualizado,
+ 	data_dosis.tiberius_2dosis.tx_registro
+ 		AS tiberius_2dosis,
+ 	data_dosis.tiberius_1dosis.fe_actualizado
+ 		AS tiberius_2dosis_actualizado,
+ 	data_dosis.tiberius_total.tx_registro
+ 		AS tiberius_total,
+ 	data_dosis.tiberius_total.fe_actualizado
+ 		AS tiberius_total_actualizado
+FROM covid19datos_sources.vacunaciones_json
+ORDER BY downloaded_at DESC;
 
 --
 -- Limpieza para exponer la fecha de las descargas, que pueden ser múltiples por día
