@@ -287,68 +287,72 @@ COMMENT ON MATERIALIZED VIEW bitemporal_agg IS
 
 CREATE VIEW municipal_agg AS
 WITH first_bulletin AS (
-	SELECT min(bulletin_date) min_bulletin_date
+	SELECT
+	    min(bulletin_date) min_bulletin_date,
+	    min(bulletin_date) FILTER (
+	        WHERE probable_cases IS NOT NULL
+        ) AS min_antigens_date
 	FROM municipal
 ), new_cases AS (
 	SELECT
 		bulletin_date,
 		municipality,
 		cases AS cumulative_cases,
-        CASE WHEN bulletin_date > first_bulletin.min_bulletin_date
-		THEN COALESCE(cases - lag(cases) OVER bulletin, cases)
-		END AS new_cases
+        CASE
+            WHEN bulletin_date > first_bulletin.min_bulletin_date
+		    THEN COALESCE(cases - lag(cases) OVER bulletin,
+		                  cases)
+		END AS new_cases,
+		confirmed_cases AS cumulative_confirmed,
+        CASE
+            WHEN bulletin_date > first_bulletin.min_bulletin_date
+		    THEN COALESCE(confirmed_cases - lag(confirmed_cases) OVER bulletin,
+		                  confirmed_cases)
+		END AS new_confirmed,
+		probable_cases AS cumulative_probable,
+        CASE
+            WHEN bulletin_date > first_bulletin.min_antigens_date
+		    THEN COALESCE(probable_cases - lag(probable_cases) OVER bulletin,
+		                  probable_cases)
+		END AS new_probable
 	FROM municipal m
 	CROSS JOIN first_bulletin
 	WINDOW bulletin AS (
 		PARTITION BY municipality ORDER BY bulletin_date
 	)
-)SELECT
+)
+SELECT
 	bulletin_date,
 	municipality,
 	cumulative_cases,
 	new_cases,
 	sum(new_cases) OVER seven_most_recent
 		AS new_7day_cases,
-	sum(new_cases) OVER seven_before
-		AS previous_7day_cases,
 	sum(new_cases) OVER fourteen_most_recent
 		AS new_14day_cases,
-	sum(new_cases) OVER fourteen_before
-		AS previous_14day_cases,
-	sum(new_cases) OVER twentyone_most_recent
-		AS new_21day_cases,
-	sum(new_cases) OVER twentyone_before
-		AS previous_21day_cases
+	cumulative_confirmed,
+	new_confirmed,
+	sum(new_confirmed) OVER seven_most_recent
+		AS new_7day_confirmed,
+	sum(new_confirmed) OVER fourteen_most_recent
+		AS new_14day_confirmed,
+	cumulative_probable,
+	new_probable,
+	sum(new_probable) OVER seven_most_recent
+		AS new_7day_probable,
+	sum(new_probable) OVER fourteen_most_recent
+		AS new_14day_probable
 FROM new_cases
 WINDOW seven_most_recent AS (
 	PARTITION BY municipality
 	ORDER BY bulletin_date
 	RANGE BETWEEN '6 days' PRECEDING AND CURRENT ROW
-), seven_before AS (
-	PARTITION BY municipality
-	ORDER BY bulletin_date
-	RANGE BETWEEN '7 days' PRECEDING AND CURRENT ROW
-	EXCLUDE CURRENT ROW
 ), fourteen_most_recent AS (
 	PARTITION BY municipality
 	ORDER BY bulletin_date
 	RANGE BETWEEN '13 days' PRECEDING AND CURRENT ROW
-), fourteen_before AS (
-	PARTITION BY municipality
-	ORDER BY bulletin_date
-	RANGE BETWEEN '14 days' PRECEDING AND CURRENT ROW
-	EXCLUDE CURRENT ROW
-), twentyone_most_recent AS (
-	PARTITION BY municipality
-	ORDER BY bulletin_date
-	RANGE BETWEEN '20 days' PRECEDING AND CURRENT ROW
-), twentyone_before AS (
-	PARTITION BY municipality
-	ORDER BY bulletin_date
-	RANGE BETWEEN '21 days' PRECEDING AND CURRENT ROW
-	EXCLUDE CURRENT ROW
 )
-ORDER BY municipality, bulletin_date;
+ORDER BY bulletin_date, municipality;
 
 
 CREATE VIEW age_groups_agg AS
@@ -609,22 +613,32 @@ SELECT
 	bulletin_date,
 	new_cases,
 	new_7day_cases,
-	CAST(new_cases AS DOUBLE PRECISION)
-		/ CASE WHEN previous_7day_cases > 0
-			THEN previous_7day_cases
-			ELSE 1.0
-			END
-		AS pct_increase_1day,
 	CAST(new_7day_cases AS DOUBLE PRECISION)
-		/ CASE WHEN (previous_14day_cases - previous_7day_cases) > 0
-			THEN previous_14day_cases - previous_7day_cases
+		/ CASE WHEN (new_14day_cases - new_7day_cases) > 0
+			THEN new_14day_cases - new_7day_cases
 			ELSE 1.0
 			END
-		AS pct_increase_7day
+		AS pct_increase_7day,
+	new_confirmed,
+	new_7day_confirmed,
+	CAST(new_7day_confirmed AS DOUBLE PRECISION)
+		/ CASE WHEN (new_14day_confirmed - new_7day_confirmed) > 0
+			THEN new_14day_confirmed - new_7day_confirmed
+			ELSE 1.0
+			END
+		AS pct_increase_7day_confirmed,
+	new_probable,
+	new_7day_probable,
+	CAST(new_7day_probable AS DOUBLE PRECISION)
+		/ CASE WHEN (new_14day_probable - new_7day_probable) > 0
+			THEN new_14day_probable - new_7day_probable
+			ELSE 1.0
+			END
+		AS pct_increase_7day_probable
 FROM municipal_agg ma
 INNER JOIN canonical_municipal_names cmn
     ON cmn.name = ma.municipality
-ORDER BY municipality, bulletin_date;
+ORDER BY bulletin_date, municipality;
 
 
 CREATE VIEW products.lateness_tiers AS
