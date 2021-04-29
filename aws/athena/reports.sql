@@ -241,3 +241,85 @@ INNER JOIN covid_pr_sources.acs_2019_5y_municipal_race race
 INNER JOIN covid_pr_sources.acs_2019_5y_municipal_household_income income
 	ON vax.municipio = income.municipality
 ORDER BY bulletin_date;
+
+
+--
+-- Puerto Rico PCR test volume and positive rate according to the HHS's
+-- very unreliable Diagnostic Lab Testing dataset.
+--
+WITH bulletins AS (
+	SELECT max(bulletin_date) AS max_bulletin_date
+	FROM covid_hhs_sources.diagnostic_lab_testing_PR_daily
+)
+SELECT
+	bulletin_date "Datos hasta",
+	date "Fecha pruebas",
+	tests "Pruebas",
+	(cumulative_tests - lag(cumulative_tests, 7) OVER (
+		PARTITION BY bulletin_date
+		ORDER BY date
+	)) / 7.0 AS "Promedio 7 días",
+	positive "Positivas",
+	100.0 * (cumulative_positive - lag(cumulative_positive, 7) OVER (
+		PARTITION BY bulletin_date
+		ORDER BY date
+	)) / (cumulative_tests - lag(cumulative_tests, 7) OVER (
+		PARTITION BY bulletin_date
+		ORDER BY date
+	)) AS "Positividad (7 días)"
+FROM covid_hhs_sources.diagnostic_lab_testing_PR_daily
+INNER JOIN bulletins
+    ON bulletin_date = max_bulletin_date
+ORDER BY date DESC;
+
+
+WITH hhs_date AS (
+	SELECT max(bulletin_date) AS max_bulletin_date
+	FROM covid_hhs_sources.diagnostic_lab_testing_PR_daily
+), prdoh_date AS (
+	SELECT max(bulletin_date) AS max_bulletin_date
+	FROM covid_pr_etl.bioportal_curve
+), agg AS (
+	SELECT
+		bio.bulletin_date "Datos Salud",
+		hhs.bulletin_date "Datos HHS",
+		bio.reported_date AS "Fecha pruebas",
+		bio.tests "Salud",
+		(bio.cumulative_tests - lag(bio.cumulative_tests, 7) OVER (
+			ORDER BY bio.reported_date
+		)) / 7.0 AS "Promedio Salud",
+		hhs.tests "Federales",
+		(hhs.cumulative_tests - lag(hhs.cumulative_tests, 7) OVER (
+			ORDER BY date
+		)) / 7.0 AS "Promedio federales"
+	FROM covid_pr_etl.bioportal_reported_agg bio
+	INNER JOIN prdoh_date
+		ON prdoh_date.max_bulletin_date = bio.bulletin_date
+	INNER JOIN covid_hhs_sources.diagnostic_lab_testing_PR_daily hhs
+		ON hhs.date = bio.reported_date
+	INNER JOIN hhs_date
+		ON hhs_date.max_bulletin_date = hhs.bulletin_date
+	WHERE bio.test_type = 'Molecular'
+)
+SELECT
+	*,
+	"Promedio Salud" - "Promedio federales"
+		AS "Promedio Salud - Promedio federales"
+FROM agg
+ORDER BY "Fecha pruebas" DESC;
+
+
+--
+-- Puerto Rico PCR test volume and positive rate according to the HHS's
+-- very unreliable Community Profile Report.
+--
+SELECT
+	date,
+	sum(total_tests_last_7_days) / 7.0 AS "Pruebas diarias",
+	sum(total_positive_tests_last_7_days) / 7.0 AS "Positivas diarias",
+	100.0 * sum(total_positive_tests_last_7_days)
+		/ sum(total_tests_last_7_days)
+		AS "Positividad"
+FROM covid_hhs_sources.community_profile_report_municipios
+GROUP BY date
+ORDER BY date DESC;
