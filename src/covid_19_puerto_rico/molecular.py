@@ -1133,6 +1133,7 @@ class MunicipalTestingScatter(AbstractMolecularChart):
         query = select([
             table.c.bulletin_date,
             table.c.municipality,
+            table.c.abbreviation,
             table.c.population,
             table.c.daily_specimens,
             table.c.daily_antigens,
@@ -1168,7 +1169,7 @@ class MunicipalTestingScatter(AbstractMolecularChart):
         )
 
         text = scatter.mark_text(align='left', fontSize=9, angle=315, dx=5).encode(
-            text=alt.Text('municipality:N')
+            text=alt.Text('abbreviation:N')
         )
 
         mean_antigens = alt.Chart(df).transform_aggregate(

@@ -219,6 +219,7 @@ CREATE OR REPLACE VIEW covid_pr_etl.municipal_testing_scatterplot AS
 SELECT
 	bulletin_date,
 	municipality,
+	abbreviation,
 	population,
 	sum(specimens) / 21.0 daily_specimens,
 	1e3 * sum(specimens) / population / 21.0
@@ -230,7 +231,9 @@ SELECT
 	1e3 * sum(molecular) / population / 21.0
 		AS daily_molecular_1k
 FROM covid_pr_etl.municipal_tests_per_capita
+INNER JOIN covid_pr_sources.municipal_abbreviations
+	USING (municipality)
 WHERE date_add('day', -21, bulletin_date) < collected_date
 AND collected_date <= bulletin_date
-GROUP BY bulletin_date, municipality, population
+GROUP BY bulletin_date, municipality, abbreviation, population
 ORDER BY bulletin_date DESC, municipality;

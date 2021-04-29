@@ -11,3 +11,5 @@ various others to this and perform aggregations:
 * `bioportal_age_ranges`: Join to Bioportal's `age_range` field
 * `prdoh_age_ranges`: Join to my capture of Puerto Rico Dept.
   of Health daily reports
+* `municipal_abbreviations` is three-letter codes for municipalities
+  from [`gis.pr.gov`](https://gis.pr.gov/descargaGeodatos/GeografiaCensal/Pages/ABREVIATURAS-DE-MUNICIPIOS.aspx).

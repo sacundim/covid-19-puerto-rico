@@ -264,3 +264,17 @@ TBLPROPERTIES (
     "skip.header.line.count"="1"
 );
 
+
+CREATE EXTERNAL TABLE covid_pr_sources.municipal_abbreviations (
+    municipality STRING,
+    abbreviation STRING,
+    county STRING,
+    geoid STRING
+) ROW FORMAT DELIMITED
+  FIELDS TERMINATED BY ','
+  ESCAPED BY '\\'
+  LINES TERMINATED BY '\n'
+LOCATION 's3://covid-19-puerto-rico-data/Census/municipal_abbreviations/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
