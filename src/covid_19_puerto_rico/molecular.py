@@ -1124,3 +1124,84 @@ class EncounterLag(AbstractMolecularChart):
         ).resolve_scale(
             y='shared'
         )
+
+
+class MunicipalTestingScatter(AbstractMolecularChart):
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('municipal_testing_scatterplot', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.municipality,
+            table.c.population,
+            table.c.daily_specimens,
+            table.c.daily_antigens,
+            table.c.daily_molecular,
+        ]).where(
+            and_(min(bulletin_dates) <= table.c.bulletin_date,
+                 table.c.bulletin_date <= max(bulletin_dates))
+        )
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+
+    def make_chart(self, df, bulletin_date):
+        scatter = alt.Chart(df).transform_calculate(
+            collected_since="timeOffset('day', datum.bulletin_date, -20)",
+            daily_specimens_1k='1000 * datum.daily_specimens / datum.population',
+            daily_antigens_1k='1000 * datum.daily_antigens / datum.population',
+            daily_molecular_1k='1000 * datum.daily_molecular / datum.population'
+        ).mark_point().encode(
+            x=alt.X('daily_antigens_1k:Q', title='Antígenos por millar (promedio 21 días)',
+                    axis=alt.Axis(labelFlush=False)),
+            y=alt.Y('daily_molecular_1k:Q', title='Moleculares por millar (promedio 21 días)'),
+            tooltip=[
+                alt.Tooltip('municipality:N', title='Municipio'),
+                alt.Tooltip('population:Q', format=',d', title='Población'),
+                alt.Tooltip('collected_since:T', title='Muestras desde'),
+                alt.Tooltip('bulletin_date:T', title='Muestras hasta'),
+                alt.Tooltip('daily_specimens:Q', format=',.1f', title='Especímenes diarios'),
+                alt.Tooltip('daily_specimens_1k:Q', format=',.1f', title='Especímenes diarios (/1k)'),
+                alt.Tooltip('daily_antigens:Q', format=',.1f', title='Antígenos diarios'),
+                alt.Tooltip('daily_antigens_1k:Q', format=',.1f', title='Antígenos diarios (/1k)'),
+                alt.Tooltip('daily_molecular:Q', format=',.1f', title='Moleculares diarias'),
+                alt.Tooltip('daily_molecular_1k:Q', format=',.1f', title='Moleculares diarias (/1k)')
+            ]
+        )
+
+        text = scatter.mark_text(align='left', fontSize=9, angle=315, dx=5).encode(
+            text=alt.Text('municipality:N')
+        )
+
+        mean_antigens = alt.Chart(df).transform_aggregate(
+            sum_population='sum(population)',
+            sum_daily_antigens='sum(daily_antigens)'
+        ).transform_calculate(
+            sum_daily_antigens_1k='1000 * datum.sum_daily_antigens / datum.sum_population',
+        ).mark_rule(strokeWidth=0.5, strokeDash=[3, 2]).encode(
+            x=alt.X('sum_daily_antigens_1k:Q')
+        )
+
+        mean_molecular = alt.Chart(df).transform_aggregate(
+            sum_population='sum(population)',
+            sum_daily_molecular='sum(daily_molecular)'
+        ).transform_calculate(
+            sum_daily_molecular_1k='1000 * datum.sum_daily_molecular / datum.sum_population'
+        ).mark_rule(strokeWidth=0.5, strokeDash=[3, 2]).encode(
+            y=alt.Y('sum_daily_molecular_1k:Q')
+        )
+
+        mean_specimens = alt.Chart(df).transform_aggregate(
+            sum_population='sum(population)',
+            sum_daily_specimens='sum(daily_specimens)'
+        ).transform_calculate(
+            zero='0', # dunno how else to do this in Altair
+            sum_daily_specimens_1k='1000 * datum.sum_daily_specimens / datum.sum_population'
+        ).mark_rule(strokeWidth=0.5, strokeDash=[3, 2]).encode(
+            x=alt.X('zero:Q'),
+            x2=alt.X2('sum_daily_specimens_1k:Q'),
+            y=alt.Y('sum_daily_specimens_1k:Q'),
+            y2=alt.Y2('zero:Q')
+        )
+
+        return alt.layer(mean_antigens, mean_molecular, mean_specimens, text, scatter).properties(
+            width=575, height=575
+        )
