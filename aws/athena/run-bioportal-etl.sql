@@ -127,10 +127,90 @@ INNER JOIN covid_pr_sources.acs_2019_5y_municipal_race race
 ORDER BY bulletin_date;
 
 
+----------------------------------------------------------------------------------
+
+--
+-- Deaths according to Bioportal, which I don't think is as reliable
+-- as the daily report.
+--
+MSCK REPAIR TABLE covid_pr_sources.deaths_parquet_v1;
+
+CREATE TABLE covid_pr_etl.bioportal_deaths WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['downloaded_date'],
+    bucket_count = 1
+) AS
+WITH first_clean AS (
+	SELECT
+		date(downloaded_date) AS downloaded_date,
+	    CAST(from_iso8601_timestamp(downloadedAt) AS TIMESTAMP)
+	        AS downloaded_at,
+	    CAST(from_iso8601_timestamp(downloadedAt) AS DATE) - INTERVAL '1' DAY
+	        AS bulletin_date,
+	    date(from_iso8601_timestamp(nullif(deathDate, '')) AT TIME ZONE 'America/Puerto_Rico')
+	        AS raw_death_date,
+	    date(from_iso8601_timestamp(nullif(reportDate, '')) AT TIME ZONE 'America/Puerto_Rico')
+	        AS report_date,
+	    region,
+	    sex,
+	   	ageRange AS age_range
+	FROM covid_pr_sources.deaths_parquet_v1
+)
+SELECT
+	*,
+	CASE
+		WHEN raw_death_date < DATE '2020-01-01' AND month(raw_death_date) >= 3
+		THEN from_iso8601_date(date_format(raw_death_date, '2020-%m-%d'))
+		WHEN raw_death_date BETWEEN DATE '2020-01-01' AND DATE '2020-03-01'
+		THEN date_add('year', 1, raw_death_date)
+		ELSE raw_death_date
+	END AS death_date
+FROM first_clean
+ORDER BY bulletin_date, death_date, report_date;
+
+CREATE TABLE covid_pr_etl.bioportal_deaths_age_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['downloaded_at'],
+    bucket_count = 1
+) AS
+SELECT
+	downloaded_at,
+	bulletin_date,
+	death_date,
+   	age_range,
+   	count(*) deaths,
+   	sum(count(*)) OVER (
+   		PARTITION BY downloaded_at, bulletin_date, age_range
+   		ORDER BY death_date
+   	) AS cumulative_deaths
+FROM covid_pr_etl.bioportal_deaths
+GROUP BY downloaded_at, bulletin_date, death_date, age_range
+ORDER BY downloaded_at, bulletin_date, death_date, age_range;
+
+CREATE TABLE covid_pr_etl.bioportal_deaths_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['downloaded_at'],
+    bucket_count = 1
+) AS
+SELECT
+	downloaded_at,
+	bulletin_date,
+	death_date,
+   	count(*) deaths,
+   	sum(count(*)) OVER (
+   		PARTITION BY downloaded_at, bulletin_date
+   		ORDER BY death_date
+   	) AS cumulative_deaths
+FROM covid_pr_etl.bioportal_deaths
+GROUP BY downloaded_at, bulletin_date, death_date
+ORDER BY downloaded_at, bulletin_date, death_date;
+
+
 --
 -- The `orders/basic` row-per-test dataset from Bioportal.
 --
 MSCK REPAIR TABLE covid_pr_sources.orders_basic_parquet_v2;
+
 CREATE TABLE covid_pr_etl.bioportal_orders_basic WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['downloaded_date'],
@@ -637,13 +717,18 @@ CREATE TABLE covid_pr_etl.bioportal_acs_age_curve WITH (
     bucket_count = 1
 ) AS
 SELECT
-	bulletin_date,
+	encounters.bulletin_date,
 	collected_date,
 	age_dim.age_gte,
 	age_dim.age_lt,
 	age_dim.population,
-	sum(cases) AS cases
+	sum(cases) AS cases,
+	COALESCE(sum(deaths), 0) AS deaths
 FROM covid_pr_etl.bioportal_encounters_cube encounters
+LEFT OUTER JOIN covid_pr_etl.bioportal_deaths_age_agg deaths
+    ON deaths.bulletin_date = encounters.bulletin_date
+    AND deaths.death_date = encounters.collected_date
+    AND deaths.age_range = encounters.age_range
 INNER JOIN covid_pr_sources.bioportal_age_ranges bio
 	ON bio.age_range = encounters.age_range
 INNER JOIN covid_pr_sources.acs_2019_1y_age_ranges age_dim
@@ -651,14 +736,14 @@ INNER JOIN covid_pr_sources.acs_2019_1y_age_ranges age_dim
 	AND bio.age_gte < COALESCE(age_dim.age_lt, 9999)
 WHERE collected_date >= DATE '2020-03-13'
 GROUP BY
-	bulletin_date,
+	encounters.bulletin_date,
 	collected_date,
 	age_dim.age_gte,
 	age_dim.age_lt,
 	age_dim.population
 ORDER BY
-	bulletin_date DESC,
-	collected_date DESC,
+	bulletin_date,
+	collected_date,
 	age_dim.age_gte;
 
 
@@ -1193,39 +1278,15 @@ SELECT
 	age_lt - 1 AS oldest,
 	cases,
 	1e6 * cases / population
-		AS cases_1m
+		AS cases_1m,
+	deaths,
+	1e6 * deaths / population
+		AS deaths_1m
 FROM covid_pr_etl.bioportal_acs_age_curve
 ORDER BY
 	bulletin_date DESC,
 	collected_date DESC,
 	youngest;
-
---
--- Version with 10-year age bands instead of 5-year:
---
-CREATE OR REPLACE VIEW covid_pr_etl.cases_by_age_10y AS
-SELECT
-	bulletin_date,
-	collected_date,
-	age_dim.age_gte AS youngest,
-	age_dim.age_lt - 1 AS oldest,
-	sum(curve.population) AS population,
-	sum(cases) AS cases,
-	1e6 * sum(cases) / sum(curve.population)
-		AS cases_1m
-FROM covid_pr_etl.bioportal_acs_age_curve curve
-INNER JOIN covid_pr_sources.prdoh_age_ranges age_dim
-	ON age_dim.age_gte <= curve.age_gte
-	AND curve.age_gte < COALESCE(age_dim.age_lt, 9999)
-GROUP BY
-	bulletin_date,
-	collected_date,
-	age_dim.age_gte,
-	age_dim.age_lt
-ORDER BY
-	bulletin_date DESC,
-	collected_date DESC,
-	age_dim.age_gte;
 
 
 --

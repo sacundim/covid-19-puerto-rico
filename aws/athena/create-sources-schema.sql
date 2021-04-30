@@ -116,6 +116,17 @@ CREATE EXTERNAL TABLE covid_pr_sources.minimal_info_unique_tests_parquet_v4 (
 STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/bioportal/minimal-info-unique-tests/parquet_v4/';
 
+CREATE EXTERNAL TABLE covid_pr_sources.deaths_parquet_v1 (
+	downloadedAt STRING,
+    region STRING,
+    ageRange STRING,
+    sex STRING,
+    deathDate STRING,
+    reportDate STRING
+) PARTITIONED BY (downloaded_date STRING)
+STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/bioportal/deaths/parquet_v1/';
+
 
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
