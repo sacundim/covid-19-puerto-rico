@@ -48,13 +48,13 @@ def main():
     targets = [
 #        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
 #        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
+        molecular.AgeGroups(athena, args.output_dir, output_formats),
         molecular.EncounterLag(athena, args.output_dir, output_formats),
         molecular.RecentHospitalizations(athena, args.output_dir, output_formats),
         charts.ICUsByRegion(postgres, args.output_dir, output_formats),
         charts.ICUsByHospital(postgres, args.output_dir, output_formats),
         molecular.VaccinationMap(athena, args.output_dir, output_formats),
         charts.MunicipalMap(postgres, args.output_dir, output_formats),
-        molecular.AgeGroups(athena, args.output_dir, output_formats),
         molecular.NaivePositiveRate(athena, args.output_dir, output_formats),
 
         # We always generate png for this because they're our Twitter cards

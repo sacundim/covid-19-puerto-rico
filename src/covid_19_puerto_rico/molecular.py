@@ -873,11 +873,14 @@ class AgeGroups(AbstractMolecularChart):
             table.c.bulletin_date,
             table.c.collected_date,
             table.c.youngest,
-            table.c.cases,
-            table.c.cases_1m
+#            table.c.cases,
+            table.c.cases_1m.label('Casos por millón'),
+#            table.c.deaths,
+            table.c.deaths_1m.label('Muertes por millón')
         ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
                       table.c.bulletin_date <= max(bulletin_dates)))
-        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
+        return pd.melt(df, ['bulletin_date', 'collected_date', 'youngest'])
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
@@ -888,18 +891,18 @@ class AgeGroups(AbstractMolecularChart):
             groupby=['youngest', 'bulletin_date'],
             sort=[{'field': 'collected_date'}],
             frame=[-6, 0],
-            mean_cases='mean(cases)',
-            mean_cases_1m='mean(cases_1m)'
+#            mean_cases='mean(cases)',
+            mean_value_1m='mean(value)'
         ).transform_impute(
-            impute='mean_cases_1m',
+            impute='mean_value_1m',
             key='collected_date',
-            groupby=['youngest'],
+            groupby=['bulletin_date', 'variable', 'youngest'],
             value=0
         ).transform_calculate(
             oldest='if(datum.youngest < 80, datum.youngest + 4, null)',
             edades="if(datum.oldest == null, '≤ ' + datum.youngest, datum.youngest + ' a ' + datum.oldest)"
         ).mark_rect().encode(
-            x=alt.X('collected_date:T', timeUnit='yearmonthdate', title='Fecha de muestra',
+            x=alt.X('collected_date:T', timeUnit='yearmonthdate', title='Fecha de muestra o deceso',
                     axis=alt.Axis(
                         labelExpr="[timeFormat(datum.value, '%b'),"
                                   " timeFormat(datum.value, '%m') == '01'"
@@ -908,7 +911,7 @@ class AgeGroups(AbstractMolecularChart):
             y=alt.Y('youngest:O', title='Edad',
                     axis=alt.Axis(labelBaseline='alphabetic',
                                   labelOverlap=True, tickBand='extent')),
-            color=alt.Color('mean_cases_1m:Q', title='Casos diarios por millón',
+            color=alt.Color('mean_value_1m:Q', title='Diarios por millón',
                             sort='descending', scale=alt.Scale(scheme='spectral', type='sqrt'),
                             legend=alt.Legend(orient='top', gradientLength=WIDTH,
                                               labelOverlap=True, labelSeparation=5)),
@@ -916,11 +919,18 @@ class AgeGroups(AbstractMolecularChart):
                 alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                 alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                 alt.Tooltip('edades:N', title='Edad'),
-                alt.Tooltip('mean_cases:Q', format='.1f', title='Casos diarios (7 días)'),
-                alt.Tooltip('mean_cases_1m:Q', format='.1f', title='Casos (7 días, por millón)')
+                alt.Tooltip('variable:N', title='Variable'),
+                alt.Tooltip('mean_value_1m:Q', format='.1f', title='Ocurrencias (7 días, por millón)')
+#                alt.Tooltip('mean_cases:Q', format='.1f', title='Casos diarios (7 días)'),
+#                alt.Tooltip('mean_cases_1m:Q', format='.1f', title='Casos (7 días, por millón)')
             ]
         ).properties(
             width=WIDTH, height=225
+        ).facet(
+            columns=2,
+            facet=alt.Facet('variable:N', title=None)
+        ).resolve_scale(
+            color='independent'
         )
 
 
