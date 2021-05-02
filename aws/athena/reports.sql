@@ -323,3 +323,19 @@ SELECT
 FROM covid_hhs_sources.community_profile_report_municipios
 GROUP BY date
 ORDER BY date DESC;
+
+
+--
+-- Compare the PREIS and Tiberius numbers to watch for
+-- PRDoH shenanigans
+--
+SELECT
+	downloaded_at AT TIME ZONE 'America/Puerto_Rico'
+		AS "Hora de descarga",
+	registradas,
+	registradas1,
+	registradas2,
+	tiberius_total,
+	tiberius_1dosis,
+	tiberius_2dosis
+FROM covid19datos_sources.vacunaciones_flat;
