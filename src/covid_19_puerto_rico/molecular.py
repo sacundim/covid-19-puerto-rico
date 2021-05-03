@@ -982,6 +982,37 @@ class VaccinationMap(AbstractMolecularChart):
             height=250
         )
 
+class MunicipalVaccination(AbstractMolecularChart):
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('municipal_vaccinations', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.municipio,
+            table.c.population,
+            table.c.total_dosis1.label('Primera dosis'),
+            table.c.total_dosis2.label('Segunda dosis')
+        ]).where(table.c.bulletin_date <= max(bulletin_dates))
+        df = pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
+        return pd.melt(df, ['bulletin_date', 'municipio', 'population'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df).mark_area().transform_calculate(
+            pct=alt.datum.value / alt.datum.population
+        ).encode(
+            x=alt.X('bulletin_date:T', title='Fecha'),
+            y=alt.Y('pct:Q', title='% de población', axis=alt.Axis(format='%')),
+            color=alt.Color('variable:N', title='Dosis')
+        ).properties(
+            width=250, height=175
+        ).facet(
+            column=alt.Column('variable:N', title=None),
+            row=alt.Row('municipio:N', title=None)
+        )
+
 
 class MunicipalSPLOM(AbstractMolecularChart):
     VARIABLES = [
