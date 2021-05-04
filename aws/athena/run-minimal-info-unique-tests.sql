@@ -257,9 +257,15 @@ WITH tests AS (
         sum(specimens) FILTER (
             WHERE test_type = 'Antígeno'
         ) AS cumulative_antigens,
+        sum(positives) FILTER (
+            WHERE test_type = 'Antígeno'
+        ) AS cumulative_positive_antigens,
         sum(specimens) FILTER (
             WHERE test_type = 'Molecular'
-        ) AS cumulative_molecular
+        ) AS cumulative_molecular,
+        sum(positives) FILTER (
+            WHERE test_type = 'Molecular'
+        ) AS cumulative_positive_molecular
     FROM covid_pr_etl.municipal_tests_collected_agg
     INNER JOIN covid_pr_sources.municipal_abbreviations
         USING (municipality)
@@ -301,9 +307,15 @@ SELECT
 	cumulative_antigens,
 	1e3 * cumulative_antigens / race.population
 		AS cumulative_antigens_1k,
+	CAST(cumulative_positive_antigens AS DOUBLE)
+		/ cumulative_antigens
+		AS cumulative_antigen_positivity,
 	cumulative_molecular,
 	1e3 * cumulative_molecular / race.population
-		AS cumulative_molecular_1k
+		AS cumulative_molecular_1k,
+	CAST(cumulative_positive_molecular AS DOUBLE)
+		/ cumulative_molecular
+		AS cumulative_molecular_positivity
 FROM tests
 INNER JOIN covid19datos_sources.vacunaciones_municipios_totales_daily vax
 	ON vax.local_date = tests.bulletin_date
