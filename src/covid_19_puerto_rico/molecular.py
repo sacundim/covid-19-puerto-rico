@@ -1020,7 +1020,8 @@ class MunicipalSPLOM(AbstractMolecularChart):
         '<$10k', '≥$200k',
         '% blanco', '% negro',
         '1 dosis', '2 dosis',
-        'Casos/1k'
+        'Casos/1k', 'Pruebas/1k',
+        'Antígenos/1k', 'Moleculares/1k'
     ]
 
     def fetch_data(self, connection, bulletin_dates):
@@ -1038,6 +1039,9 @@ class MunicipalSPLOM(AbstractMolecularChart):
             table.c.total_dosis1_pct.label('1 dosis'),
             table.c.total_dosis2_pct.label('2 dosis'),
             table.c.cumulative_cases_1k.label('Casos/1k'),
+            table.c.cumulative_specimens_1k.label('Pruebas/1k'),
+            table.c.cumulative_antigens_1k.label('Antígenos/1k'),
+            table.c.cumulative_molecular_1k.label('Moleculares/1k'),
         ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
                       table.c.bulletin_date <= max(bulletin_dates)))
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
@@ -1059,6 +1063,9 @@ class MunicipalSPLOM(AbstractMolecularChart):
                 alt.Tooltip(field='1 dosis', type='quantitative', format=',.1%'),
                 alt.Tooltip(field='2 dosis', type='quantitative', format=',.1%'),
                 alt.Tooltip(field='Casos/1k', type='quantitative', format=',.1f'),
+                alt.Tooltip(field='Pruebas/1k', type='quantitative', format=',.1f'),
+                alt.Tooltip(field='Moleculares/1k', type='quantitative', format=',.1f'),
+                alt.Tooltip(field='Antígenos/1k', type='quantitative', format=',.1f'),
             ]
         ).properties(
             width=100, height=100
