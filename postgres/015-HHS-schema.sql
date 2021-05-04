@@ -112,6 +112,18 @@ CREATE TABLE hhs_hospital_history (
     "previous_day_total_ED_visits_7_day_sum" INTEGER,
     "previous_day_admission_influenza_confirmed_7_day_sum" INTEGER,
     "geocoded_hospital_address" TEXT,
+    -- Added on May 3, 2021:
+    "hhs_ids" TEXT,
+    "previous_day_admission_adult_covid_confirmed_7_day_coverage" INTEGER,
+    "previous_day_admission_pediatric_covid_confirmed_7_day_coverage" INTEGER,
+    "previous_day_admission_adult_covid_suspected_7_day_coverage" INTEGER,
+    "previous_day_admission_pediatric_covid_suspected_7_day_coverage" INTEGER,
+    "previous_week_personnel_covid_vaccinated_doses_administered_7_day_sum" INTEGER,
+    "total_personnel_covid_vaccinated_doses_none_7_day_sum" INTEGER,
+    "total_personnel_covid_vaccinated_doses_one_7_day_sum" INTEGER,
+    "total_personnel_covid_vaccinated_doses_all_7_day_sum" INTEGER,
+    "previous_week_patients_covid_vaccinated_doses_one_7_day_sum" INTEGER,
+    "previous_week_patients_covid_vaccinated_doses_all_7_day_sum" INTEGER,
     PRIMARY KEY ("hospital_pk", "collection_week")
 );
 
