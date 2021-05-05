@@ -237,3 +237,94 @@ WHERE date_add('day', -21, bulletin_date) < collected_date
 AND collected_date <= bulletin_date
 GROUP BY bulletin_date, municipality, abbreviation, population
 ORDER BY bulletin_date DESC, municipality;
+
+
+--
+-- Big municipality data table for a SPLOM chart.  Depends on
+-- municipal bulletin data and minimal-info-unique-tests.
+--
+DROP TABLE IF EXISTS covid_pr_etl.municipal_splom;
+CREATE TABLE covid_pr_etl.municipal_splom WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
+WITH tests AS (
+    SELECT
+        bulletin_date,
+        municipality,
+        sum(specimens) cumulative_specimens,
+        sum(specimens) FILTER (
+            WHERE test_type = 'Antígeno'
+        ) AS cumulative_antigens,
+        sum(positives) FILTER (
+            WHERE test_type = 'Antígeno'
+        ) AS cumulative_positive_antigens,
+        sum(specimens) FILTER (
+            WHERE test_type = 'Molecular'
+        ) AS cumulative_molecular,
+        sum(positives) FILTER (
+            WHERE test_type = 'Molecular'
+        ) AS cumulative_positive_molecular
+    FROM covid_pr_etl.municipal_tests_collected_agg
+    INNER JOIN covid_pr_sources.municipal_abbreviations
+        USING (municipality)
+    WHERE test_type IN ('Antígeno', 'Molecular')
+    GROUP BY bulletin_date, municipality
+)
+SELECT
+	local_date AS bulletin_date,
+	municipio,
+	race.fips,
+	race.population,
+	households_median,
+	households_lt_10k_pct / 100.0
+		AS households_lt_10k_pct,
+    households_gte_200k_pct / 100.0
+    	AS households_gte_200k_pct,
+	white_alone,
+	CAST(white_alone AS DOUBLE)
+		/ race.population
+		AS white_alone_pct,
+	black_alone,
+	CAST(black_alone AS DOUBLE)
+		/ race.population
+		AS black_alone_pct,
+	cumulative_cases,
+	1e3 * cumulative_cases / race.population
+		AS cumulative_cases_1k,
+	total_dosis1,
+	CAST(total_dosis1 AS DOUBLE)
+		/ race.population
+		AS total_dosis1_pct,
+	total_dosis2,
+	CAST(total_dosis2 AS DOUBLE)
+		/ race.population
+		AS total_dosis2_pct,
+	cumulative_specimens,
+	1e3 * cumulative_specimens / race.population
+		AS cumulative_specimens_1k,
+	cumulative_antigens,
+	1e3 * cumulative_antigens / race.population
+		AS cumulative_antigens_1k,
+	CAST(cumulative_positive_antigens AS DOUBLE)
+		/ cumulative_antigens
+		AS cumulative_antigen_positivity,
+	cumulative_molecular,
+	1e3 * cumulative_molecular / race.population
+		AS cumulative_molecular_1k,
+	CAST(cumulative_positive_molecular AS DOUBLE)
+		/ cumulative_molecular
+		AS cumulative_molecular_positivity
+FROM tests
+INNER JOIN covid19datos_sources.vacunaciones_municipios_totales_daily vax
+	ON vax.local_date = tests.bulletin_date
+	AND vax.municipio = tests.municipality
+INNER JOIN covid_pr_sources.bulletin_municipal cases
+	ON cases.bulletin_date = vax.local_date
+	AND cases.municipality = vax.municipio
+INNER JOIN covid_pr_sources.acs_2019_5y_municipal_race race
+	ON vax.municipio = race.municipality
+INNER JOIN covid_pr_sources.acs_2019_5y_municipal_household_income income
+	ON vax.municipio = income.municipality
+ORDER BY bulletin_date, municipio;

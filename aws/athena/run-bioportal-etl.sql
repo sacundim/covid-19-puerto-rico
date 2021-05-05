@@ -103,6 +103,8 @@ ORDER BY date DESC;
 --
 -- Municipal vaccinations according to PRDoH
 --
+MSCK REPAIR TABLE covid_hhs_sources.vaccination_county_condensed_data_json;
+
 DROP TABLE IF EXISTS covid_pr_etl.municipal_vaccinations;
 CREATE TABLE covid_pr_etl.municipal_vaccinations WITH (
     format = 'PARQUET',
