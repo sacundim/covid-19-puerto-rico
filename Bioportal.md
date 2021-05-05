@@ -58,3 +58,6 @@ Esta lista fue compilada por el Dr. Rafael Irizarry (@rafalab) y
     
 16. Resumen de Escuelas Públicas y Privadas:
 ```/administration/reports/education/general-summary```
+    
+17. Muertes por fecha de deceso:
+```/administration/reports/deaths/summary```

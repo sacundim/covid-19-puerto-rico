@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import sqlalchemy
 from covid_19_puerto_rico import util
+from sqlalchemy import func
 from sqlalchemy import text
 from sqlalchemy.sql import select, and_
 from . import charts
@@ -757,12 +758,12 @@ class Hospitalizations(AbstractMolecularChart):
             table.c.date,
             table.c.hospitalized_currently.label('Hospitalizados'),
             table.c.in_icu_currently.label('Cuidado intensivo'),
-        ]).where(table.c.date <= max(bulletin_dates))
+        ]).where(table.c.date <= max(bulletin_dates) + datetime.timedelta(days=1))
         df = pd.read_sql_query(query, connection, parse_dates=['date'])
         return pd.melt(df, ['date']).dropna()
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['date'] <= pd.to_datetime(bulletin_date)]
+        return df.loc[df['date'] <= pd.to_datetime(bulletin_date + datetime.timedelta(days=1))]
 
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df).transform_window(
@@ -791,6 +792,76 @@ class Hospitalizations(AbstractMolecularChart):
             ]
         ).properties(
             width=575, height=350
+        )
+
+class RecentHospitalizations(AbstractMolecularChart):
+    """Hospitalizations, based on PRDoH data we scrape."""
+
+    SORT_ORDER = ['COVID', 'No COVID', 'Disponibles']
+    COLORS = ['#d4322c', '#f58518', '#a4d86e']
+
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('prdoh_hospitalizations', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.date.label('Fecha'),
+            table.c.age.label('Edad'),
+            table.c.resource.label('Tipo'),
+            table.c.total.label('Total'),
+            table.c.covid.label('COVID'),
+            table.c.nocovid.label('No COVID'),
+            table.c.disp.label('Disponibles')
+        ]).where(table.c.date <= max(bulletin_dates) + datetime.timedelta(days=1))
+        df = pd.read_sql_query(query, connection, parse_dates=['Fecha'])
+        return pd.melt(df, ['Fecha', 'Edad', 'Tipo', 'Total'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['Fecha'] <= pd.to_datetime(bulletin_date + datetime.timedelta(days=1))]
+
+    def make_chart(self, df, bulletin_date):
+        area = alt.Chart(df).transform_calculate(
+            order="if(datum.variable == 'COVID', 0, if(datum.variable == 'No COVID', 1, 2))",
+            pct=alt.datum.value / alt.datum['Total']
+        ).mark_area(opacity=0.85).encode(
+            x=alt.X('Fecha:T', title=None,
+                    axis=alt.Axis(format='%-d/%-m', labelBound=True,
+                                  labelAlign='right', labelOffset=4)),
+            y=alt.Y('value:Q', title=None, stack=True,
+                    axis=alt.Axis(minExtent=30, format='s', labelFlush=True,
+                                  labelExpr="if(datum.value > 0, datum.label, '')")),
+            color=alt.Color('variable:N', title=None, sort=self.SORT_ORDER,
+                            legend=alt.Legend(orient='top', columns=3, labelLimit=250),
+                            scale=alt.Scale(range=self.COLORS)),
+            order=alt.Order('order:O'),
+            tooltip=[
+                alt.Tooltip('Fecha:T'),
+                alt.Tooltip('Edad:N'),
+                alt.Tooltip('Tipo:N'),
+                alt.Tooltip('Total:Q', format=',d'),
+                alt.Tooltip('variable:N', title='Variable'),
+                alt.Tooltip('value:Q', format=',d', title='Valor'),
+                alt.Tooltip('pct:Q', format='.1%', title='% del total')
+            ]
+        )
+
+        threshold = alt.Chart(df).transform_calculate(
+            threshold=alt.datum['Total'] * 0.70
+        ).mark_line(color='gray', strokeWidth=1, strokeDash=[5, 3]).encode(
+            x=alt.X('Fecha:T', title=None),
+            y=alt.Y('threshold:Q', title=None)
+        )
+
+        return alt.layer(area, threshold).properties(
+            width=275, height=175
+        ).facet(
+            row=alt.Row('Tipo:N', title=None),
+            column=alt.Column('Edad:N', title=None)
+        ).resolve_scale(
+            y='independent'
+        ).configure_facet(
+            spacing=10
+        ).configure_axis(
+            labelFontSize=12
         )
 
 
@@ -897,7 +968,7 @@ class VaccinationMap(AbstractMolecularChart):
                               format=alt.TopoDataFormat(type='topojson', feature='municipalities'))
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_splom', self.metadata,
+        table = sqlalchemy.Table('municipal_vaccinations', self.metadata,
                                  schema='covid_pr_etl', autoload=True)
         query = select([
             table.c.bulletin_date,
@@ -947,6 +1018,37 @@ class VaccinationMap(AbstractMolecularChart):
             height=250
         )
 
+class MunicipalVaccination(AbstractMolecularChart):
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('municipal_vaccinations', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.municipio,
+            table.c.population,
+            table.c.total_dosis1.label('Primera dosis'),
+            table.c.total_dosis2.label('Segunda dosis')
+        ]).where(table.c.bulletin_date <= max(bulletin_dates))
+        df = pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
+        return pd.melt(df, ['bulletin_date', 'municipio', 'population'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df).mark_area().transform_calculate(
+            pct=alt.datum.value / alt.datum.population
+        ).encode(
+            x=alt.X('bulletin_date:T', title='Fecha'),
+            y=alt.Y('pct:Q', title='% de población', axis=alt.Axis(format='%')),
+            color=alt.Color('variable:N', title='Dosis')
+        ).properties(
+            width=250, height=175
+        ).facet(
+            column=alt.Column('variable:N', title=None),
+            row=alt.Row('municipio:N', title=None)
+        )
+
 
 class MunicipalSPLOM(AbstractMolecularChart):
     VARIABLES = [
@@ -954,7 +1056,9 @@ class MunicipalSPLOM(AbstractMolecularChart):
         '<$10k', '≥$200k',
         '% blanco', '% negro',
         '1 dosis', '2 dosis',
-        'Casos/1k'
+        'Casos/1k', 'Pruebas/1k',
+        'Antígenos/1k', '% +antígenos',
+        'Moleculares/1k', '% +molecular'
     ]
 
     def fetch_data(self, connection, bulletin_dates):
@@ -972,6 +1076,11 @@ class MunicipalSPLOM(AbstractMolecularChart):
             table.c.total_dosis1_pct.label('1 dosis'),
             table.c.total_dosis2_pct.label('2 dosis'),
             table.c.cumulative_cases_1k.label('Casos/1k'),
+            table.c.cumulative_specimens_1k.label('Pruebas/1k'),
+            table.c.cumulative_antigens_1k.label('Antígenos/1k'),
+            table.c.cumulative_antigen_positivity.label('% +antígenos'),
+            table.c.cumulative_molecular_1k.label('Moleculares/1k'),
+            table.c.cumulative_molecular_positivity.label('% +molecular'),
         ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
                       table.c.bulletin_date <= max(bulletin_dates)))
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
@@ -993,10 +1102,186 @@ class MunicipalSPLOM(AbstractMolecularChart):
                 alt.Tooltip(field='1 dosis', type='quantitative', format=',.1%'),
                 alt.Tooltip(field='2 dosis', type='quantitative', format=',.1%'),
                 alt.Tooltip(field='Casos/1k', type='quantitative', format=',.1f'),
+                alt.Tooltip(field='Pruebas/1k', type='quantitative', format=',.1f'),
+                alt.Tooltip(field='Moleculares/1k', type='quantitative', format=',.1f'),
+                alt.Tooltip(field='% +molecular', type='quantitative', format=',.1%'),
+                alt.Tooltip(field='Antígenos/1k', type='quantitative', format=',.1f'),
+                alt.Tooltip(field='% +antígenos', type='quantitative', format=',.1%'),
             ]
         ).properties(
             width=100, height=100
         ).repeat(
             row=self.VARIABLES,
             column=list(reversed(self.VARIABLES))
+        )
+
+
+class EncounterLag(AbstractMolecularChart):
+    WIDTH = 575
+    SORT_ORDER = [
+        'Pruebas (todas)', 'Pruebas (antígenos)', 'Pruebas (moleculares)',
+        'Casos (todos)', 'Casos (antígenos)', 'Casos (moleculares)'
+    ]
+
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('encounter_lag', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.age_gte,
+            table.c.age_lt,
+            table.c.delta_encounters.label('Pruebas_Todas'),
+            table.c.delta_cases.label('Casos_Todas'),
+            table.c.delta_antigens.label('Pruebas_Antígenos'),
+            table.c.delta_antigens_cases.label('Casos_Antígenos'),
+            table.c.delta_molecular.label('Pruebas_Moleculares'),
+            table.c.delta_molecular_cases.label('Casos_Moleculares')
+        ]).where(
+            and_(min(bulletin_dates) - datetime.timedelta(days=42) <= table.c.bulletin_date,
+                 table.c.bulletin_date <= max(bulletin_dates))
+        )
+        df1 = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+        df2 = pd.wide_to_long(
+            df1, ['Casos', 'Pruebas'],
+            i=['bulletin_date', 'age_gte', 'age_lt'],
+            j='test_type', sep='_', suffix='.*'
+        )
+        return pd.melt(df2.reset_index(), ['bulletin_date', 'test_type', 'age_gte', 'age_lt'])
+
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=49))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['bulletin_date'])
+                      & (df['bulletin_date'] <= until_date)]
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df).transform_joinaggregate(
+            groupby=['bulletin_date'],
+            whole_bulletin_1d='sum(value)'
+        ).transform_window(
+            groupby=['age_lt'],
+            sort=[{'field': 'bulletin_date'}],
+            frame=[-6, 0],
+            mean_whole_bulletin_7d='mean(whole_bulletin_1d)',
+            mean_delta_value_7d='mean(value)'
+        ).transform_calculate(
+            range="if(datum.age_lt - 1 == datum.age_gte, datum.age_gte, datum.age_gte + ' a ' + (datum.age_lt - 1))",
+            collected_since="timeOffset('day', datum.bulletin_date, -datum.age_lt + 1)",
+            collected_until="timeOffset('day', datum.bulletin_date, -datum.age_gte)",
+            smoothed_pct=alt.datum.mean_delta_value_7d / alt.datum.mean_whole_bulletin_7d
+        ).transform_filter(
+            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
+        ).mark_area(opacity=0.85).encode(
+            x=alt.X('bulletin_date:T', timeUnit='yearmonthdate', title='Fecha de datos',
+                    axis=alt.Axis(format='%-d/%-m', labelOverlap=True, labelSeparation=5, labelFontSize=11)),
+            y=alt.Y('mean_delta_value_7d:Q', stack='normalize', title=None,
+                    axis=alt.Axis(labelFontSize=11, orient='right', format='%')),
+            order=alt.Order('age_gte:O'),
+            color=alt.Color('age_gte:Q', title='Rezago entre muestra y Bioportal (días)',
+                            scale=alt.Scale(scheme='redyellowgreen', reverse=True,
+                                            domain=[0, 14], domainMid=2, clamp=True),
+                            legend=alt.Legend(orient='top', gradientLength=self.WIDTH,
+                                              titleLimit=self.WIDTH, format='d')),
+            tooltip=[
+                alt.Tooltip('bulletin_date:T', title='Fecha de datos'),
+                alt.Tooltip('collected_since:T', title='Muestras desde'),
+                alt.Tooltip('collected_until:T', title='Muestras hasta'),
+                alt.Tooltip('test_type:N', title='Tipo de prueba'),
+                alt.Tooltip('variable:N', title='Variable'),
+                alt.Tooltip('range:N', title='Rezago (días)'),
+                alt.Tooltip('value:Q', format=',d', title='Añadidos (crudo)'),
+                alt.Tooltip('mean_delta_value_7d:Q', format=',.1f', title='Añadidos (promedio 7 días)'),
+                alt.Tooltip('smoothed_pct:Q', format='.1%', title='Porciento (7 días)')
+            ]
+        ).properties(
+            width=175, height=110
+        ).facet(
+            column=alt.Column('test_type:N', title=None,
+                              sort=['Todas', 'Moleculares', 'Antígenos']),
+            row=alt.Row('variable:N', title=None, sort=['Pruebas', 'Casos'],
+                        header=alt.Header(orient='left'))
+        ).resolve_scale(
+            y='shared'
+        )
+
+
+class MunicipalTestingScatter(AbstractMolecularChart):
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('municipal_testing_scatterplot', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.municipality,
+            table.c.abbreviation,
+            table.c.population,
+            table.c.daily_specimens,
+            table.c.daily_antigens,
+            table.c.daily_molecular,
+        ]).where(
+            and_(min(bulletin_dates) <= table.c.bulletin_date,
+                 table.c.bulletin_date <= max(bulletin_dates))
+        )
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+
+    def make_chart(self, df, bulletin_date):
+        scatter = alt.Chart(df).transform_calculate(
+            collected_since="timeOffset('day', datum.bulletin_date, -20)",
+            daily_specimens_1k='1000 * datum.daily_specimens / datum.population',
+            daily_antigens_1k='1000 * datum.daily_antigens / datum.population',
+            daily_molecular_1k='1000 * datum.daily_molecular / datum.population'
+        ).mark_point().encode(
+            x=alt.X('daily_antigens_1k:Q', title='Antígenos por millar (promedio 21 días)',
+                    axis=alt.Axis(labelFlush=False)),
+            y=alt.Y('daily_molecular_1k:Q', title='Moleculares por millar (promedio 21 días)'),
+            tooltip=[
+                alt.Tooltip('municipality:N', title='Municipio'),
+                alt.Tooltip('population:Q', format=',d', title='Población'),
+                alt.Tooltip('collected_since:T', title='Muestras desde'),
+                alt.Tooltip('bulletin_date:T', title='Muestras hasta'),
+                alt.Tooltip('daily_specimens:Q', format=',.1f', title='Especímenes diarios'),
+                alt.Tooltip('daily_specimens_1k:Q', format=',.1f', title='Especímenes diarios (/1k)'),
+                alt.Tooltip('daily_antigens:Q', format=',.1f', title='Antígenos diarios'),
+                alt.Tooltip('daily_antigens_1k:Q', format=',.1f', title='Antígenos diarios (/1k)'),
+                alt.Tooltip('daily_molecular:Q', format=',.1f', title='Moleculares diarias'),
+                alt.Tooltip('daily_molecular_1k:Q', format=',.1f', title='Moleculares diarias (/1k)')
+            ]
+        )
+
+        text = scatter.mark_text(align='left', fontSize=9, angle=315, dx=5).encode(
+            text=alt.Text('abbreviation:N')
+        )
+
+        mean_antigens = alt.Chart(df).transform_aggregate(
+            sum_population='sum(population)',
+            sum_daily_antigens='sum(daily_antigens)'
+        ).transform_calculate(
+            sum_daily_antigens_1k='1000 * datum.sum_daily_antigens / datum.sum_population',
+        ).mark_rule(strokeWidth=0.5, strokeDash=[3, 2]).encode(
+            x=alt.X('sum_daily_antigens_1k:Q')
+        )
+
+        mean_molecular = alt.Chart(df).transform_aggregate(
+            sum_population='sum(population)',
+            sum_daily_molecular='sum(daily_molecular)'
+        ).transform_calculate(
+            sum_daily_molecular_1k='1000 * datum.sum_daily_molecular / datum.sum_population'
+        ).mark_rule(strokeWidth=0.5, strokeDash=[3, 2]).encode(
+            y=alt.Y('sum_daily_molecular_1k:Q')
+        )
+
+        mean_specimens = alt.Chart(df).transform_aggregate(
+            sum_population='sum(population)',
+            sum_daily_specimens='sum(daily_specimens)'
+        ).transform_calculate(
+            zero='0', # dunno how else to do this in Altair
+            sum_daily_specimens_1k='1000 * datum.sum_daily_specimens / datum.sum_population'
+        ).mark_rule(strokeWidth=0.5, strokeDash=[3, 2]).encode(
+            x=alt.X('zero:Q'),
+            x2=alt.X2('sum_daily_specimens_1k:Q'),
+            y=alt.Y('sum_daily_specimens_1k:Q'),
+            y2=alt.Y2('zero:Q')
+        )
+
+        return alt.layer(mean_antigens, mean_molecular, mean_specimens, text, scatter).properties(
+            width=575, height=575
         )

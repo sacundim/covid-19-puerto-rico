@@ -28,10 +28,12 @@
 
     <ul>
         <li><a href="#RecentCases_section">Pruebas, casos y muertes recientes</a></li>
-        <li><a href="#NewCases_section">Curva de casos nuevos (Bioportal)</a></li>
-        <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
+        <li><a href="#RecentHospitalizations_section">Disponibilidad hospitalaria</a></li>
+        <li><a href="#EncounterLag_section">Rezagos de datos recientes</a></li>
         <li><a href="#VaccinationMap_section">Vacunados por municipio</a></li>
         <li><a href="#AgeGroups_section">Casos por edad (per cápita)</a></li>
+        <li><a href="#NewCases_section">Curva de casos nuevos (Bioportal)</a></li>
+        <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
         <li><a href="#NewTestSpecimens_section">Especímenes de prueba diarios</a></li>
         <li><a href="#NaivePositiveRate_section">Tasa de especímenes positivos</a></li>
         <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados</a></li>
@@ -146,6 +148,149 @@
         a pesar de que esta suele ser más tardía.  En esta gráfica usamos datos del Bioportal para
         corregir esto y adjudicar esos casos a la fecha más temprana, que mejor refleja cuándo se
         contagió el paciente.</p>
+</div>
+
+
+<div class="section" id="RecentHospitalizations_section">
+    <h1>Disponibilidad hospitalaria</h1>
+
+    <div id="RecentHospitalizations"></div>
+    <script type="text/javascript">
+      embedChart('RecentHospitalizations', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Historial de ocupación hospitalaria de adultos y pediátricos, camas regulares y unidades
+        de cuidado intensivo (UCI), según <a href="https://covid19datos.salud.gov.pr/">la página
+            de estadísticas de COVID-19 del Departamento de Salud de Puerto Rico</a>.  Las líneas
+        entrecortadas indican el nivel de 30% de disponibilidad, que algunos "semáforos" declaran
+        como umbral para nivel "rojo" para las UCIs.</p>
+
+    <h3>Advertencia</h3>
+
+    <p>La capacidad hospitalaria no es solo número de camas o equipo, también es personal disponible
+        para atender pacientes. En teoría el número de camas disponibles aquí refleja ese factor,
+        según dice el Departamento de Salud de Puerto Rico en <a href="https://covid19datos.salud.gov.pr/">la
+            página de donde tiramos estos datos</a>:</p>
+
+    <blockquote>
+        El reporte de camas disponibles y ocupadas es basado en información provista por personal de
+        los hospitales de Puerto Rico.  Los datos visualizados no incluyen los hospitales de rehabilitación,
+        correccionales, psiquiátricos, hospital de Veteranos ni los CDTs de Vieques y Culebra.  La información
+        de censo y disponibilidad de camas está basada en la cantidad de camas licenciadas por SARAFS activas
+        y para las cuales la institución cuenta con el equipo y personal disponible para manejarlas.  Estos
+        números varían diariamente basados en los recursos disponibles y las decisiones operacionales tomadas
+        por cada institución hospitalaria.
+    </blockquote>
+
+    <p>Por esto al leer esta gráfica hay que imaginar que una emergencia se podría sucitar no solo
+        por un disparo de los renglones rojos (pacientes de COVID) o anaranjados (otros pacientes),
+        sino también por un desplome en los renglones verdes (camas o UCIs disponibles).  O peor, que
+        los datos del renglón verde <strong>no</strong> reflejen bien la escasez de personal y
+        que den una impresión engañosa de la verdadera situación.</p>
+
+
+    <h3>Fuentes de datos</h3>
+
+    <p>En esta página se usan tres fuentes de datos distintas respecto a hospitalizaciones, que
+        arrojan números un tanto distintos:</p>
+
+    <ol>
+        <li>Datos de <a href="https://covid19datos.salud.gov.pr/"><code>covid19datos.salud.gov.pr</code></a>
+            que capturamos diario y archivamos, pero no tenemos datos más temprano que el 26 de
+            marzo del 2021.</li>
+        <li>Datos que descargamos diario de <a href="https://healthdata.gov/">HealthData.gov</a>,
+            la página de datos de COVID-19 del Departamento de Salud y Servicios Humanos del
+            gobierno federal de los Estados Unidos ("Health and Human Services" o HHS).  De esta
+            fuente contamos con datos históricos desde agosto del 2020 pero los meses tempranos
+            muestran aparentes errores.</li>
+        <li>Datos archivados del <a href="https://covidtracking.com/">COVID Tracking Project</a>,
+            que cesó operaciones el 7 de marzo del 2021.  Este proyecto primero capturó datos del
+            Departamento de Salud de Puerto Rico y luego cambió a usar los federales, y es el
+            mejor archivo público para fechas más antiguas.</li>
+    </ol>
+
+    <p>Esta gráfica usa la #1. Otras visualizaciones usan distintos, y no cuadran 100% entre sí.</p>
+</div>
+
+
+<div class="section" id="EncounterLag_section">
+    <h1>Rezagos de datos recientes</h1>
+
+    <div id="EncounterLag"></div>
+    <script type="text/javascript">
+      embedChart('EncounterLag', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Para las últimas seis semanas, cuán retrasados llegaron los resultados de pruebas y de casos
+        al Bioportal del Departamento de Salud de Puerto Rico.  Los días de rezago son la diferencia
+        entre la fecha de toma de muestra (campo  <code>collectedDate</code> en Bioportal) y la fecha
+        de recepción de resultado (campo <code>resultCreatedAt</code>), y se agrupan por fecha de
+        recepción.  Esto último es importante, porque quiere decir que esta gráfica contesta esta
+        pregunta:</p>
+
+    <ol start="1">
+        <li>¿Cuán viejos fueron los resultados que se recibieron en tales fechas?</li>
+    </ol>
+
+    <p>...pero no esta:</p>
+
+    <ol start="2">
+        <li>¿Cuánto tardaron en recibirse los resultados de las muestras tomadas en tales fechas?</li>
+    </ol>
+
+    <p>Mucha gente ve estas gráficas y piensan que es la segunda, porque es la que a tantos en verdad
+        nos gustaría saber, pero el problema es que esa no se puede contestar firme porque mañana pueden
+        llegar resultados a destiempo para cualquier fecha pasada que cambien la respuesta.</p>
+
+    <p>Los niveles en esta gráfica no son los valores crudos diarios, sino promedios móviles de siete
+        fechas consecutivas, para ilustrar las tendencias.  El análisis además solo contempla resultados
+        que se recibieron a no más de 20 días luego de la toma de muestra, por entenderse que los que
+        tardan más reflejan procesos irregulares que no son relevantes a cuán bien está funcionando el
+        sistema de detección al presente.  Estos resultados super tardíos es mejor visualizarlos en otras
+        gráficas de esta página.</p>
+</div>
+
+
+<div class="section" id="VaccinationMap_section">
+    <h1>Vacunados por municipio</h1>
+
+    <div id="VaccinationMap"></div>
+    <script type="text/javascript">
+      embedChart('VaccinationMap', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Qué porcentaje de la población de cada municipio ha recibido ya primera y segunda
+        dosis de la vacuna.  Fuentes de datos:</p>
+
+    <ul>
+        <li>Vacunas: <a href="https://covid19datos.salud.gov.pr/">la página de datos de COVID-19
+            del Departamento de Salud de Puerto Rico</a> (<code>covid19datos.salud.gov.pr</code>);</li>
+        <li>Población: Negociado del Censo, American Community Survey (2019, estimados 5 años).</li>
+    </ul>
+</div>
+
+
+<div class="section" id="AgeGroups_section">
+    <h1>Casos por edad (per cápita)</h1>
+
+    <div id="AgeGroups"></div>
+    <script type="text/javascript">
+      embedChart('AgeGroups', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Casos por molecular o antígeno por edad, promedios de 7 días por fecha de muestra,
+        ajustado al estimado poblacional en cada grupo de edades. Los casos son a partir
+        de la curva que calculamos con datos de Bioportal.  Usamos datos del Puerto
+        Rico Community Survey del 2019 del Censo de los Estados Unidos para ajustar a la
+        población de cada edad.</p>
 </div>
 
 
@@ -286,45 +431,6 @@
             </ul>
         </li>
     </ul>
-</div>
-
-
-<div class="section" id="VaccinationMap_section">
-    <h1>Vacunados por municipio</h1>
-
-    <div id="VaccinationMap"></div>
-    <script type="text/javascript">
-      embedChart('VaccinationMap', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Qué porcentaje de la población de cada municipio ha recibido ya primera y segunda
-        dosis de la vacuna.  Fuentes de datos:</p>
-
-    <ul>
-        <li>Vacunas: <a href="https://covid19datos.salud.gov.pr/">la página de datos de COVID-19
-            del Departamento de Salud de Puerto Rico</a> (<code>covid19datos.salud.gov.pr</code>);</li>
-        <li>Población: Negociado del Censo, American Community Survey (2019, estimados 5 años).</li>
-    </ul>
-</div>
-
-
-<div class="section" id="AgeGroups_section">
-    <h1>Casos por edad (per cápita)</h1>
-
-    <div id="AgeGroups"></div>
-    <script type="text/javascript">
-      embedChart('AgeGroups', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Casos por molecular o antígeno por edad, promedios de 7 días por fecha de muestra,
-        ajustado al estimado poblacional en cada grupo de edades. Los casos son a partir
-        de la curva que calculamos con datos de Bioportal.  Usamos datos del Puerto
-        Rico Community Survey del 2019 del Censo de los Estados Unidos para ajustar a la
-        población de cada edad.</p>
 </div>
 
 
@@ -999,6 +1105,19 @@
 
     <h3>Descuadres constatados en los datos de fuente</h3>
     <dl>
+        <dt>2021-05-02</dt>
+        <dd>Hay un error en la nota al calce #6 sobre los ajustes al total acumulado de casos
+            sospechosos.  Dice que se restaron 4 duplicados pero lo acompaña con una gráfica
+            documentando las fechas de cuatro casos sospechosos adicionales.  Haciendo las
+            sumas para cotejar se constata que se sumaron 4 casos viejos como implica la
+            gráfica, y en vez de restarse 4 duplicados como dice el texto de la nota.  Hemos
+            entonces optado por ignorar el texto y hacerle caso a la gráfica, opción que hace
+            que cuadren los datos.</dd>
+
+        <dt>2021-04-30</dt>
+        <dd>No cuadran los casos confirmados en la portada y las notas al calce. El total reportado
+            en la portada es 116,180, pero la suma llega a 116,181.</dd>
+
         <dt>2021-04-10</dt>
         <dd>No cuadran los casos sospechosos en la portada y las notas al calce. El total reportado
             en la portada es 102,481, pero la suma llega a 102,484.</dd>
@@ -1175,6 +1294,20 @@
     <h3>Descuadres constatados en los datos de fuente</h3>
 
     <dl>
+        <dt>2021-04-28, 2021-04-29 y 2021-04-30</dt>
+        <dd>
+            <p>En el informe diario con fecha de actualización del 29 de abril, la portada, la
+            gráfica de muertes y la columna de muertes acumuladas por fecha de muestras todas
+            dicen 2,296 muertes, pero la columna de muertes nuevas por fecha de muestra suma a
+            2,297. El error es que la hilera del 17 de abril del 2021 dice (correctamente) que
+            son 2,220 muertes adicionales, pero la del 18 de abril dice 9 adicionales pero solo
+            2,228 acumuladas.</p>
+
+            <p>El informe diario del 29 de abril repite el mismo error, con un total reportado
+                de 2,303 muertes pero la tabla suma a 2,304.  El del 30 de abril lo repite una
+                tercera vez, con total reportado de 2,310 muertes pero la tabla suma a 2,311.</p>
+        </dd>
+
         <dt>2021-03-29</dt>
         <dd>El boletín para esta fecha publicó las mismas tablas de casos por fecha de muestra
             que el del día anterior, con los mismos totales de casos que la portada del boletín

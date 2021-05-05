@@ -567,3 +567,57 @@ INNER JOIN downloads
 	ON max_file_timestamp = file_timestamp
 GROUP BY file_timestamp, local_date, date
 ORDER BY file_timestamp, local_date, date;
+
+
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+--
+-- CDC Covid Tracker county vaccination data
+--
+
+CREATE EXTERNAL TABLE covid_hhs_sources.vaccination_county_condensed_data_json (
+	runid INT,
+	Date DATE,
+	FIPS STRING,
+	StateName STRING,
+    StateAbbr STRING,
+    County STRING,
+    Series_Complete_18Plus INT,
+    Series_Complete_18PlusPop_Pct DOUBLE,
+    Series_Complete_65Plus INT,
+    Series_Complete_65PlusPop_Pct DOUBLE,
+    Series_Complete_Yes INT,
+    Series_Complete_Pop_Pct DOUBLE,
+    Completeness_pct DOUBLE
+) PARTITIONED BY (downloaded_date STRING)
+ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
+LOCATION 's3://covid-19-puerto-rico-data/cdc-covid-data-tracker/vaccination_county_condensed_data/jsonl_v1/';
+
+
+
+CREATE OR REPLACE VIEW covid_hhs_sources.vaccination_county_condensed_data_downloads AS
+SELECT
+	CAST(from_iso8601_timestamp(
+		regexp_extract("$path", '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z'))
+		AS TIMESTAMP)
+		AS downloaded_at,
+	*
+FROM covid_hhs_sources.vaccination_county_condensed_data_json;
+
+
+CREATE OR REPLACE VIEW covid_hhs_sources.vaccination_county_condensed_data_PR_daily AS
+WITH downloads AS (
+	SELECT
+		date,
+		max(runid) runid,
+		max(downloaded_at) downloaded_at
+	FROM covid_hhs_sources.vaccination_county_condensed_data_downloads
+	GROUP BY date
+)
+SELECT *
+FROM covid_hhs_sources.vaccination_county_condensed_data_downloads vax
+INNER JOIN downloads
+	USING (date, runid, downloaded_at)
+WHERE StateAbbr LIKE 'PR%'
+ORDER BY date, County;
+

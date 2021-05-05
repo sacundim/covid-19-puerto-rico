@@ -101,9 +101,12 @@ ORDER BY date DESC;
 
 
 --
--- Big municipality data table for a SPLOM chart
+-- Municipal vaccinations according to PRDoH
 --
-CREATE TABLE covid_pr_etl.municipal_splom WITH (
+MSCK REPAIR TABLE covid_hhs_sources.vaccination_county_condensed_data_json;
+
+DROP TABLE IF EXISTS covid_pr_etl.municipal_vaccinations;
+CREATE TABLE covid_pr_etl.municipal_vaccinations WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
@@ -111,24 +114,7 @@ CREATE TABLE covid_pr_etl.municipal_splom WITH (
 SELECT
 	local_date AS bulletin_date,
 	municipio,
-	race.fips,
 	population,
-	households_median,
-	households_lt_10k_pct / 100.0
-		AS households_lt_10k_pct,
-    households_gte_200k_pct / 100.0
-    	AS households_gte_200k_pct,
-	white_alone,
-	CAST(white_alone AS DOUBLE)
-		/ population
-		AS white_alone_pct,
-	black_alone,
-	CAST(black_alone AS DOUBLE)
-		/ population
-		AS black_alone_pct,
-	cumulative_cases,
-	1e3 * cumulative_cases / population
-		AS cumulative_cases_1k,
 	total_dosis1,
 	CAST(total_dosis1 AS DOUBLE)
 		/ population
@@ -138,20 +124,95 @@ SELECT
 		/ population
 		AS total_dosis2_pct
 FROM covid19datos_sources.vacunaciones_municipios_totales_daily vax
-INNER JOIN covid_pr_sources.bulletin_municipal cases
-	ON cases.bulletin_date = vax.local_date
-	AND cases.municipality = vax.municipio
 INNER JOIN covid_pr_sources.acs_2019_5y_municipal_race race
 	ON vax.municipio = race.municipality
-INNER JOIN covid_pr_sources.acs_2019_5y_municipal_household_income income
-	ON vax.municipio = income.municipality
 ORDER BY bulletin_date;
+
+
+----------------------------------------------------------------------------------
+
+--
+-- Deaths according to Bioportal, which I don't think is as reliable
+-- as the daily report.
+--
+MSCK REPAIR TABLE covid_pr_sources.deaths_parquet_v1;
+
+CREATE TABLE covid_pr_etl.bioportal_deaths WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['downloaded_date'],
+    bucket_count = 1
+) AS
+WITH first_clean AS (
+	SELECT
+		date(downloaded_date) AS downloaded_date,
+	    CAST(from_iso8601_timestamp(downloadedAt) AS TIMESTAMP)
+	        AS downloaded_at,
+	    CAST(from_iso8601_timestamp(downloadedAt) AS DATE) - INTERVAL '1' DAY
+	        AS bulletin_date,
+	    date(from_iso8601_timestamp(nullif(deathDate, '')) AT TIME ZONE 'America/Puerto_Rico')
+	        AS raw_death_date,
+	    date(from_iso8601_timestamp(nullif(reportDate, '')) AT TIME ZONE 'America/Puerto_Rico')
+	        AS report_date,
+	    region,
+	    sex,
+	   	ageRange AS age_range
+	FROM covid_pr_sources.deaths_parquet_v1
+)
+SELECT
+	*,
+	CASE
+		WHEN raw_death_date < DATE '2020-01-01' AND month(raw_death_date) >= 3
+		THEN from_iso8601_date(date_format(raw_death_date, '2020-%m-%d'))
+		WHEN raw_death_date BETWEEN DATE '2020-01-01' AND DATE '2020-03-01'
+		THEN date_add('year', 1, raw_death_date)
+		ELSE raw_death_date
+	END AS death_date
+FROM first_clean
+ORDER BY bulletin_date, death_date, report_date;
+
+CREATE TABLE covid_pr_etl.bioportal_deaths_age_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['downloaded_at'],
+    bucket_count = 1
+) AS
+SELECT
+	downloaded_at,
+	bulletin_date,
+	death_date,
+   	age_range,
+   	count(*) deaths,
+   	sum(count(*)) OVER (
+   		PARTITION BY downloaded_at, bulletin_date, age_range
+   		ORDER BY death_date
+   	) AS cumulative_deaths
+FROM covid_pr_etl.bioportal_deaths
+GROUP BY downloaded_at, bulletin_date, death_date, age_range
+ORDER BY downloaded_at, bulletin_date, death_date, age_range;
+
+CREATE TABLE covid_pr_etl.bioportal_deaths_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['downloaded_at'],
+    bucket_count = 1
+) AS
+SELECT
+	downloaded_at,
+	bulletin_date,
+	death_date,
+   	count(*) deaths,
+   	sum(count(*)) OVER (
+   		PARTITION BY downloaded_at, bulletin_date
+   		ORDER BY death_date
+   	) AS cumulative_deaths
+FROM covid_pr_etl.bioportal_deaths
+GROUP BY downloaded_at, bulletin_date, death_date
+ORDER BY downloaded_at, bulletin_date, death_date;
 
 
 --
 -- The `orders/basic` row-per-test dataset from Bioportal.
 --
 MSCK REPAIR TABLE covid_pr_sources.orders_basic_parquet_v2;
+
 CREATE TABLE covid_pr_etl.bioportal_orders_basic WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['downloaded_date'],
@@ -385,7 +446,21 @@ WITH downloads AS (
             WHERE tests.positive
             AND NOT tests.followup
         ) cases,
-        -- A rejected case is a non-followup encounter that had no 
+        -- An antigens case is a test encounter that had a positive antigens
+        -- test and is not a followup to an earlier positive encounter.
+        count(*) FILTER (
+            WHERE tests.has_positive_antigens
+            AND NOT tests.followup
+        ) antigens_cases,
+        -- A molecular case is a test encounter that had a positive PCR
+        -- test, no positive antigen test, and is not a followup to an
+        -- earlier positive encounter.
+        count(*) FILTER (
+            WHERE tests.has_positive_molecular
+            AND NOT tests.has_positive_antigens
+            AND NOT tests.followup
+        ) molecular_cases,
+        -- A rejected case is a non-followup encounter that had no
         -- positive tests and at least one of the tests is PCR.
         count(*) FILTER (
             WHERE tests.has_molecular
@@ -472,6 +547,14 @@ SELECT
         PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
     ) AS cumulative_initial_molecular,
+    sum(antigens_cases) OVER (
+        PARTITION BY bulletin_date, age_range
+        ORDER BY collected_date
+    ) AS cumulative_antigens_cases,
+    sum(molecular_cases) OVER (
+        PARTITION BY bulletin_date, age_range
+        ORDER BY collected_date
+    ) AS cumulative_molecular_cases,
     sum(initial_positive_molecular) OVER (
         PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
@@ -491,6 +574,7 @@ CREATE TABLE covid_pr_etl.bioportal_encounters_agg WITH (
 SELECT
     bulletin_date,
 	collected_date,
+	date_diff('day', collected_date, bulletin_date) age,
 	sum(encounters) encounters,
 	sum(cases) cases,
 	sum(rejections) rejections,
@@ -498,6 +582,8 @@ SELECT
 	sum(molecular) molecular,
 	sum(positive_antigens) positive_antigens,
 	sum(positive_molecular) positive_molecular,
+	sum(antigens_cases) antigens_cases,
+	sum(molecular_cases) molecular_cases,
 	sum(initial_molecular) initial_molecular,
 	sum(initial_positive_molecular) initial_positive_molecular,
 	sum(sum(encounters)) OVER (
@@ -528,6 +614,14 @@ SELECT
 	    PARTITION BY bulletin_date
 	    ORDER BY collected_date
 	) AS cumulative_positive_molecular,
+	sum(sum(antigens_cases)) OVER (
+	    PARTITION BY bulletin_date
+	    ORDER BY collected_date
+	) AS cumulative_antigens_cases,
+	sum(sum(molecular_cases)) OVER (
+	    PARTITION BY bulletin_date
+	    ORDER BY collected_date
+	) AS cumulative_molecular_cases,
 	sum(sum(initial_molecular)) OVER (
 	    PARTITION BY bulletin_date
 	    ORDER BY collected_date
@@ -535,7 +629,51 @@ SELECT
 	sum(sum(initial_positive_molecular)) OVER (
 	    PARTITION BY bulletin_date
 	    ORDER BY collected_date
-	) AS cumulative_initial_positive_molecular
+	) AS cumulative_initial_positive_molecular,
+	sum(encounters) - lag(sum(encounters), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_encounters,
+	sum(cases) - lag(sum(cases), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_cases,
+	sum(rejections) - lag(sum(rejections), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_rejections,
+	sum(antigens) - lag(sum(antigens), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_antigens,
+	sum(molecular) - lag(sum(molecular), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_molecular,
+	sum(positive_antigens) - lag(sum(positive_antigens), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_positive_antigens,
+	sum(positive_molecular) - lag(sum(positive_molecular), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_positive_molecular,
+	sum(antigens_cases) - lag(sum(antigens_cases), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_antigens_cases,
+	sum(molecular_cases) - lag(sum(molecular_cases), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_molecular_cases,
+	sum(initial_molecular) - lag(sum(initial_molecular), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_initial_molecular,
+	sum(initial_positive_molecular) - lag(sum(initial_positive_molecular), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_initial_positive_molecular
 FROM covid_pr_etl.bioportal_encounters_cube
 GROUP BY
 	bulletin_date,
@@ -582,7 +720,7 @@ CREATE TABLE covid_pr_etl.bioportal_acs_age_curve WITH (
     bucket_count = 1
 ) AS
 SELECT
-	bulletin_date,
+	encounters.bulletin_date,
 	collected_date,
 	age_dim.age_gte,
 	age_dim.age_lt,
@@ -595,8 +733,13 @@ SELECT
 	sum(positive_antigens) positive_antigens,
 	sum(positive_molecular) positive_molecular,
 	sum(initial_molecular) initial_molecular,
-	sum(initial_positive_molecular) initial_positive_molecular
+	sum(initial_positive_molecular) initial_positive_molecular,
+	COALESCE(sum(deaths), 0) AS deaths
 FROM covid_pr_etl.bioportal_encounters_cube encounters
+LEFT OUTER JOIN covid_pr_etl.bioportal_deaths_age_agg deaths
+    ON deaths.bulletin_date = encounters.bulletin_date
+    AND deaths.death_date = encounters.collected_date
+    AND deaths.age_range = encounters.age_range
 INNER JOIN covid_pr_sources.bioportal_age_ranges bio
 	ON bio.age_range = encounters.age_range
 INNER JOIN covid_pr_sources.acs_2019_1y_age_ranges age_dim
@@ -604,14 +747,14 @@ INNER JOIN covid_pr_sources.acs_2019_1y_age_ranges age_dim
 	AND bio.age_gte < COALESCE(age_dim.age_lt, 9999)
 WHERE collected_date >= DATE '2020-03-13'
 GROUP BY
-	bulletin_date,
+	encounters.bulletin_date,
 	collected_date,
 	age_dim.age_gte,
 	age_dim.age_lt,
 	age_dim.population
 ORDER BY
-	bulletin_date DESC,
-	collected_date DESC,
+	bulletin_date,
+	collected_date,
 	age_dim.age_gte;
 
 
@@ -629,7 +772,7 @@ ORDER BY
 --
 
 --
--- Counts of tests from Bioportal, classified along three
+-- Counts of tests from Bioportal, classified along four
 -- time axes:
 --
 -- * `bulletin_date`, which is the data as-of date (that
@@ -640,6 +783,12 @@ ORDER BY
 -- * `reported_date`, which is when the laboratory knew the
 --   test result (but generally earlier than it communicated
 --   it to PRDoH).
+--
+-- * `received_date`, which is when Bioportal says they received
+--   the actual test result.
+--
+-- Yes, I know the name says "tritemporal" and now it's four
+-- time axes.  Not gonna rename it right now.
 --
 CREATE TABLE covid_pr_etl.bioportal_tritemporal_counts WITH (
     format = 'PARQUET',
@@ -665,6 +814,7 @@ SELECT
 	bulletins.bulletin_date,
 	reported_date,
 	collected_date,
+	received_date,
 	count(*) tests,
 	count(*) FILTER (WHERE positive)
 		AS positive_tests
@@ -678,7 +828,7 @@ AND DATE '2020-03-01' <= collected_date
 AND collected_date <= received_date
 AND DATE '2020-03-01' <= reported_date
 AND reported_date <= received_date
-GROUP BY test_type, bulletins.bulletin_date, collected_date, reported_date;
+GROUP BY test_type, bulletins.bulletin_date, collected_date, reported_date, received_date;
 
 
 --
@@ -694,16 +844,17 @@ CREATE TABLE covid_pr_etl.bioportal_tritemporal_deltas WITH (
 SELECT
 	test_type,
 	bulletin_date,
+	received_date,
 	reported_date,
 	collected_date,
 	tests,
 	tests - COALESCE(lag(tests) OVER (
-        PARTITION BY test_type, collected_date, reported_date
+        PARTITION BY test_type, collected_date, reported_date, received_date
 	    ORDER BY bulletin_date
     ), 0) AS delta_tests,
 	positive_tests,
 	positive_tests - COALESCE(lag(positive_tests) OVER (
-        PARTITION BY test_type, collected_date, reported_date
+        PARTITION BY test_type, collected_date, reported_date, received_date
 	    ORDER BY bulletin_date
     ), 0) AS delta_positive_tests
 FROM covid_pr_etl.bioportal_tritemporal_counts
@@ -713,7 +864,8 @@ AND reported_date <= bulletin_date;
 
 --
 -- Same data as `bioportal_tritemporal_deltas`, but aggregated
--- to `collected_date` (i.e., removes `reported_date`)
+-- to `collected_date` (i.e., removes `reported_date` and
+-- `received_date`).
 --
 CREATE TABLE covid_pr_etl.bioportal_collected_agg WITH (
     format = 'PARQUET',
@@ -744,7 +896,7 @@ GROUP BY test_type, bulletin_date, collected_date;
 
 --
 -- Same data as `bioportal_tritemporal_deltas`, but aggregated
--- to `reported_date` (i.e., removes `collected_date`)
+-- to `reported_date`.
 --
 CREATE TABLE covid_pr_etl.bioportal_reported_agg WITH (
     format = 'PARQUET',
@@ -771,6 +923,37 @@ SELECT
 	sum(delta_positive_tests) AS delta_positive_tests
 FROM covid_pr_etl.bioportal_tritemporal_deltas
 GROUP BY test_type, bulletin_date, reported_date;
+
+
+--
+-- Same data as `bioportal_tritemporal_deltas`, but aggregated
+-- to `received_date`.
+--
+CREATE TABLE covid_pr_etl.bioportal_received_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
+SELECT
+	test_type,
+	bulletin_date,
+	received_date,
+	date_diff('day', received_date, bulletin_date)
+		AS reported_age,
+	sum(tests) AS tests,
+	sum(sum(tests)) OVER (
+        PARTITION BY test_type, bulletin_date
+        ORDER BY received_date
+    ) AS cumulative_tests,
+	sum(delta_tests) AS delta_tests,
+	sum(positive_tests) AS positive_tests,
+	sum(sum(positive_tests)) OVER (
+        PARTITION BY test_type, bulletin_date
+        ORDER BY received_date
+    ) AS cumulative_positives,
+	sum(delta_positive_tests) AS delta_positive_tests
+FROM covid_pr_etl.bioportal_tritemporal_deltas
+GROUP BY test_type, bulletin_date, received_date;
 
 
 
@@ -1047,6 +1230,52 @@ ORDER BY date DESC;
 
 
 --
+-- Hospital bed availabilty and ICU occupancy, using PRDoH data
+--
+CREATE OR REPLACE VIEW covid_pr_etl.prdoh_hospitalizations AS
+SELECT
+	fe_hospitalario date,
+	'Adultos' age,
+	'Camas' resource,
+	camas_adultos_total total,
+	camas_adultos_covid covid,
+	camas_adultos_nocovid nocovid,
+	camas_adultos_disp disp
+FROM covid19datos_sources.hospitales_daily
+UNION ALL
+SELECT
+	fe_hospitalario date,
+	'Adultos' age,
+	'UCI' resource,
+	camas_icu_total total,
+	camas_icu_covid covid,
+	camas_icu_nocovid nocovid,
+	camas_icu_disp disp
+FROM covid19datos_sources.hospitales_daily
+UNION ALL
+SELECT
+	fe_hospitalario date,
+	'Pediátricos' age,
+	'Camas' resource,
+	camas_ped_total total,
+	camas_ped_covid covid,
+	camas_ped_nocovid nocovid,
+	camas_ped_disp disp
+FROM covid19datos_sources.hospitales_daily
+UNION ALL
+SELECT
+	fe_hospitalario date,
+	'Pediátricos' age,
+	'UCI' resource,
+	camas_picu_total total,
+	camas_picu_covid covid,
+	camas_picu_nocovid nocovid,
+	camas_picu_disp disp
+FROM covid19datos_sources.hospitales_daily
+ORDER BY date DESC, age, resource;
+
+
+--
 -- Cases by age group, both as raw numbers and by million population.
 -- And when I say million population, I mean using Census Bureau
 -- estimate of the population size for that age group.
@@ -1063,9 +1292,39 @@ SELECT
 		AS cases_1m,
     encounters,
     initial_positive_molecular AS novels,
-	rejections
+	rejections,
+	deaths,
+	1e6 * deaths / population
+		AS deaths_1m
 FROM covid_pr_etl.bioportal_acs_age_curve
 ORDER BY
 	bulletin_date DESC,
 	collected_date DESC,
 	youngest;
+
+
+--
+-- Encounters-based test and case lag.
+--
+CREATE OR REPLACE VIEW covid_pr_etl.encounter_lag AS
+SELECT
+	bulletin_date,
+	min(age) age_gte,
+	max(age) + 1 age_lt,
+	sum(delta_encounters) delta_encounters,
+	sum(delta_cases) delta_cases,
+	sum(delta_antigens) delta_antigens,
+	sum(delta_antigens_cases) delta_antigens_cases,
+	sum(delta_molecular) delta_molecular,
+	sum(delta_molecular_cases) delta_molecular_cases
+FROM covid_pr_etl.bioportal_encounters_agg
+WHERE age <= 20
+GROUP BY
+	bulletin_date,
+	CASE
+		WHEN 0 <= age AND age < 3 THEN age
+		WHEN 3 <= age AND age < 7 THEN 3
+		WHEN 7 <= age AND age < 14 THEN 14
+		WHEN 14 <= age AND age < 21 THEN 21
+	END
+ORDER BY bulletin_date DESC, age_lt;
