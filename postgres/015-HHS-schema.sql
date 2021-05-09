@@ -124,6 +124,7 @@ CREATE TABLE hhs_hospital_history (
     "total_personnel_covid_vaccinated_doses_all_7_day_sum" INTEGER,
     "previous_week_patients_covid_vaccinated_doses_one_7_day_sum" INTEGER,
     "previous_week_patients_covid_vaccinated_doses_all_7_day_sum" INTEGER,
+    "is_corrected" BOOLEAN,
     PRIMARY KEY ("hospital_pk", "collection_week")
 );
 
