@@ -32,6 +32,7 @@ def hhs_download():
         Asset('reported_hospital_utilization', '6xf2-c3ie'),
         Asset('reported_hospital_utilization_timeseries', 'g62h-syeh'),
         Asset('reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries', 'anag-cw7u'),
+        Asset('reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries_raw', 'uqq2-txqb'),
     ]
     with Socrata('beta.healthdata.gov', None, timeout=60) as client:
         for dataset in datasets:
