@@ -134,6 +134,21 @@ LOCATION 's3://covid-19-puerto-rico-data/bioportal/deaths/parquet_v1/';
 -- Tables and views to join Bioportal age_range data to Census Bureau population
 --
 
+CREATE EXTERNAL TABLE covid_pr_sources.population_estimates_2019 (
+	name STRING,
+	popest2019 INT,
+	fips_code STRING,
+	region STRING
+) ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+ESCAPED BY '\\'
+LINES TERMINATED BY '\n'
+LOCATION 's3://covid-19-puerto-rico-data/Census/population_estimates_2019/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
+
 CREATE EXTERNAL TABLE covid_pr_sources.acs_2019_1y_age_ranges_csv (
 	age_range STRING,
 	population STRING,

@@ -114,19 +114,19 @@ CREATE TABLE covid_pr_etl.municipal_vaccinations WITH (
 SELECT
 	local_date AS bulletin_date,
 	municipio,
-	population,
+	popest2019,
 	total_dosis1,
 	CAST(total_dosis1 AS DOUBLE)
-		/ population
+		/ popest2019
 		AS total_dosis1_pct,
 	total_dosis2,
 	CAST(total_dosis2 AS DOUBLE)
-		/ population
+		/ popest2019
 		AS total_dosis2_pct
 FROM covid19datos_sources.vacunaciones_municipios_totales_daily vax
-INNER JOIN covid_pr_sources.acs_2019_5y_municipal_race race
-	ON vax.municipio = race.municipality
-ORDER BY bulletin_date;
+INNER JOIN covid_pr_sources.population_estimates_2019 pop
+	ON vax.municipio = pop.name
+ORDER BY bulletin_date, municipio;
 
 
 ----------------------------------------------------------------------------------

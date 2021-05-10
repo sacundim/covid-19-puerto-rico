@@ -937,7 +937,7 @@ class VaccinationMap(AbstractMolecularChart):
         query = select([
             table.c.bulletin_date,
             table.c.municipio,
-            table.c.population,
+            table.c.popest2019,
             table.c.total_dosis1.label('Primera dosis'),
             table.c.total_dosis2.label('Segunda dosis')
         ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
@@ -964,7 +964,7 @@ class VaccinationMap(AbstractMolecularChart):
             lookup='municipio',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
         ).transform_calculate(
-            pct=alt.datum[variable] / alt.datum.population
+            pct=alt.datum[variable] / alt.datum.popest2019
         ).mark_geoshape().encode(
             color=alt.Color('pct:Q', type='quantitative', sort='descending',
                             scale=alt.Scale(type='linear', scheme='blueorange',
@@ -974,7 +974,7 @@ class VaccinationMap(AbstractMolecularChart):
                                               offset=-15, gradientLength=self.WIDTH)),
             tooltip=[alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
-                     alt.Tooltip(field='population', type='quantitative', format=',d', title='Población'),
+                     alt.Tooltip(field='popest2019', type='quantitative', format=',d', title='Población'),
                      alt.Tooltip(field=variable, type='quantitative', format=',d'),
                      alt.Tooltip(field='pct', type='quantitative', format='.1%', title='Porciento')]
         ).properties(
