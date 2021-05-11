@@ -34,15 +34,15 @@ resource "aws_ecs_task_definition" "bioportal_download_and_sync" {
   requires_compatibilities = ["FARGATE"]
   task_role_arn = aws_iam_role.ecs_task_role.arn
   execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
-  cpu = 1024
-  memory = 8192
+  cpu = 2048
+  memory = 12288
   network_mode = "awsvpc"
   container_definitions = jsonencode([
     {
       name = "bioportal-downloader",
       image = "${data.aws_ecr_image.downloader.registry_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${data.aws_ecr_image.downloader.repository_name}:${data.aws_ecr_image.downloader.image_tag}"
-      cpu = 1024,
-      memoryReservation = 8192,
+      cpu = 2048,
+      memoryReservation = 12288,
       essential = true,
       command = ["bioportal-download.sh"],
       environment = [
