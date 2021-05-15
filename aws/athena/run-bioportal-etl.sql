@@ -465,6 +465,7 @@ WITH downloads AS (
         count(*) FILTER (
             WHERE tests.has_molecular
             AND NOT tests.followup
+            AND NOT tests.positive
         ) rejections,
         -- Note that `has_antigens` and `has_molecular` don't
         -- have to add up to `encounters` because a person may
