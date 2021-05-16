@@ -31,6 +31,7 @@
         <li><a href="#RecentHospitalizations_section">Disponibilidad hospitalaria</a></li>
         <li><a href="#EncounterLag_section">Rezagos de datos recientes</a></li>
         <li><a href="#VaccinationMap_section">Vacunados por municipio</a></li>
+        <li><a href="#OWID_vaccines">Vacunaciones según los CDC</a></li>
         <li><a href="#AgeGroups_section">Casos por edad (per cápita)</a></li>
         <li><a href="#NewCases_section">Curva de casos nuevos (Bioportal)</a></li>
         <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
@@ -274,6 +275,64 @@
         <li>Población: Negociado del Censo, <a href="https://www.census.gov/programs-surveys/popest.html">Population
             Estimates Program</a> (estimados 1ero de julio del 2019).</li>
     </ul>
+</div>
+
+
+<div class="section" id="OWID_vaccines">
+    <h1>Vacunaciones según los CDC</h1>
+
+    <p>Estas gráficas son tomadas de <a href="https://ourworldindata.org/us-states-vaccinations">esta
+        página de World in Data</a>, quienes las elaboran a partir de datos que capturan de los CDC
+        de los Estados Unidos.</p>
+
+
+    <h3>Porción de personas completamente vacunada contra el COVID-19</h3>
+
+    <p>Porción de la población total que ha recibido todas las dosis prescritas por el protocolo
+        de vacunación.</p>
+
+    <iframe src="https://ourworldindata.org/grapher/us-covid-share-fully-vaccinated?time=earliest..{{bulletin_date}}&country=PRI~New+York+State~Florida~USA"
+            loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
+
+
+    <h3>Porción de personas que ha recibido al menos una dosis de vacuna de COVID-19</h3>
+
+    <p>Porción de la población total que ha recibido al menos una dosis de vacuna.  Esto podría
+        no igualar a la porción que está completamente vacunada si la vacuna requiere dos dosis.</p>
+
+    <iframe src="https://ourworldindata.org/grapher/us-covid-19-share-people-vaccinated?time=earliest..{{bulletin_date}}&country=PRI~New+York+State~Florida~USA"
+            loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
+
+
+    <h3>Total de dosis de vacuna de COVID-19 administradas por 100 personas</h3>
+
+    <p>Número total de dosis de vacunas administradas por 100 personas en la población total.
+        Esto se cuenta como una sola dosis, y podría no ser igual al número total de personas
+        vacunadas, dependiendo del régimen de dosis específico (e.g. la gente recibe múltiples
+        dosis).</p>
+
+    <iframe src="https://ourworldindata.org/grapher/us-state-covid-vaccines-per-100?time=earliest..{{bulletin_date}}&country=PRI~New+York+State~Florida~USA"
+            loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
+
+
+    <h3>Dosis de vacuna de COVID-19 administradas diarias por 100 personas</h3>
+
+    <p>Se muestra el promedio móvil de 7 días por 100 personas en la población total.  Esto se
+        cuenta como dosis sencilla, y podría no ser igual al número total de personas vacunadas,
+        dependiendo del régimen específico de dosis (e.g. personas que reciben múltiples dosis).</p>
+
+    <iframe src="https://ourworldindata.org/grapher/us-daily-covid-vaccine-doses-per-100?time=earliest..{{bulletin_date}}&country=PRI~New+York+State~Florida~USA"
+            loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
+
+
+    <h3>Porción de dosis de vacuna de COVID-19 dispobibles que han sido usadas</h3>
+
+    <p>Porción de dosis de vacunas distribuidas que han sido administradas/usadas en la
+        población.  Las cifras de distribuidas representan aquellas reportadas a la Operación
+        Warp Speed según entregadas.</p>
+
+    <iframe src="https://ourworldindata.org/grapher/us-share-covid-19-vaccine-doses-used?time=2021-01-12..{{bulletin_date}}&country=PRI~New+York+State~Florida~USA"
+            loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
 </div>
 
 
