@@ -118,12 +118,12 @@ CREATE TABLE hhs_hospital_history (
     "previous_day_admission_pediatric_covid_confirmed_7_day_coverage" INTEGER,
     "previous_day_admission_adult_covid_suspected_7_day_coverage" INTEGER,
     "previous_day_admission_pediatric_covid_suspected_7_day_coverage" INTEGER,
-    "previous_week_personnel_covid_vaccinated_doses_administered_7_day_sum" INTEGER,
-    "total_personnel_covid_vaccinated_doses_none_7_day_sum" INTEGER,
-    "total_personnel_covid_vaccinated_doses_one_7_day_sum" INTEGER,
-    "total_personnel_covid_vaccinated_doses_all_7_day_sum" INTEGER,
-    "previous_week_patients_covid_vaccinated_doses_one_7_day_sum" INTEGER,
-    "previous_week_patients_covid_vaccinated_doses_all_7_day_sum" INTEGER,
+    "previous_week_personnel_covid_vaccinated_doses_administered_7_day_max" INTEGER,
+    "total_personnel_covid_vaccinated_doses_none_7_day_min" INTEGER,
+    "total_personnel_covid_vaccinated_doses_one_7_day_max" INTEGER,
+    "total_personnel_covid_vaccinated_doses_all_7_day_max" INTEGER,
+    "previous_week_patients_covid_vaccinated_doses_one_7_day_max" INTEGER,
+    "previous_week_patients_covid_vaccinated_doses_all_7_day_max" INTEGER,
     "is_corrected" BOOLEAN,
     PRIMARY KEY ("hospital_pk", "collection_week")
 );
