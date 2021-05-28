@@ -13,3 +13,5 @@ various others to this and perform aggregations:
   of Health daily reports
 * `municipal_abbreviations` is three-letter codes for municipalities
   from [`gis.pr.gov`](https://gis.pr.gov/descargaGeodatos/GeografiaCensal/Pages/ABREVIATURAS-DE-MUNICIPIOS.aspx).
+* [`municipal_hex_grid/municipal_hex_grid.csv`](municipal_hex_grid/municipal_hex_grid.csv)
+  is x/y coordinates for making a hex grid cartogram of municipalities.

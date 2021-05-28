@@ -599,8 +599,7 @@ class MunicipalMap(AbstractChart):
                                       domain=alt.DomainUnionWith(unionWith=[0])),
                       legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                         title='Casos diarios (por 100k de población, promedio 7 días)',
-                                        offset=-15, labelSeparation=10,
-                                        format=',d', gradientLength=self.WIDTH)))
+                                        labelSeparation=10, format=',d', gradientLength=self.WIDTH)))
 
     def make_trend_chart(self, df):
         return self.make_subchart(
@@ -610,18 +609,16 @@ class MunicipalMap(AbstractChart):
                                       domain=[-1.0, 5.0], domainMid=0.0, clamp=True),
                       legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                         title='Cambio semanal (7 días más recientes vs. 7 anteriores)',
-                                        offset=-15, labelSeparation=10,
-                                        format='+,.0%', gradientLength=self.WIDTH)))
+                                        labelSeparation=10, format='+,.0%', gradientLength=self.WIDTH)))
 
 
     def make_subchart(self, df, color):
-        return alt.Chart(df).transform_lookup(
-            lookup='municipality',
-            from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
-        ).transform_calculate(
+        circles = alt.Chart(df).transform_calculate(
             daily_cases=alt.datum.weekly_cases / 7.0,
             daily_cases_100k=alt.datum.weekly_cases_100k / 7.0
-        ).mark_geoshape().encode(
+        ).mark_circle(stroke='black', size=1250).encode(
+            x=alt.X('x:Q', axis=None),
+            y=alt.Y('y:Q', axis=None),
             color=color,
             tooltip=[alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha de boletín'),
                      alt.Tooltip(field='municipality', type='nominal', title='Municipio'),
@@ -635,7 +632,15 @@ class MunicipalMap(AbstractChart):
                                  title='Casos/100k (prom. 7 días)'),
                      alt.Tooltip(field='weekly_trend', type='quantitative', format='+,.0%',
                                  title='Cambio semanal')]
-        ).properties(
+        )
+
+        text = alt.Chart(df).mark_text().encode(
+            x=alt.X('x:Q', axis=None),
+            y=alt.Y('y:Q', axis=None),
+            text=alt.Text('abbreviation:N')
+        )
+
+        return alt.layer(circles, text).properties(
             width=self.WIDTH,
             height=250
         )
@@ -651,6 +656,9 @@ class MunicipalMap(AbstractChart):
         query = select([
             table.c.bulletin_date,
             table.c.municipality,
+            table.c.abbreviation,
+            table.c.x,
+            table.c.y,
             table.c.popest2019,
             (table.c.new_7day_cases).label('weekly_cases'),
             (1e5 * table.c.new_7day_cases / table.c.popest2019).label('weekly_cases_100k'),

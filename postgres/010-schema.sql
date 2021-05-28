@@ -141,6 +141,26 @@ COMMENT ON COLUMN canonical_municipal_names.popest2019 IS
 Population Estimates Program.';
 
 
+CREATE TABLE municipal_hex_grid (
+    municipality TEXT NOT NULL,
+    abbreviation CHAR(3) NOT NULL,
+    col INT NOT NULL,
+    row INT NOT NULL,
+    x DOUBLE PRECISION NOT NULL,
+    y DOUBLE PRECISION NOT NULL,
+    center_to_hex_corner DOUBLE PRECISION NOT NULL,
+    radius DOUBLE PRECISION NOT NULL,
+    hex_width DOUBLE PRECISION NOT NULL,
+    hex_height DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (abbreviation),
+    UNIQUE (municipality),
+    UNIQUE (col, row)
+);
+
+COMMENT ON TABLE municipal_hex_grid IS
+'x and y coordinates for drawing a hex grid cartogram of municipalities.';
+
+
 CREATE TABLE municipal_molecular (
     bulletin_date DATE NOT NULL,
     municipality TEXT NOT NULL
@@ -608,9 +628,13 @@ COMMENT ON VIEW products.lateness_7day IS
 
 CREATE VIEW products.municipal_map AS
 SELECT
-	municipality,
-	popest2019,
 	bulletin_date,
+	municipality,
+	abbreviation,
+	x,
+	y,
+	radius,
+	popest2019,
 	new_cases,
 	new_7day_cases,
 	CAST(new_7day_cases AS DOUBLE PRECISION)
@@ -638,6 +662,8 @@ SELECT
 FROM municipal_agg ma
 INNER JOIN canonical_municipal_names cmn
     ON cmn.name = ma.municipality
+INNER JOIN municipal_hex_grid hex
+    USING (municipality)
 ORDER BY bulletin_date, municipality;
 
 

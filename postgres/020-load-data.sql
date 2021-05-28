@@ -30,6 +30,10 @@ COPY canonical_municipal_names
 FROM '/data/cases/Municipalities-canonical_names.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
 
+COPY municipal_hex_grid
+FROM '/data/Census/municipal_hex_grid/municipal_hex_grid.csv'
+    CSV ENCODING 'UTF-8' HEADER NULL '';
+
 COPY municipal_molecular
 FROM '/data/cases/Municipalities-molecular.csv'
     CSV ENCODING 'UTF-8' HEADER NULL '';
