@@ -935,23 +935,52 @@ class VaccinationMap(AbstractMolecularChart):
         table = sqlalchemy.Table('municipal_vaccinations', self.metadata,
                                  schema='covid_pr_etl', autoload=True)
         query = select([
-            table.c.bulletin_date,
+            table.c.local_date,
             table.c.municipio,
+            table.c.fips_code,
             table.c.popest2019,
-            table.c.total_dosis1.label('Primera dosis'),
-            table.c.total_dosis2.label('Segunda dosis')
-        ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
-                      table.c.bulletin_date <= max(bulletin_dates)))
-        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
+            table.c.salud_total_dosis1,
+            table.c.salud_total_dosis1_pct,
+            table.c.salud_dosis1,
+            table.c.salud_total_dosis2,
+            table.c.salud_total_dosis2_pct,
+            table.c.salud_dosis2,
+            table.c.cdc_series_complete_yes,
+            table.c.cdc_series_complete_pop_pct,
+            table.c.cdc_completeness_pct,
+            table.c.cdc_series_complete_65plus,
+            table.c.cdc_series_complete_65pluspop_pct,
+            table.c.cdc_series_complete_18plus,
+            table.c.cdc_series_complete_18pluspop_pct,
+            table.c.cdc_census2019_12pluspop,
+            table.c.cdc_series_complete_12plus,
+            table.c.cdc_series_complete_12pluspop_pct,
+        ])
+        df = pd.read_sql_query(query, connection, parse_dates=["local_date"])
+
+        # We really just do this to undo Pandas' null int to float conversion. See:
+        #
+        #     https://pandas.pydata.org/pandas-docs/stable/user_guide/integer_na.html
+        for col in ['salud_dosis1',
+                    'salud_dosis2',
+                    'cdc_series_complete_12plus',
+                    'cdc_census2019_12pluspop',
+                    'cdc_series_complete_18plus',
+                    'cdc_series_complete_65plus',
+                    'cdc_series_complete_yes']:
+            df[col] = df[col].astype('Int64')
+
+        self.save_csv(df)
+        return df
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+        return df.loc[df['local_date'] == pd.to_datetime(bulletin_date)]
 
 
     def make_chart(self, df, bulletin_date):
-        dosis1 = self.make_subchart(df, 'Primera dosis')
-        dosis2 = self.make_subchart(df, 'Segunda dosis')
-        return alt.vconcat(dosis1, dosis2).configure_view(
+        dosis2 = self.make_subchart(df, 'salud_total_dosis2', 'Régimen completo')
+        dosis1 = self.make_subchart(df, 'salud_total_dosis1', 'Primera dosis')
+        return alt.vconcat(dosis2, dosis1).configure_view(
             strokeWidth=0
         ).configure_concat(
             spacing=40
@@ -959,7 +988,7 @@ class VaccinationMap(AbstractMolecularChart):
             color='independent'
         )
 
-    def make_subchart(self, df, variable):
+    def make_subchart(self, df, variable, title):
         return alt.Chart(df).transform_lookup(
             lookup='municipio',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
@@ -970,17 +999,18 @@ class VaccinationMap(AbstractMolecularChart):
                             scale=alt.Scale(type='linear', scheme='blueorange',
                                             domain=[0, 1], domainMid=0.6),
                             legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
-                                              title=variable, labelSeparation=10, format='.0%',
+                                              title=title, labelSeparation=10, format='.0%',
                                               offset=-15, gradientLength=self.WIDTH)),
-            tooltip=[alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha'),
+            tooltip=[alt.Tooltip(field='local_date', type='temporal', title='Fecha'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
                      alt.Tooltip(field='popest2019', type='quantitative', format=',d', title='Población'),
-                     alt.Tooltip(field=variable, type='quantitative', format=',d'),
+                     alt.Tooltip(field=variable, title=title, type='quantitative', format=',d'),
                      alt.Tooltip(field='pct', type='quantitative', format='.1%', title='Porciento')]
         ).properties(
             width=self.WIDTH,
             height=250
         )
+
 
 class MunicipalVaccination(AbstractMolecularChart):
     def fetch_data(self, connection, bulletin_dates):

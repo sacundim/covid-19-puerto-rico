@@ -37,6 +37,14 @@ class AbstractChart(ABC):
                         f"{bulletin_dir}/{bulletin_date}_{self.name}",
                         self.output_formats)
 
+    def save_csv(self, df):
+        """Utility method to save a CSV file to a standardized location."""
+        csv_dir = Path(f'{self.output_dir}/csv')
+        csv_dir.mkdir(exist_ok=True)
+        csv_file = f'{csv_dir}/{self.name}.csv'
+        df.to_csv(csv_file, index=False)
+        logging.info('Wrote %s', csv_file)
+
     @abstractmethod
     def make_chart(self, df, bulletin_date):
         pass

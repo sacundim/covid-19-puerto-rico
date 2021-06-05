@@ -101,32 +101,66 @@ ORDER BY date DESC;
 
 
 --
--- Municipal vaccinations according to PRDoH
+-- Municipal vaccinations according to PRDoH and HHS
 --
 MSCK REPAIR TABLE covid_hhs_sources.vaccination_county_condensed_data_json;
-
 DROP TABLE IF EXISTS covid_pr_etl.municipal_vaccinations;
 CREATE TABLE covid_pr_etl.municipal_vaccinations WITH (
     format = 'PARQUET',
-    bucketed_by = ARRAY['bulletin_date'],
+    bucketed_by = ARRAY['local_date'],
     bucket_count = 1
 ) AS
 SELECT
-	local_date AS bulletin_date,
+	local_date,
 	municipio,
+	pop.fips_code,
 	popest2019,
-	total_dosis1,
+	total_dosis1
+		AS salud_total_dosis1,
 	CAST(total_dosis1 AS DOUBLE)
 		/ popest2019
-		AS total_dosis1_pct,
-	total_dosis2,
+		AS salud_total_dosis1_pct,
+	total_dosis1 - lag(total_dosis1) OVER (
+		PARTITION BY municipio
+		ORDER BY local_date
+	) AS salud_dosis1,
+	total_dosis2
+		AS salud_total_dosis2,
 	CAST(total_dosis2 AS DOUBLE)
 		/ popest2019
-		AS total_dosis2_pct
-FROM covid19datos_sources.vacunaciones_municipios_totales_daily vax
+		AS salud_total_dosis2_pct,
+	total_dosis2 - lag(total_dosis2) OVER (
+		PARTITION BY municipio
+		ORDER BY local_date
+	) AS salud_dosis2,
+	series_complete_12plus
+		AS cdc_series_complete_12plus,
+	census2019_12pluspop
+		AS cdc_census2019_12pluspop,
+	series_complete_12pluspop_pct / 100.0
+		AS cdc_series_complete_12pluspop_pct,
+	series_complete_18plus
+		AS cdc_series_complete_18plus,
+	series_complete_18pluspop_pct / 100.0
+		AS cdc_series_complete_18pluspop_pct,
+	series_complete_65plus
+		AS cdc_series_complete_65plus,
+	series_complete_65pluspop_pct / 100.0
+		AS cdc_series_complete_65pluspop_pct,
+	series_complete_pop_pct / 100.0
+		AS cdc_series_complete_pop_pct,
+	series_complete_yes
+		AS cdc_series_complete_yes,
+	completeness_pct / 100.0
+		AS cdc_completeness_pct
+FROM covid19datos_sources.vacunaciones_municipios_totales_daily prdoh
+LEFT OUTER JOIN covid_hhs_sources.vaccination_county_condensed_data_pr_daily cdc
+	ON cdc.date = prdoh.local_date
+	AND cdc.county = prdoh.municipio
 INNER JOIN covid_pr_sources.population_estimates_2019 pop
-	ON vax.municipio = pop.name
-ORDER BY bulletin_date, municipio;
+	ON prdoh.municipio = pop.name
+ORDER BY local_date, municipio;
+
 
 
 ----------------------------------------------------------------------------------

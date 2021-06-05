@@ -55,6 +55,8 @@
         <li><a href="#Municipal_section">Historial de casos por municipio (fecha de boletín)</a></li>
         <li><a href="#ConsecutiveBulletinMismatch_section">Descuadre de encabezado de boletín</a></li>
         <li><a href="#BulletinChartMismatch_section">Descuadre de boletín y gráficas</a></li>
+
+        <li><a href="#VaccinationMap_download_section">Descarga de datos de vacunas</a></li>
         <li><a href="#Revisions_section">Revisiones</a></li>
         <li><a href="#Terminology_section">Terminología</a></li>
         <li><a href="#Sources_section">Datos fuente para {{ bulletin_date }}</a></li>
@@ -277,6 +279,13 @@
         <li>Población: Negociado del Censo, <a href="https://www.census.gov/programs-surveys/popest.html">Population
             Estimates Program</a> (estimados 1ero de julio del 2019).</li>
     </ul>
+
+    <h3>Descarga de datos</h3>
+
+    <p>Los datos que capturo y uso para estos mapas están <a href="../csv/VaccinationMap.csv">disponibles
+        para descargar como archivo CSV</a>.  Más abajo en esta página hay una
+        <a href="#VaccinationMap_download_section">sección documentando este archivo de datos</a>.</p>
+
 </div>
 
 
@@ -1530,6 +1539,142 @@
 
     <p>Cualquier otra fecha que no dé cero en esta gráfica hay que cotejar que se hayan
         copiado correctamente los datos.</p>
+</div>
+
+
+<div class="section" id="VaccinationMap_download_section">
+    <h1>Descarga de datos de vacunas</h1>
+
+    <p>Los datos que capturados de vacunaciones por municipio se pueden descargar de aquí:</p>
+
+    <ul>
+        <li><a href="../csv/VaccinationMap.csv"><code>VaccinationMap.csv</code></a></li>
+    </ul>
+
+    <p>Los datos provienen de:</p>
+
+    <ul>
+        <li>Capturas dos veces al día de <a href="https://covid19datos.salud.gov.pr/">la página de datos
+            de COVID-19 del Departamento de Salud de Puerto Rico</a> (<code>covid19datos.salud.gov.pr</code>).
+            Estas capturas las comenzamos el 24 de marzo del 2021, así que no tenemos datos más tempranos.</li>
+        <li>Capturas dos veces al día de <a href="https://covid.cdc.gov/covid-data-tracker/#county-view">el
+            rastreador de datos de COVID-19 del Centro de Control de Enfermedades de los Estados Unidos</a>
+            (Centers for Diseas Control, siglas CDC). Estas capturas las comenzamos a realizar el 30 de abril
+            del 2021, así que los campos correspondientes aparecen vacíos para fechas más tempranas.</li>
+        <li>Negociado del Censo, <a href="https://www.census.gov/programs-surveys/popest.html">Population
+            Estimates Program</a> (estimados 1ero de julio del 2019).</li>
+    </ul>
+
+    <p>Las claves de la tabla de datos (conjuntos de campos que definen hileras únicas) son:</p>
+
+    <ul>
+        <li><code>local_date</code>, <code>municipio</code></li>
+        <li><code>local_date</code>, <code>fips_code</code></li>
+    </ul>
+
+    <p>Todas las fechas están en formato ISO 8601 (e.g., <code>2021-03-24</code>), y todos los
+        campos cuyos valores son porcentajes están expresados como fracción (e.g., <code>0.251</code>
+        en vez de <code>25.1</code>).</p>
+
+    <dl>
+        <dt>local_date</dt>
+        <dd>Fecha del dato.  Para datos de Salud imputo la fecha según la hora de las descargas
+            que realizo.  Para datos de HHS son los valores que aparecen en los mismos datos.
+            Se entiende que estas fechas representan cuándo se añadió una dosis o persona al
+            conteo, y no cuándo se administró la dosis correspondiente, y que las dosis que se
+            añaden en cualquier fecha dada son una mezcla de dosis administradas en múltiples
+            fechas anteriores.</dd>
+
+        <dt>municipio</dt>
+        <dd>Nombre del municipio.</dd>
+
+        <dt>fips_code</dt>
+        <dd>El <a href="https://en.wikipedia.org/wiki/FIPS_county_code">código FIPS</a> del
+            municipio, que usan muchas fuentes federales (e.g. el Censo).</dd>
+
+        <dt>popest2019</dt>
+        <dd>Estimado de la población del municipio al 1ero de julio del 2019, según el
+            <a href="https://www.census.gov/programs-surveys/popest/data/tables.html">Programa
+                de Estimados Poblacionales</a> de la Oficina del Censo de los Estados Unidos.</dd>
+
+        <dt>salud_total_dosis1</dt>
+        <dd>Número de personas con solo primera dosis en ese municipio y fecha, según capturamos de
+            <a href="https://covid19datos.salud.gov.pr/"><code>covid19datos.salud.gov.pr</code></a>.</dd>
+
+        <dt>salud_total_dosis1_pct</dt>
+        <dd>Estimado del porciento poblacional con solo primera dosis en ese municipio y fecha.
+            Este campo no viene de los datos de Salud, sino que lo calculamos al producir este archivo.
+            Su valor es el campo <code>salud_total_dosis1</code> dividido entre <code>popest2019</code>.
+            Este valor podría exceder 1.0 por varios motivos, por ejemplo que el Censo haya subestimado
+            la población de un municipio, o errores en los datos de vacunación.</dd>
+
+        <dt>salud_dosis1</dt>
+        <dd>Cambio en el valor de <code>salud_total_dosis1</code> comparado con la fecha anterior.
+            Este campo campo no viene de los datos de Salud, sino que lo calculamos al producir este
+            archivo.</dd>
+
+        <dt>salud_total_dosis2</dt>
+        <dd>Número de personas con régimen completo de dosis en ese municipio y fecha, según capturamos de
+            <a href="https://covid19datos.salud.gov.pr/"><code>covid19datos.salud.gov.pr</code></a>.</dd>
+
+        <dt>salud_total_dosis2_pct</dt>
+        <dd>Estimado del porciento poblacional con régimen completo de dosis en ese municipio y fecha.
+            Esto es el campo <code>salud_total_dosis2</code> dividido entre <code>popest2019</code>.
+            Las mismas salvedades aplican que a <code>salud_total_dosis1_pct</code>.</dd>
+
+        <dt>salud_dosis2</dt>
+        <dd>Cambio en el valor de <code>salud_total_dosis2</code> comparado con la fecha anterior.
+            Este campo campo no viene de los datos de Salud, sino que lo calculamos al producir este
+            archivo.</dd>
+
+        <dt>cdc_series_complete_yes</dt>
+        <dd>Número de personas con régimen completo de vacunas en ese municipio y fecha, según
+            capturamos de <a href="https://covid.cdc.gov/covid-data-tracker/#county-view">la página de
+                datos por condado del rastreador de COVID-19 de los Centros de Control de Enfermedades
+                de los Estados Unidos</a> (Centers for Disease Control, siglas CDC).</dd>
+
+        <dt>series_complete_pop_pct</dt>
+        <dd>Porcentaje estimado de personas con régimen completo de vacunas en ese municipio y fecha, según
+            capturamos de las páginas de los Centros de Control de Enfermedades de los Estados Unidos
+            (Centers for Disease Control, siglas CDC).  Este porcentaje lo calculan los CDC (en
+            contraste al campo <code>salud_total_dosis2_pct</code>, que calculamos nosotros).
+            Expresamos el porcentaje como fracción; los CDC imponen un límite de 0.999 a sus cálculos.</dd>
+
+        <dt>cdc_series_complete_12plus</dt>
+        <dd>Igual que <code>cdc_series_complete_yes</code>, pero personas de 12 años o más.</dd>
+
+        <dt>cdc_series_complete_12plus_pct</dt>
+        <dd>Igual que <code>series_complete_pop_pct</code>, pero personas de 12 años o más.</dd>
+
+        <dt>cdc_census2019_12pluspop</dt>
+        <dd>Población de 12 años o mayores en ese municipio, según capturada en los datos de los CDC,
+            que a su vez los toman del Censo, entiendo que del American Community Survey.</dd>
+
+        <dt>cdc_series_complete_18plus</dt>
+        <dd>Igual que <code>cdc_series_complete_yes</code>, pero personas de 18 años o más.</dd>
+
+        <dt>cdc_series_complete_18plus_pct</dt>
+        <dd>Igual que <code>series_complete_pop_pct</code>, pero personas de 18 años o más.</dd>
+
+        <dt>cdc_series_complete_65plus</dt>
+        <dd>Igual que <code>cdc_series_complete_yes</code>, pero personas de 65 años o más.</dd>
+
+        <dt>cdc_series_complete_65plus_pct</dt>
+        <dd>Igual que <code>series_complete_pop_pct</code>, pero personas de 65 años o más.</dd>
+
+        <dt>cdc_completeness_pct</dt>
+        <dd>Porciento de la población de todo Puerto Rico que ha recibido régimen completo de
+            vacuna y que se conoce su municipio.  O sea, si restamos esta fracción a <code>1</code>,
+            obtenemos el porciento de personas vacunadas que no se conoce el municipio.</dd>
+    </dl>
+
+
+    <h3>Revisiones</h3>
+
+    <dl>
+        <dt>5 de junio del 2021</dt>
+        <dd>Versión inicial.</dd>
+    </dl>
 </div>
 
 
