@@ -22,7 +22,11 @@ def hhs_download():
     """Entry point for HHS download code."""
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
     args = process_arguments()
+    healthdata_download(args)
+    cdc_download(args)
 
+def healthdata_download(args):
+    '''Download datasets hosted at healthdata.gov API endpoints'''
     datasets = [
         Asset('covid-19_community_profile_report_county', 'di4u-7yu6'),
         Asset('covid-19_diagnostic_lab_testing', 'j8mb-icvb'),
@@ -34,7 +38,23 @@ def hhs_download():
         Asset('reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries', 'anag-cw7u'),
         Asset('reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries_raw', 'uqq2-txqb'),
     ]
-    with Socrata('beta.healthdata.gov', None, timeout=60) as client:
+    download_datasets(args, 'healthdata.gov', datasets)
+
+def cdc_download(args):
+    '''Download datasets hosted at data.cdc.gov endpoints'''
+    datasets = [
+        Asset('covid_vaccinations_state', 'unsk-b7fc'),
+        Asset('covid_vaccinations_county', '8xkx-amqh'),
+        Asset('covid_vaccine_allocations_state_pfizer', 'saz5-9hgg'),
+        Asset('covid_vaccine_allocations_state_moderna', 'b7pe-5nws'),
+        Asset('covid_vaccine_allocations_state_janssen', 'w9zu-fywh'),
+        Asset('nationwide_commercial_laborator_seroprevalence_survey', 'd2tw-32xv'),
+    ]
+    download_datasets(args, 'data.cdc.gov', datasets)
+
+
+def download_datasets(args, server, datasets):
+    with Socrata(server, None, timeout=60) as client:
         for dataset in datasets:
             logging.info('Fetching %s...', dataset.name)
             csv_file = dataset.get_csv(client)
@@ -67,6 +87,7 @@ def hhs_download():
             shutil.move(parquet_file, f'{parquet_dir}/{parquet_file}')
 
         logging.info('All done!')
+
 
 class Asset():
     """A dataset in a Socrata server, and methods to work with it"""
