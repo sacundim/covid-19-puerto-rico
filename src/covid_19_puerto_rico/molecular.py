@@ -999,7 +999,7 @@ class VaccinationMap(AbstractMolecularChart):
         )
 
     def make_subchart(self, df, bulletin_date, variable, title):
-        DOMAIN_MID = 0.75
+        DOMAIN_MID = 0.775
 
         return alt.Chart(df).transform_filter(
             alt.datum.local_date == util.altair_date_expr(bulletin_date)
@@ -1011,8 +1011,8 @@ class VaccinationMap(AbstractMolecularChart):
         ).mark_geoshape().encode(
             color=alt.Color('pct:Q', type='quantitative',
                             scale=alt.Scale(type='linear', scheme='blueorange', reverse=True,
-                                            domain=alt.DomainUnionWith(unionWith=[DOMAIN_MID]),
-                                            domainMid=DOMAIN_MID),
+                                            domain=alt.DomainUnionWith(unionWith=[1.0]),
+                                            domainMid=DOMAIN_MID, clamp=True),
                             legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                               title=title, labelSeparation=10, format='.0%',
                                               offset=-15, gradientLength=self.WIDTH - 10)),
@@ -1043,7 +1043,7 @@ class VaccinationMap(AbstractMolecularChart):
                             legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                               labelSeparation=10, offset=-15,
                                               gradientLength=self.WIDTH - 10,
-                                              title='Dosis por 100 habitantes, promedio 7 días')),
+                                              title='Dosis diarias por 100 habitantes, promedio 7 días')),
             tooltip=[alt.Tooltip(field='min_local_date', type='temporal', title='Desde'),
                      alt.Tooltip(field='max_local_date', type='temporal', title='Hasta'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
