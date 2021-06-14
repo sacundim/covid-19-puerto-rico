@@ -924,6 +924,7 @@ class AgeGroups(AbstractMolecularChart):
 
 class VaccinationMap(AbstractMolecularChart):
     WIDTH = 600
+    HEIGHT = 250
 
     def geography(self):
         return alt.InlineData(values=util.get_geojson_resource('municipalities.topojson'),
@@ -972,13 +973,24 @@ class VaccinationMap(AbstractMolecularChart):
         return df
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['local_date'] == pd.to_datetime(bulletin_date)]
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=7))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['local_date'])
+                      & (df['local_date'] <= until_date)]
 
 
     def make_chart(self, df, bulletin_date):
-        dosis2 = self.make_subchart(df, 'salud_total_dosis2', 'Régimen completo')
-        dosis1 = self.make_subchart(df, 'salud_total_dosis1', 'Primera dosis')
-        return alt.vconcat(dosis2, dosis1).configure_view(
+        dosis2 = self.make_subchart(
+            df, bulletin_date, 'salud_total_dosis2', 'Personas con régimen completo'
+        ).properties(
+            width=self.WIDTH,
+            height=self.HEIGHT
+        )
+        rate = self.make_daily_rate_chart(df).properties(
+            width=self.WIDTH,
+            height=self.HEIGHT
+        )
+        return alt.vconcat(dosis2, rate).configure_view(
             strokeWidth=0
         ).configure_concat(
             spacing=40
@@ -986,28 +998,62 @@ class VaccinationMap(AbstractMolecularChart):
             color='independent'
         )
 
-    def make_subchart(self, df, variable, title):
-        return alt.Chart(df).transform_lookup(
-            lookup='municipio',
-            from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
+    def make_subchart(self, df, bulletin_date, variable, title):
+        DOMAIN_MID = 0.75
+
+        return alt.Chart(df).transform_filter(
+            alt.datum.local_date == util.altair_date_expr(bulletin_date)
         ).transform_calculate(
             pct=alt.datum[variable] / alt.datum.popest2019
+        ).transform_lookup(
+            lookup='municipio',
+            from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
         ).mark_geoshape().encode(
-            color=alt.Color('pct:Q', type='quantitative', sort='descending',
-                            scale=alt.Scale(type='linear', scheme='blueorange',
-                                            domain=[0, 1], domainMid=0.6),
+            color=alt.Color('pct:Q', type='quantitative',
+                            scale=alt.Scale(type='linear', scheme='blueorange', reverse=True,
+                                            domain=alt.DomainUnionWith(unionWith=[DOMAIN_MID]),
+                                            domainMid=DOMAIN_MID),
                             legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                               title=title, labelSeparation=10, format='.0%',
-                                              offset=-15, gradientLength=self.WIDTH)),
+                                              offset=-15, gradientLength=self.WIDTH - 10)),
             tooltip=[alt.Tooltip(field='local_date', type='temporal', title='Fecha'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
                      alt.Tooltip(field='popest2019', type='quantitative', format=',d', title='Población'),
                      alt.Tooltip(field=variable, title=title, type='quantitative', format=',d'),
                      alt.Tooltip(field='pct', type='quantitative', format='.1%', title='Porciento')]
-        ).properties(
-            width=self.WIDTH,
-            height=250
         )
+
+    def make_daily_rate_chart(self, df):
+        return alt.Chart(df).transform_calculate(
+            dosis=alt.datum.salud_dosis1 + alt.datum.salud_dosis2,
+            dosis_per_100=100.0 * alt.datum.dosis / alt.datum.popest2019
+        ).transform_aggregate(
+            groupby=['municipio'],
+            min_local_date='min(local_date)',
+            max_local_date='max(local_date)',
+            popest2019='mean(popest2019)',
+            mean_dosis='mean(dosis)',
+            mean_dosis_per_100='mean(dosis_per_100)'
+        ).transform_lookup(
+            lookup='municipio',
+            from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
+        ).mark_geoshape().encode(
+            color=alt.Color('mean_dosis_per_100:Q', type='quantitative',
+                            scale=alt.Scale(type='linear', scheme='blueorange', reverse=True),
+                            legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
+                                              labelSeparation=10, offset=-15,
+                                              gradientLength=self.WIDTH - 10,
+                                              title='Dosis por 100 habitantes, promedio 7 días')),
+            tooltip=[alt.Tooltip(field='min_local_date', type='temporal', title='Desde'),
+                     alt.Tooltip(field='max_local_date', type='temporal', title='Hasta'),
+                     alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
+                     alt.Tooltip(field='popest2019', type='quantitative', format=',d', title='Población'),
+                     alt.Tooltip(field='mean_dosis', type='quantitative', format=',d',
+                                 title='Dosis diarias (promedio 7 días)'),
+                     alt.Tooltip(field='mean_dosis_per_100', type='quantitative', format=',.1f',
+                                 title='Dosis diarias por 100 habitantes (promedio 7 días)')]
+        )
+
 
 
 class MunicipalVaccination(AbstractMolecularChart):
