@@ -809,12 +809,15 @@ class RecentHospitalizations(AbstractMolecularChart):
             table.c.covid.label('COVID'),
             table.c.nocovid.label('No COVID'),
             table.c.disp.label('Disponibles')
-        ]).where(table.c.date <= max(bulletin_dates) + datetime.timedelta(days=1))
+        ]).where(and_(min(bulletin_dates) - datetime.timedelta(days=41) < table.c.date,
+                      table.c.date <= max(bulletin_dates) + datetime.timedelta(days=1)))
         df = pd.read_sql_query(query, connection, parse_dates=['Fecha'])
         return pd.melt(df, ['Fecha', 'Edad', 'Tipo', 'Total'])
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['Fecha'] <= pd.to_datetime(bulletin_date + datetime.timedelta(days=1))]
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=42))
+        until_date = pd.to_datetime(bulletin_date + datetime.timedelta(days=1))
+        return df.loc[(df['Fecha'] >= since_date) & (df['Fecha'] <= until_date)]
 
     def make_chart(self, df, bulletin_date):
         area = alt.Chart(df).transform_calculate(
