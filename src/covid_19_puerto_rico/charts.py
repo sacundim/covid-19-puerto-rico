@@ -608,7 +608,7 @@ class MunicipalMap(AbstractChart):
                       legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                         title='Casos diarios (por 100k de población, promedio 7 días)',
                                         offset=-15, labelSeparation=10,
-                                        format=',d', gradientLength=self.WIDTH)))
+                                        format=',~r', gradientLength=self.WIDTH)))
 
     def make_trend_chart(self, df):
         return self.make_subchart(
