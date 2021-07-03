@@ -15,6 +15,10 @@ from sqlalchemy import text
 from sqlalchemy.sql import select, and_
 from . import charts
 
+# 2020 Census:
+PUERTO_RICO_POPULATION = 3_285_874
+PUERTO_RICO_POPULATION_100K = PUERTO_RICO_POPULATION / 1e5
+
 
 class AbstractMolecularChart(charts.AbstractChart):
     def filter_data(self, df, bulletin_date):
@@ -22,7 +26,6 @@ class AbstractMolecularChart(charts.AbstractChart):
 
 
 class RecentCases(AbstractMolecularChart):
-    POPULATION_100K = 31.93694
     SORT_ORDER=['Pruebas', 'Casos', 'Camas ocupadas por COVID', 'Muertes']
 
     def fetch_data(self, connection, bulletin_dates):
@@ -59,10 +62,10 @@ class RecentCases(AbstractMolecularChart):
             mean_14day = 'mean(value)',
             sum_14day='sum(value)'
         ).transform_calculate(
-            mean_7day_100k=alt.datum.mean_7day / self.POPULATION_100K,
-            sum_7day_100k=alt.datum.sum_7day / self.POPULATION_100K,
-            mean_14day_100k=alt.datum.mean_14day / self.POPULATION_100K,
-            sum_14day_100k=alt.datum.sum_14day / self.POPULATION_100K
+            mean_7day_100k=alt.datum.mean_7day / PUERTO_RICO_POPULATION_100K,
+            sum_7day_100k=alt.datum.sum_7day / PUERTO_RICO_POPULATION_100K,
+            mean_14day_100k=alt.datum.mean_14day / PUERTO_RICO_POPULATION_100K,
+            sum_14day_100k=alt.datum.sum_14day / PUERTO_RICO_POPULATION_100K
         ).transform_filter(
             alt.datum.datum_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
         ).encode(
@@ -121,8 +124,6 @@ class RecentCases(AbstractMolecularChart):
 
 
 class NewCases(AbstractMolecularChart):
-    POPULATION_100K = 31.93694
-
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('new_daily_cases', self.metadata,
                                  schema='covid_pr_etl', autoload=True)
@@ -160,10 +161,10 @@ class NewCases(AbstractMolecularChart):
             mean_14day = 'mean(value)',
             sum_14day='sum(value)'
         ).transform_calculate(
-            mean_7day_100k=alt.datum.mean_7day / self.POPULATION_100K,
-            sum_7day_100k=alt.datum.sum_7day / self.POPULATION_100K,
-            mean_14day_100k=alt.datum.mean_14day / self.POPULATION_100K,
-            sum_14day_100k=alt.datum.sum_14day / self.POPULATION_100K
+            mean_7day_100k=alt.datum.mean_7day / PUERTO_RICO_POPULATION_100K,
+            sum_7day_100k=alt.datum.sum_7day / PUERTO_RICO_POPULATION_100K,
+            mean_14day_100k=alt.datum.mean_14day / PUERTO_RICO_POPULATION_100K,
+            sum_14day_100k=alt.datum.sum_14day / PUERTO_RICO_POPULATION_100K
         ).transform_filter(
             alt.datum.mean_7day > 0.0
         ).mark_line().encode(
@@ -328,8 +329,7 @@ class NaivePositiveRate(AbstractMolecularChart):
 
 class NewTestSpecimens(AbstractMolecularChart):
     """The original tests chart, counting test specimens naïvely out of Bioportal."""
-    POPULATION = 3_193_694
-    POPULATION_THOUSANDS = POPULATION / 1_000.0
+    POPULATION_THOUSANDS = PUERTO_RICO_POPULATION / 1_000.0
     TEST_TYPE_SORT_ORDER = ['Molecular', 'Antígeno', 'Serológica']
     TEST_TYPE_COLORS = ['#4c78a8', '#e45756', 'lightgray']
     DATE_TYPE_SORT_ORDER = ['Fecha de muestra', 'Fecha de reporte']
