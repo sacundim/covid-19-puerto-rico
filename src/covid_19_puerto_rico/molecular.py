@@ -188,18 +188,17 @@ class NewCases(AbstractMolecularChart):
                 alt.Tooltip('sum_7day_100k:Q', format=',.1f', title='Suma 7 días (/100k)'),
                 alt.Tooltip('mean_7day:Q', format=',.1f', title='Promedio 7 días'),
                 alt.Tooltip('mean_7day_100k:Q', format=',.1f', title='Promedio 7 días (/100k)')],
-            color=alt.Color('variable:N', title=None,
+            color=alt.Color('variable:N', title='Curva',
                             scale=alt.Scale(range=['#54a24b', '#4c78a8', '#e45756']),
-                            legend=alt.Legend(orient='top', labelLimit=250,
+                            legend=alt.Legend(orient='top', direction='horizontal', labelLimit=250,
                                               symbolStrokeWidth=3, symbolSize=300),
                             sort=['Descartados',
                                   'Casos',
                                   'Muertes',]),
             strokeDash=alt.StrokeDash('bulletin_date:T', title='Datos hasta', sort='descending',
-                                      legend=alt.Legend(orient='bottom-right', symbolSize=300,
-                                                        symbolStrokeWidth=2, symbolStrokeColor='black',
-                                                        direction='vertical', fillColor='white',
-                                                        padding=7.5))
+                                      legend=alt.Legend(orient='top', direction='horizontal',
+                                                        symbolSize=300, symbolStrokeWidth=2,
+                                                        symbolStrokeColor='black'))
         ).properties(
             width=575, height=475
         )
