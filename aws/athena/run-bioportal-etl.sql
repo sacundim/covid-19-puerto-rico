@@ -759,6 +759,7 @@ SELECT
 	age_dim.age_gte,
 	age_dim.age_lt,
 	age_dim.population,
+	sum(encounters) AS encounters,
 	sum(cases) AS cases,
 	COALESCE(sum(deaths), 0) AS deaths
 FROM covid_pr_etl.bioportal_encounters_cube encounters
