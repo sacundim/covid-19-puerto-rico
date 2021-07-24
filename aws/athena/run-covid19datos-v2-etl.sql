@@ -264,6 +264,7 @@ SELECT
             PARTITION BY datum_date
             ORDER BY bulletin_date
         ), 0) AS delta_confirmed_cases,
+    probable_cases,
     sum(probable_cases) OVER (
         PARTITION BY bulletin_date
         ORDER BY datum_date
@@ -273,7 +274,7 @@ SELECT
             PARTITION BY datum_date
             ORDER BY bulletin_date
         ), 0) AS delta_probable_cases,
-	COALESCE(deaths, 0) deaths,
+	deaths,
     sum(deaths) OVER (
         PARTITION BY bulletin_date
         ORDER BY datum_date
