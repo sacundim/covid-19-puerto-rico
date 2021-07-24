@@ -14,14 +14,15 @@ TMP="${REPO_ROOT}"/tmp
 S3_SYNC_DIR="${REPO_ROOT}"/s3-bucket-sync/covid-19-puerto-rico-data
 COVID19DATOS_V2_DIR="${S3_SYNC_DIR}"/covid19datos-v2
 
+timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+downloaded_date="${timestamp:0:10}"
+ts_seconds="$(date -u +"%s")"
+
 cd "${TMP}"
 for dataset in "${DATASETS[@]}"
 do
   url="${ENDPOINT}/${dataset}/completo"
 
-  timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-  downloaded_date="${timestamp:0:10}"
-  ts_seconds="$(date -u +"%s")"
   # PyArrow tends to barf on filenames with colons (thinks they're URLs),
   # so we have to generate a weird filename and rename it.
   tempname="${dataset}_${ts_seconds}"
