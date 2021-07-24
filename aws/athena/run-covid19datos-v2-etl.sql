@@ -51,12 +51,10 @@ SELECT
 		regexp_extract("$path", '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z'))
 		AS TIMESTAMP)
 		AS downloaded_at,
-	id_muerte,
-	id_paciente,
- 	date(date_parse(NULLIF(fe_nacimiento, ''), '%Y-%m-%d %H:%i:%s'))
-		AS fe_nacimiento,
+	from_iso8601_date(downloaded_date)
+		AS downloaded_date,
+	NULLIF(id_muerte, '') id_muerte,
 	NULLIF(co_sexo, '') co_sexo,
-	NULLIF(co_municipio, '') co_municipio,
 	NULLIF(co_region, '') co_region,
 	NULLIF(co_clasificacion, '') co_clasificacion,
  	date(date_parse(NULLIF(fe_muerte, ''), '%Y-%m-%d %H:%i:%s'))
@@ -67,8 +65,7 @@ SELECT
 		AS fe_bioportal,
  	date(date_parse(NULLIF(fe_registro, ''), '%Y-%m-%d %H:%i:%s'))
 		AS fe_registro,
-	from_iso8601_date(downloaded_date)
-		AS downloaded_date
+	NULLIF(tx_grupo_edad, '') tx_grupo_edad
 FROM covid19datos_v2_sources.defunciones_parquet
 ORDER BY downloaded_at, fe_muerte, fe_reporte;
 
@@ -142,24 +139,15 @@ SELECT
 		regexp_extract("$path", '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z'))
 		AS TIMESTAMP)
 		AS downloaded_at,
-    nullif(id_paciente, '') id_paciente,
- 	date(date_parse(NULLIF(fe_nacimiento, ''), '%Y-%m-%d %H:%i:%s'))
-		AS fe_nacimiento,
     CAST(nullif(nu_edad, '') AS INT) nu_edad,
-    nullif(co_sexo, '') co_sexo,
     nullif(co_municipio, '') co_municipio,
     nullif(co_region, '') co_region,
  	date(date_parse(NULLIF(fe_vacuna, ''), '%Y-%m-%d %H:%i:%s'))
 		AS fe_vacuna,
     CAST(nullif(nu_dosis, '') AS INT) nu_dosis,
     nullif(co_manufacturero, '') co_manufacturero,
- 	date(date_parse(NULLIF(fe_registro_preis, ''), '%Y-%m-%d %H:%i:%s'))
-		AS fe_registro_preis,
  	date(date_parse(NULLIF(fe_reporte, ''), '%Y-%m-%d %H:%i:%s'))
-		AS fe_reporte,
- 	date(date_parse(NULLIF(fe_registro, ''), '%Y-%m-%d %H:%i:%s'))
-		AS fe_registro,
-    nullif(in_ignore, '') in_ignore
+		AS fe_reporte
 FROM covid19datos_v2_sources.vacunacion_parquet
 ORDER BY downloaded_at, fe_vacuna;
 
@@ -177,13 +165,10 @@ SELECT
 		AS TIMESTAMP)
 		AS downloaded_at,
     nullif(id_orden, '') id_orden,
-    nullif(id_paciente, '') id_paciente,
     nullif(co_tipo, '') co_tipo,
+    nullif(tx_grupo_edad, '') tx_grupo_edad,
     nullif(co_resultado, '') co_resultado,
- 	date(date_parse(NULLIF(fe_nacimiento, ''), '%Y-%m-%d %H:%i:%s'))
-		AS fe_nacimiento,
     nullif(co_sexo, '') co_sexo,
-    nullif(co_municipio, '') co_municipio,
     nullif(co_region, '') co_region,
  	date(date_parse(NULLIF(fe_prueba, ''), '%Y-%m-%d %H:%i:%s'))
 		AS fe_prueba,
