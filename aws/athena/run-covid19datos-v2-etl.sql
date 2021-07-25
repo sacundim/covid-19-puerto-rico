@@ -390,6 +390,7 @@ SELECT
 	sample_date,
 	display_name municipality,
 	fips,
+	popest2019,
 	count(*) new_cases,
 	count(*) FILTER (
 		WHERE class = 'CONFIRMADO'
@@ -400,8 +401,9 @@ SELECT
 FROM covid19datos_v2_etl.casos
 INNER JOIN covid19datos_v2_sources.casos_city_names names
 	USING (city)
-WHERE sample_date >= date_add('day', -15, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
-GROUP BY downloaded_at, sample_date, fips, display_name
+INNER JOIN covid19datos_v2_sources.population_estimates_2019
+	USING (fips)
+GROUP BY downloaded_at, sample_date, fips, display_name, popest2019
 ORDER BY downloaded_at, sample_date, display_name;
 
 

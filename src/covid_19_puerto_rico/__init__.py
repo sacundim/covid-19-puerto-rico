@@ -50,10 +50,10 @@ def main():
         #        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
         #        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
 
+        charts.Municipal(athena, args.output_dir, output_formats),
         molecular.RecentHospitalizations(athena, args.output_dir, output_formats),
         charts.WeekdayBias(athena, args.output_dir, output_formats),
         charts.LatenessTiers(athena, args.output_dir, output_formats),
-        charts.Municipal(athena, args.output_dir, output_formats),
         charts.CurrentDeltas(athena, args.output_dir, output_formats),
         charts.DailyDeltas(athena, args.output_dir, output_formats),
 

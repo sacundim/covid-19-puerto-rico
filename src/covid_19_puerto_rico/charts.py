@@ -498,51 +498,42 @@ class WeekdayBias(AbstractChart):
 
 
 class Municipal(AbstractChart):
-    REDS = ('#fad1bd', '#ea9178', '#c74643')
-    GRAYS = ('#dadada', '#ababab', '#717171')
-    DOMAIN=[0, 6]
-
     def make_chart(self, df, bulletin_date):
-        base = alt.Chart(df).transform_impute(
-            impute='new_cases',
-            groupby=['Municipio'],
-            key='bulletin_date',
+        WIDTH = 525
+        return alt.Chart(df).transform_calculate(
+            new_cases_1m='1e6 * datum.new_cases / datum.popest2019'
+        ).transform_impute(
+            impute='new_cases_1m',
+            groupby=['bulletin_date', 'municipality'],
+            key='sample_date',
             value=0
-        ).mark_area(interpolate='monotone', clip=True).encode(
-            x=alt.X('sample_date:T', title='Fecha de muestra',
-                    axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('new_cases:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=self.DOMAIN)),
-            color=alt.value(self.REDS[0]),
+        ).transform_window(
+            groupby=['bulletin_date', 'municipality'],
+            sort=[{'field': 'sample_date'}],
+            frame=[-6, 0],
+            mean_cases_1m='mean(new_cases_1m)'
+        ).transform_filter(
+            alt.datum.sample_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
+        ).mark_rect().encode(
+            x=alt.X('sample_date:T', title='Fecha de muestra', timeUnit='yearmonthdate',
+                    axis=alt.Axis(
+                        labelExpr="[timeFormat(datum.value, '%b'),"
+                                  " timeFormat(datum.value, '%m') == '01'"
+                                  " ? timeFormat(datum.value, '%Y')"
+                                  " : '']")),
+            color=alt.Color('mean_cases_1m:Q', title='Casos diarios por millón',
+                            sort='descending', scale=alt.Scale(scheme='spectral', type='sqrt'),
+                            legend=alt.Legend(orient='top', gradientLength=WIDTH,
+                                              labelOverlap=True, labelSeparation=5)),
             tooltip=[alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('sample_date:T', title='Fecha de muestra'),
-                     alt.Tooltip('Municipio:N'),
-                     alt.Tooltip('new_cases:Q', title='Casos nuevos')]
-        )
-
-        def make_band(variable, color, calculate):
-            return base.transform_calculate(
-                as_=variable, calculate=calculate
-            ).encode(
-                y=alt.Y(f'{variable}:Q'),
-                color=alt.value(color)
-            )
-
-        one_above = make_band('one_above', self.REDS[1],
-                              alt.datum.new_cases - self.DOMAIN[1])
-        two_above = make_band('two_above', self.REDS[2],
-                              alt.datum.new_cases - 2 * self.DOMAIN[1])
-        negative = make_band('negative', self.GRAYS[0], -alt.datum.new_cases)
-        one_below = make_band('one_below', self.GRAYS[1],
-                              -alt.datum.new_cases - self.DOMAIN[1])
-        two_below = make_band('two_below', self.GRAYS[2],
-                              -alt.datum.new_cases - 2 * self.DOMAIN[1])
-
-        return (base + one_above + two_above
-                + negative + one_below + two_below).properties(
-            width=525, height=24
+                     alt.Tooltip('municipality:N', title='Municipio'),
+                     alt.Tooltip('mean_cases_1m:Q', format=',d',
+                                 title='Casos nuevos por millón (prom. 7)')]
+        ).properties(
+            width=WIDTH, height=24
         ).facet(
-            row=alt.Row('Municipio:N', title=None,
+            row=alt.Row('municipality:N', title=None,
                         header=alt.Header(
                             labelAngle=0,
                             labelFontSize=10,
@@ -557,9 +548,10 @@ class Municipal(AbstractChart):
                                  schema='covid19datos_v2_etl', autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.sample_date,
-                        table.c.municipality.label('Municipio'),
+                        table.c.municipality,
+                        table.c.popest2019,
                         table.c.new_cases])\
-            .where(and_(min(bulletin_dates) - datetime.timedelta(days=35) <= table.c.sample_date,
+            .where(and_(min(bulletin_dates) - datetime.timedelta(days=57) <= table.c.sample_date,
                         table.c.sample_date <= max(bulletin_dates)))
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'sample_date'])
 
