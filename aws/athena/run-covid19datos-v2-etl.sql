@@ -195,14 +195,14 @@ CREATE TABLE covid19datos_v2_etl.bulletin_cases WITH (
 WITH casos AS (
 	WITH downloads AS (
 		SELECT
-			downloaded_date,
+			date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+				AS bulletin_date,
 			max(downloaded_at) downloaded_at
 		FROM covid19datos_v2_etl.casos
-		GROUP BY downloaded_date
+		GROUP BY date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
 	)
 	SELECT
-		date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
-			AS bulletin_date,
+		bulletin_date,
 		sample_date AS datum_date,
 		count(*) FILTER (WHERE class = 'CONFIRMADO')
 			AS confirmed_cases,
@@ -210,25 +210,25 @@ WITH casos AS (
 			AS probable_cases
 	FROM covid19datos_v2_etl.casos casos
 	INNER JOIN downloads
-		USING (downloaded_date, downloaded_at)
-	GROUP BY downloaded_at, sample_date
+		USING (downloaded_at)
+	GROUP BY bulletin_date, sample_date
 ), defunciones AS (
 	WITH downloads AS (
 		SELECT
-			downloaded_date,
+			date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+				AS bulletin_date,
 			max(downloaded_at) downloaded_at
 		FROM covid19datos_v2_etl.casos
-		GROUP BY downloaded_date
+		GROUP BY date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
 	)
 	SELECT
-		date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
-			AS bulletin_date,
+		bulletin_date,
 		fe_muerte AS datum_date,
 		count(*) deaths
 	FROM covid19datos_v2_etl.defunciones defunciones
 	INNER JOIN downloads
-		USING (downloaded_date, downloaded_at)
-	GROUP BY downloaded_at, fe_muerte
+		USING (downloaded_at)
+	GROUP BY bulletin_date, fe_muerte
 ), joined AS (
 	SELECT
 		bulletin_date,
@@ -436,7 +436,7 @@ ORDER BY bulletin_date, datum_date;
 --
 -- For VaccinationMap.
 --
-CREATE VIEW covid19datos_v2_etl.municipal_vaccinations
+CREATE VIEW covid19datos_v2_etl.municipal_vaccinations AS
 SELECT
 	bulletin_date,
 	dose_date,
