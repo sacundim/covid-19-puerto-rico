@@ -320,6 +320,47 @@ GROUP BY downloaded_at, sample_date, fips, display_name
 ORDER BY downloaded_at, sample_date, display_name;
 
 
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--
+-- Vaccination analysis.
+--
+
+-- FIXME: there are missing dose_date/municipality pairs
+CREATE TABLE covid19datos_v2_etl.vacunacion_agg WITH (
+    format = 'PARQUET'
+) AS
+SELECT
+	bulletin_date,
+	fe_vacuna AS dose_date,
+	munis.display_name AS municipality,
+	munis.fips,
+	co_manufacturero AS vendor,
+	nu_dosis AS dose_number,
+	co_manufacturero = 'JSN' OR nu_dosis = 2
+		AS is_complete,
+	count(*) doses
+FROM covid19datos_v2_etl.vacunacion vax
+INNER JOIN downloads
+	USING (downloaded_at)
+LEFT OUTER JOIN covid19datos_v2_sources.casos_city_names munis
+	ON munis.city = vax.co_municipio
+GROUP BY
+	bulletin_date,
+	fe_vacuna,
+	nu_dosis,
+	co_manufacturero,
+	munis.display_name,
+	munis.fips
+ORDER BY
+	bulletin_date,
+	fe_vacuna,
+	munis.display_name,
+	vendor,
+	dose_number;
+
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --
@@ -382,3 +423,35 @@ AND ba.bulletin_date > (
 	AND delta_probable_cases IS NOT NULL
 	AND delta_deaths IS NOT NULL)
 ORDER BY bulletin_date, datum_date;
+
+
+--
+-- For VaccinationMap.
+--
+CREATE VIEW covid19datos_v2_etl.municipal_vaccinations
+SELECT
+	bulletin_date,
+	dose_date,
+	municipality,
+	fips,
+	popest2019,
+	sum(doses) AS doses,
+	sum(sum(doses) FILTER (
+		WHERE is_complete
+	)) OVER (
+		PARTITION BY bulletin_date, municipality
+		ORDER BY dose_date
+	) AS complete
+FROM covid19datos_v2_etl.vacunacion_agg
+LEFT OUTER JOIN covid19datos_v2_sources.population_estimates_2019
+	USING (fips)
+GROUP BY
+	bulletin_date,
+	dose_date,
+	municipality,
+	fips,
+	popest2019
+ORDER BY
+	bulletin_date DESC,
+	dose_date DESC,
+	municipality;
