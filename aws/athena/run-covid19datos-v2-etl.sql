@@ -376,6 +376,14 @@ CREATE TABLE covid19datos_v2_etl.cases_municipal_agg WITH (
     bucketed_by = ARRAY['bulletin_date'],
     bucket_count = 1
 ) AS
+WITH downloads AS (
+    SELECT
+        date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+            AS bulletin_date,
+        max(downloaded_at) downloaded_at
+    FROM covid19datos_v2_etl.casos
+    GROUP BY date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+)
 SELECT
 	date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
 		AS bulletin_date,
