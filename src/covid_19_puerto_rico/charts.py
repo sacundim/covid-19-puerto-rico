@@ -298,8 +298,8 @@ class CurrentDeltas(AbstractChart):
         )
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('daily_deltas', self.metadata,
-                                 schema='products', autoload=True)
+        table = sqlalchemy.Table('bulletin_cases', self.metadata,
+                                 schema='covid19datos_v2_etl', autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.datum_date,
                         table.c.delta_confirmed_cases,
@@ -357,8 +357,8 @@ class DailyDeltas(AbstractChart):
         )
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('daily_deltas', self.metadata,
-                                 schema='products', autoload=True)
+        table = sqlalchemy.Table('bulletin_cases', self.metadata,
+                                 schema='covid19datos_v2_etl', autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.datum_date,
                         table.c.delta_confirmed_cases,
@@ -474,27 +474,16 @@ class WeekdayBias(AbstractChart):
         )
 
     def fetch_data(self, connection, bulletin_dates):
-        query = text("""SELECT 
-	ba.bulletin_date,
-	ba.datum_date,
-	ba.delta_confirmed_cases,
-	ba.delta_probable_cases,
-	ba.delta_deaths
-FROM bitemporal_agg ba 
-WHERE ba.datum_date >= ba.bulletin_date - INTERVAL '14' DAY
-AND ba.bulletin_date > (
-	SELECT min(bulletin_date)
-	FROM bitemporal_agg
-	WHERE delta_confirmed_cases IS NOT NULL
-	AND delta_probable_cases IS NOT NULL
-	AND delta_deaths IS NOT NULL)
-ORDER BY bulletin_date, datum_date""")
+        table = sqlalchemy.Table('weekday_bias', self.metadata,
+                                 schema='covid19datos_v2_etl', autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.datum_date,
+                        table.c.delta_confirmed_cases.label('Confirmados'),
+                        table.c.delta_probable_cases.label('Probables'),
+                        table.c.delta_deaths.label('Muertes')])\
+            .where(and_(min(bulletin_dates) - datetime.timedelta(days=22) <= table.c.bulletin_date,
+                        table.c.bulletin_date <= max(bulletin_dates)))
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
-        df = df.rename(columns={
-            'delta_confirmed_cases': 'Confirmados',
-            'delta_probable_cases': 'Probables',
-            'delta_deaths': 'Muertes'
-        })
         return pd.melt(df, ['bulletin_date', 'datum_date']).dropna()
 
     def filter_data(self, df, bulletin_date):
@@ -520,12 +509,13 @@ class Municipal(AbstractChart):
             key='bulletin_date',
             value=0
         ).mark_area(interpolate='monotone', clip=True).encode(
-            x=alt.X('bulletin_date:T', title='Fecha de boletín',
+            x=alt.X('sample_date:T', title='Fecha de muestra',
                     axis=alt.Axis(format='%d/%m')),
             y=alt.Y('new_cases:Q', title=None, axis=None,
                     scale=alt.Scale(domain=self.DOMAIN)),
             color=alt.value(self.REDS[0]),
-            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Datos hasta'),
+                     alt.Tooltip('sample_date:T', title='Fecha de muestra'),
                      alt.Tooltip('Municipio:N'),
                      alt.Tooltip('new_cases:Q', title='Casos nuevos')]
         )
@@ -563,23 +553,15 @@ class Municipal(AbstractChart):
         )
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_agg', self.metadata, autoload=True)
+        table = sqlalchemy.Table('cases_municipal_agg', self.metadata,
+                                 schema='covid19datos_v2_etl', autoload=True)
         query = select([table.c.bulletin_date,
-                        table.c.municipality,
+                        table.c.sample_date,
+                        table.c.municipality.label('Municipio'),
                         table.c.new_cases])\
-            .where(and_(table.c.municipality.notin_(['Total']),
-                        min(bulletin_dates) - datetime.timedelta(days=35) <= table.c.bulletin_date,
-                        table.c.bulletin_date <= max(bulletin_dates)))
-        df = pd.read_sql_query(query, connection,
-                               parse_dates=["bulletin_date"])
-        return df.rename(columns={
-            'municipality': 'Municipio'
-        })
-
-    def filter_data(self, df, bulletin_date):
-        since = pd.to_datetime(bulletin_date - datetime.timedelta(days=35))
-        until = pd.to_datetime(bulletin_date)
-        return df.loc[(since <= df['bulletin_date']) & (df['bulletin_date'] <= until)]
+            .where(and_(min(bulletin_dates) - datetime.timedelta(days=35) <= table.c.sample_date,
+                        table.c.sample_date <= max(bulletin_dates)))
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'sample_date'])
 
 
 class MunicipalMap(AbstractChart):
@@ -808,7 +790,7 @@ class ICUsByRegion(AbstractChart):
 class LatenessTiers(AbstractChart):
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('lateness_tiers', self.metadata,
-                                 schema='products', autoload=True)
+                                 schema='covid19datos_v2_etl', autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.tier,

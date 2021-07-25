@@ -37,7 +37,7 @@ def main():
 
     postgres = util.create_postgres_engine(args)
     athena = util.create_athena_engine(args)
-    bulletin_date = compute_bulletin_date(args, postgres)
+    bulletin_date = compute_bulletin_date(args, athena)
     logging.info('Using bulletin date of %s', bulletin_date)
 
     if args.svg:
@@ -46,14 +46,23 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
-#        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
-#        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
+        # Occasional:
+        #        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
+        #        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
+
+        charts.WeekdayBias(athena, args.output_dir, output_formats),
+        charts.LatenessTiers(athena, args.output_dir, output_formats),
+        charts.Municipal(athena, args.output_dir, output_formats),
+        charts.CurrentDeltas(athena, args.output_dir, output_formats),
+        charts.DailyDeltas(athena, args.output_dir, output_formats),
+        # TODO: Athenify these:
+        # charts.MunicipalMap(postgres, args.output_dir, output_formats),
+        charts.ICUsByRegion(postgres, args.output_dir, output_formats),
+        charts.ICUsByHospital(postgres, args.output_dir, output_formats),
+
         molecular.VaccinationMap(athena, args.output_dir, output_formats),
         molecular.EncounterLag(athena, args.output_dir, output_formats),
         molecular.RecentHospitalizations(athena, args.output_dir, output_formats),
-        charts.ICUsByRegion(postgres, args.output_dir, output_formats),
-        charts.ICUsByHospital(postgres, args.output_dir, output_formats),
-        charts.MunicipalMap(postgres, args.output_dir, output_formats),
         molecular.AgeGroups(athena, args.output_dir, output_formats),
         molecular.NaivePositiveRate(athena, args.output_dir, output_formats),
 
@@ -68,15 +77,6 @@ def main():
         molecular.MolecularLatenessTiers(athena, args.output_dir, output_formats),
         molecular.MolecularCurrentDeltas(athena, args.output_dir, output_formats),
         molecular.MolecularDailyDeltas(athena, args.output_dir, output_formats),
-        charts.LatenessTiers(postgres, args.output_dir, output_formats),
-        charts.BulletinChartMismatch(postgres, args.output_dir, output_formats),
-        charts.ConsecutiveBulletinMismatch(postgres, args.output_dir, output_formats),
-        charts.Municipal(postgres, args.output_dir, output_formats),
-        charts.CurrentDeltas(postgres, args.output_dir, output_formats),
-        charts.WeekdayBias(postgres, args.output_dir, output_formats),
-        charts.DailyDeltas(postgres, args.output_dir, output_formats),
-        charts.LatenessDaily(postgres, args.output_dir, output_formats),
-        charts.Lateness7Day(postgres, args.output_dir, output_formats)
     ]
     if args.website:
         site = website.Website(args)
@@ -118,7 +118,8 @@ def compute_bulletin_date(args, engine):
 def query_for_bulletin_date(engine):
     metadata = sqlalchemy.MetaData(engine)
     with engine.connect() as connection:
-        table = sqlalchemy.Table('bitemporal', metadata, autoload=True)
+        table = sqlalchemy.Table('bulletin_cases', metadata,
+                                 schema='covid19datos_v2_etl', autoload=True)
         query = sql.select([sqlfn.max(table.c.bulletin_date)])
         result = connection.execute(query)
         return result.fetchone()[0]

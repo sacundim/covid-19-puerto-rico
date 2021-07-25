@@ -341,6 +341,9 @@ WHERE bulletin_date > (
 );
 
 
+--
+-- For the LatenessTiers chart
+--
 CREATE VIEW covid19datos_v2_etl.lateness_tiers AS
 SELECT
 	bulletin_date,
@@ -358,3 +361,24 @@ INNER JOIN (VALUES (0, 3, '0-3'),
 WHERE bulletin_date > DATE '2020-04-24'
 GROUP BY bulletin_date, ranges.lo, ranges.hi, ranges.tier
 ORDER BY bulletin_date DESC, ranges.lo ASC;
+
+
+--
+-- For the WeekdayBias chart
+--
+CREATE VIEW covid19datos_v2_etl.weekday_bias AS
+SELECT
+	ba.bulletin_date,
+	ba.datum_date,
+	ba.delta_confirmed_cases,
+	ba.delta_probable_cases,
+	ba.delta_deaths
+FROM covid19datos_v2_etl.bulletin_cases ba
+WHERE ba.datum_date >= ba.bulletin_date - INTERVAL '14' DAY
+AND ba.bulletin_date > (
+	SELECT min(bulletin_date)
+	FROM covid19datos_v2_etl.bulletin_cases
+	WHERE delta_confirmed_cases IS NOT NULL
+	AND delta_probable_cases IS NOT NULL
+	AND delta_deaths IS NOT NULL)
+ORDER BY bulletin_date, datum_date;
