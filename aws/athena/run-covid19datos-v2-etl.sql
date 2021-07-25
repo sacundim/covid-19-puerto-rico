@@ -331,6 +331,14 @@ ORDER BY downloaded_at, sample_date, display_name;
 CREATE TABLE covid19datos_v2_etl.vacunacion_agg WITH (
     format = 'PARQUET'
 ) AS
+WITH downloads AS (
+	SELECT
+		date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+			AS bulletin_date,
+		max(downloaded_at) downloaded_at
+	FROM covid19datos_v2_etl.vacunacion
+	GROUP BY date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+)
 SELECT
 	bulletin_date,
 	fe_vacuna AS dose_date,
