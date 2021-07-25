@@ -50,11 +50,13 @@ def main():
         #        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
         #        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
 
+        molecular.RecentHospitalizations(athena, args.output_dir, output_formats),
         charts.WeekdayBias(athena, args.output_dir, output_formats),
         charts.LatenessTiers(athena, args.output_dir, output_formats),
         charts.Municipal(athena, args.output_dir, output_formats),
         charts.CurrentDeltas(athena, args.output_dir, output_formats),
         charts.DailyDeltas(athena, args.output_dir, output_formats),
+
         # TODO: Athenify these:
         # charts.MunicipalMap(postgres, args.output_dir, output_formats),
         charts.ICUsByRegion(postgres, args.output_dir, output_formats),
@@ -62,7 +64,6 @@ def main():
 
         molecular.VaccinationMap(athena, args.output_dir, output_formats),
         molecular.EncounterLag(athena, args.output_dir, output_formats),
-        molecular.RecentHospitalizations(athena, args.output_dir, output_formats),
         molecular.AgeGroups(athena, args.output_dir, output_formats),
         molecular.NaivePositiveRate(athena, args.output_dir, output_formats),
 

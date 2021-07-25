@@ -799,8 +799,9 @@ class RecentHospitalizations(AbstractMolecularChart):
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('prdoh_hospitalizations', self.metadata,
-                                 schema='covid_pr_etl', autoload=True)
+                                 schema='covid19datos_v2_etl', autoload=True)
         query = select([
+            table.c.bulletin_date,
             table.c.date.label('Fecha'),
             table.c.age.label('Edad'),
             table.c.resource.label('Tipo'),
@@ -808,15 +809,9 @@ class RecentHospitalizations(AbstractMolecularChart):
             table.c.covid.label('COVID'),
             table.c.nocovid.label('No COVID'),
             table.c.disp.label('Disponibles')
-        ]).where(and_(min(bulletin_dates) - datetime.timedelta(days=41) < table.c.date,
-                      table.c.date <= max(bulletin_dates) + datetime.timedelta(days=1)))
-        df = pd.read_sql_query(query, connection, parse_dates=['Fecha'])
-        return pd.melt(df, ['Fecha', 'Edad', 'Tipo', 'Total'])
-
-    def filter_data(self, df, bulletin_date):
-        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=42))
-        until_date = pd.to_datetime(bulletin_date + datetime.timedelta(days=1))
-        return df.loc[(df['Fecha'] >= since_date) & (df['Fecha'] <= until_date)]
+        ])
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'Fecha'])
+        return pd.melt(df, ['bulletin_date', 'Fecha', 'Edad', 'Tipo', 'Total'])
 
     def make_chart(self, df, bulletin_date):
         area = alt.Chart(df).transform_calculate(
