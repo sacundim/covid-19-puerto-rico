@@ -288,6 +288,37 @@ FROM joined
 ORDER BY bulletin_date, datum_date;
 
 
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--
+-- Cases by municipality.
+--
+
+CREATE TABLE covid19datos_v2_etl.cases_municipal_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
+SELECT
+	date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+		AS bulletin_date,
+	sample_date,
+	display_name municipality,
+	fips,
+	count(*) new_cases,
+	count(*) FILTER (
+		WHERE class = 'CONFIRMADO'
+	) AS new_confirmed,
+	count(*) FILTER (
+		WHERE class = 'PROBABLE'
+	) AS new_probable
+FROM covid19datos_v2_etl.casos
+INNER JOIN covid19datos_v2_sources.casos_city_names names
+	USING (city)
+WHERE sample_date >= date_add('day', -15, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+GROUP BY downloaded_at, sample_date, fips, display_name
+ORDER BY downloaded_at, sample_date, display_name;
+
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

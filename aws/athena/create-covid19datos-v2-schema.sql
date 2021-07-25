@@ -23,6 +23,38 @@ CREATE EXTERNAL TABLE covid19datos_v2_sources.casos_parquet (
 STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/casos/parquet_v1/';
 
+--
+-- Metadata for mapping the `city` field codes to display names and
+-- joining to other tables.
+--
+CREATE EXTERNAL TABLE covid19datos_v2_sources.casos_city_names (
+    city STRING,
+    display_name STRING,
+    fips STRING
+) ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+ESCAPED BY '\\'
+LINES TERMINATED BY '\n'
+LOCATION 's3://covid-19-puerto-rico-data/Census/covid19datos_v2_casos_city_names/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
+CREATE EXTERNAL TABLE covid19datos_v2_sources.population_estimates_2019 (
+	name STRING,
+	popest2019 INT,
+	fips STRING,
+	region STRING
+) ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+ESCAPED BY '\\'
+LINES TERMINATED BY '\n'
+LOCATION 's3://covid-19-puerto-rico-data/Census/population_estimates_2019/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
+
 
 ---------------------------------------------------------------------------
 ---------------------------------------------------------------------------
