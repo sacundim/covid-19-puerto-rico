@@ -515,12 +515,7 @@ class Municipal(AbstractChart):
         ).transform_filter(
             alt.datum.sample_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
         ).mark_rect().encode(
-            x=alt.X('sample_date:T', title='Fecha de muestra', timeUnit='yearmonthdate',
-                    axis=alt.Axis(
-                        labelExpr="[timeFormat(datum.value, '%b'),"
-                                  " timeFormat(datum.value, '%m') == '01'"
-                                  " ? timeFormat(datum.value, '%Y')"
-                                  " : '']")),
+            x=alt.X('sample_date:T', title='Fecha de muestra', timeUnit='yearmonthdate'),
             color=alt.Color('mean_cases_1m:Q', title='Casos diarios por millón',
                             sort='descending', scale=alt.Scale(scheme='spectral', type='sqrt'),
                             legend=alt.Legend(orient='top', gradientLength=WIDTH,
