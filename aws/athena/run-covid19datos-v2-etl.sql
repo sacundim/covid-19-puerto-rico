@@ -383,28 +383,43 @@ WITH downloads AS (
         max(downloaded_at) downloaded_at
     FROM covid19datos_v2_etl.casos
     GROUP BY date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+), grid AS (
+	SELECT
+		bulletin_date,
+		date(date_column) AS sample_date,
+		city,
+		display_name,
+		fips
+	FROM covid19datos_v2_sources.casos_city_names
+	CROSS JOIN (
+		VALUES (SEQUENCE(DATE '2020-03-09', DATE '2021-12-31', INTERVAL '1' DAY))
+	) AS date_array (date_array)
+	CROSS JOIN UNNEST(date_array) AS t2(date_column)
+	INNER JOIN downloads
+		ON CAST(date_column AS DATE) < bulletin_date
 )
 SELECT
-	date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
-		AS bulletin_date,
-	sample_date,
+	grid.bulletin_date,
+	grid.sample_date,
 	display_name municipality,
 	fips,
 	popest2019,
-	count(*) new_cases,
-	count(*) FILTER (
+	count(casos.downloaded_at) new_cases,
+	count(casos.downloaded_at) FILTER (
 		WHERE class = 'CONFIRMADO'
 	) AS new_confirmed,
-	count(*) FILTER (
+	count(casos.downloaded_at) FILTER (
 		WHERE class = 'PROBABLE'
 	) AS new_probable
 FROM covid19datos_v2_etl.casos
-INNER JOIN covid19datos_v2_sources.casos_city_names names
-	USING (city)
+RIGHT OUTER JOIN grid
+	ON grid.city = casos.city
+	AND grid.sample_date = casos.sample_date
+	AND grid.bulletin_date = date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
 INNER JOIN covid19datos_v2_sources.population_estimates_2019
 	USING (fips)
-GROUP BY downloaded_at, sample_date, fips, display_name, popest2019
-ORDER BY downloaded_at, sample_date, display_name;
+GROUP BY grid.bulletin_date, grid.sample_date, fips, display_name, popest2019
+ORDER BY grid.bulletin_date, grid.sample_date, display_name;
 
 
 

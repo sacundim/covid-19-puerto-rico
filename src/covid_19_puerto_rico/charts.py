@@ -511,6 +511,7 @@ class Municipal(AbstractChart):
             groupby=['bulletin_date', 'municipality'],
             sort=[{'field': 'sample_date'}],
             frame=[-6, 0],
+            mean_cases='mean(new_cases)',
             mean_cases_1m='mean(new_cases_1m)'
         ).transform_filter(
             alt.datum.sample_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
@@ -523,8 +524,10 @@ class Municipal(AbstractChart):
             tooltip=[alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('sample_date:T', title='Fecha de muestra'),
                      alt.Tooltip('municipality:N', title='Municipio'),
-                     alt.Tooltip('mean_cases_1m:Q', format=',d',
-                                 title='Casos nuevos por millón (prom. 7)')]
+                     alt.Tooltip('popest2019:Q', format=',d', title='Population'),
+                     alt.Tooltip('new_cases:Q', format=',d', title='Casos crudos'),
+                     alt.Tooltip('mean_cases:Q', format=',.1f', title='Casos diarios (prom. 7)'),
+                     alt.Tooltip('mean_cases_1m:Q', format=',d', title='Casos por millón (prom. 7)')]
         ).properties(
             width=WIDTH, height=24
         ).facet(
