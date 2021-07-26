@@ -1132,7 +1132,7 @@ class EncounterLag(AbstractMolecularChart):
             table.c.delta_molecular.label('Pruebas_Moleculares'),
             table.c.delta_molecular_cases.label('Casos_Moleculares')
         ]).where(
-            and_(min(bulletin_dates) - datetime.timedelta(days=42) <= table.c.bulletin_date,
+            and_(min(bulletin_dates) - datetime.timedelta(days=49) <= table.c.bulletin_date,
                  table.c.bulletin_date <= max(bulletin_dates))
         )
         df1 = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
