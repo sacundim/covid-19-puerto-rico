@@ -429,8 +429,7 @@ ORDER BY grid.bulletin_date, grid.sample_date, display_name;
 -- Vaccination analysis.
 --
 
--- FIXME: there are missing dose_date/municipality pairs
-CREATE TABLE covid19datos_v2_etl.vacunacion_agg WITH (
+CREATE TABLE covid19datos_v2_etl.vacunacion_cube WITH (
     format = 'PARQUET'
 ) AS
 WITH downloads AS (
@@ -440,35 +439,69 @@ WITH downloads AS (
 		max(downloaded_at) downloaded_at
 	FROM covid19datos_v2_etl.vacunacion
 	GROUP BY date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+), vendors AS (
+	SELECT DISTINCT co_manufacturero vendor
+	FROM covid19datos_v2_etl.vacunacion
+), dose_numbers AS (
+	SELECT DISTINCT nu_dosis dose_number
+	FROM covid19datos_v2_etl.vacunacion
+), grid AS (
+	SELECT
+		bulletin_date,
+		date(date_column) AS dose_date,
+		city,
+		display_name,
+		fips,
+		vendor,
+		dose_number
+	FROM covid19datos_v2_sources.casos_city_names
+	CROSS JOIN (
+		VALUES (SEQUENCE(DATE '2020-12-03', DATE '2021-12-31', INTERVAL '1' DAY))
+	) AS date_array (date_array)
+	CROSS JOIN UNNEST(date_array) AS t2(date_column)
+	INNER JOIN downloads
+		ON CAST(date_column AS DATE) < bulletin_date
+	CROSS JOIN vendors
+	CROSS JOIN dose_numbers
 )
 SELECT
-	bulletin_date,
-	fe_vacuna AS dose_date,
-	munis.display_name AS municipality,
-	munis.fips,
-	co_manufacturero AS vendor,
-	nu_dosis AS dose_number,
-	co_manufacturero = 'JSN' OR nu_dosis = 2
+	grid.bulletin_date,
+	grid.dose_date,
+	grid.display_name AS municipality,
+	grid.fips,
+	grid.vendor,
+	grid.dose_number,
+	grid.vendor = 'JSN' OR grid.dose_number = 2
 		AS is_complete,
-	count(*) doses
+	count(vax.downloaded_at) doses,
+	sum(count(vax.downloaded_at)) OVER (
+		PARTITION BY
+			grid.bulletin_date,
+			grid.fips,
+			grid.vendor,
+			grid.dose_number
+		ORDER BY grid.dose_date
+	) AS cumulative_doses
 FROM covid19datos_v2_etl.vacunacion vax
-INNER JOIN downloads
-	USING (downloaded_at)
-LEFT OUTER JOIN covid19datos_v2_sources.casos_city_names munis
-	ON munis.city = vax.co_municipio
+RIGHT OUTER JOIN grid
+	ON grid.city = vax.co_municipio
+	AND grid.dose_date = vax.fe_vacuna
+	AND grid.vendor = vax.co_manufacturero
+	AND grid.dose_number = vax.nu_dosis
+	AND grid.bulletin_date = date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
 GROUP BY
-	bulletin_date,
-	fe_vacuna,
-	nu_dosis,
-	co_manufacturero,
-	munis.display_name,
-	munis.fips
+	grid.bulletin_date,
+	grid.dose_date,
+	grid.display_name,
+	grid.fips,
+	grid.vendor,
+	grid.dose_number
 ORDER BY
-	bulletin_date,
-	fe_vacuna,
-	munis.display_name,
-	vendor,
-	dose_number;
+	grid.bulletin_date,
+	grid.dose_date,
+	grid.display_name,
+	grid.vendor,
+	grid.dose_number;
 
 
 --------------------------------------------------------------------------------
@@ -570,30 +603,47 @@ ORDER BY
 --
 -- For VaccinationMap.
 --
-CREATE VIEW covid19datos_v2_etl.municipal_vaccinations AS
+CREATE OR REPLACE VIEW covid19datos_v2_etl.municipal_vaccinations AS
+WITH completed AS (
+	SELECT
+		bulletin_date,
+		fips,
+		sum(doses) FILTER (
+			WHERE is_complete
+		) AS complete
+	FROM covid19datos_v2_etl.vacunacion_cube
+	GROUP BY bulletin_date, fips
+), doses AS (
+	SELECT
+		bulletin_date,
+		fips,
+		min(dose_date) min_dose_date,
+		max(dose_date) max_dose_date,
+		sum(doses) FILTER (
+			WHERE date_add('day', -7, bulletin_date) <= dose_date
+		) AS doses_7days,
+		sum(doses) AS doses_14days
+	FROM covid19datos_v2_etl.vacunacion_cube
+	WHERE date_add('day', -14, bulletin_date) <= dose_date
+	GROUP BY
+		bulletin_date,
+		fips
+)
 SELECT
 	bulletin_date,
-	dose_date,
-	municipality,
+	min_dose_date,
+	max_dose_date,
+	pop.name AS municipality,
 	fips,
 	popest2019,
-	sum(doses) AS doses,
-	sum(sum(doses) FILTER (
-		WHERE is_complete
-	)) OVER (
-		PARTITION BY bulletin_date, municipality
-		ORDER BY dose_date
-	) AS complete
-FROM covid19datos_v2_etl.vacunacion_agg
-LEFT OUTER JOIN covid19datos_v2_sources.population_estimates_2019
+	doses_7days,
+	doses_14days,
+	complete
+FROM completed
+INNER JOIN doses
+	USING (bulletin_date, fips)
+LEFT OUTER JOIN covid19datos_v2_sources.population_estimates_2019 pop
 	USING (fips)
-GROUP BY
-	bulletin_date,
-	dose_date,
-	municipality,
-	fips,
-	popest2019
 ORDER BY
 	bulletin_date DESC,
-	dose_date DESC,
 	municipality;
