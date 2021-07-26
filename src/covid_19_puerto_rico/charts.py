@@ -516,7 +516,10 @@ class Municipal(AbstractChart):
         ).transform_filter(
             alt.datum.sample_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
         ).mark_rect().encode(
-            x=alt.X('sample_date:T', title='Fecha de muestra', timeUnit='yearmonthdate'),
+            x=alt.X('sample_date:T', title='Fecha de muestra',
+                    timeUnit='yearmonthdate', axis=alt.Axis(labelFontSize=10)),
+            y=alt.Y('municipality:N', title=None,
+                    axis=alt.Axis(tickBand='extent', labelFontSize=10)),
             color=alt.Color('mean_cases_1m:Q', title='Casos diarios por millón',
                             sort='descending', scale=alt.Scale(scheme='spectral', type='sqrt'),
                             legend=alt.Legend(orient='top', gradientLength=WIDTH,
@@ -529,16 +532,7 @@ class Municipal(AbstractChart):
                      alt.Tooltip('mean_cases:Q', format=',.1f', title='Casos diarios (prom. 7)'),
                      alt.Tooltip('mean_cases_1m:Q', format=',d', title='Casos por millón (prom. 7)')]
         ).properties(
-            width=WIDTH, height=24
-        ).facet(
-            row=alt.Row('municipality:N', title=None,
-                        header=alt.Header(
-                            labelAngle=0,
-                            labelFontSize=10,
-                            labelAlign='left',
-                            labelBaseline='top')),
-        ).configure_facet(
-            spacing=0
+            width=WIDTH, height=1200
         )
 
     def fetch_data(self, connection, bulletin_dates):
