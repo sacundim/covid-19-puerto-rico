@@ -298,8 +298,8 @@ class CurrentDeltas(AbstractChart):
         )
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('daily_deltas', self.metadata,
-                                 schema='products', autoload=True)
+        table = sqlalchemy.Table('bulletin_cases', self.metadata,
+                                 schema='covid19datos_v2_etl', autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.datum_date,
                         table.c.delta_confirmed_cases,
@@ -357,8 +357,8 @@ class DailyDeltas(AbstractChart):
         )
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('daily_deltas', self.metadata,
-                                 schema='products', autoload=True)
+        table = sqlalchemy.Table('bulletin_cases', self.metadata,
+                                 schema='covid19datos_v2_etl', autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.datum_date,
                         table.c.delta_confirmed_cases,
@@ -474,27 +474,16 @@ class WeekdayBias(AbstractChart):
         )
 
     def fetch_data(self, connection, bulletin_dates):
-        query = text("""SELECT 
-	ba.bulletin_date,
-	ba.datum_date,
-	ba.delta_confirmed_cases,
-	ba.delta_probable_cases,
-	ba.delta_deaths
-FROM bitemporal_agg ba 
-WHERE ba.datum_date >= ba.bulletin_date - INTERVAL '14' DAY
-AND ba.bulletin_date > (
-	SELECT min(bulletin_date)
-	FROM bitemporal_agg
-	WHERE delta_confirmed_cases IS NOT NULL
-	AND delta_probable_cases IS NOT NULL
-	AND delta_deaths IS NOT NULL)
-ORDER BY bulletin_date, datum_date""")
+        table = sqlalchemy.Table('weekday_bias', self.metadata,
+                                 schema='covid19datos_v2_etl', autoload=True)
+        query = select([table.c.bulletin_date,
+                        table.c.datum_date,
+                        table.c.delta_confirmed_cases.label('Confirmados'),
+                        table.c.delta_probable_cases.label('Probables'),
+                        table.c.delta_deaths.label('Muertes')])\
+            .where(and_(min(bulletin_dates) - datetime.timedelta(days=22) <= table.c.bulletin_date,
+                        table.c.bulletin_date <= max(bulletin_dates)))
         df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
-        df = df.rename(columns={
-            'delta_confirmed_cases': 'Confirmados',
-            'delta_probable_cases': 'Probables',
-            'delta_deaths': 'Muertes'
-        })
         return pd.melt(df, ['bulletin_date', 'datum_date']).dropna()
 
     def filter_data(self, df, bulletin_date):
@@ -509,77 +498,54 @@ ORDER BY bulletin_date, datum_date""")
 
 
 class Municipal(AbstractChart):
-    REDS = ('#fad1bd', '#ea9178', '#c74643')
-    GRAYS = ('#dadada', '#ababab', '#717171')
-    DOMAIN=[0, 6]
-
     def make_chart(self, df, bulletin_date):
-        base = alt.Chart(df).transform_impute(
-            impute='new_cases',
-            groupby=['Municipio'],
-            key='bulletin_date',
+        WIDTH = 525
+        return alt.Chart(df).transform_calculate(
+            new_cases_1m='1e6 * datum.new_cases / datum.popest2019'
+        ).transform_impute(
+            impute='new_cases_1m',
+            groupby=['bulletin_date', 'municipality'],
+            key='sample_date',
             value=0
-        ).mark_area(interpolate='monotone', clip=True).encode(
-            x=alt.X('bulletin_date:T', title='Fecha de boletín',
-                    axis=alt.Axis(format='%d/%m')),
-            y=alt.Y('new_cases:Q', title=None, axis=None,
-                    scale=alt.Scale(domain=self.DOMAIN)),
-            color=alt.value(self.REDS[0]),
-            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
-                     alt.Tooltip('Municipio:N'),
-                     alt.Tooltip('new_cases:Q', title='Casos nuevos')]
-        )
-
-        def make_band(variable, color, calculate):
-            return base.transform_calculate(
-                as_=variable, calculate=calculate
-            ).encode(
-                y=alt.Y(f'{variable}:Q'),
-                color=alt.value(color)
-            )
-
-        one_above = make_band('one_above', self.REDS[1],
-                              alt.datum.new_cases - self.DOMAIN[1])
-        two_above = make_band('two_above', self.REDS[2],
-                              alt.datum.new_cases - 2 * self.DOMAIN[1])
-        negative = make_band('negative', self.GRAYS[0], -alt.datum.new_cases)
-        one_below = make_band('one_below', self.GRAYS[1],
-                              -alt.datum.new_cases - self.DOMAIN[1])
-        two_below = make_band('two_below', self.GRAYS[2],
-                              -alt.datum.new_cases - 2 * self.DOMAIN[1])
-
-        return (base + one_above + two_above
-                + negative + one_below + two_below).properties(
-            width=525, height=24
-        ).facet(
-            row=alt.Row('Municipio:N', title=None,
-                        header=alt.Header(
-                            labelAngle=0,
-                            labelFontSize=10,
-                            labelAlign='left',
-                            labelBaseline='top')),
-        ).configure_facet(
-            spacing=0
+        ).transform_window(
+            groupby=['bulletin_date', 'municipality'],
+            sort=[{'field': 'sample_date'}],
+            frame=[-6, 0],
+            mean_cases='mean(new_cases)',
+            mean_cases_1m='mean(new_cases_1m)'
+        ).transform_filter(
+            alt.datum.sample_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
+        ).mark_rect().encode(
+            x=alt.X('sample_date:T', title='Fecha de muestra',
+                    timeUnit='yearmonthdate', axis=alt.Axis(labelFontSize=10)),
+            y=alt.Y('municipality:N', title=None,
+                    axis=alt.Axis(tickBand='extent', labelFontSize=10)),
+            color=alt.Color('mean_cases_1m:Q', title='Casos diarios por millón',
+                            sort='descending', scale=alt.Scale(scheme='spectral', type='sqrt'),
+                            legend=alt.Legend(orient='top', gradientLength=WIDTH,
+                                              labelOverlap=True, labelSeparation=5)),
+            tooltip=[alt.Tooltip('bulletin_date:T', title='Datos hasta'),
+                     alt.Tooltip('sample_date:T', title='Fecha de muestra'),
+                     alt.Tooltip('municipality:N', title='Municipio'),
+                     alt.Tooltip('popest2019:Q', format=',d', title='Population'),
+                     alt.Tooltip('new_cases:Q', format=',d', title='Casos crudos'),
+                     alt.Tooltip('mean_cases:Q', format=',.1f', title='Casos diarios (prom. 7)'),
+                     alt.Tooltip('mean_cases_1m:Q', format=',d', title='Casos por millón (prom. 7)')]
+        ).properties(
+            width=WIDTH, height=1200
         )
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_agg', self.metadata, autoload=True)
+        table = sqlalchemy.Table('cases_municipal_agg', self.metadata,
+                                 schema='covid19datos_v2_etl', autoload=True)
         query = select([table.c.bulletin_date,
+                        table.c.sample_date,
                         table.c.municipality,
+                        table.c.popest2019,
                         table.c.new_cases])\
-            .where(and_(table.c.municipality.notin_(['Total']),
-                        min(bulletin_dates) - datetime.timedelta(days=35) <= table.c.bulletin_date,
-                        table.c.bulletin_date <= max(bulletin_dates)))
-        df = pd.read_sql_query(query, connection,
-                               parse_dates=["bulletin_date"])
-        return df.rename(columns={
-            'municipality': 'Municipio'
-        })
-
-    def filter_data(self, df, bulletin_date):
-        since = pd.to_datetime(bulletin_date - datetime.timedelta(days=35))
-        until = pd.to_datetime(bulletin_date)
-        return df.loc[(since <= df['bulletin_date']) & (df['bulletin_date'] <= until)]
+            .where(and_(min(bulletin_dates) - datetime.timedelta(days=57) <= table.c.sample_date,
+                        table.c.sample_date <= max(bulletin_dates)))
+        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'sample_date'])
 
 
 class MunicipalMap(AbstractChart):
@@ -606,18 +572,18 @@ class MunicipalMap(AbstractChart):
                                       # https://github.com/vega/vega-lite/issues/6544
                                       domain=alt.DomainUnionWith(unionWith=[0])),
                       legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
-                                        title='Casos diarios (por 100k de población, promedio 7 días)',
+                                        title='Casos diarios (por 100k de población, promedio 14 días)',
                                         offset=-15, labelSeparation=10,
                                         format=',~r', gradientLength=self.WIDTH)))
 
     def make_trend_chart(self, df):
         return self.make_subchart(
             df,
-            alt.Color('weekly_trend', type='quantitative', sort='descending',
-                      scale=alt.Scale(type='sqrt', scheme='redgrey',
-                                      domain=[-1.0, 5.0], domainMid=0.0, clamp=True),
+            alt.Color('trend:Q', type='quantitative', sort='descending',
+                      scale=alt.Scale(type='symlog', scheme='redgrey',
+                                      domain=[-1.0, 10.0], domainMid=0.0, clamp=True),
                       legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
-                                        title='Cambio semanal (7 días más recientes vs. 7 anteriores)',
+                                        title='Cambio (14 días más recientes vs. 14 anteriores)',
                                         offset=-15, labelSeparation=10,
                                         format='+,.0%', gradientLength=self.WIDTH)))
 
@@ -627,22 +593,19 @@ class MunicipalMap(AbstractChart):
             lookup='municipality',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
         ).transform_calculate(
-            daily_cases=alt.datum.weekly_cases / 7.0,
-            daily_cases_100k=alt.datum.weekly_cases_100k / 7.0
+            daily_cases=alt.datum.new_14day_cases / 14.0,
+            daily_cases_100k=((alt.datum.new_14day_cases * 1e5) / alt.datum.popest2019) / 14.0,
+            trend='(datum.new_14day_cases / if(datum.previous_14day_cases == 0, 1, datum.previous_14day_cases)) - 1.0'
         ).mark_geoshape().encode(
             color=color,
             tooltip=[alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha de boletín'),
                      alt.Tooltip(field='municipality', type='nominal', title='Municipio'),
-                     alt.Tooltip(field='popest2019', type='quantitative', format=',d',
-                                 title='Población'),
-                     alt.Tooltip(field='weekly_cases', type='quantitative', format=',d',
-                                 title='Casos (suma 7 días)'),
+                     alt.Tooltip(field='popest2019', type='quantitative', format=',d', title='Población'),
                      alt.Tooltip(field='daily_cases', type='quantitative', format=',.1f',
-                                 title='Casos (prom. 7 días)'),
+                                 title='Casos (prom. 14 días)'),
                      alt.Tooltip(field='daily_cases_100k', type='quantitative', format=',.1f',
-                                 title='Casos/100k (prom. 7 días)'),
-                     alt.Tooltip(field='weekly_trend', type='quantitative', format='+,.0%',
-                                 title='Cambio semanal')]
+                                 title='Casos/100k (prom. 14 días)'),
+                     alt.Tooltip(field='trend', type='quantitative', format='+,.0%', title='Cambio')]
         ).properties(
             width=self.WIDTH,
             height=250
@@ -655,16 +618,14 @@ class MunicipalMap(AbstractChart):
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('municipal_map', self.metadata,
-                                 schema='products', autoload=True)
+                                 schema='covid19datos_v2_etl', autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.municipality,
             table.c.popest2019,
-            (table.c.new_7day_cases).label('weekly_cases'),
-            (1e5 * table.c.new_7day_cases / table.c.popest2019).label('weekly_cases_100k'),
-            (table.c.pct_increase_7day - 1.0).label('weekly_trend')
-        ]).where(and_(table.c.municipality.notin_(['Total', 'No disponible', 'Otro lugar fuera de PR']),
-                      min(bulletin_dates) <= table.c.bulletin_date,
+            table.c.new_14day_cases,
+            table.c.previous_14day_cases
+        ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
                       table.c.bulletin_date <= max(bulletin_dates)))
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
 
@@ -808,7 +769,7 @@ class ICUsByRegion(AbstractChart):
 class LatenessTiers(AbstractChart):
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('lateness_tiers', self.metadata,
-                                 schema='products', autoload=True)
+                                 schema='covid19datos_v2_etl', autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.tier,

@@ -799,8 +799,9 @@ class RecentHospitalizations(AbstractMolecularChart):
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('prdoh_hospitalizations', self.metadata,
-                                 schema='covid_pr_etl', autoload=True)
+                                 schema='covid19datos_v2_etl', autoload=True)
         query = select([
+            table.c.bulletin_date,
             table.c.date.label('Fecha'),
             table.c.age.label('Edad'),
             table.c.resource.label('Tipo'),
@@ -808,15 +809,9 @@ class RecentHospitalizations(AbstractMolecularChart):
             table.c.covid.label('COVID'),
             table.c.nocovid.label('No COVID'),
             table.c.disp.label('Disponibles')
-        ]).where(and_(min(bulletin_dates) - datetime.timedelta(days=41) < table.c.date,
-                      table.c.date <= max(bulletin_dates) + datetime.timedelta(days=1)))
-        df = pd.read_sql_query(query, connection, parse_dates=['Fecha'])
-        return pd.melt(df, ['Fecha', 'Edad', 'Tipo', 'Total'])
-
-    def filter_data(self, df, bulletin_date):
-        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=42))
-        until_date = pd.to_datetime(bulletin_date + datetime.timedelta(days=1))
-        return df.loc[(df['Fecha'] >= since_date) & (df['Fecha'] <= until_date)]
+        ])
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'Fecha'])
+        return pd.melt(df, ['bulletin_date', 'Fecha', 'Edad', 'Tipo', 'Total'])
 
     def make_chart(self, df, bulletin_date):
         area = alt.Chart(df).transform_calculate(
@@ -934,65 +929,34 @@ class VaccinationMap(AbstractMolecularChart):
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('municipal_vaccinations', self.metadata,
-                                 schema='covid_pr_etl', autoload=True)
+                                 schema='covid19datos_v2_etl', autoload=True)
         query = select([
-            table.c.local_date,
-            table.c.municipio,
-            table.c.fips_code,
+            table.c.bulletin_date,
+            table.c.min_dose_date,
+            table.c.max_dose_date,
+            table.c.municipality.label('municipio'),
             table.c.popest2019,
-            table.c.salud_total_dosis1,
-            table.c.salud_total_dosis1_pct,
-            table.c.salud_dosis1,
-            table.c.salud_total_dosis2,
-            table.c.salud_total_dosis2_pct,
-            table.c.salud_dosis2,
-            table.c.cdc_series_complete_yes,
-            table.c.cdc_series_complete_pop_pct,
-            table.c.cdc_completeness_pct,
-            table.c.cdc_series_complete_65plus,
-            table.c.cdc_series_complete_65pluspop_pct,
-            table.c.cdc_series_complete_18plus,
-            table.c.cdc_series_complete_18pluspop_pct,
-            table.c.cdc_census2019_12pluspop,
-            table.c.cdc_series_complete_12plus,
-            table.c.cdc_series_complete_12pluspop_pct,
+            table.c.doses_14days,
+            table.c.complete
         ])
-        df = pd.read_sql_query(query, connection, parse_dates=["local_date"])
-
-        # We really just do this to undo Pandas' null int to float conversion. See:
-        #
-        #     https://pandas.pydata.org/pandas-docs/stable/user_guide/integer_na.html
-        for col in ['salud_dosis1',
-                    'salud_dosis2',
-                    'cdc_series_complete_12plus',
-                    'cdc_census2019_12pluspop',
-                    'cdc_series_complete_18plus',
-                    'cdc_series_complete_65plus',
-                    'cdc_series_complete_yes']:
-            df[col] = df[col].astype('Int64')
-
-        self.save_csv(df)
-        return df
-
-    def filter_data(self, df, bulletin_date):
-        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=7))
-        until_date = pd.to_datetime(bulletin_date)
-        return df.loc[(since_date < df['local_date'])
-                      & (df['local_date'] <= until_date)]
+        return pd.read_sql_query(query, connection,
+                                 parse_dates=['bulletin_date', 'min_dose_date', 'max_dose_date'])
 
 
     def make_chart(self, df, bulletin_date):
         dosis2 = self.make_subchart(
-            df, bulletin_date, 'salud_total_dosis2', 'Personas con régimen completo'
+            df, bulletin_date, 'complete', 'Personas con régimen completo'
         ).properties(
             width=self.WIDTH,
             height=self.HEIGHT
         )
+
+        # TODO: Reinclude the rate map
         rate = self.make_daily_rate_chart(df).properties(
             width=self.WIDTH,
             height=self.HEIGHT
         )
-        return alt.vconcat(dosis2, rate).configure_view(
+        return alt.vconcat(dosis2).configure_view(
             strokeWidth=0
         ).configure_concat(
             spacing=40
@@ -1003,9 +967,7 @@ class VaccinationMap(AbstractMolecularChart):
     def make_subchart(self, df, bulletin_date, variable, title):
         DOMAIN_MID = 0.775
 
-        return alt.Chart(df).transform_filter(
-            alt.datum.local_date == util.altair_date_expr(bulletin_date)
-        ).transform_calculate(
+        return alt.Chart(df).transform_calculate(
             pct=alt.datum[variable] / alt.datum.popest2019
         ).transform_lookup(
             lookup='municipio',
@@ -1018,7 +980,7 @@ class VaccinationMap(AbstractMolecularChart):
                             legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                               title=title, labelSeparation=10, format='.0%',
                                               offset=-15, gradientLength=self.WIDTH - 10)),
-            tooltip=[alt.Tooltip(field='local_date', type='temporal', title='Fecha'),
+            tooltip=[alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
                      alt.Tooltip(field='popest2019', type='quantitative', format=',d', title='Población'),
                      alt.Tooltip(field=variable, title=title, type='quantitative', format=',d'),
@@ -1027,15 +989,8 @@ class VaccinationMap(AbstractMolecularChart):
 
     def make_daily_rate_chart(self, df):
         return alt.Chart(df).transform_calculate(
-            dosis=alt.datum.salud_dosis1 + alt.datum.salud_dosis2,
-            dosis_per_100=100.0 * alt.datum.dosis / alt.datum.popest2019
-        ).transform_aggregate(
-            groupby=['municipio'],
-            min_local_date='min(local_date)',
-            max_local_date='max(local_date)',
-            popest2019='mean(popest2019)',
-            mean_dosis='mean(dosis)',
-            mean_dosis_per_100='mean(dosis_per_100)'
+            mean_dosis=alt.datum.doses_14days / 14.0,
+            mean_dosis_per_100=alt.datum.doses_14days * 100.0 / 14.0 / alt.datum.popest2019
         ).transform_lookup(
             lookup='municipio',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
@@ -1045,15 +1000,15 @@ class VaccinationMap(AbstractMolecularChart):
                             legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                               labelSeparation=10, offset=-15,
                                               gradientLength=self.WIDTH - 10,
-                                              title='Dosis diarias por 100 habitantes, promedio 7 días')),
-            tooltip=[alt.Tooltip(field='min_local_date', type='temporal', title='Desde'),
-                     alt.Tooltip(field='max_local_date', type='temporal', title='Hasta'),
+                                              title='Dosis diarias por 100 habitantes, promedio 14 días')),
+            tooltip=[alt.Tooltip(field='min_dose_date', type='temporal', title='Desde'),
+                     alt.Tooltip(field='max_dose_date', type='temporal', title='Hasta'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
                      alt.Tooltip(field='popest2019', type='quantitative', format=',d', title='Población'),
                      alt.Tooltip(field='mean_dosis', type='quantitative', format=',d',
-                                 title='Dosis diarias (promedio 7 días)'),
+                                 title='Dosis diarias (promedio 14 días)'),
                      alt.Tooltip(field='mean_dosis_per_100', type='quantitative', format=',.1f',
-                                 title='Dosis diarias por 100 habitantes (promedio 7 días)')]
+                                 title='Dosis diarias por 100 habitantes (promedio 14 días)')]
         )
 
 
@@ -1177,7 +1132,7 @@ class EncounterLag(AbstractMolecularChart):
             table.c.delta_molecular.label('Pruebas_Moleculares'),
             table.c.delta_molecular_cases.label('Casos_Moleculares')
         ]).where(
-            and_(min(bulletin_dates) - datetime.timedelta(days=42) <= table.c.bulletin_date,
+            and_(min(bulletin_dates) - datetime.timedelta(days=49) <= table.c.bulletin_date,
                  table.c.bulletin_date <= max(bulletin_dates))
         )
         df1 = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])

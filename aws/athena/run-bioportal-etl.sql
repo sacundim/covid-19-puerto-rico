@@ -3,6 +3,8 @@
 --
 -- Rebuild the whole schema from scratch from the raw CSV tables.
 --
+-- Prerequisite: run-covid19datos-v2-etl.sql
+--
 
 DROP DATABASE IF EXISTS covid_pr_etl CASCADE;
 
@@ -15,62 +17,6 @@ LOCATION 's3://covid-19-puerto-rico-athena/';
 --
 -- The big core tables with disaggregated clean data.
 --
-
---
--- The bitemporal daily bulletin cases table, with data
--- from the PRDoH daily PDF report
---
-DROP TABLE IF EXISTS covid_pr_etl.bulletin_cases;
-CREATE TABLE covid_pr_etl.bulletin_cases WITH (
-    format = 'PARQUET',
-    bucketed_by = ARRAY['bulletin_date'],
-    bucket_count = 1
-) AS
-WITH cleaned AS (
-    SELECT
-        from_iso8601_date(bulletin_date) AS bulletin_date,
-        from_iso8601_date(datum_date) AS datum_date,
-        CAST(nullif(confirmed_cases, '') AS INTEGER) AS confirmed_cases,
-        CAST(nullif(probable_cases, '') AS INTEGER) AS probable_cases,
-        CAST(nullif(deaths, '') AS INTEGER) AS deaths
-    FROM covid_pr_sources.bulletin_cases_csv
-)
-SELECT
-    bulletin_date,
-    datum_date,
-	date_diff('day', datum_date, bulletin_date)
-		AS age,
-    confirmed_cases,
-    sum(confirmed_cases) OVER (
-        PARTITION BY bulletin_date
-        ORDER BY datum_date
-    ) AS cumulative_confirmed_cases,
-    COALESCE(confirmed_cases, 0)
-        - COALESCE(lag(confirmed_cases) OVER (
-            PARTITION BY datum_date
-            ORDER BY bulletin_date
-        ), 0) AS delta_confirmed_cases,
-    probable_cases,
-    sum(probable_cases) OVER (
-        PARTITION BY bulletin_date
-        ORDER BY datum_date
-    ) AS cumulative_probable_cases,
-    COALESCE(probable_cases, 0)
-        - COALESCE(lag(probable_cases) OVER (
-            PARTITION BY datum_date
-            ORDER BY bulletin_date
-        ), 0) AS delta_probable_cases,
-    deaths,
-    sum(deaths) OVER (
-        PARTITION BY bulletin_date
-        ORDER BY datum_date
-    ) AS cumulative_deaths,
-    COALESCE(deaths, 0)
-        - COALESCE(lag(deaths) OVER (
-            PARTITION BY datum_date
-            ORDER BY bulletin_date
-        ), 0) AS delta_deaths
-FROM cleaned;
 
 
 --
@@ -1006,7 +952,7 @@ SELECT
 		+ hosp.previous_day_admission_pediatric_covid_suspected
 		AS hospital_admissions
 FROM covid_pr_etl.bioportal_encounters_agg encounters
-LEFT OUTER JOIN covid_pr_etl.bulletin_cases bul
+LEFT OUTER JOIN covid19datos_v2_etl.bulletin_cases bul
 	ON bul.bulletin_date = encounters.bulletin_date
 	AND bul.datum_date = encounters.collected_date
 LEFT OUTER JOIN covid_pr_etl.hhs_hospitals hosp
@@ -1023,7 +969,7 @@ SELECT
 	cumulative_confirmed_cases
 	    AS cumulative_cases
 FROM covid_pr_etl.bioportal_collected_agg tests
-INNER JOIN covid_pr_etl.bulletin_cases cases
+INNER JOIN covid19datos_v2_etl.bulletin_cases cases
 	ON cases.bulletin_date = tests.bulletin_date
 	AND cases.datum_date = tests.collected_date
 WHERE tests.bulletin_date > DATE '2020-04-24'
@@ -1067,7 +1013,7 @@ SELECT
 		THEN cases.confirmed_cases
 	END AS cases
 FROM covid_pr_etl.bioportal_collected_agg bioportal
-INNER JOIN covid_pr_etl.bulletin_cases cases
+INNER JOIN covid19datos_v2_etl.bulletin_cases cases
 	ON cases.bulletin_date = bioportal.bulletin_date
 	AND cases.datum_date = bioportal.collected_date
 WHERE bioportal.test_type IN ('Molecular', 'Antígeno')
@@ -1146,20 +1092,31 @@ SELECT
     	PARTITION BY encounters.bulletin_date
     	ORDER BY encounters.collected_date
     ) cumulative_cases,
-    hosp.camas_adultos_covid
-    	+ camas_ped_covid
-    	AS inpatient_beds_used_covid,
+	hosp.previous_day_admission_adult_covid_confirmed
+		+ hosp.previous_day_admission_adult_covid_suspected
+		+ hosp.previous_day_admission_pediatric_covid_confirmed
+		+ hosp.previous_day_admission_pediatric_covid_suspected
+		AS admissions,
+	sum(hosp.previous_day_admission_adult_covid_confirmed
+		+ hosp.previous_day_admission_adult_covid_suspected
+		+ hosp.previous_day_admission_pediatric_covid_confirmed
+		+ hosp.previous_day_admission_pediatric_covid_suspected) OVER (
+    	PARTITION BY encounters.bulletin_date
+    	ORDER BY encounters.collected_date
+    ) AS cumulative_admissions,
+    hosp.inpatient_beds_used_covid,
 	bul.deaths AS deaths,
     sum(bul.deaths) OVER (
     	PARTITION BY encounters.bulletin_date
     	ORDER BY encounters.collected_date
     ) cumulative_deaths
 FROM covid_pr_etl.bioportal_encounters_agg encounters
-LEFT OUTER JOIN covid_pr_etl.bulletin_cases bul
+LEFT OUTER JOIN covid19datos_v2_etl.bulletin_cases bul
 	ON bul.bulletin_date = encounters.bulletin_date
 	AND bul.datum_date = encounters.collected_date
-LEFT OUTER JOIN covid19datos_sources.hospitales_daily hosp
-	ON encounters.collected_date = hosp.fe_hospitalario
+LEFT OUTER JOIN covid_pr_etl.hhs_hospitals hosp
+	ON encounters.collected_date = hosp.date
+	AND hosp.date >= DATE '2020-07-28'
 -- We want 42 days of data, so we fetch 56 because we need to
 -- calculate a 14-day average 42 days ago:
 WHERE encounters.collected_date >= date_add('day', -56, encounters.bulletin_date)
@@ -1179,7 +1136,7 @@ WITH deaths AS (
 			PARTITION BY bulletin_date
 			ORDER BY datum_date
 		) AS cumulative_deaths
-	FROM covid_pr_etl.bulletin_cases
+	FROM covid19datos_v2_etl.bulletin_cases
 )
 SELECT
 	cases.bulletin_date,
@@ -1242,52 +1199,6 @@ INNER JOIN cutoff
 	-- Older HHS data is kinda messed up
 	ON date >= cutoff
 ORDER BY date DESC;
-
-
---
--- Hospital bed availabilty and ICU occupancy, using PRDoH data
---
-CREATE OR REPLACE VIEW covid_pr_etl.prdoh_hospitalizations AS
-SELECT
-	fe_hospitalario date,
-	'Adultos' age,
-	'Camas' resource,
-	camas_adultos_total total,
-	camas_adultos_covid covid,
-	camas_adultos_nocovid nocovid,
-	camas_adultos_disp disp
-FROM covid19datos_sources.hospitales_daily
-UNION ALL
-SELECT
-	fe_hospitalario date,
-	'Adultos' age,
-	'UCI' resource,
-	camas_icu_total total,
-	camas_icu_covid covid,
-	camas_icu_nocovid nocovid,
-	camas_icu_disp disp
-FROM covid19datos_sources.hospitales_daily
-UNION ALL
-SELECT
-	fe_hospitalario date,
-	'Pediátricos' age,
-	'Camas' resource,
-	camas_ped_total total,
-	camas_ped_covid covid,
-	camas_ped_nocovid nocovid,
-	camas_ped_disp disp
-FROM covid19datos_sources.hospitales_daily
-UNION ALL
-SELECT
-	fe_hospitalario date,
-	'Pediátricos' age,
-	'UCI' resource,
-	camas_picu_total total,
-	camas_picu_covid covid,
-	camas_picu_nocovid nocovid,
-	camas_picu_disp disp
-FROM covid19datos_sources.hospitales_daily
-ORDER BY date DESC, age, resource;
 
 
 --

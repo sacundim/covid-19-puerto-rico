@@ -21,11 +21,6 @@
 <div class="section">
     <h1>COVID-19 en Puerto Rico, análisis {{ bulletin_date }}</h1>
 
-    <p><b>Advertencia:</b> Favor notar que esta página usa las fechas que aparecen
-        a la cabeza de los boletines del Departamento de Salud, pero estos suelen
-        publicarse la mañana del próximo día, y muchas bases de datos y fuentes
-        periodísticas reportan los mismos datos a base de la fecha de publicación.</p>
-
     <ul>
         <li><a href="#RecentCases_section">Pruebas, casos y muertes recientes</a></li>
         <li><a href="#RecentHospitalizations_section">Disponibilidad hospitalaria</a></li>
@@ -47,8 +42,6 @@
 
         <li><a href="#CurrentDeltas_section">Cambio entre boletín actual y anterior</a></li>
         <li><a href="#DailyDeltas_section">Cambios entre boletines recientes</a></li>
-        <li><a href="#LatenessDaily_section">Rezago de datos de cada boletín</a></li>
-        <li><a href="#Lateness7Day_section">Tendencia de rezago de datos</a></li>
         <li><a href="#LatenessTiers_section">Rezago de casos por renglones</a></li>
         <li><a href="#WeekdayBias_section">Tendencias por día de semana</a></li>
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
@@ -56,7 +49,7 @@
         <li><a href="#ConsecutiveBulletinMismatch_section">Descuadre de encabezado de boletín</a></li>
         <li><a href="#BulletinChartMismatch_section">Descuadre de boletín y gráficas</a></li>
 
-        <li><a href="#VaccinationMap_download_section">Descarga de datos de vacunas</a></li>
+        <li hidden><a href="#VaccinationMap_download_section">Descarga de datos de vacunas</a></li>
         <li><a href="#Revisions_section">Revisiones</a></li>
         <li><a href="#Terminology_section">Terminología</a></li>
         <li><a href="#Sources_section">Datos fuente para {{ bulletin_date }}</a></li>
@@ -94,9 +87,7 @@
 
         <dt>Camas ocupadas por COVID</dt>
         <dd>Número de camas hospitalarias corrientemente ocupadas por pacientes con COVID-19
-            confirmado o sospechado, según nuestras capturas de los datos de
-            <a href="https://covid19datos.salud.gov.pr/">la página
-                <code>covid19datos.salud.gov.pr</code></a>.</dd>
+            confirmado o sospechado.</dd>
 
         <dt>Muertes</dt>
         <dd>Por fecha de deceso.</dd>
@@ -280,8 +271,8 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Porcentaje de la población de cada municipio con régimen completo de vacuna, y promedio
-        de dosis diarias registradas los 7 días más recientes.  Fuentes de datos:</p>
+    <p>Porcentaje de la población de cada municipio con régimen completo de vacuna. <!-- y promedio
+        de dosis diarias reportadas como administradas los 14 días más recientes. --> Fuentes de datos:</p>
 
     <ul>
         <li>Vacunas: <a href="https://covid19datos.salud.gov.pr/">la página de datos de COVID-19
@@ -310,9 +301,9 @@
         queda claro que sean más certeros que los estimados del 2019. </p>
 
 
-    <h3>Descarga de datos</h3>
+    <h3 hidden>Descarga de datos</h3>
 
-    <p>Los datos que capturo y uso para estos mapas están <a href="../csv/VaccinationMap.csv">disponibles
+    <p hidden>Los datos que capturo y uso para estos mapas están <a href="../csv/VaccinationMap.csv">disponibles
         para descargar como archivo CSV</a>.  Más abajo en esta página hay una
         <a href="#VaccinationMap_download_section">sección documentando este archivo de datos</a>.</p>
 
@@ -985,38 +976,12 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Una gráfica que muestra, para los dos boletines más recientes, los
-        resultados de tomar los números de sus gráficas como esta:</p>
-
-    <figure>
-        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_confirmed.jpg">
-        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
-    </figure>
-
-    <p>...y restarle sus contrapartes del boletín anterior:</p>
-
-    <figure>
-        <img class="figure_chart" src="../source_material/{{ previous_date_month }}/{{ previous_date }}/{{ previous_date }}_confirmed.jpg">
-        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
-    </figure>
-
-    <p>Esto nos da un desglose aproximado, para el nuevo boletín, de a qué fecha se le
-        atribuyeron los casos nuevos que reporta este.</p>
-
-    <p>Hay que notar que frecuentemente se ven fechas que salen números negativos.
-        La información que brinda el Departamento de Salud de Puerto Rico no deja claro
-        qué motiva esto en cada caso; algunas posibilidades podrían ser:</p>
-
-    <ul>
-        <li>Casos probables que luego se recibió resultado confirmatoria (positiva o negativa);</li>
-        <li>Llegada de resultado positivo más antiguo para la misma persona;</li>
-        <li>Corrección de errores clericales en los récords.</li>
-    </ul>
-
-    <p>La existencia de números negativos también complica la interpretación de este
-        modo: las fechas que dan positivos no sabemos si hubo resta de casos.  Una
-        fecha que diga que un boletín la subió por siete casos bien pudiera ser que
-        se registraron 8 casos nuevos y se restó uno.</p>
+    <p>Sumas y restas efectuadas a conteos de casos por fecha de muestra, según datos
+        diarios publicados por el Departamento de Salud de Puerto Rico.  Hasta el
+        21 de julio del 2021 usamos nuestra captura a mano del
+        <a href="http://www.salud.gov.pr/Estadisticas-Registros-y-Publicaciones/Pages/COVID-19.aspx">boletín
+            diario impreso (PDF) de casos</a>; del 22 de julio del 2021 en adelante los
+        datos son de la página <code><a href="https://covid19datos.salud.gov.pr/">covid19datos.salud.gov.pr</a></code></p>.
 </div>
 
 
@@ -1032,62 +997,6 @@
 
     <p>El mismo análisis que la gráfica anterior, pero para los 14 boletines
         más recientes, cosa que require hacer los númeritos bien chiquititos.</p>
-</div>
-
-
-<div class="section" id="LatenessDaily_section">
-    <h1>Rezago de datos de cada boletín</h1>
-
-    <div id="LatenessDaily" class="chart"></div>
-    <script type="text/javascript">
-      embedChart('LatenessDaily', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Un estimado, para los boletines más recientes, de cuánto tiempo
-        atrás en promedio se tomaron las muestras que añade y las muertes
-        que reporta.</p>
-
-    <p>Este estimado se elabora a partir de los datos arriba de los cambios
-        entre boletines consecutivos. Por el asunto de los números negativos
-        en esos datos, no se puede esperar que estos rezagos estimados
-        sean los valores exactos que calcularíamos si tuvieramos mejor datos.</p>
-</div>
-
-
-<div class="section" id="Lateness7Day_section">
-    <h1>Tendencia de rezago de datos</h1>
-
-    <div id="Lateness7Day" class="chart"></div>
-    <script type="text/javascript">
-      embedChart('Lateness7Day', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Un estimado de rezagos similar al anterior, pero en vez de evaluar
-        los casos de cada boletín aparte, se agrupan en ventanas rodantes
-        de siete días.  O sea, la cifra que se reporta para cada fecha de
-        boletín abarca no solo los casos nuevos reportados en ese boletín,
-        sino también los seis días anteriores.</p>
-
-    <p>El ancho de ventana se fijó en siete días para eliminar los ciclos
-        semanales que son evidentes en los datos de fuente, como se aprecia
-        fácil en esta gráfica del boletín:</p>
-
-    <figure>
-        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_confirmed.jpg">
-        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
-    </figure>
-
-    <p>Las fechas como el 18, 19, 25 y 26 de abril, que reportan bien pocos
-        casos, es que son fines de semana.</p>
-
-    <p>Vale añadir que de los ocho puntos que muestran estas líneas, solo el
-        primero y el último son estadísticamente independientes.  Por ejemplo
-        la cifra más reciente y la anterior son calculadas a partir de ventanas
-        de siete días que coinciden en seis de estos.</p>
 </div>
 
 
@@ -1163,12 +1072,13 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Casos confirmados y probables nuevos reportados por municipio, por fecha de reporte
-        en el informe diario de casos del Departamento de Salud de Puerto Rico, visto de
-        dos formas:</p>
+    <p>Casos confirmados y probables nuevos reportados por municipio, por fecha de muestra
+        según descargas diarias del portal <a href="https://covid19datos.salud.gov.pr/">
+            <code>covid19datos.salud.gov.pr</code></a> del Departamento de Salud de Puerto Rico,
+        visto de dos formas:</p>
 
     <ol>
-        <li>Promedio de casos nuevos registrados en los siete informes diarios más recientes,
+        <li>Promedio de casos nuevos por muestras en las siete fechas más recientes,
             ajustados per cápita a la población de cada municipio (según estimados del 2019
             del Censo);</li>
         <li>Comparación de esa cifra con la correspondiente a los siete informes diarios
@@ -1192,37 +1102,20 @@
 
     <h3>Advertencias</h3>
 
-    <p>Contrario a las mejores visualizaciones en esta página, que se hacen con datos del
-        Bioportal del Departamento de Salud de Puerto Rico, esta se hace a partir del
-        informe diario de casos.  Esto significa que estos mapas sufren de estas desventajas:</p>
-
-    <ul>
-        <li>Los datos municipales del informe diario son totales por fecha de actualización
-            de ese informe, y no por fecha de muestra.  Esto quiere decir que casos anunciados
-            a destiempo afectan la precisión de estos mapas.</li>
-        <li>El informe diario siempre esta 1-3 días atrasado respecto a Bioportal.</li>
-    </ul>
+    <p>Estos mapas usan datos por fecha de muestra, que para fechas recientes suelen estar
+        un tanto incompletos.  A la fecha de esta nota (julio del 2021) los datos suelen
+        llegar con bastante velocidad, suficiente que se ha observado durante tanto marzo/abril
+        como julio del 2021 que cuando hay repunte esto es bastante obvio. Aún así optamos por
+        promedios de 14 días en vez de 7 para usar datos un tanto más completos.</p>
 </div>
 
 
 <div class="section" id="Municipal_section">
     <h1>Historial de casos por municipio (fecha de boletín)</h1>
 
-    <p>Historial de números de casos confirmados y probables nuevos para cada municipio en
-        cada una de las 35 fechas más recientes, interpretándose estas como fecha de boletín.
-        Nótese que esto último quiere decir que esta gráfica no nos dice cuándo sucedieron los
-        casos, sino cuándo se añadieron al conteo.</p>
-
-    <p>Esto es una
-        <a href="https://flowingdata.com/2015/07/02/changing-price-of-food-items-and-horizon-graphs/">gráfica
-        de horizonte</a>, que hay que leer un poco al respecto para intepretar. Aquí se ha optado
-        por:</p>
-
-    <ul>
-        <li>Tonos rojos: valores positivos (más intenso, mayor el valor)</li>
-        <li>Tonos grises: valores negativos</li>
-        <li>Bandas de 0-6, 8-12 y 12-18</li>
-    </ul>
+    <p>Promedios móviles de casos confirmados y probables nuevos para cada municipio por millón
+        de habitantes en cada una de las 35 fechas más recientes, interpretándose estas como
+        fecha de muestra.</p>
 
     <div id="Municipal"></div>
     <script type="text/javascript">
@@ -1234,20 +1127,13 @@
 <div class="section" id="ConsecutiveBulletinMismatch_section">
     <h1>Descuadre de encabezado de boletín</h1>
 
-    <div id="ConsecutiveBulletinMismatch" class="chart"></div>
-    <script type="text/javascript" class="chart">
-      embedChart('ConsecutiveBulletinMismatch', bulletin_date);
-    </script>
-
     <h3>¿Qué es esto?</h3>
 
-    <p>Cotejos de cifras reportadas en la primera página de cada boletín. Se compara:</p>
-    <ul>
-        <li>Para casos confirmados y probables, que cuadren el total reportado en el
-            boletín anterior con los casos nuevos, ajustes y total en el corriente;</li>
-        <li>Para las muertes, que cuadren la cifras de confirmadas y probables con
-            la de total.</li>
-    </ul>
+    <p>Antes del 22 de julio del 2021, los datos detallados de COVID-19 en Puerto Rico se
+        publicaban como un reporte PDF diario cuyos datos capturábamos a mano para elaborar
+        esta página.  Este gráfica cotejaba las cifras reportadas en la primera página de
+        cada boletín. Ya no hay boletines diarios así que descontinuamos la gráfica pero
+        retenemos la lista de descuadres constatados.</p>
 
     <h3>Descuadres constatados en los datos de fuente</h3>
     <dl>
@@ -1482,16 +1368,14 @@
 <div class="section" id="BulletinChartMismatch_section">
     <h1>Descuadre de boletín y gráficas</h1>
 
-    <div id="BulletinChartMismatch" class="chart"></div>
-    <script type="text/javascript" class="chart">
-      embedChart('BulletinChartMismatch', bulletin_date);
-    </script>
-
     <h3>¿Qué es esto?</h3>
 
-    <p>Comparación entre los totales de casos acumulados reportados en la primera página
-        de cada boletín y las sumas de los datos por fecha de muestra en las gráficas de
-        este mismo boletín.  Esto es un cotejo de calidad de datos.</p>
+    <p>Antes del 22 de julio del 2021, los datos detallados de COVID-19 en Puerto Rico se
+        publicaban como un reporte PDF diario cuyos datos capturábamos a mano para elaborar
+        esta página.  Aquí había una gráfica que comparaba los totales de casos acumulados
+        reportados en la primera página de cada boletín y las sumas de los datos por fecha de
+        muestra en las gráficas de este mismo boletín.  Ya no hay boletines diarios así que
+        descontinuamos la gráfica pero retenemos la lista de descuadres constatados.</p>
 
     <h3>Descuadres constatados en los datos de fuente</h3>
 
@@ -1717,7 +1601,7 @@
 </div>
 
 
-<div class="section" id="VaccinationMap_download_section">
+<div hidden class="section" id="VaccinationMap_download_section">
     <h1>Descarga de datos de vacunas</h1>
 
     <p>Los datos que capturados de vacunaciones por municipio se pueden descargar de aquí:</p>
@@ -1855,6 +1739,14 @@
 
 <div class="section" id="Revisions_section">
     <h1>Revisiones</h1>
+
+    <h3 id="Revisions_2021-07-25">25 de julio del 2021</h3>
+
+    <p>El Departamento de Salud comenzó a ofrecer, a partir del 22 de julio del 2021,
+        descargas de datos en su mejorado portal <a href="https://covid19datos.salud.gov.pr/"><code>covid19datos.salud.gov.pr</code></a>,
+        y descontinuó los informes impresos (PDF) que publicaba antes.  Esta página ahora
+        empata lo mejor que puede los datos de estas dos fuentes.</p>
+
 
     <h3 id="Revisions_2020-12-02">3 de diciembre del 2020</h3>
 
@@ -2058,57 +1950,5 @@
     <p>Esta página en su momento usó el término "caso probable" en el primer, mal sentido que hizo
         el Departamento de Salud de Puerto Rico, pero luego revisó todo retroactivamente para adaptarse
         a la nueva definición.</p>
-</div>
-
-<div class="section" id="Sources_section">
-    <h1>Datos fuente para {{ bulletin_date }}</h1>
-
-    Estas son las imágenes de los boletines del Departamento de Salud que
-    se usaron para elaborar este análisis.
-
-    <figure>
-        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_announcement.jpg">
-        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
-    </figure>
-
-
-    <h3>Casos únicos confirmados {{ bulletin_date }} (vs. {{ previous_date }})</h3>
-
-    <figure>
-        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_confirmed.jpg">
-        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
-    </figure>
-
-    <figure>
-        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ previous_date }}/{{ previous_date }}_confirmed.jpg">
-        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
-    </figure>
-
-
-    <h3>Casos únicos probables {{ bulletin_date }} (vs. {{ previous_date }})</h3>
-
-    <figure>
-        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_probable.jpg">
-        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
-    </figure>
-
-    <figure>
-        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ previous_date }}/{{ previous_date }}_probable.jpg">
-        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
-    </figure>
-
-
-    <h3>Muertes {{ bulletin_date }} (vs. {{ previous_date }})</h3>
-
-    <figure>
-        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ bulletin_date }}/{{ bulletin_date }}_deaths.jpg">
-        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
-    </figure>
-
-    <figure>
-        <img class="figure_chart" src="../source_material/{{ bulletin_month }}/{{ previous_date }}/{{ previous_date }}_deaths.jpg">
-        <figcaption>Fuente: Departamento de Salud de Puerto Rico</figcaption>
-    </figure>
-
 </div>
 {% endblock %}

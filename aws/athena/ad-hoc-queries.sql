@@ -85,7 +85,7 @@ ORDER BY date DESC;
 --
 WITH bulletins AS (
 	SELECT max(bulletin_date) AS max_bulletin_date
-	FROM covid_pr_etl.bulletin_cases
+	FROM covid19datos_v2_etl.bulletin_cases
 )
 SELECT
 	max_bulletin_date "Datos",
@@ -108,7 +108,7 @@ SELECT
 FROM covid_pr_etl.bioportal_encounters_agg bio
 INNER JOIN bulletins
 	ON bulletins.max_bulletin_date = bio.bulletin_date
-INNER JOIN covid_pr_etl.bulletin_cases bul
+INNER JOIN covid19datos_v2_etl.bulletin_cases bul
 	ON bul.bulletin_date = bio.bulletin_date
 	AND bul.datum_date = bio.collected_date
 ORDER BY bio.collected_date DESC;
