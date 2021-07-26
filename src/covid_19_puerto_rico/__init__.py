@@ -50,6 +50,7 @@ def main():
         #        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
         #        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
 
+        charts.MunicipalMap(athena, args.output_dir, output_formats),
         charts.Municipal(athena, args.output_dir, output_formats),
         molecular.RecentHospitalizations(athena, args.output_dir, output_formats),
         charts.WeekdayBias(athena, args.output_dir, output_formats),
@@ -58,7 +59,6 @@ def main():
         charts.DailyDeltas(athena, args.output_dir, output_formats),
 
         # TODO: Athenify these:
-        # charts.MunicipalMap(postgres, args.output_dir, output_formats),
         charts.ICUsByRegion(postgres, args.output_dir, output_formats),
         charts.ICUsByHospital(postgres, args.output_dir, output_formats),
 

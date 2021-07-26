@@ -572,18 +572,18 @@ class MunicipalMap(AbstractChart):
                                       # https://github.com/vega/vega-lite/issues/6544
                                       domain=alt.DomainUnionWith(unionWith=[0])),
                       legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
-                                        title='Casos diarios (por 100k de población, promedio 7 días)',
+                                        title='Casos diarios (por 100k de población, promedio 14 días)',
                                         offset=-15, labelSeparation=10,
                                         format=',~r', gradientLength=self.WIDTH)))
 
     def make_trend_chart(self, df):
         return self.make_subchart(
             df,
-            alt.Color('weekly_trend', type='quantitative', sort='descending',
-                      scale=alt.Scale(type='sqrt', scheme='redgrey',
-                                      domain=[-1.0, 5.0], domainMid=0.0, clamp=True),
+            alt.Color('trend:Q', type='quantitative', sort='descending',
+                      scale=alt.Scale(type='symlog', scheme='redgrey',
+                                      domain=[-1.0, 10.0], domainMid=0.0, clamp=True),
                       legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
-                                        title='Cambio semanal (7 días más recientes vs. 7 anteriores)',
+                                        title='Cambio (14 días más recientes vs. 14 anteriores)',
                                         offset=-15, labelSeparation=10,
                                         format='+,.0%', gradientLength=self.WIDTH)))
 
@@ -593,22 +593,19 @@ class MunicipalMap(AbstractChart):
             lookup='municipality',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
         ).transform_calculate(
-            daily_cases=alt.datum.weekly_cases / 7.0,
-            daily_cases_100k=alt.datum.weekly_cases_100k / 7.0
+            daily_cases=alt.datum.new_14day_cases / 14.0,
+            daily_cases_100k=((alt.datum.new_14day_cases * 1e5) / alt.datum.popest2019) / 14.0,
+            trend='(datum.new_14day_cases / if(datum.previous_14day_cases == 0, 1, datum.previous_14day_cases)) - 1.0'
         ).mark_geoshape().encode(
             color=color,
             tooltip=[alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha de boletín'),
                      alt.Tooltip(field='municipality', type='nominal', title='Municipio'),
-                     alt.Tooltip(field='popest2019', type='quantitative', format=',d',
-                                 title='Población'),
-                     alt.Tooltip(field='weekly_cases', type='quantitative', format=',d',
-                                 title='Casos (suma 7 días)'),
+                     alt.Tooltip(field='popest2019', type='quantitative', format=',d', title='Población'),
                      alt.Tooltip(field='daily_cases', type='quantitative', format=',.1f',
-                                 title='Casos (prom. 7 días)'),
+                                 title='Casos (prom. 14 días)'),
                      alt.Tooltip(field='daily_cases_100k', type='quantitative', format=',.1f',
-                                 title='Casos/100k (prom. 7 días)'),
-                     alt.Tooltip(field='weekly_trend', type='quantitative', format='+,.0%',
-                                 title='Cambio semanal')]
+                                 title='Casos/100k (prom. 14 días)'),
+                     alt.Tooltip(field='trend', type='quantitative', format='+,.0%', title='Cambio')]
         ).properties(
             width=self.WIDTH,
             height=250
@@ -621,16 +618,14 @@ class MunicipalMap(AbstractChart):
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('municipal_map', self.metadata,
-                                 schema='products', autoload=True)
+                                 schema='covid19datos_v2_etl', autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.municipality,
             table.c.popest2019,
-            (table.c.new_7day_cases).label('weekly_cases'),
-            (1e5 * table.c.new_7day_cases / table.c.popest2019).label('weekly_cases_100k'),
-            (table.c.pct_increase_7day - 1.0).label('weekly_trend')
-        ]).where(and_(table.c.municipality.notin_(['Total', 'No disponible', 'Otro lugar fuera de PR']),
-                      min(bulletin_dates) <= table.c.bulletin_date,
+            table.c.new_14day_cases,
+            table.c.previous_14day_cases
+        ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
                       table.c.bulletin_date <= max(bulletin_dates)))
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
 

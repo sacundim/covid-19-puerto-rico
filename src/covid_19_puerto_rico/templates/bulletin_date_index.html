@@ -44,7 +44,7 @@
         <li><a href="#DailyDeltas_section">Cambios entre boletines recientes</a></li>
         <li><a href="#LatenessTiers_section">Rezago de casos por renglones</a></li>
         <li><a href="#WeekdayBias_section">Tendencias por día de semana</a></li>
-        <li hidden><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
+        <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
         <li><a href="#Municipal_section">Historial de casos por municipio (fecha de boletín)</a></li>
         <li><a href="#ConsecutiveBulletinMismatch_section">Descuadre de encabezado de boletín</a></li>
         <li><a href="#BulletinChartMismatch_section">Descuadre de boletín y gráficas</a></li>
@@ -1062,7 +1062,7 @@
 </div>
 
 
-<div hidden class="section" id="MunicipalMap_section">
+<div class="section" id="MunicipalMap_section">
     <h1>Mapas municipales de casos recientes</h1>
 
     <div id="MunicipalMap"></div>
@@ -1072,12 +1072,13 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Casos confirmados y probables nuevos reportados por municipio, por fecha de reporte
-        en el informe diario de casos del Departamento de Salud de Puerto Rico, visto de
-        dos formas:</p>
+    <p>Casos confirmados y probables nuevos reportados por municipio, por fecha de muestra
+        según descargas diarias del portal <a href="https://covid19datos.salud.gov.pr/">
+            <code>covid19datos.salud.gov.pr</code></a> del Departamento de Salud de Puerto Rico,
+        visto de dos formas:</p>
 
     <ol>
-        <li>Promedio de casos nuevos registrados en los siete informes diarios más recientes,
+        <li>Promedio de casos nuevos por muestras en las siete fechas más recientes,
             ajustados per cápita a la población de cada municipio (según estimados del 2019
             del Censo);</li>
         <li>Comparación de esa cifra con la correspondiente a los siete informes diarios
@@ -1101,16 +1102,11 @@
 
     <h3>Advertencias</h3>
 
-    <p>Contrario a las mejores visualizaciones en esta página, que se hacen con datos del
-        Bioportal del Departamento de Salud de Puerto Rico, esta se hace a partir del
-        informe diario de casos.  Esto significa que estos mapas sufren de estas desventajas:</p>
-
-    <ul>
-        <li>Los datos municipales del informe diario son totales por fecha de actualización
-            de ese informe, y no por fecha de muestra.  Esto quiere decir que casos anunciados
-            a destiempo afectan la precisión de estos mapas.</li>
-        <li>El informe diario siempre esta 1-3 días atrasado respecto a Bioportal.</li>
-    </ul>
+    <p>Estos mapas usan datos por fecha de muestra, que para fechas recientes suelen estar
+        un tanto incompletos.  A la fecha de esta nota (julio del 2021) los datos suelen
+        llegar con bastante velocidad, suficiente que se ha observado durante tanto marzo/abril
+        como julio del 2021 que cuando hay repunte esto es bastante obvio. Aún así optamos por
+        promedios de 14 días en vez de 7 para usar datos un tanto más completos.</p>
 </div>
 
 

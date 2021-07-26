@@ -536,6 +536,38 @@ ORDER BY bulletin_date, datum_date;
 
 
 --
+-- For MunicipalMap
+--
+CREATE OR REPLACE VIEW covid19datos_v2_etl.municipal_map AS
+SELECT
+	bulletin_date,
+	municipality,
+	popest2019,
+	sum(new_cases) FILTER (
+		WHERE date_add('day', -7, bulletin_date) <= sample_date
+	) new_7day_cases,
+	sum(new_cases) FILTER (
+		WHERE date_add('day', -14, bulletin_date) <= sample_date
+		AND sample_date < date_add('day', -7, bulletin_date)
+	) previous_7day_cases,
+	sum(new_cases) FILTER (
+		WHERE date_add('day', -14, bulletin_date) <= sample_date
+	) new_14day_cases,
+	sum(new_cases) FILTER (
+		WHERE sample_date < date_add('day', -14, bulletin_date)
+	) previous_14day_cases
+FROM covid19datos_v2_etl.cases_municipal_agg
+WHERE sample_date >= date_add('day', -28, bulletin_date)
+GROUP BY
+	bulletin_date,
+	municipality,
+	popest2019
+ORDER BY
+	bulletin_date,
+	municipality;
+
+
+--
 -- For VaccinationMap.
 --
 CREATE VIEW covid19datos_v2_etl.municipal_vaccinations AS
