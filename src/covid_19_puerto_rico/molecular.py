@@ -950,11 +950,13 @@ class VaccinationMap(AbstractMolecularChart):
             width=self.WIDTH,
             height=self.HEIGHT
         )
+
+        # TODO: Reinclude the rate map
         rate = self.make_daily_rate_chart(df).properties(
             width=self.WIDTH,
             height=self.HEIGHT
         )
-        return alt.vconcat(dosis2, rate).configure_view(
+        return alt.vconcat(dosis2).configure_view(
             strokeWidth=0
         ).configure_concat(
             spacing=40
@@ -998,7 +1000,7 @@ class VaccinationMap(AbstractMolecularChart):
                             legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                               labelSeparation=10, offset=-15,
                                               gradientLength=self.WIDTH - 10,
-                                              title='Dosis diarias por 100 habitantes, promedio 7 días')),
+                                              title='Dosis diarias por 100 habitantes, promedio 14 días')),
             tooltip=[alt.Tooltip(field='min_dose_date', type='temporal', title='Desde'),
                      alt.Tooltip(field='max_dose_date', type='temporal', title='Hasta'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
