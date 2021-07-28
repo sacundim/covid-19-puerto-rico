@@ -1699,6 +1699,21 @@
         <dt>salud_dosis2</dt>
         <dd>Cambio en el valor de <code>salud_total_dosis2</code> comparado con la fecha anterior.
             Este campo lo calculamos al producir este archivo.</dd>
+
+        <dt>salud_total_dosis</dt>
+        <dd>Número cumulativos de dosis administradas en ese municipio hasta fecha, según capturamos de
+            de <a href="https://covid19datos.salud.gov.pr/"><code>covid19datos.salud.gov.pr</code></a>.
+            Este número lo calculamos a partir de comparar descargas diarias consecutivas de la segunda
+            versión del portal, y por eso solo lo tenemos disponible a partir del 23 de julio del 2021.</dd>
+
+        <dt>salud_total_dosis_per_100</dt>
+        <dd>Número cumulativo de dosis por cien personas en ese municipio hasta esa fecha.
+            Esto es el campo <code>salud_total_dosis2</code> dividido entre <code>popest2019</code>
+            y multiplicado por cien. Las mismas salvedades sobre estimados poblacionales aplican que
+            a <code>salud_total_dosis1_pct</code> y <code>salud_total_dosis2_pct</code>.</dd>
+
+        <dt>salud_dosis2</dt>
+        <dd>Cambio en el valor de <code>salud_total_dosis</code> comparado con la fecha anterior.</dd>
     </dl>
 
 

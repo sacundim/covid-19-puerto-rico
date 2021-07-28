@@ -511,12 +511,16 @@ WITH prdoh AS (
 	SELECT
 		bulletin_date local_date,
 		fips,
+		-- Persons with at least one dose
 		sum(doses) FILTER (
 			WHERE dose_number = 1
 		) total_dosis1,
+		-- Persons with complete regime
 		sum(doses) FILTER (
 			WHERE is_complete
-		) total_dosis2
+		) total_dosis2,
+		-- Number of doses administered
+		sum(doses) AS total_dosis
 	FROM covid19datos_v2_etl.vacunacion_cube
 	WHERE bulletin_date >= DATE '2021-07-23'
 	GROUP BY bulletin_date, fips
@@ -524,8 +528,16 @@ WITH prdoh AS (
 	SELECT
 		local_date,
 		fips,
+		-- Persons with at least one dose
 		total_dosis1,
-		total_dosis2
+		-- Persons with complete regime
+		total_dosis2,
+		-- Incorrect approximation of total number of doses.
+		-- The problem is that single-dose vaccines, when
+		-- administered, increment both dosis1 and dosis2.
+		-- But this sum is the best we can do...
+		total_dosis1 + total_dosis2
+			AS total_dosis
 	FROM covid19datos_sources.vacunaciones_municipios_totales_daily prdoh
 	INNER JOIN covid19datos_v2_sources.population_estimates_2019 pop
 		ON pop.name = prdoh.municipio
@@ -552,7 +564,14 @@ SELECT
 	total_dosis2 - lag(total_dosis2) OVER (
 		PARTITION BY fips
 		ORDER BY local_date
-	) AS salud_dosis2
+	) AS salud_dosis2,
+	total_dosis AS salud_total_dosis,
+	100.0 * (total_dosis) / popest2019
+		AS salud_total_dosis_per_100,
+	total_dosis - lag(total_dosis) OVER (
+		PARTITION BY fips
+		ORDER BY local_date
+	) AS salud_dosis
 FROM prdoh
 INNER JOIN covid19datos_v2_sources.population_estimates_2019 pop
 	USING (fips)

@@ -940,14 +940,19 @@ class VaccinationMap(AbstractMolecularChart):
             table.c.salud_dosis1,
             table.c.salud_total_dosis2,
             table.c.salud_total_dosis2_pct,
-            table.c.salud_dosis2
+            table.c.salud_dosis2,
+            table.c.salud_total_dosis,
+            table.c.salud_total_dosis_per_100,
+            table.c.salud_dosis,
         ])
         df = pd.read_sql_query(query, connection, parse_dates=["local_date"])
 
         # We really just do this to undo Pandas' null int to float conversion. See:
         #
         #     https://pandas.pydata.org/pandas-docs/stable/user_guide/integer_na.html
-        for col in ['salud_total_dosis1', 'salud_dosis1', 'salud_total_dosis2', 'salud_dosis2']:
+        for col in ['salud_total_dosis1', 'salud_dosis1',
+                    'salud_total_dosis2', 'salud_dosis2',
+                    'salud_total_dosis', 'salud_dosis']:
             df[col] = df[col].astype('Int64')
 
         self.save_csv(df)
@@ -1005,15 +1010,14 @@ class VaccinationMap(AbstractMolecularChart):
 
     def make_daily_rate_chart(self, df):
         return alt.Chart(df).transform_calculate(
-            dosis=alt.datum.salud_dosis1 + alt.datum.salud_dosis2,
-            dosis_per_100=100.0 * alt.datum.dosis / alt.datum.popest2019
+            salud_dosis_per_100=100.0 * alt.datum.salud_dosis / alt.datum.popest2019
         ).transform_aggregate(
             groupby=['municipio'],
             min_local_date='min(local_date)',
             max_local_date='max(local_date)',
             popest2019='mean(popest2019)',
-            mean_dosis='mean(dosis)',
-            mean_dosis_per_100='mean(dosis_per_100)'
+            mean_dosis='mean(salud_dosis)',
+            mean_dosis_per_100='mean(salud_dosis_per_100)'
         ).transform_lookup(
             lookup='municipio',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
