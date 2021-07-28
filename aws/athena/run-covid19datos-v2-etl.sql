@@ -440,11 +440,10 @@ WITH downloads AS (
 	FROM covid19datos_v2_etl.vacunacion
 	GROUP BY date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
 ), vendors AS (
-	SELECT DISTINCT co_manufacturero vendor
-	FROM covid19datos_v2_etl.vacunacion
-), dose_numbers AS (
-	SELECT DISTINCT nu_dosis dose_number
-	FROM covid19datos_v2_etl.vacunacion
+    SELECT DISTINCT
+        co_manufacturero vendor,
+        nu_dosis dose_number
+    FROM covid19datos_v2_etl.vacunacion
 ), grid AS (
 	SELECT
 		bulletin_date,
@@ -462,7 +461,6 @@ WITH downloads AS (
 	INNER JOIN downloads
 		ON CAST(date_column AS DATE) < bulletin_date
 	CROSS JOIN vendors
-	CROSS JOIN dose_numbers
 )
 SELECT
 	grid.bulletin_date,
@@ -502,6 +500,63 @@ ORDER BY
 	grid.display_name,
 	grid.vendor,
 	grid.dose_number;
+
+
+CREATE TABLE covid19datos_v2_etl.municipal_vaccinations WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['local_date'],
+    bucket_count = 1
+) AS
+WITH prdoh AS (
+	SELECT
+		bulletin_date local_date,
+		fips,
+		sum(doses) FILTER (
+			WHERE dose_number = 1
+		) total_dosis1,
+		sum(doses) FILTER (
+			WHERE is_complete
+		) total_dosis2
+	FROM covid19datos_v2_etl.vacunacion_cube
+	WHERE bulletin_date >= DATE '2021-07-23'
+	GROUP BY bulletin_date, fips
+	UNION
+	SELECT
+		local_date,
+		fips,
+		total_dosis1,
+		total_dosis2
+	FROM covid19datos_sources.vacunaciones_municipios_totales_daily prdoh
+	INNER JOIN covid19datos_v2_sources.population_estimates_2019 pop
+		ON pop.name = prdoh.municipio
+	-- data in this source goes bad on the 22nd...
+	WHERE local_date <= DATE '2021-07-21'
+)
+SELECT
+	local_date,
+	pop.name AS municipio,
+	fips AS fips_code,
+	popest2019,
+	total_dosis1 AS salud_total_dosis1,
+	CAST(total_dosis1 AS DOUBLE)
+		/ popest2019
+		AS salud_total_dosis1_pct,
+	total_dosis1 - lag(total_dosis1) OVER (
+		PARTITION BY fips
+		ORDER BY local_date
+	) AS salud_dosis1,
+	total_dosis2 AS salud_total_dosis2,
+	CAST(total_dosis2 AS DOUBLE)
+		/ popest2019
+		AS salud_total_dosis2_pct,
+	total_dosis2 - lag(total_dosis2) OVER (
+		PARTITION BY fips
+		ORDER BY local_date
+	) AS salud_dosis2
+FROM prdoh
+INNER JOIN covid19datos_v2_sources.population_estimates_2019 pop
+	USING (fips)
+ORDER BY local_date, municipio;
 
 
 --------------------------------------------------------------------------------
@@ -597,53 +652,4 @@ GROUP BY
 	popest2019
 ORDER BY
 	bulletin_date,
-	municipality;
-
-
---
--- For VaccinationMap.
---
-CREATE OR REPLACE VIEW covid19datos_v2_etl.municipal_vaccinations AS
-WITH completed AS (
-	SELECT
-		bulletin_date,
-		fips,
-		sum(doses) FILTER (
-			WHERE is_complete
-		) AS complete
-	FROM covid19datos_v2_etl.vacunacion_cube
-	GROUP BY bulletin_date, fips
-), doses AS (
-	SELECT
-		bulletin_date,
-		fips,
-		min(dose_date) min_dose_date,
-		max(dose_date) max_dose_date,
-		sum(doses) FILTER (
-			WHERE date_add('day', -7, bulletin_date) <= dose_date
-		) AS doses_7days,
-		sum(doses) AS doses_14days
-	FROM covid19datos_v2_etl.vacunacion_cube
-	WHERE date_add('day', -14, bulletin_date) <= dose_date
-	GROUP BY
-		bulletin_date,
-		fips
-)
-SELECT
-	bulletin_date,
-	min_dose_date,
-	max_dose_date,
-	pop.name AS municipality,
-	fips,
-	popest2019,
-	doses_7days,
-	doses_14days,
-	complete
-FROM completed
-INNER JOIN doses
-	USING (bulletin_date, fips)
-LEFT OUTER JOIN covid19datos_v2_sources.population_estimates_2019 pop
-	USING (fips)
-ORDER BY
-	bulletin_date DESC,
 	municipality;
