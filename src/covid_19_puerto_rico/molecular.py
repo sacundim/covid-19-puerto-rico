@@ -975,7 +975,8 @@ class VaccinationMap(AbstractMolecularChart):
             width=self.WIDTH,
             height=self.HEIGHT
         )
-        return alt.vconcat(dosis2, rate).configure_view(
+        # TODO: Reenable rate map: alt.vconcat(dosis2, rate)
+        return alt.vconcat(dosis2).configure_view(
             strokeWidth=0
         ).configure_concat(
             spacing=40
