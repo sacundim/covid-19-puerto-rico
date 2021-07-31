@@ -45,7 +45,7 @@
         <li><a href="#LatenessTiers_section">Rezago de casos por renglones</a></li>
         <li><a href="#WeekdayBias_section">Tendencias por día de semana</a></li>
         <li><a href="#MunicipalMap_section">Mapas municipales de casos recientes</a></li>
-        <li><a href="#Municipal_section">Historial de casos por municipio (fecha de boletín)</a></li>
+        <li><a href="#Municipal_section">Historial de casos por municipio</a></li>
         <li><a href="#ConsecutiveBulletinMismatch_section">Descuadre de encabezado de boletín</a></li>
         <li><a href="#BulletinChartMismatch_section">Descuadre de boletín y gráficas</a></li>
 
@@ -1111,11 +1111,19 @@
 
 
 <div class="section" id="Municipal_section">
-    <h1>Historial de casos por municipio (fecha de boletín)</h1>
+    <h1>Historial de casos por municipio</h1>
 
-    <p>Promedios móviles de casos confirmados y probables nuevos para cada municipio por millón
-        de habitantes en cada una de las 35 fechas más recientes, interpretándose estas como
-        fecha de muestra.</p>
+    <p>Promedios móviles de 7 días casos confirmados y probables nuevos para cada municipio por
+        millón de habitantes en cada una de las 84 fechas más recientes, interpretándose estas como
+        fecha de muestra.  Los municipios se agrupan por región, y se ordenan por el volumen de
+        casos en los 21 días más recientes.</p>
+
+    <p>Como esta gráfica es por fecha de muestra, caídas súbitas al final suelen ser falsas, más
+        bien debidas a datos incompletos para fechas recientes.  Además, como usan los datos del
+        portal <code><a href="https://covid19datos.salud.gov.pr/">covid19datos.salud.gov.pr</a></code>
+        que adjudican mal las fechas de casos descubiertos por prueba de antígeno (originalmente
+        "probables," según la mala designación) que luego se reclasifican a "confirmados" por
+        prueba molecular posterior.</p>
 
     <div id="Municipal"></div>
     <script type="text/javascript">

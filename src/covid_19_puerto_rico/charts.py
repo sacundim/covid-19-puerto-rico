@@ -513,13 +513,24 @@ class Municipal(AbstractChart):
             frame=[-6, 0],
             mean_cases='mean(new_cases)',
             mean_cases_1m='mean(new_cases_1m)'
+        ).transform_window(
+            groupby=['bulletin_date', 'municipality'],
+            sort=[{'field': 'sample_date'}],
+            frame=[-20, 0],
+            mean_cases_1m_21day='sum(new_cases_1m)'
+        ).transform_window(
+            groupby=['bulletin_date', 'municipality'],
+            sort=[{'field': 'sample_date'}],
+            frame=[None, None],
+            order_value='last_value(mean_cases_1m_21day)'
         ).transform_filter(
-            alt.datum.sample_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=42))
+            alt.datum.sample_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=84))
         ).mark_rect().encode(
             x=alt.X('sample_date:T', title='Fecha de muestra',
                     timeUnit='yearmonthdate', axis=alt.Axis(labelFontSize=10)),
             y=alt.Y('municipality:N', title=None,
-                    axis=alt.Axis(tickBand='extent', labelFontSize=10)),
+                    axis=alt.Axis(tickBand='extent', labelFontSize=10),
+                    sort=alt.Sort(op='sum', field='order_value', order='descending')),
             color=alt.Color('mean_cases_1m:Q', title='Casos diarios por millón',
                             sort='descending', scale=alt.Scale(scheme='spectral', type='sqrt'),
                             legend=alt.Legend(orient='top', gradientLength=WIDTH,
@@ -532,7 +543,15 @@ class Municipal(AbstractChart):
                      alt.Tooltip('mean_cases:Q', format=',.1f', title='Casos diarios (prom. 7)'),
                      alt.Tooltip('mean_cases_1m:Q', format=',d', title='Casos por millón (prom. 7)')]
         ).properties(
-            width=WIDTH, height=1200
+            width=WIDTH
+        ).facet(
+            columns=1,
+            row=alt.Row('region:N', title=None,
+                        header=alt.Header(orient='right'),
+                        # TODO: compute and use a regional population weighted mean for sorting
+                        sort=alt.Sort(op='mean', field='order_value', order='descending'))
+        ).resolve_scale(
+            x='independent', y='independent'
         )
 
     def fetch_data(self, connection, bulletin_dates):
@@ -540,10 +559,11 @@ class Municipal(AbstractChart):
                                  schema='covid19datos_v2_etl', autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.sample_date,
+                        table.c.region,
                         table.c.municipality,
                         table.c.popest2019,
                         table.c.new_cases])\
-            .where(and_(min(bulletin_dates) - datetime.timedelta(days=57) <= table.c.sample_date,
+            .where(and_(min(bulletin_dates) - datetime.timedelta(days=97) <= table.c.sample_date,
                         table.c.sample_date <= max(bulletin_dates)))
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'sample_date'])
 

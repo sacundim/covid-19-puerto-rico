@@ -401,6 +401,7 @@ WITH downloads AS (
 SELECT
 	grid.bulletin_date,
 	grid.sample_date,
+	popest.region,
 	display_name municipality,
 	fips,
 	popest2019,
@@ -416,10 +417,19 @@ RIGHT OUTER JOIN grid
 	ON grid.city = casos.city
 	AND grid.sample_date = casos.sample_date
 	AND grid.bulletin_date = date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
-INNER JOIN covid19datos_v2_sources.population_estimates_2019
+INNER JOIN covid19datos_v2_sources.population_estimates_2019 popest
 	USING (fips)
-GROUP BY grid.bulletin_date, grid.sample_date, fips, display_name, popest2019
-ORDER BY grid.bulletin_date, grid.sample_date, display_name;
+GROUP BY
+    grid.bulletin_date,
+    grid.sample_date,
+    fips,
+    display_name,
+    popest2019,
+    popest.region
+ORDER BY
+    grid.bulletin_date,
+    grid.sample_date,
+    display_name;
 
 
 
