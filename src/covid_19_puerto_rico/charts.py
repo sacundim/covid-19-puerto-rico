@@ -526,8 +526,9 @@ class Municipal(AbstractChart):
         ).transform_filter(
             alt.datum.sample_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=84))
         ).mark_rect().encode(
-            x=alt.X('sample_date:T', title='Fecha de muestra',
-                    timeUnit='yearmonthdate', axis=alt.Axis(labelFontSize=10)),
+            x=alt.X('sample_date:T', timeUnit='yearmonthdate', title='Fecha de muestra',
+                    axis=alt.Axis(format='%-d/%-m', labelFontSize=10,
+                                  labelBound=True, labelAlign='right', labelOffset=4)),
             y=alt.Y('municipality:N', title=None,
                     axis=alt.Axis(tickBand='extent', labelFontSize=10),
                     sort=alt.Sort(op='sum', field='order_value', order='descending')),
