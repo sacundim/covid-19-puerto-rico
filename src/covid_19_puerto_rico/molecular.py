@@ -931,31 +931,51 @@ class VaccinationMap(AbstractMolecularChart):
         table = sqlalchemy.Table('municipal_vaccinations', self.metadata,
                                  schema='covid19datos_v2_etl', autoload=True)
         query = select([
-            table.c.bulletin_date,
-            table.c.min_dose_date,
-            table.c.max_dose_date,
-            table.c.municipality.label('municipio'),
+            table.c.local_date,
+            table.c.municipio,
+            table.c.fips_code,
             table.c.popest2019,
-            table.c.doses_14days,
-            table.c.complete
+            table.c.salud_total_dosis1,
+            table.c.salud_total_dosis1_pct,
+            table.c.salud_dosis1,
+            table.c.salud_total_dosis2,
+            table.c.salud_total_dosis2_pct,
+            table.c.salud_dosis2,
+            table.c.salud_total_dosis,
+            table.c.salud_total_dosis_per_100,
+            table.c.salud_dosis,
         ])
-        return pd.read_sql_query(query, connection,
-                                 parse_dates=['bulletin_date', 'min_dose_date', 'max_dose_date'])
+        df = pd.read_sql_query(query, connection, parse_dates=["local_date"])
 
+        # We really just do this to undo Pandas' null int to float conversion. See:
+        #
+        #     https://pandas.pydata.org/pandas-docs/stable/user_guide/integer_na.html
+        for col in ['salud_total_dosis1', 'salud_dosis1',
+                    'salud_total_dosis2', 'salud_dosis2',
+                    'salud_total_dosis', 'salud_dosis']:
+            df[col] = df[col].astype('Int64')
+
+        self.save_csv(df)
+        return df
+
+    def filter_data(self, df, bulletin_date):
+        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=7))
+        until_date = pd.to_datetime(bulletin_date)
+        return df.loc[(since_date < df['local_date'])
+                      & (df['local_date'] <= until_date)]
 
     def make_chart(self, df, bulletin_date):
         dosis2 = self.make_subchart(
-            df, bulletin_date, 'complete', 'Personas con régimen completo'
+            df, bulletin_date, 'salud_total_dosis2', 'Personas con régimen completo'
         ).properties(
             width=self.WIDTH,
             height=self.HEIGHT
         )
-
-        # TODO: Reinclude the rate map
         rate = self.make_daily_rate_chart(df).properties(
             width=self.WIDTH,
             height=self.HEIGHT
         )
+        # TODO: Reenable rate map: alt.vconcat(dosis2, rate)
         return alt.vconcat(dosis2).configure_view(
             strokeWidth=0
         ).configure_concat(
@@ -967,7 +987,9 @@ class VaccinationMap(AbstractMolecularChart):
     def make_subchart(self, df, bulletin_date, variable, title):
         DOMAIN_MID = 0.775
 
-        return alt.Chart(df).transform_calculate(
+        return alt.Chart(df).transform_filter(
+            alt.datum.local_date == util.altair_date_expr(bulletin_date)
+        ).transform_calculate(
             pct=alt.datum[variable] / alt.datum.popest2019
         ).transform_lookup(
             lookup='municipio',
@@ -980,7 +1002,7 @@ class VaccinationMap(AbstractMolecularChart):
                             legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                               title=title, labelSeparation=10, format='.0%',
                                               offset=-15, gradientLength=self.WIDTH - 10)),
-            tooltip=[alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha'),
+            tooltip=[alt.Tooltip(field='local_date', type='temporal', title='Fecha'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
                      alt.Tooltip(field='popest2019', type='quantitative', format=',d', title='Población'),
                      alt.Tooltip(field=variable, title=title, type='quantitative', format=',d'),
@@ -989,8 +1011,14 @@ class VaccinationMap(AbstractMolecularChart):
 
     def make_daily_rate_chart(self, df):
         return alt.Chart(df).transform_calculate(
-            mean_dosis=alt.datum.doses_14days / 14.0,
-            mean_dosis_per_100=alt.datum.doses_14days * 100.0 / 14.0 / alt.datum.popest2019
+            salud_dosis_per_100=100.0 * alt.datum.salud_dosis / alt.datum.popest2019
+        ).transform_aggregate(
+            groupby=['municipio'],
+            min_local_date='min(local_date)',
+            max_local_date='max(local_date)',
+            popest2019='mean(popest2019)',
+            mean_dosis='mean(salud_dosis)',
+            mean_dosis_per_100='mean(salud_dosis_per_100)'
         ).transform_lookup(
             lookup='municipio',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
@@ -1000,16 +1028,17 @@ class VaccinationMap(AbstractMolecularChart):
                             legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                               labelSeparation=10, offset=-15,
                                               gradientLength=self.WIDTH - 10,
-                                              title='Dosis diarias por 100 habitantes, promedio 14 días')),
-            tooltip=[alt.Tooltip(field='min_dose_date', type='temporal', title='Desde'),
-                     alt.Tooltip(field='max_dose_date', type='temporal', title='Hasta'),
+                                              title='Dosis diarias por 100 habitantes, promedio 7 días')),
+            tooltip=[alt.Tooltip(field='min_local_date', type='temporal', title='Desde'),
+                     alt.Tooltip(field='max_local_date', type='temporal', title='Hasta'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
                      alt.Tooltip(field='popest2019', type='quantitative', format=',d', title='Población'),
                      alt.Tooltip(field='mean_dosis', type='quantitative', format=',d',
-                                 title='Dosis diarias (promedio 14 días)'),
+                                 title='Dosis diarias (promedio 7 días)'),
                      alt.Tooltip(field='mean_dosis_per_100', type='quantitative', format=',.1f',
-                                 title='Dosis diarias por 100 habitantes (promedio 14 días)')]
+                                 title='Dosis diarias por 100 habitantes (promedio 7 días)')]
         )
+
 
 
 

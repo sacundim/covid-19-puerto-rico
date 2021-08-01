@@ -572,7 +572,7 @@ ORDER BY file_timestamp, local_date, date;
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
 --
--- CDC Covid Tracker county vaccination data
+-- CDC Covid Tracker county vaccination data, scraped version
 --
 
 CREATE EXTERNAL TABLE covid_hhs_sources.vaccination_county_condensed_data_json (
@@ -624,3 +624,97 @@ INNER JOIN downloads
 WHERE StateAbbr LIKE 'PR%'
 ORDER BY date, County;
 
+
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+--
+-- CDC Covid Tracker county vaccination data, downloadable dataset version
+--
+
+CREATE EXTERNAL TABLE covid_hhs_sources.covid_vaccinations_county_parquet (
+	Date STRING,
+	FIPS STRING,
+	MMWR_week STRING,
+	Recip_County STRING,
+	Recip_State STRING,
+    Series_Complete_Pop_Pct STRING,
+    Series_Complete_Yes STRING,
+    Series_Complete_12Plus STRING,
+    Series_Complete_12PlusPop_Pct STRING,
+    Series_Complete_18Plus STRING,
+    Series_Complete_18PlusPop_Pct STRING,
+    Series_Complete_65Plus STRING,
+    Series_Complete_65PlusPop_Pct STRING,
+    Completeness_pct STRING,
+    Administered_Dose1_Recip STRING,
+    Administered_Dose1_Pop_Pct STRING,
+    Administered_Dose1_Recip_12Plus STRING,
+    Administered_Dose1_Recip_12PlusPop_Pct STRING,
+    Administered_Dose1_Recip_18Plus STRING,
+    Administered_Dose1_Recip_18PlusPop_Pct STRING,
+    Administered_Dose1_Recip_65Plus STRING,
+    Administered_Dose1_Recip_65PlusPop_Pct STRING,
+    SVI_CTGY STRING,
+    Series_Complete_Pop_Pct_SVI STRING,
+    Series_Complete_12PlusPop_Pct_SVI STRING,
+    Series_Complete_18PlusPop_Pct_SVI STRING,
+    Series_Complete_65PlusPop_Pct_SVI STRING
+) ROW FORMAT PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/HHS/covid_vaccinations_county/v2/parquet/';
+
+
+CREATE OR REPLACE VIEW covid_hhs_sources.covid_vaccinations_county_PR AS
+SELECT
+	date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
+		AS file_timestamp,
+	date(date_parse(Date, '%Y/%m/%d')) AS Date,
+	FIPS,
+	MMWR_week,
+	Recip_County,
+	Recip_State,
+	CAST(NULLIF(Series_Complete_Pop_Pct, '') AS DOUBLE)
+		AS Series_Complete_Pop_Pct,
+	CAST(NULLIF(Series_Complete_Yes, '') AS INTEGER)
+		AS Series_Complete_Yes,
+	CAST(NULLIF(Series_Complete_12Plus, '') AS INTEGER)
+		AS Series_Complete_12Plus,
+	CAST(NULLIF(Series_Complete_12PlusPop_Pct, '') AS DOUBLE)
+		AS Series_Complete_12PlusPop_Pct,
+	CAST(NULLIF(Series_Complete_18Plus, '') AS INTEGER)
+		AS Series_Complete_18Plus,
+	CAST(NULLIF(Series_Complete_18PlusPop_Pct, '') AS DOUBLE)
+		AS Series_Complete_18PlusPop_Pct,
+	CAST(NULLIF(Series_Complete_65Plus, '') AS INTEGER)
+		AS Series_Complete_65Plus,
+	CAST(NULLIF(Series_Complete_65PlusPop_Pct, '') AS DOUBLE)
+		AS Series_Complete_65PlusPop_Pct,
+	CAST(NULLIF(Completeness_pct, '') AS DOUBLE)
+		AS Completeness_pct,
+	CAST(NULLIF(Administered_Dose1_Recip, '') AS INTEGER)
+		AS Administered_Dose1_Recip,
+	CAST(NULLIF(Administered_Dose1_Pop_Pct, '') AS DOUBLE)
+		AS Administered_Dose1_Pop_Pct,
+	CAST(NULLIF(Administered_Dose1_Recip_12Plus, '') AS INTEGER)
+		AS Administered_Dose1_Recip_12Plus,
+	CAST(NULLIF(Administered_Dose1_Recip_12PlusPop_Pct, '') AS DOUBLE)
+		AS Administered_Dose1_Recip_12PlusPop_Pct,
+	CAST(NULLIF(Administered_Dose1_Recip_18Plus, '') AS INTEGER)
+		AS Administered_Dose1_Recip_18Plus,
+	CAST(NULLIF(Administered_Dose1_Recip_18PlusPop_Pct, '') AS DOUBLE)
+		AS Administered_Dose1_Recip_18PlusPop_Pct,
+	CAST(NULLIF(Administered_Dose1_Recip_65Plus, '') AS INTEGER)
+		AS Administered_Dose1_Recip_65Plus,
+	CAST(NULLIF(Administered_Dose1_Recip_65PlusPop_Pct, '') AS DOUBLE)
+		AS Administered_Dose1_Recip_65PlusPop_Pct,
+    SVI_CTGY,
+    CAST(NULLIF(Series_Complete_Pop_Pct_SVI, '') AS DOUBLE)
+        AS Series_Complete_Pop_Pct_SVI,
+    CAST(NULLIF(Series_Complete_12PlusPop_Pct_SVI, '') AS DOUBLE)
+        AS Series_Complete_12PlusPop_Pct_SVI,
+    CAST(NULLIF(Series_Complete_18PlusPop_Pct_SVI, '') AS DOUBLE)
+        AS Series_Complete_18PlusPop_Pct_SVI,
+    CAST(NULLIF(Series_Complete_65PlusPop_Pct_SVI, '') AS DOUBLE)
+        AS Series_Complete_65PlusPop_Pct_SVI
+FROM covid_hhs_sources.covid_vaccinations_county_parquet
+WHERE Recip_State = 'PR'
+ORDER BY "$path", Date;
