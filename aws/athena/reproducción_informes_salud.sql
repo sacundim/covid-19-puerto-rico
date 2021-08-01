@@ -1,6 +1,10 @@
 --
 -- Reproducir (más or menos) la carátula del viejo informe de casos
 --
+WITH bulletins AS (
+	SELECT max(bulletin_date) AS bulletin_date
+	FROM covid19datos_v2_etl.bulletin_cases
+)
 SELECT
 	bulletin_date "Fecha de actualización de datos",
 	datum_date "Fecha de muestra",
@@ -9,7 +13,7 @@ SELECT
 	probable_cases "Casos probables",
 	cumulative_probable_cases "Casos probables"
 FROM covid19datos_v2_etl.bulletin_cases
-WHERE bulletin_date = DATE '2021-07-30'
+INNER JOIN bulletins USING (bulletin_date)
 ORDER BY datum_date DESC;
 
 
@@ -41,7 +45,10 @@ ORDER BY bulletin_date DESC;
 -- Aproximación del informe de transmisión comunitaria. Requiere datos
 -- municipales de pruebas de Bioportal.
 --
-WITH casos AS (
+WITH bulletins AS (
+	SELECT max(bulletin_date) AS bulletin_date
+	FROM covid19datos_v2_etl.bulletin_cases
+), casos AS (
 	SELECT
 		bulletin_date,
 		municipality,
@@ -49,9 +56,9 @@ WITH casos AS (
 		sum(new_cases) new_cases,
 		1e5 * sum(new_cases) / popest2019 itc1
 	FROM covid19datos_v2_etl.cases_municipal_agg
-	WHERE bulletin_date = DATE '2021-07-31'
-	AND date_add('day', -14, bulletin_date) < sample_date
-	AND sample_date <= date_add('day', -7, bulletin_date)
+	INNER JOIN bulletins USING (bulletin_date)
+	WHERE date_add('day', -10, bulletin_date) <= sample_date
+	AND sample_date <= date_add('day', -4, bulletin_date)
 	GROUP BY bulletin_date, municipality, popest2019
 ), pruebas AS (
 	SELECT
@@ -61,11 +68,11 @@ WITH casos AS (
 		sum(positives) AS positives,
 		100.0 * sum(positives) / sum(specimens) AS itc2
 	FROM covid_pr_etl.municipal_tests_collected_agg tests
+	INNER JOIN bulletins USING (bulletin_date)
 	INNER JOIN covid_pr_sources.population_estimates_2019 pop
 		ON pop.name = tests.municipality
-	WHERE bulletin_date = DATE '2021-07-31'
-	AND date_add('day', -14, bulletin_date) < collected_date
-	AND collected_date <= date_add('day', -7, bulletin_date)
+	WHERE date_add('day', -10, bulletin_date) <= collected_date
+	AND collected_date <= date_add('day', -4, bulletin_date)
 	AND test_type = 'Molecular'
 	GROUP BY bulletin_date, municipality
 ), niveles AS (
