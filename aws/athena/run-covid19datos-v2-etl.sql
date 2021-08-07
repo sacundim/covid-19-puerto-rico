@@ -588,6 +588,72 @@ INNER JOIN covid19datos_v2_sources.population_estimates_2019 pop
 ORDER BY local_date, municipio;
 
 
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--
+-- Tests according to Salud.
+--
+
+CREATE TABLE covid19datos_v2_etl.pruebas_collected_agg WITH (
+    format = 'PARQUET',
+    bucketed_by = ARRAY['bulletin_date'],
+    bucket_count = 1
+) AS
+SELECT
+	date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+		AS bulletin_date,
+	fe_prueba AS collected_date,
+	count(*) tests,
+	sum(count(*)) OVER (
+		PARTITION BY downloaded_at
+		ORDER BY fe_prueba
+	) AS cumulative_tests,
+	count(*) FILTER (
+		WHERE co_tipo = 'MOLECULAR'
+	) AS molecular,
+	sum(count(*) FILTER (
+		WHERE co_tipo = 'MOLECULAR'
+	)) OVER (
+		PARTITION BY downloaded_at
+		ORDER BY fe_prueba
+	) AS cumulative_molecular,
+	count(*) FILTER (
+		WHERE co_tipo = 'MOLECULAR'
+		AND co_resultado = 'POSITIVA'
+	) AS positive_molecular,
+	sum(count(*) FILTER (
+		WHERE co_tipo = 'MOLECULAR'
+		AND co_resultado = 'POSITIVA'
+	)) OVER (
+		PARTITION BY downloaded_at
+		ORDER BY fe_prueba
+	) AS cumulative_positive_molecular,
+	count(*) FILTER (
+		WHERE co_tipo = 'ANTIGENO'
+	) AS antigens,
+	sum(count(*) FILTER (
+		WHERE co_tipo = 'ANTIGENO'
+	)) OVER (
+		PARTITION BY downloaded_at
+		ORDER BY fe_prueba
+	) AS cumulative_antigens,
+	count(*) FILTER (
+		WHERE co_tipo = 'MOLECULAR'
+		AND co_resultado = 'POSITIVA'
+	) AS positive_antigens,
+	sum(count(*) FILTER (
+		WHERE co_tipo = 'ANTIGENO'
+		AND co_resultado = 'POSITIVA'
+	)) OVER (
+		PARTITION BY downloaded_at
+		ORDER BY fe_prueba
+	) AS cumulative_positive_antigens
+FROM covid19datos_v2_etl.pruebas
+GROUP BY downloaded_at, fe_prueba
+ORDER BY downloaded_at, fe_prueba;
+
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --
