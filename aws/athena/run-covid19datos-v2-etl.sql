@@ -594,7 +594,6 @@ ORDER BY local_date, municipio;
 --
 -- Tests according to Salud.
 --
-
 CREATE TABLE covid19datos_v2_etl.pruebas_collected_agg WITH (
     format = 'PARQUET',
     bucketed_by = ARRAY['bulletin_date'],
@@ -605,6 +604,10 @@ SELECT
 		AS bulletin_date,
 	fe_prueba AS collected_date,
 	count(*) tests,
+	count(*) - lag(count(*), 1, 0) OVER (
+		PARTITION BY fe_prueba
+		ORDER BY downloaded_at
+	) AS delta_tests,
 	sum(count(*)) OVER (
 		PARTITION BY downloaded_at
 		ORDER BY fe_prueba
@@ -612,6 +615,14 @@ SELECT
 	count(*) FILTER (
 		WHERE co_tipo = 'MOLECULAR'
 	) AS molecular,
+	count(*) FILTER (
+		WHERE co_tipo = 'MOLECULAR'
+	) - lag(count(*) FILTER (
+		WHERE co_tipo = 'MOLECULAR'
+	), 1, 0) OVER (
+		PARTITION BY fe_prueba
+		ORDER BY downloaded_at
+	) AS delta_molecular,
 	sum(count(*) FILTER (
 		WHERE co_tipo = 'MOLECULAR'
 	)) OVER (
@@ -622,6 +633,16 @@ SELECT
 		WHERE co_tipo = 'MOLECULAR'
 		AND co_resultado = 'POSITIVA'
 	) AS positive_molecular,
+	count(*) FILTER (
+		WHERE co_tipo = 'MOLECULAR'
+		AND co_resultado = 'POSITIVA'
+	) - lag(count(*) FILTER (
+		WHERE co_tipo = 'MOLECULAR'
+		AND co_resultado = 'POSITIVA'
+	), 1, 0) OVER (
+		PARTITION BY fe_prueba
+		ORDER BY downloaded_at
+	) AS delta_positive_molecular,
 	sum(count(*) FILTER (
 		WHERE co_tipo = 'MOLECULAR'
 		AND co_resultado = 'POSITIVA'
@@ -632,6 +653,14 @@ SELECT
 	count(*) FILTER (
 		WHERE co_tipo = 'ANTIGENO'
 	) AS antigens,
+	count(*) FILTER (
+		WHERE co_tipo = 'ANTIGENO'
+	) - lag(count(*) FILTER (
+		WHERE co_tipo = 'ANTIGENO'
+	), 1, 0) OVER (
+		PARTITION BY fe_prueba
+		ORDER BY downloaded_at
+	) AS delta_antigens,
 	sum(count(*) FILTER (
 		WHERE co_tipo = 'ANTIGENO'
 	)) OVER (
@@ -639,9 +668,19 @@ SELECT
 		ORDER BY fe_prueba
 	) AS cumulative_antigens,
 	count(*) FILTER (
-		WHERE co_tipo = 'MOLECULAR'
+		WHERE co_tipo = 'ANTIGENO'
 		AND co_resultado = 'POSITIVA'
 	) AS positive_antigens,
+	count(*) FILTER (
+		WHERE co_tipo = 'ANTIGENO'
+		AND co_resultado = 'POSITIVA'
+	) - lag(count(*) FILTER (
+		WHERE co_tipo = 'ANTIGENO'
+		AND co_resultado = 'POSITIVA'
+	), 1, 0) OVER (
+		PARTITION BY fe_prueba
+		ORDER BY downloaded_at
+	) AS delta_positive_antigens,
 	sum(count(*) FILTER (
 		WHERE co_tipo = 'ANTIGENO'
 		AND co_resultado = 'POSITIVA'
@@ -652,7 +691,6 @@ SELECT
 FROM covid19datos_v2_etl.pruebas
 GROUP BY downloaded_at, fe_prueba
 ORDER BY downloaded_at, fe_prueba;
-
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
