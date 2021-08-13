@@ -40,7 +40,7 @@ TBLPROPERTIES (
     "skip.header.line.count"="1"
 );
 
-CREATE EXTERNAL TABLE covid19datos_v2_sources.population_estimates_2019 (
+CREATE EXTERNAL TABLE covid19datos_v2_sources.municipal_population (
 	name STRING,
 	popest2019 INT,
 	fips STRING,
@@ -49,7 +49,7 @@ CREATE EXTERNAL TABLE covid19datos_v2_sources.population_estimates_2019 (
 FIELDS TERMINATED BY ','
 ESCAPED BY '\\'
 LINES TERMINATED BY '\n'
-LOCATION 's3://covid-19-puerto-rico-data/Census/population_estimates_2019/'
+LOCATION 's3://covid-19-puerto-rico-data/Census/municipal_population/'
 TBLPROPERTIES (
     "skip.header.line.count"="1"
 );

@@ -417,7 +417,7 @@ RIGHT OUTER JOIN grid
 	ON grid.city = casos.city
 	AND grid.sample_date = casos.sample_date
 	AND grid.bulletin_date = date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
-INNER JOIN covid19datos_v2_sources.population_estimates_2019 popest
+INNER JOIN covid19datos_v2_sources.municipal_population popest
 	USING (fips)
 GROUP BY
     grid.bulletin_date,
@@ -549,7 +549,7 @@ WITH prdoh AS (
 		total_dosis1 + total_dosis2
 			AS total_dosis
 	FROM covid19datos_sources.vacunaciones_municipios_totales_daily prdoh
-	INNER JOIN covid19datos_v2_sources.population_estimates_2019 pop
+	INNER JOIN covid19datos_v2_sources.municipal_population pop
 		ON pop.name = prdoh.municipio
 	-- data in this source goes bad on the 22nd...
 	WHERE local_date <= DATE '2021-07-21'
@@ -583,7 +583,7 @@ SELECT
 		ORDER BY local_date
 	) AS salud_dosis
 FROM prdoh
-INNER JOIN covid19datos_v2_sources.population_estimates_2019 pop
+INNER JOIN covid19datos_v2_sources.municipal_population pop
 	USING (fips)
 ORDER BY local_date, municipio;
 

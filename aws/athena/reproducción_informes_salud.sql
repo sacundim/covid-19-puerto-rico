@@ -69,7 +69,7 @@ WITH bulletins AS (
 		100.0 * sum(positives) / sum(specimens) AS itc2
 	FROM covid_pr_etl.municipal_tests_collected_agg tests
 	INNER JOIN bulletins USING (bulletin_date)
-	INNER JOIN covid_pr_sources.population_estimates_2019 pop
+	INNER JOIN covid_pr_sources.municipal_population pop
 		ON pop.name = tests.municipality
 	WHERE date_add('day', -10, bulletin_date) <= collected_date
 	AND collected_date <= date_add('day', -4, bulletin_date)
