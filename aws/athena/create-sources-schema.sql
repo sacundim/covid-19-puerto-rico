@@ -137,6 +137,7 @@ LOCATION 's3://covid-19-puerto-rico-data/bioportal/deaths/parquet_v1/';
 CREATE EXTERNAL TABLE covid_pr_sources.municipal_population (
 	name STRING,
 	popest2019 INT,
+	pop2020 INT,
 	fips_code STRING,
 	region STRING
 ) ROW FORMAT DELIMITED

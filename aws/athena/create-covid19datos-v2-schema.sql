@@ -43,6 +43,7 @@ TBLPROPERTIES (
 CREATE EXTERNAL TABLE covid19datos_v2_sources.municipal_population (
 	name STRING,
 	popest2019 INT,
+	pop2020 INT,
 	fips STRING,
 	region STRING
 ) ROW FORMAT DELIMITED

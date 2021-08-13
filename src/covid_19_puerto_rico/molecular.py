@@ -934,7 +934,7 @@ class VaccinationMap(AbstractMolecularChart):
             table.c.local_date,
             table.c.municipio,
             table.c.fips_code,
-            table.c.popest2019,
+            table.c.pop2020,
             table.c.salud_total_dosis1,
             table.c.salud_total_dosis1_pct,
             table.c.salud_dosis1,
@@ -990,7 +990,7 @@ class VaccinationMap(AbstractMolecularChart):
         return alt.Chart(df).transform_filter(
             alt.datum.local_date == util.altair_date_expr(bulletin_date)
         ).transform_calculate(
-            pct=alt.datum[variable] / alt.datum.popest2019
+            pct=alt.datum[variable] / alt.datum.pop2020
         ).transform_lookup(
             lookup='municipio',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
@@ -1004,19 +1004,19 @@ class VaccinationMap(AbstractMolecularChart):
                                               offset=-15, gradientLength=self.WIDTH - 10)),
             tooltip=[alt.Tooltip(field='local_date', type='temporal', title='Fecha'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
-                     alt.Tooltip(field='popest2019', type='quantitative', format=',d', title='Población'),
+                     alt.Tooltip(field='pop2020', type='quantitative', format=',d', title='Población'),
                      alt.Tooltip(field=variable, title=title, type='quantitative', format=',d'),
                      alt.Tooltip(field='pct', type='quantitative', format='.1%', title='Porciento')]
         )
 
     def make_daily_rate_chart(self, df):
         return alt.Chart(df).transform_calculate(
-            salud_dosis_per_100=100.0 * alt.datum.salud_dosis / alt.datum.popest2019
+            salud_dosis_per_100=100.0 * alt.datum.salud_dosis / alt.datum.pop2020
         ).transform_aggregate(
             groupby=['municipio'],
             min_local_date='min(local_date)',
             max_local_date='max(local_date)',
-            popest2019='mean(popest2019)',
+            pop2020='mean(pop2020)',
             mean_dosis='mean(salud_dosis)',
             mean_dosis_per_100='mean(salud_dosis_per_100)'
         ).transform_lookup(
@@ -1032,7 +1032,7 @@ class VaccinationMap(AbstractMolecularChart):
             tooltip=[alt.Tooltip(field='min_local_date', type='temporal', title='Desde'),
                      alt.Tooltip(field='max_local_date', type='temporal', title='Hasta'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
-                     alt.Tooltip(field='popest2019', type='quantitative', format=',d', title='Población'),
+                     alt.Tooltip(field='pop2020', type='quantitative', format=',d', title='Población'),
                      alt.Tooltip(field='mean_dosis', type='quantitative', format=',d',
                                  title='Dosis diarias (promedio 7 días)'),
                      alt.Tooltip(field='mean_dosis_per_100', type='quantitative', format=',.1f',

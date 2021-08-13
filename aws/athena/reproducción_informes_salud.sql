@@ -52,14 +52,14 @@ WITH bulletins AS (
 	SELECT
 		bulletin_date,
 		municipality,
-		popest2019,
+		pop2020,
 		sum(new_cases) new_cases,
-		1e5 * sum(new_cases) / popest2019 itc1
+		1e5 * sum(new_cases) / pop2020 itc1
 	FROM covid19datos_v2_etl.cases_municipal_agg
 	INNER JOIN bulletins USING (bulletin_date)
 	WHERE date_add('day', -10, bulletin_date) <= sample_date
 	AND sample_date <= date_add('day', -4, bulletin_date)
-	GROUP BY bulletin_date, municipality, popest2019
+	GROUP BY bulletin_date, municipality, pop2020
 ), pruebas AS (
 	SELECT
 		bulletin_date,

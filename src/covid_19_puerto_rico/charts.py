@@ -501,7 +501,7 @@ class Municipal(AbstractChart):
     def make_chart(self, df, bulletin_date):
         WIDTH = 525
         return alt.Chart(df).transform_calculate(
-            new_cases_1m='1e6 * datum.new_cases / datum.popest2019'
+            new_cases_1m='1e6 * datum.new_cases / datum.pop2020'
         ).transform_impute(
             impute='new_cases_1m',
             groupby=['bulletin_date', 'municipality'],
@@ -539,7 +539,7 @@ class Municipal(AbstractChart):
             tooltip=[alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('sample_date:T', title='Fecha de muestra'),
                      alt.Tooltip('municipality:N', title='Municipio'),
-                     alt.Tooltip('popest2019:Q', format=',d', title='Population'),
+                     alt.Tooltip('pop2020:Q', format=',d', title='Population'),
                      alt.Tooltip('new_cases:Q', format=',d', title='Casos crudos'),
                      alt.Tooltip('mean_cases:Q', format=',.1f', title='Casos diarios (prom. 7)'),
                      alt.Tooltip('mean_cases_1m:Q', format=',d', title='Casos por millón (prom. 7)')]
@@ -562,7 +562,7 @@ class Municipal(AbstractChart):
                         table.c.sample_date,
                         table.c.region,
                         table.c.municipality,
-                        table.c.popest2019,
+                        table.c.pop2020,
                         table.c.new_cases])\
             .where(and_(min(bulletin_dates) - datetime.timedelta(days=97) <= table.c.sample_date,
                         table.c.sample_date <= max(bulletin_dates)))
@@ -615,13 +615,13 @@ class MunicipalMap(AbstractChart):
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
         ).transform_calculate(
             daily_cases=alt.datum.new_14day_cases / 14.0,
-            daily_cases_100k=((alt.datum.new_14day_cases * 1e5) / alt.datum.popest2019) / 14.0,
+            daily_cases_100k=((alt.datum.new_14day_cases * 1e5) / alt.datum.pop2020) / 14.0,
             trend='(datum.new_14day_cases / if(datum.previous_14day_cases == 0, 1, datum.previous_14day_cases)) - 1.0'
         ).mark_geoshape().encode(
             color=color,
             tooltip=[alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha de boletín'),
                      alt.Tooltip(field='municipality', type='nominal', title='Municipio'),
-                     alt.Tooltip(field='popest2019', type='quantitative', format=',d', title='Población'),
+                     alt.Tooltip(field='pop2020', type='quantitative', format=',d', title='Población'),
                      alt.Tooltip(field='daily_cases', type='quantitative', format=',.1f',
                                  title='Casos (prom. 14 días)'),
                      alt.Tooltip(field='daily_cases_100k', type='quantitative', format=',.1f',
@@ -643,7 +643,7 @@ class MunicipalMap(AbstractChart):
         query = select([
             table.c.bulletin_date,
             table.c.municipality,
-            table.c.popest2019,
+            table.c.pop2020,
             table.c.new_14day_cases,
             table.c.previous_14day_cases
         ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,

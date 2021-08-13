@@ -404,7 +404,7 @@ SELECT
 	popest.region,
 	display_name municipality,
 	fips,
-	popest2019,
+	pop2020,
 	count(casos.downloaded_at) new_cases,
 	count(casos.downloaded_at) FILTER (
 		WHERE class = 'CONFIRMADO'
@@ -424,7 +424,7 @@ GROUP BY
     grid.sample_date,
     fips,
     display_name,
-    popest2019,
+    pop2020,
     popest.region
 ORDER BY
     grid.bulletin_date,
@@ -558,10 +558,10 @@ SELECT
 	local_date,
 	pop.name AS municipio,
 	fips AS fips_code,
-	popest2019,
+	pop2020,
 	total_dosis1 AS salud_total_dosis1,
 	CAST(total_dosis1 AS DOUBLE)
-		/ popest2019
+		/ pop2020
 		AS salud_total_dosis1_pct,
 	total_dosis1 - lag(total_dosis1) OVER (
 		PARTITION BY fips
@@ -569,14 +569,14 @@ SELECT
 	) AS salud_dosis1,
 	total_dosis2 AS salud_total_dosis2,
 	CAST(total_dosis2 AS DOUBLE)
-		/ popest2019
+		/ pop2020
 		AS salud_total_dosis2_pct,
 	total_dosis2 - lag(total_dosis2) OVER (
 		PARTITION BY fips
 		ORDER BY local_date
 	) AS salud_dosis2,
 	total_dosis AS salud_total_dosis,
-	100.0 * (total_dosis) / popest2019
+	100.0 * (total_dosis) / pop2020
 		AS salud_total_dosis_per_100,
 	total_dosis - lag(total_dosis) OVER (
 		PARTITION BY fips
@@ -763,7 +763,7 @@ CREATE OR REPLACE VIEW covid19datos_v2_etl.municipal_map AS
 SELECT
 	bulletin_date,
 	municipality,
-	popest2019,
+	pop2020,
 	sum(new_cases) FILTER (
 		WHERE date_add('day', -7, bulletin_date) <= sample_date
 	) new_7day_cases,
@@ -782,7 +782,7 @@ WHERE sample_date >= date_add('day', -28, bulletin_date)
 GROUP BY
 	bulletin_date,
 	municipality,
-	popest2019
+	pop2020
 ORDER BY
 	bulletin_date,
 	municipality;
