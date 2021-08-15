@@ -891,7 +891,7 @@ class AgeGroups(AbstractMolecularChart):
             groupby=['youngest'],
             value=0
         ).transform_calculate(
-            oldest='if(datum.youngest < 80, datum.youngest + 4, null)',
+            oldest='if(datum.youngest < 85, datum.youngest + 4, null)',
             edades="if(datum.oldest == null, '≤ ' + datum.youngest, datum.youngest + ' a ' + datum.oldest)"
         ).mark_rect().encode(
             x=alt.X('collected_date:T', timeUnit='yearmonthdate', title='Fecha de muestra',
