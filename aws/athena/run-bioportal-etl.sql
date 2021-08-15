@@ -643,8 +643,46 @@ SELECT
 	age_dim.age_lt,
 	age_dim.population,
 	sum(encounters) AS encounters,
+	sum(molecular) AS molecular,
+	sum(cumulative_molecular) - lag(sum(cumulative_molecular), 7) OVER (
+		PARTITION BY encounters.bulletin_date, age_dim.age_gte
+		ORDER BY collected_date
+	) AS molecular_7d,
+	sum(positive_molecular) AS positive_molecular,
+	sum(cumulative_positive_molecular) - lag(sum(cumulative_positive_molecular), 7) OVER (
+		PARTITION BY encounters.bulletin_date, age_dim.age_gte
+		ORDER BY collected_date
+	) AS positive_molecular_7d,
+	sum(antigens) AS antigens,
+	sum(cumulative_antigens) - lag(sum(cumulative_antigens), 7) OVER (
+		PARTITION BY encounters.bulletin_date, age_dim.age_gte
+		ORDER BY collected_date
+	) AS antigens_7d,
+	sum(positive_antigens) AS positive_antigens,
+	sum(cumulative_positive_antigens) - lag(sum(cumulative_positive_antigens), 7) OVER (
+		PARTITION BY encounters.bulletin_date, age_dim.age_gte
+		ORDER BY collected_date
+	) AS positive_antigens_7d,
 	sum(cases) AS cases,
-	COALESCE(sum(deaths), 0) AS deaths
+	sum(cumulative_cases) - lag(sum(cumulative_cases), 7) OVER (
+		PARTITION BY encounters.bulletin_date, age_dim.age_gte
+		ORDER BY collected_date
+	) AS cases_7d,
+	sum(molecular_cases) AS molecular_cases,
+	sum(cumulative_molecular_cases) - lag(sum(cumulative_molecular_cases), 7) OVER (
+		PARTITION BY encounters.bulletin_date, age_dim.age_gte
+		ORDER BY collected_date
+	) AS molecular_cases_7d,
+	sum(antigens_cases) AS antigens_cases,
+	sum(cumulative_antigens_cases) - lag(sum(cumulative_antigens_cases), 7) OVER (
+		PARTITION BY encounters.bulletin_date, age_dim.age_gte
+		ORDER BY collected_date
+	) AS antigens_cases_7d,
+	COALESCE(sum(deaths), 0) AS deaths,
+	sum(cumulative_deaths) - lag(sum(cumulative_deaths), 7) OVER (
+		PARTITION BY encounters.bulletin_date, age_dim.age_gte
+		ORDER BY collected_date
+	) AS deaths_7d
 FROM covid_pr_etl.bioportal_encounters_cube encounters
 LEFT OUTER JOIN covid_pr_etl.bioportal_deaths_age_agg deaths
     ON deaths.bulletin_date = encounters.bulletin_date
@@ -666,7 +704,6 @@ ORDER BY
 	bulletin_date,
 	collected_date,
 	age_dim.age_gte;
-
 
 ----------------------------------------------------------
 ----------------------------------------------------------
@@ -1150,6 +1187,9 @@ SELECT
 	population,
 	age_gte AS youngest,
 	age_lt - 1 AS oldest,
+	encounters,
+	1e6 * encounters / population
+		AS encounters_1m,
 	cases,
 	1e6 * cases / population
 		AS cases_1m,
@@ -1161,6 +1201,27 @@ ORDER BY
 	bulletin_date DESC,
 	collected_date DESC,
 	youngest;
+
+--
+-- RecentAgeGroups chart
+--
+CREATE OR REPLACE VIEW covid_pr_etl.recent_age_groups AS
+SELECT
+	bulletin_date,
+	collected_date,
+	age_gte AS youngest,
+	age_lt - 1 AS oldest,
+	population,
+	encounters,
+	molecular,
+	antigens,
+	cases,
+	deaths
+FROM covid_pr_etl.bioportal_acs_age_curve
+WHERE collected_date >= date_add('day', -91, bulletin_date)
+ORDER BY
+	bulletin_date DESC,
+	collected_date DESC;
 
 
 --

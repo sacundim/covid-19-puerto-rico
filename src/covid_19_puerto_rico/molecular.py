@@ -919,6 +919,76 @@ class AgeGroups(AbstractMolecularChart):
         )
 
 
+class RecentAgeGroups(AbstractMolecularChart):
+    def fetch_data(self, connection, bulletin_dates):
+        table = sqlalchemy.Table('recent_age_groups', self.metadata,
+                                 schema='covid_pr_etl', autoload=True)
+        query = select([
+            table.c.bulletin_date,
+            table.c.collected_date,
+            table.c.youngest,
+            table.c.population,
+            table.c.encounters.label('Pruebas'),
+            table.c.cases.label('Casos'),
+            table.c.deaths.label('Muertes'),
+        ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
+                      table.c.bulletin_date <= max(bulletin_dates)))
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
+        return pd.melt(df, ['bulletin_date', 'collected_date', 'youngest', 'population'])
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df, bulletin_date):
+        WIDTH = 275
+        return alt.Chart(df).transform_impute(
+            impute='value',
+            key='collected_date',
+            groupby=['variable', 'bulletin_date', 'youngest'],
+            value=0
+        ).transform_calculate(
+            oldest='if(datum.youngest < 80, datum.youngest + 4, null)',
+            edades="if(datum.oldest == null, '≤ ' + datum.youngest, datum.youngest + ' a ' + datum.oldest)",
+            value_1m=(alt.datum.value / alt.datum.population) * 1e6
+        ).transform_window(
+            groupby=['youngest', 'bulletin_date'],
+            sort=[{'field': 'collected_date'}],
+            frame=[-6, 0],
+            mean_value='mean(value)',
+            mean_value_1m='mean(value_1m)'
+        ).transform_filter(
+            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=84))
+        ).mark_rect().encode(
+            x=alt.X('collected_date:T', timeUnit='yearmonthdate', title='Fecha de muestra',
+                    axis=alt.Axis(format='%-d/%-m')),
+            y=alt.Y('youngest:O', title='Edad',
+                    axis=alt.Axis(labelBaseline='alphabetic',
+                                  labelOverlap=True, tickBand='extent')),
+            color=alt.Color('mean_value_1m:Q', title='Diarios por millón',
+                            sort='descending', scale=alt.Scale(scheme='spectral', type='sqrt'),
+                            legend=alt.Legend(orient='top', gradientLength=WIDTH,
+                                              labelOverlap=True, labelSeparation=5)),
+            tooltip=[
+                alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                alt.Tooltip('collected_date:T', title='Fecha de muestra'),
+                alt.Tooltip('edades:N', title='Edad'),
+                alt.Tooltip('variable:N', title='Variable'),
+                alt.Tooltip('mean_value:Q', format=',.1f', title='Diarios (7 días)'),
+                alt.Tooltip('mean_value_1m:Q', format=',d', title='Diarios (7 días, por millón)')
+            ]
+        ).properties(
+            width=WIDTH, height=175
+        ).facet(
+            columns=2,
+            facet=alt.Facet('variable:N', title=None,
+                            sort=["Pruebas", "Casos", "Muertes"])
+        ).resolve_scale(
+            color='independent',
+            x='independent',
+            y='independent'
+        )
+
+
 class VaccinationMap(AbstractMolecularChart):
     WIDTH = 600
     HEIGHT = 250
