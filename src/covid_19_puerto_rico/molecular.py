@@ -920,7 +920,7 @@ class AgeGroups(AbstractMolecularChart):
 
 
 class RecentAgeGroups(AbstractMolecularChart):
-    WIDTH = 275
+    WIDTH = 260
     HEIGHT = 175
     DAYS=168
 
