@@ -66,7 +66,7 @@ resource "aws_ecs_task_definition" "bioportal_download_and_sync" {
 resource "aws_cloudwatch_event_rule" "bioportal_daily_download" {
   name        = "bioportal-daily-download"
   description = "Run the daily Bioportal download."
-  schedule_expression = "cron(55 15 * * ? *)"
+  schedule_expression = "cron(55 09 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "bioportal_daily_download" {
