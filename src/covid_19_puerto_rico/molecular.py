@@ -922,7 +922,7 @@ class AgeGroups(AbstractMolecularChart):
 class RecentAgeGroups(AbstractMolecularChart):
     WIDTH = 275
     HEIGHT = 175
-
+    DAYS=168
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('recent_age_groups', self.metadata,
@@ -965,7 +965,7 @@ class RecentAgeGroups(AbstractMolecularChart):
             mean_value='mean(value)',
             mean_value_1m='mean(value_1m)'
         ).transform_filter(
-            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=84))
+            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=self.DAYS))
         ).mark_rect().encode(
             x=alt.X('collected_date:T', timeUnit='yearmonthdate', title=None,
                     axis=alt.Axis(format='%-d/%-m')),
@@ -1011,7 +1011,7 @@ class RecentAgeGroups(AbstractMolecularChart):
             mean_value='mean(value)',
             mean_value_1m='mean(value_1m)'
         ).transform_filter(
-            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=84))
+            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=self.DAYS))
         ).mark_rect().encode(
             x=alt.X('collected_date:T', timeUnit='yearmonthdate', title=None,
                     axis=alt.Axis(format='%-d/%-m')),
@@ -1054,7 +1054,7 @@ class RecentAgeGroups(AbstractMolecularChart):
             sum_positive_molecular='sum(positive_molecular)',
             sum_molecular = 'sum(Moleculares)',
         ).transform_filter(
-            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=84))
+            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=self.DAYS))
         ).transform_calculate(
             oldest='if(datum.youngest < 85, datum.youngest + 4, null)',
             edades="if(datum.oldest == null, '≤ ' + datum.youngest, datum.youngest + ' a ' + datum.oldest)"

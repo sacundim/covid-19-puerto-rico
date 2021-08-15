@@ -1205,7 +1205,7 @@ SELECT
 	positive_antigens,
 	positive_molecular
 FROM covid_pr_etl.bioportal_acs_age_curve
-WHERE collected_date >= date_add('day', -91, bulletin_date)
+WHERE collected_date >= date_add('day', -119, bulletin_date)
 ORDER BY
 	bulletin_date DESC,
 	collected_date DESC,
