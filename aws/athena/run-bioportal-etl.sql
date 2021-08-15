@@ -643,7 +643,29 @@ SELECT
 	age_dim.age_lt,
 	age_dim.population,
 	sum(encounters) AS encounters,
+	sum(molecular) AS molecular,
+	sum(sum(molecular)) OVER (
+		PARTITION BY encounters.bulletin_date, age_dim.age_gte
+		ORDER BY collected_date
+	) AS cumulative_molecular,
+	sum(positive_molecular) AS positive_molecular,
+	sum(sum(positive_molecular)) OVER (
+		PARTITION BY encounters.bulletin_date, age_dim.age_gte
+		ORDER BY collected_date
+	) AS cumulative_positive_molecular,
+	sum(antigens) AS antigens,
+	sum(sum(antigens)) OVER (
+		PARTITION BY encounters.bulletin_date, age_dim.age_gte
+		ORDER BY collected_date
+	) AS cumulative_antigens,
+	sum(positive_antigens) AS positive_antigens,
+	sum(sum(positive_antigens)) OVER (
+		PARTITION BY encounters.bulletin_date, age_dim.age_gte
+		ORDER BY collected_date
+	) AS cumulative_positive_antigens,
 	sum(cases) AS cases,
+	sum(molecular_cases) AS molecular_cases,
+	sum(antigens_cases) AS antigens_cases,
 	COALESCE(sum(deaths), 0) AS deaths
 FROM covid_pr_etl.bioportal_encounters_cube encounters
 LEFT OUTER JOIN covid_pr_etl.bioportal_deaths_age_agg deaths
@@ -1150,6 +1172,9 @@ SELECT
 	population,
 	age_gte AS youngest,
 	age_lt - 1 AS oldest,
+	encounters,
+	1e6 * encounters / population
+		AS encounters_1m,
 	cases,
 	1e6 * cases / population
 		AS cases_1m,
@@ -1157,6 +1182,32 @@ SELECT
 	1e6 * deaths / population
 		AS deaths_1m
 FROM covid_pr_etl.bioportal_acs_age_curve
+ORDER BY
+	bulletin_date DESC,
+	collected_date DESC,
+	youngest;
+
+--
+-- RecentAgeGroups chart
+--
+CREATE OR REPLACE VIEW covid_pr_etl.recent_age_groups AS
+SELECT
+	bulletin_date,
+	collected_date,
+	age_gte AS youngest,
+	age_lt - 1 AS oldest,
+	population,
+	encounters,
+	antigens,
+	molecular,
+	cases,
+	antigens_cases,
+	molecular_cases,
+	deaths,
+	positive_antigens,
+	positive_molecular
+FROM covid_pr_etl.bioportal_acs_age_curve
+WHERE collected_date >= date_add('day', -119, bulletin_date)
 ORDER BY
 	bulletin_date DESC,
 	collected_date DESC,
