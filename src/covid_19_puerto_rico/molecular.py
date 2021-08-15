@@ -949,8 +949,8 @@ class RecentAgeGroups(AbstractMolecularChart):
 
     def make_chart(self, df, bulletin_date):
         return alt.vconcat(
-            self.make_tests_chart(df, bulletin_date),
             self.make_cases_charts(df, bulletin_date),
+            self.make_tests_chart(df, bulletin_date),
             self.make_case_test_charts(df, bulletin_date),
             self.make_positivity_chart(df, bulletin_date),
             spacing=40
@@ -979,8 +979,9 @@ class RecentAgeGroups(AbstractMolecularChart):
             y=alt.Y('youngest:O', title=None,
                     axis=alt.Axis(labelBaseline='alphabetic',
                                   labelOverlap=True, tickBand='extent')),
-            color=alt.Color('mean_tests_1m:Q', title='Pruebas (personas diarias por millón del grupo etario)',
-                            sort='descending', scale=alt.Scale(scheme='spectral', type='sqrt'),
+            color=alt.Color('mean_tests_1m:Q',
+                            title='Pruebas (personas diarias por millón del grupo etario)',
+                            scale=alt.Scale(scheme='spectral', type='log'),
                             legend=alt.Legend(orient='top', gradientLength=self.WIDTH * 2 + 70,
                                               labelOverlap=True, labelSeparation=5,
                                               titleLimit=self.WIDTH * 2 + 70)),
@@ -1136,7 +1137,7 @@ class RecentAgeGroups(AbstractMolecularChart):
                 alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                 alt.Tooltip('edades:N', title='Edad'),
                 alt.Tooltip('variable:N', title='Variable'),
-                alt.Tooltip('value:Q', format=',.1%', title='Positividad (7 días)')
+                alt.Tooltip('value:Q', format='.3p', title='Positividad (7 días)')
             ]
         ).properties(
             width=self.WIDTH, height=self.HEIGHT
