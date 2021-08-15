@@ -938,6 +938,8 @@ class RecentAgeGroups(AbstractMolecularChart):
             table.c.positive_molecular,
             table.c.cases.label('Casos'),
             table.c.deaths.label('Muertes'),
+            table.c.antigens_cases.label('Casos por antígeno'),
+            table.c.molecular_cases.label('Casos por molecular'),
         ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
                       table.c.bulletin_date <= max(bulletin_dates)))
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
@@ -946,24 +948,29 @@ class RecentAgeGroups(AbstractMolecularChart):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
     def make_chart(self, df, bulletin_date):
-        return alt.vconcat(self.make_tests_chart(df, bulletin_date),
-                           self.make_cases_charts(df, bulletin_date),
-                           self.make_positivity_chart(df, bulletin_date),
-                           spacing=40)
+        return alt.vconcat(
+            self.make_tests_chart(df, bulletin_date),
+            self.make_cases_charts(df, bulletin_date),
+            self.make_case_test_charts(df, bulletin_date),
+            self.make_positivity_chart(df, bulletin_date),
+            spacing=40
+        ).resolve_scale(
+            color='independent'
+        )
 
     def make_tests_chart(self, df, bulletin_date):
         return alt.Chart(df).transform_fold(
-            ['Antígenos', 'Moleculares'], as_=['variable', 'value']
+            ['Antígenos', 'Moleculares'], as_=['variable', 'tests']
         ).transform_calculate(
             oldest='if(datum.youngest < 85, datum.youngest + 4, null)',
             edades="if(datum.oldest == null, '≤ ' + datum.youngest, datum.youngest + ' a ' + datum.oldest)",
-            value_1m=(alt.datum.value / alt.datum.population) * 1e6
+            tests_1m=(alt.datum.tests / alt.datum.population) * 1e6
         ).transform_window(
             groupby=['youngest', 'bulletin_date', 'variable'],
             sort=[{'field': 'collected_date'}],
             frame=[-6, 0],
-            mean_value='mean(value)',
-            mean_value_1m='mean(value_1m)'
+            mean_tests='mean(tests)',
+            mean_tests_1m='mean(tests_1m)'
         ).transform_filter(
             alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=self.DAYS))
         ).mark_rect().encode(
@@ -972,7 +979,7 @@ class RecentAgeGroups(AbstractMolecularChart):
             y=alt.Y('youngest:O', title=None,
                     axis=alt.Axis(labelBaseline='alphabetic',
                                   labelOverlap=True, tickBand='extent')),
-            color=alt.Color('mean_value_1m:Q', title='Pruebas (personas diarias por millón del grupo etario)',
+            color=alt.Color('mean_tests_1m:Q', title='Pruebas (personas diarias por millón del grupo etario)',
                             sort='descending', scale=alt.Scale(scheme='spectral', type='sqrt'),
                             legend=alt.Legend(orient='top', gradientLength=self.WIDTH * 2 + 70,
                                               labelOverlap=True, labelSeparation=5,
@@ -982,8 +989,8 @@ class RecentAgeGroups(AbstractMolecularChart):
                 alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                 alt.Tooltip('edades:N', title='Edad'),
                 alt.Tooltip('variable:N', title='Variable'),
-                alt.Tooltip('mean_value:Q', format=',.1f', title='Diarios (7 días)'),
-                alt.Tooltip('mean_value_1m:Q', format=',d', title='Diarios (7 días, por millón)')
+                alt.Tooltip('mean_tests:Q', format=',.1f', title='Pruebas diarias (7 días)'),
+                alt.Tooltip('mean_tests_1m:Q', format=',d', title='Pruebas diarias (7 días, por millón)')
             ]
         ).properties(
             width=self.WIDTH, height=self.HEIGHT
@@ -999,17 +1006,17 @@ class RecentAgeGroups(AbstractMolecularChart):
 
     def make_cases_charts(self, df, bulletin_date):
         return alt.Chart(df).transform_fold(
-            ['Casos', 'Muertes'], as_=['variable', 'value']
+            ['Casos', 'Muertes'], as_=['variable', 'incidences']
         ).transform_calculate(
             oldest='if(datum.youngest < 85, datum.youngest + 4, null)',
             edades="if(datum.oldest == null, '≤ ' + datum.youngest, datum.youngest + ' a ' + datum.oldest)",
-            value_1m=(alt.datum.value / alt.datum.population) * 1e6
+            incidences_1m=(alt.datum.incidences / alt.datum.population) * 1e6
         ).transform_window(
             groupby=['youngest', 'bulletin_date', 'variable'],
             sort=[{'field': 'collected_date'}],
             frame=[-6, 0],
-            mean_value='mean(value)',
-            mean_value_1m='mean(value_1m)'
+            mean_incidences='mean(incidences)',
+            mean_incidences_1m='mean(incidences_1m)'
         ).transform_filter(
             alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=self.DAYS))
         ).mark_rect().encode(
@@ -1018,7 +1025,7 @@ class RecentAgeGroups(AbstractMolecularChart):
             y=alt.Y('youngest:O', title=None,
                     axis=alt.Axis(labelBaseline='alphabetic',
                                   labelOverlap=True, tickBand='extent')),
-            color=alt.Color('mean_value_1m:Q', title='Diarios (por millón del grupo etario)',
+            color=alt.Color('mean_incidences_1m:Q', title='Diarios (por millón del grupo etario)',
                             sort='descending', scale=alt.Scale(scheme='spectral', type='sqrt'),
                             legend=alt.Legend(orient='top', gradientLength=self.WIDTH,
                                               labelOverlap=True, labelSeparation=5,
@@ -1028,8 +1035,8 @@ class RecentAgeGroups(AbstractMolecularChart):
                 alt.Tooltip('collected_date:T', title='Fecha de muestra'),
                 alt.Tooltip('edades:N', title='Edad'),
                 alt.Tooltip('variable:N', title='Variable'),
-                alt.Tooltip('mean_value:Q', format=',.1f', title='Diarios (7 días)'),
-                alt.Tooltip('mean_value_1m:Q', format=',d', title='Diarios (7 días, por millón)')
+                alt.Tooltip('mean_incidences:Q', format=',.1f', title='Diarios (7 días)'),
+                alt.Tooltip('mean_incidences_1m:Q', format=',d', title='Diarios (7 días, por millón)')
             ]
         ).properties(
             width=self.WIDTH, height=self.HEIGHT
@@ -1040,6 +1047,54 @@ class RecentAgeGroups(AbstractMolecularChart):
                             header=alt.Header(orient='right'))
         ).resolve_scale(
             color='independent',
+            x='independent',
+            y='independent'
+        )
+
+    def make_case_test_charts(self, df, bulletin_date):
+        return alt.Chart(df).transform_fold(
+            ['Casos por antígeno', 'Casos por molecular'], as_=['variable', 'cases']
+        ).transform_calculate(
+            oldest='if(datum.youngest < 85, datum.youngest + 4, null)',
+            edades="if(datum.oldest == null, '≤ ' + datum.youngest, datum.youngest + ' a ' + datum.oldest)",
+            cases_1m=(alt.datum.cases / alt.datum.population) * 1e6
+        ).transform_window(
+            groupby=['youngest', 'bulletin_date', 'variable'],
+            sort=[{'field': 'collected_date'}],
+            frame=[-6, 0],
+            mean_cases='mean(cases)',
+            mean_cases_1m='mean(cases_1m)'
+        ).transform_filter(
+            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=self.DAYS))
+        ).mark_rect().encode(
+            x=alt.X('collected_date:T', timeUnit='yearmonthdate', title=None,
+                    axis=alt.Axis(format='%-d/%-m')),
+            y=alt.Y('youngest:O', title=None,
+                    axis=alt.Axis(labelBaseline='alphabetic',
+                                  labelOverlap=True, tickBand='extent')),
+            color=alt.Color('mean_cases_1m:Q',
+                            title='Casos diarios por tipo de prueba (por millón del grupo etario)',
+                            sort='descending', scale=alt.Scale(scheme='spectral', type='sqrt'),
+                            legend=alt.Legend(orient='top', gradientLength=self.WIDTH * 2 + 70,
+                                              labelOverlap=True, labelSeparation=5,
+                                              titleLimit=self.WIDTH * 2 + 70)),
+            tooltip=[
+                alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                alt.Tooltip('collected_date:T', title='Fecha de muestra'),
+                alt.Tooltip('edades:N', title='Edad'),
+                alt.Tooltip('variable:N', title='Variable'),
+                alt.Tooltip('mean_cases:Q', format=',.1f', title='Diarios (7 días)'),
+                alt.Tooltip('mean_cases:Q', format=',d', title='Diarios (7 días, por millón)')
+            ]
+        ).properties(
+            width=self.WIDTH, height=self.HEIGHT
+        ).facet(
+            columns=2,
+            facet=alt.Facet('variable:N', title=None,
+                            sort=['Casos por antígeno',
+                                  'Casos por molecular'],
+                            header=alt.Header(orient='right'))
+        ).resolve_scale(
             x='independent',
             y='independent'
         )

@@ -1201,6 +1201,8 @@ SELECT
 	antigens,
 	molecular,
 	cases,
+	antigens_cases,
+	molecular_cases,
 	deaths,
 	positive_antigens,
 	positive_molecular
