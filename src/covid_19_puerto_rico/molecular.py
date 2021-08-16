@@ -972,7 +972,7 @@ class RecentAgeGroups(AbstractMolecularChart):
             mean_tests='mean(tests)',
             mean_tests_1m='mean(tests_1m)'
         ).transform_filter(
-            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=self.DAYS))
+            alt.datum.collected_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=self.DAYS))
         ).mark_rect().encode(
             x=alt.X('collected_date:T', timeUnit='yearmonthdate', title=None,
                     axis=alt.Axis(format='%-d/%-m')),
@@ -1019,7 +1019,7 @@ class RecentAgeGroups(AbstractMolecularChart):
             mean_incidences='mean(incidences)',
             mean_incidences_1m='mean(incidences_1m)'
         ).transform_filter(
-            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=self.DAYS))
+            alt.datum.collected_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=self.DAYS))
         ).mark_rect().encode(
             x=alt.X('collected_date:T', timeUnit='yearmonthdate', title=None,
                     axis=alt.Axis(format='%-d/%-m')),
@@ -1066,7 +1066,7 @@ class RecentAgeGroups(AbstractMolecularChart):
             mean_cases='mean(cases)',
             mean_cases_1m='mean(cases_1m)'
         ).transform_filter(
-            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=self.DAYS))
+            alt.datum.collected_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=self.DAYS))
         ).mark_rect().encode(
             x=alt.X('collected_date:T', timeUnit='yearmonthdate', title=None,
                     axis=alt.Axis(format='%-d/%-m')),
@@ -1110,7 +1110,7 @@ class RecentAgeGroups(AbstractMolecularChart):
             sum_positive_molecular='sum(positive_molecular)',
             sum_molecular = 'sum(Moleculares)',
         ).transform_filter(
-            alt.datum.bulletin_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=self.DAYS))
+            alt.datum.collected_date >= util.altair_date_expr(bulletin_date - datetime.timedelta(days=self.DAYS))
         ).transform_calculate(
             oldest='if(datum.youngest < 85, datum.youngest + 4, null)',
             edades="if(datum.oldest == null, '≤ ' + datum.youngest, datum.youngest + ' a ' + datum.oldest)"
