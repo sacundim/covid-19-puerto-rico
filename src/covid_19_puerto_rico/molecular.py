@@ -1154,8 +1154,10 @@ class RecentAgeGroups(AbstractMolecularChart):
 
 
 class VaccinationMap(AbstractMolecularChart):
-    WIDTH = 600
-    HEIGHT = 250
+    FULL_WIDTH = 600
+    FULL_HEIGHT = 250
+    HALF_WIDTH = 280
+    HALF_HEIGHT = 150
 
     def geography(self):
         return alt.InlineData(values=util.get_geojson_resource('municipalities.topojson'),
@@ -1199,18 +1201,13 @@ class VaccinationMap(AbstractMolecularChart):
                       & (df['local_date'] <= until_date)]
 
     def make_chart(self, df, bulletin_date):
-        dosis2 = self.make_subchart(
+        cumulative = self.make_cumulative_chart(
             df, bulletin_date, 'salud_total_dosis2', 'Personas con régimen completo'
-        ).properties(
-            width=self.WIDTH,
-            height=self.HEIGHT
         )
-        rate = self.make_daily_rate_chart(df).properties(
-            width=self.WIDTH,
-            height=self.HEIGHT
-        )
-        # TODO: Reenable rate map: alt.vconcat(dosis2, rate)
-        return alt.vconcat(dosis2).configure_view(
+
+        rate = self.make_daily_rate_chart(df)
+
+        return alt.vconcat(cumulative, rate).configure_view(
             strokeWidth=0
         ).configure_concat(
             spacing=40
@@ -1218,7 +1215,7 @@ class VaccinationMap(AbstractMolecularChart):
             color='independent'
         )
 
-    def make_subchart(self, df, bulletin_date, variable, title):
+    def make_cumulative_chart(self, df, bulletin_date, variable, title):
         DOMAIN_MID = 0.775
 
         return alt.Chart(df).transform_filter(
@@ -1228,49 +1225,69 @@ class VaccinationMap(AbstractMolecularChart):
         ).transform_lookup(
             lookup='municipio',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
-        ).mark_geoshape().encode(
+        ).mark_geoshape().project(
+            type='mercator'
+        ).encode(
             color=alt.Color('pct:Q', type='quantitative',
                             scale=alt.Scale(type='linear', scheme='blueorange', reverse=True,
                                             domain=alt.DomainUnionWith(unionWith=[1.0]),
                                             domainMid=DOMAIN_MID, clamp=True),
                             legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                               title=title, labelSeparation=10, format='.0%',
-                                              offset=-15, gradientLength=self.WIDTH - 10)),
+                                              offset=-15, gradientLength=self.FULL_WIDTH - 10)),
             tooltip=[alt.Tooltip(field='local_date', type='temporal', title='Fecha'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
                      alt.Tooltip(field='pop2020', type='quantitative', format=',d', title='Población'),
                      alt.Tooltip(field=variable, title=title, type='quantitative', format=',d'),
                      alt.Tooltip(field='pct', type='quantitative', format='.1%', title='Porciento')]
+        ).properties(
+            width=self.FULL_WIDTH,
+            height=self.FULL_HEIGHT
         )
 
     def make_daily_rate_chart(self, df):
+        rate1 = self.make_daily_rate_subchart(
+            df, 'salud_dosis1', 'Velocidad 1ra dosis'
+        ).properties(
+            width=self.HALF_WIDTH, height=self.HALF_HEIGHT
+        )
+        rate2 = self.make_daily_rate_subchart(
+            df, 'salud_dosis2', 'Velocidad 2da dosis'
+        ).properties(
+            width=self.HALF_WIDTH, height=self.HALF_HEIGHT
+        )
+        return alt.hconcat(rate1, rate2)
+
+    def make_daily_rate_subchart(self, df, variable, title):
         return alt.Chart(df).transform_calculate(
-            salud_dosis_per_100=100.0 * alt.datum.salud_dosis / alt.datum.pop2020
+            dosis_pct=alt.datum[variable] / alt.datum.pop2020
         ).transform_aggregate(
             groupby=['municipio'],
             min_local_date='min(local_date)',
             max_local_date='max(local_date)',
             pop2020='mean(pop2020)',
-            mean_dosis='mean(salud_dosis)',
-            mean_dosis_per_100='mean(salud_dosis_per_100)'
+            mean_dosis=f'mean({variable})',
+            mean_rate_pct='mean(dosis_pct)'
         ).transform_lookup(
             lookup='municipio',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
-        ).mark_geoshape().encode(
-            color=alt.Color('mean_dosis_per_100:Q', type='quantitative',
+        ).mark_geoshape().project(
+            type='mercator'
+        ).encode(
+            color=alt.Color('mean_rate_pct:Q', type='quantitative',
                             scale=alt.Scale(type='linear', scheme='blueorange', reverse=True),
-                            legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
-                                              labelSeparation=10, offset=-15,
-                                              gradientLength=self.WIDTH - 10,
-                                              title='Dosis diarias por 100 habitantes, promedio 7 días')),
+                            legend=alt.Legend(orient='top', titleLimit=self.FULL_WIDTH, titleOrient='top',
+                                              labelSeparation=10, offset=-15, gradientLength=self.FULL_WIDTH,
+                                              title='Velocidad (% vacunado diario, inicial vs. completo)',
+                                              format='%')),
             tooltip=[alt.Tooltip(field='min_local_date', type='temporal', title='Desde'),
                      alt.Tooltip(field='max_local_date', type='temporal', title='Hasta'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
                      alt.Tooltip(field='pop2020', type='quantitative', format=',d', title='Población'),
-                     alt.Tooltip(field='mean_dosis', type='quantitative', format=',d',
+                     alt.Tooltip(field='mean_dosis', type='quantitative', format=',.1f',
                                  title='Dosis diarias (promedio 7 días)'),
-                     alt.Tooltip(field='mean_dosis_per_100', type='quantitative', format=',.1f',
-                                 title='Dosis diarias por 100 habitantes (promedio 7 días)')]
+                     alt.Tooltip(field='mean_rate_pct', type='quantitative', format=',.2p',
+                                 title='Dosis diarias como % de habitantes (promedio 7 días)')]
         )
 
 
