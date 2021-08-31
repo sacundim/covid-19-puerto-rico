@@ -617,7 +617,7 @@ class MunicipalMap(AbstractChart):
             daily_cases=alt.datum.new_14day_cases / 14.0,
             daily_cases_100k=((alt.datum.new_14day_cases * 1e5) / alt.datum.pop2020) / 14.0,
             trend='(datum.new_14day_cases / if(datum.previous_14day_cases == 0, 1, datum.previous_14day_cases)) - 1.0'
-        ).mark_geoshape().encode(
+        ).mark_geoshape(stroke='black', strokeWidth=0.25).encode(
             color=color,
             tooltip=[alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha de boletín'),
                      alt.Tooltip(field='municipality', type='nominal', title='Municipio'),

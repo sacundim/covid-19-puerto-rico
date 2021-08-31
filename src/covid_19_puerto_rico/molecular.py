@@ -1225,7 +1225,7 @@ class VaccinationMap(AbstractMolecularChart):
         ).transform_lookup(
             lookup='municipio',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
-        ).mark_geoshape().project(
+        ).mark_geoshape(stroke='black', strokeWidth=0.25).project(
             type='mercator'
         ).encode(
             color=alt.Color('pct:Q', type='quantitative',
@@ -1271,7 +1271,7 @@ class VaccinationMap(AbstractMolecularChart):
         ).transform_lookup(
             lookup='municipio',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
-        ).mark_geoshape().project(
+        ).mark_geoshape(stroke='black', strokeWidth=0.25).project(
             type='mercator'
         ).encode(
             color=alt.Color('mean_rate_pct:Q', type='quantitative',
