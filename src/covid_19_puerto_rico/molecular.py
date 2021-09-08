@@ -1275,7 +1275,13 @@ class VaccinationMap(AbstractMolecularChart):
             type='mercator'
         ).encode(
             color=alt.Color('mean_rate_pct:Q', type='quantitative',
-                            scale=alt.Scale(type='linear', scheme='blueorange', reverse=True),
+                            scale=alt.Scale(type='linear', scheme='blueorange', reverse=True,
+                                            # We pick 0.7% as the domain top value because, looking
+                                            # at Our World in Data, 1.4 doses/day/100 looks like a common
+                                            # top rate that many countries have approached or achieved,
+                                            # and almost none exceeded.  So half that because we have
+                                            # a first doses and a final doses map.
+                                            domain=[0, 0.007], clamp=True),
                             legend=alt.Legend(orient='top', titleLimit=self.FULL_WIDTH, titleOrient='top',
                                               labelSeparation=10, offset=-15, gradientLength=self.FULL_WIDTH,
                                               title='Velocidad (% vacunado diario, inicial vs. completo)',
