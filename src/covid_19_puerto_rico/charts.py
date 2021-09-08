@@ -586,12 +586,18 @@ class MunicipalMap(AbstractChart):
     def make_cases_chart(self, df):
         return self.make_subchart(
             df,
-            alt.Color('daily_cases_100k', type='quantitative', sort='descending',
-                      scale=alt.Scale(type='sqrt', scheme='redgrey', domainMid=0.0,
+            alt.Color('daily_cases_100k', type='quantitative',
+                      scale=alt.Scale(type='sqrt', scheme='redgrey', reverse=True,
+                                      clamp=True, domainMid=0,
                                       # WORKAROUND: Set the domain manually to forcibly
                                       # include zero or else we run into
                                       # https://github.com/vega/vega-lite/issues/6544
-                                      domain=alt.DomainUnionWith(unionWith=[0])),
+                                      #
+                                      # Also, we union with 40 so that the scale always
+                                      # goes at least that high, but if values exceed
+                                      # that then we let the data determine the top
+                                      # of the domain.
+                                      domain=alt.DomainUnionWith(unionWith=[0, 40])),
                       legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
                                         title='Casos diarios (por 100k de población, promedio 14 días)',
                                         offset=-15, labelSeparation=10,
