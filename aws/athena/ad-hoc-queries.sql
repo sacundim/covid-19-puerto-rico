@@ -28,38 +28,6 @@ ORDER BY bulletin_date DESC, test_type DESC;
 
 
 --
--- Bioportal curve.
---
-WITH bulletins AS (
-	SELECT max(bulletin_date) AS max_bulletin_date
-	FROM covid_pr_etl.bioportal_curve
-)
-SELECT
-	max_bulletin_date "Datos",
-	bio.collected_date AS "Muestras",
-	bio.encounters "Evaluados",
-	(bio.cumulative_encounters - lag(bio.cumulative_encounters, 7) OVER (
-		ORDER BY bio.collected_date
-	)) / 7.0 AS "Promedio",
-	bio.molecular "Molecular",
-	(bio.cumulative_molecular - lag(bio.cumulative_molecular, 7) OVER (
-		ORDER BY bio.collected_date
-	)) / 7.0 AS "Promedio",
-	bio.antigens "Antígeno",
-	(bio.cumulative_antigens - lag(bio.cumulative_antigens, 7) OVER (
-		ORDER BY bio.collected_date
-	)) / 7.0 AS "Promedio",
-	bio.cases "Casos",
-	(bio.cumulative_cases - lag(bio.cumulative_cases, 7) OVER (
-		ORDER BY bio.collected_date
-	)) / 7.0 AS "Promedio"
-FROM covid_pr_etl.bioportal_encounters_agg bio
-INNER JOIN bulletins
-	ON bulletins.max_bulletin_date = bio.bulletin_date
-ORDER BY bio.collected_date DESC;
-
-
---
 -- Datos básicos de hospitalizaciones
 --
 SELECT
@@ -111,6 +79,65 @@ INNER JOIN bulletins
 INNER JOIN covid19datos_v2_etl.bulletin_cases bul
 	ON bul.bulletin_date = bio.bulletin_date
 	AND bul.datum_date = bio.collected_date
+ORDER BY bio.collected_date DESC;
+
+
+--
+-- Bioportal curve.
+--
+WITH bulletins AS (
+	SELECT max(bulletin_date) AS max_bulletin_date
+	FROM covid_pr_etl.bioportal_curve
+)
+SELECT
+	max_bulletin_date "Datos",
+	bio.collected_date AS "Muestras",
+	bio.encounters "Evaluados",
+	(bio.cumulative_encounters - lag(bio.cumulative_encounters, 7) OVER (
+		ORDER BY bio.collected_date
+	)) / 7.0 AS "Promedio",
+	bio.molecular "Molecular",
+	(bio.cumulative_molecular - lag(bio.cumulative_molecular, 7) OVER (
+		ORDER BY bio.collected_date
+	)) / 7.0 AS "Promedio",
+	bio.antigens "Antígeno",
+	(bio.cumulative_antigens - lag(bio.cumulative_antigens, 7) OVER (
+		ORDER BY bio.collected_date
+	)) / 7.0 AS "Promedio",
+	bio.cases "Casos",
+	(bio.cumulative_cases - lag(bio.cumulative_cases, 7) OVER (
+		ORDER BY bio.collected_date
+	)) / 7.0 AS "Promedio"
+FROM covid_pr_etl.bioportal_encounters_agg bio
+INNER JOIN bulletins
+	ON bulletins.max_bulletin_date = bio.bulletin_date
+ORDER BY bio.collected_date DESC;
+
+
+--
+-- Casos detectados inicialmente por prueba de antígeno
+--
+WITH bulletins AS (
+	SELECT max(bulletin_date) AS max_bulletin_date
+	FROM covid_pr_etl.bioportal_curve
+)
+SELECT
+	max_bulletin_date "Datos",
+	bio.collected_date AS "Muestras",
+	(bio.cumulative_cases - lag(bio.cumulative_cases, 7) OVER (
+		ORDER BY bio.collected_date
+	)) / 7.0 AS "Casos",
+	(bio.cumulative_antigens_cases - lag(bio.cumulative_antigens_cases, 7) OVER (
+		ORDER BY bio.collected_date
+	)) / 7.0 AS "Por antígeno",
+	100.0 * (bio.cumulative_antigens_cases - lag(bio.cumulative_antigens_cases, 7) OVER (
+		ORDER BY bio.collected_date
+	)) / (bio.cumulative_cases - lag(bio.cumulative_cases, 7) OVER (
+		ORDER BY bio.collected_date
+	)) "Porcentaje"
+FROM covid_pr_etl.bioportal_encounters_agg bio
+INNER JOIN bulletins
+	ON bulletins.max_bulletin_date = bio.bulletin_date
 ORDER BY bio.collected_date DESC;
 
 
