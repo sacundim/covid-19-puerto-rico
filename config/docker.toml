@@ -1,5 +1,5 @@
 [postgres]
-drivername = "postgres"
+drivername = "postgresql"
 host = "db"
 port = "5432"
 database = "postgres"
