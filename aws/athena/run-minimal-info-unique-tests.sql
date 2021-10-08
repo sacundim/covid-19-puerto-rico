@@ -271,6 +271,13 @@ WITH tests AS (
         USING (municipality)
     WHERE test_type IN ('Antígeno', 'Molecular')
     GROUP BY bulletin_date, municipality
+), cases AS (
+	SELECT
+        bulletin_date,
+        municipality,
+        sum(new_cases) AS cumulative_cases
+	FROM covid19datos_v2_etl.cases_municipal_agg
+	GROUP BY bulletin_date, municipality
 )
 SELECT
 	local_date AS bulletin_date,
@@ -293,12 +300,12 @@ SELECT
 	cumulative_cases,
 	1e3 * cumulative_cases / race.population
 		AS cumulative_cases_1k,
-	total_dosis1,
-	CAST(total_dosis1 AS DOUBLE)
+	salud_total_dosis1 total_dosis1,
+	CAST(salud_total_dosis1 AS DOUBLE)
 		/ race.population
 		AS total_dosis1_pct,
-	total_dosis2,
-	CAST(total_dosis2 AS DOUBLE)
+	salud_total_dosis2 total_dosis2,
+	CAST(salud_total_dosis2 AS DOUBLE)
 		/ race.population
 		AS total_dosis2_pct,
 	cumulative_specimens,
@@ -317,12 +324,11 @@ SELECT
 		/ cumulative_molecular
 		AS cumulative_molecular_positivity
 FROM tests
-INNER JOIN covid19datos_sources.vacunaciones_municipios_totales_daily vax
+INNER JOIN covid19datos_v2_etl.municipal_vaccinations vax
 	ON vax.local_date = tests.bulletin_date
 	AND vax.municipio = tests.municipality
-INNER JOIN covid_pr_sources.bulletin_municipal cases
-	ON cases.bulletin_date = vax.local_date
-	AND cases.municipality = vax.municipio
+INNER JOIN cases
+	USING (bulletin_date, municipality)
 INNER JOIN covid_pr_sources.acs_2019_5y_municipal_race race
 	ON vax.municipio = race.municipality
 INNER JOIN covid_pr_sources.acs_2019_5y_municipal_household_income income

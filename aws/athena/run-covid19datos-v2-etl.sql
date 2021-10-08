@@ -411,7 +411,23 @@ SELECT
 	) AS new_confirmed,
 	count(casos.downloaded_at) FILTER (
 		WHERE class = 'PROBABLE'
-	) AS new_probable
+	) AS new_probable,
+	sum(count(casos.downloaded_at)) OVER (
+		PARTITION BY grid.bulletin_date, fips
+		ORDER BY grid.sample_date
+	) AS cumulative_cases,
+	sum(count(casos.downloaded_at) FILTER (
+		WHERE class = 'CONFIRMADO'
+	)) OVER (
+		PARTITION BY grid.bulletin_date, fips
+		ORDER BY grid.sample_date
+	) AS cumulative_confirmed,
+	sum(count(casos.downloaded_at) FILTER (
+		WHERE class = 'PROBABLE'
+	)) OVER (
+		PARTITION BY grid.bulletin_date, fips
+		ORDER BY grid.sample_date
+	) AS cumulative_probable
 FROM covid19datos_v2_etl.casos
 RIGHT OUTER JOIN grid
 	ON grid.city = casos.city
