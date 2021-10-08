@@ -1505,6 +1505,13 @@ class MunicipalTestingScatter(AbstractMolecularChart):
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
 
     def make_chart(self, df, bulletin_date):
+        antigens_per_capita = df['daily_antigens'] / df['population']
+        min_antigens_1k = antigens_per_capita.min() * 1000
+        max_antigens_1k = antigens_per_capita.max() * 1000
+        molecular_per_capita = df['daily_molecular'] / df['population']
+        min_molecular_1k = molecular_per_capita.min() * 1000
+        max_molecular_1k = molecular_per_capita.max() * 1000
+
         scatter = alt.Chart(df).transform_calculate(
             collected_since="timeOffset('day', datum.bulletin_date, -20)",
             daily_specimens_1k='1000 * datum.daily_specimens / datum.population',
@@ -1512,8 +1519,10 @@ class MunicipalTestingScatter(AbstractMolecularChart):
             daily_molecular_1k='1000 * datum.daily_molecular / datum.population'
         ).mark_point().encode(
             x=alt.X('daily_antigens_1k:Q', title='Antígenos por millar (promedio 21 días)',
+                    scale=alt.Scale(domain=[min_antigens_1k, max_antigens_1k], zero=False),
                     axis=alt.Axis(labelFlush=False)),
-            y=alt.Y('daily_molecular_1k:Q', title='Moleculares por millar (promedio 21 días)'),
+            y=alt.Y('daily_molecular_1k:Q', title='Moleculares por millar (promedio 21 días)',
+                    scale=alt.Scale(domain=[min_molecular_1k, max_molecular_1k], zero=False)),
             tooltip=[
                 alt.Tooltip('municipality:N', title='Municipio'),
                 alt.Tooltip('population:Q', format=',d', title='Población'),
@@ -1528,7 +1537,7 @@ class MunicipalTestingScatter(AbstractMolecularChart):
             ]
         )
 
-        text = scatter.mark_text(align='left', fontSize=9, angle=315, dx=5).encode(
+        text = scatter.mark_text(align='right', fontSize=9, angle=0, dx=-5).encode(
             text=alt.Text('abbreviation:N')
         )
 
@@ -1537,7 +1546,7 @@ class MunicipalTestingScatter(AbstractMolecularChart):
             sum_daily_antigens='sum(daily_antigens)'
         ).transform_calculate(
             sum_daily_antigens_1k='1000 * datum.sum_daily_antigens / datum.sum_population',
-        ).mark_rule(strokeWidth=0.5, strokeDash=[3, 2]).encode(
+        ).mark_rule(strokeWidth=0.5, strokeDash=[3, 2], clip=True).encode(
             x=alt.X('sum_daily_antigens_1k:Q')
         )
 
@@ -1546,7 +1555,7 @@ class MunicipalTestingScatter(AbstractMolecularChart):
             sum_daily_molecular='sum(daily_molecular)'
         ).transform_calculate(
             sum_daily_molecular_1k='1000 * datum.sum_daily_molecular / datum.sum_population'
-        ).mark_rule(strokeWidth=0.5, strokeDash=[3, 2]).encode(
+        ).mark_rule(strokeWidth=0.5, strokeDash=[3, 2], clip=True).encode(
             y=alt.Y('sum_daily_molecular_1k:Q')
         )
 
@@ -1556,7 +1565,7 @@ class MunicipalTestingScatter(AbstractMolecularChart):
         ).transform_calculate(
             zero='0', # dunno how else to do this in Altair
             sum_daily_specimens_1k='1000 * datum.sum_daily_specimens / datum.sum_population'
-        ).mark_rule(strokeWidth=0.5, strokeDash=[3, 2]).encode(
+        ).mark_rule(strokeWidth=0.5, strokeDash=[3, 2], clip=True).encode(
             x=alt.X('zero:Q'),
             x2=alt.X2('sum_daily_specimens_1k:Q'),
             y=alt.Y('sum_daily_specimens_1k:Q'),
