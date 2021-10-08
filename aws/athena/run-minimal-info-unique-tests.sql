@@ -181,7 +181,7 @@ SELECT
     bulletin_date,
     collected_date,
     municipality,
-    population,
+    pop2020 population,
     sum(specimens) AS specimens,
     coalesce(sum(specimens) FILTER (
         WHERE test_type = 'Antígeno'
@@ -197,15 +197,15 @@ SELECT
         WHERE test_type = 'Molecular'
     ), 0) AS cumulative_molecular
 FROM covid_pr_etl.municipal_tests_collected_agg tests
-INNER JOIN covid_pr_sources.acs_2019_5y_municipal_race
-    USING (municipality)
+INNER JOIN covid19datos_v2_sources.municipal_population muni
+	ON muni.name = tests.municipality
 WHERE test_type IN ('Antígeno', 'Molecular')
 GROUP BY
     downloaded_at,
     bulletin_date,
     municipality,
     collected_date,
-    population
+    pop2020
 ORDER BY
     downloaded_at,
     bulletin_date,
