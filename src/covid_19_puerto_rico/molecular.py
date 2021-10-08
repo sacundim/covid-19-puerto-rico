@@ -1516,7 +1516,8 @@ class MunicipalTestingScatter(AbstractMolecularChart):
             collected_since="timeOffset('day', datum.bulletin_date, -20)",
             daily_specimens_1k='1000 * datum.daily_specimens / datum.population',
             daily_antigens_1k='1000 * datum.daily_antigens / datum.population',
-            daily_molecular_1k='1000 * datum.daily_molecular / datum.population'
+            daily_antigens_pct='datum.daily_antigens / datum.daily_specimens',
+            daily_molecular_1k='1000 * datum.daily_molecular / datum.population',
         ).mark_point().encode(
             x=alt.X('daily_antigens_1k:Q', title='Antígenos por millar (promedio 21 días)',
                     scale=alt.Scale(domain=[min_antigens_1k, max_antigens_1k], zero=False),
@@ -1533,7 +1534,8 @@ class MunicipalTestingScatter(AbstractMolecularChart):
                 alt.Tooltip('daily_antigens:Q', format=',.1f', title='Antígenos diarios'),
                 alt.Tooltip('daily_antigens_1k:Q', format=',.1f', title='Antígenos diarios (/1k)'),
                 alt.Tooltip('daily_molecular:Q', format=',.1f', title='Moleculares diarias'),
-                alt.Tooltip('daily_molecular_1k:Q', format=',.1f', title='Moleculares diarias (/1k)')
+                alt.Tooltip('daily_molecular_1k:Q', format=',.1f', title='Moleculares diarias (/1k)'),
+                alt.Tooltip('daily_antigens_pct:Q', format=',.1%', title='% antígenos')
             ]
         )
 
