@@ -177,6 +177,8 @@ SELECT
  	date(date_parse(NULLIF(fe_registro, ''), '%Y-%m-%d %H:%i:%s'))
 		AS fe_registro
 FROM covid19datos_v2_sources.pruebas_parquet
+-- IMPORTANT: This prunes partitions
+WHERE downloaded_date >= cast(date_add('day', -32, current_date) AS VARCHAR)
 ORDER BY downloaded_at, fe_prueba;
 
 
