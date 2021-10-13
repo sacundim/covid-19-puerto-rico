@@ -329,8 +329,8 @@ class NaivePositiveRate(AbstractMolecularChart):
 class NewTestSpecimens(AbstractMolecularChart):
     """The original tests chart, counting test specimens naïvely out of Bioportal."""
     POPULATION_THOUSANDS = PUERTO_RICO_POPULATION / 1_000.0
-    TEST_TYPE_SORT_ORDER = ['Molecular', 'Antígeno', 'Serológica']
-    TEST_TYPE_COLORS = ['#4c78a8', '#e45756', 'lightgray']
+    TEST_TYPE_SORT_ORDER = ['Molecular', 'Antígeno', 'Serológica', 'Otro (¿inválido?)']
+    TEST_TYPE_COLORS = ['#4c78a8', '#e45756', 'lightgray', 'gray']
     DATE_TYPE_SORT_ORDER = ['Fecha de muestra', 'Fecha de reporte']
 
     def make_chart(self, df, bulletin_date):

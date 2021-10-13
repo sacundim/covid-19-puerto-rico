@@ -173,7 +173,7 @@ WITH downloads AS (
             WHEN testType IN (
                 'Serological', 'Serological IgG Only', 'Total Antibodies', 'SEROLOGICAL'
             ) THEN 'Serológica'
-            ELSE testType
+            ELSE 'Otro (¿inválido?)'
         END AS test_type,
 	    result,
 	    COALESCE(result, '') LIKE '%Positive%' AS positive
@@ -289,7 +289,7 @@ SELECT
 	-- specimen that is both of the respective type and came
 	-- back positive.  Note that for example this means that
 	-- `has_positive_antigens` is't synonymous with
-	-- `positive AND has_antigens`, because that could be true 
+	-- `positive AND has_antigens`, because that could be true
 	-- because the patient has a negative antigen and a positive
 	-- molecular test on that date.
 	bool_or(cur.test_type = 'Molecular' AND cur.positive)
@@ -298,7 +298,7 @@ SELECT
 	    AS has_positive_antigens,
     -- A followup test is any test—positive or negative—such
     -- that the same patient had a positive test in the 90
-    -- days before. 
+    -- days before.
 	COALESCE(bool_or(prev.collected_date >= date_add('day', -90, cur.collected_date)
 			            AND prev.positive),
              FALSE)
@@ -394,7 +394,7 @@ WITH downloads AS (
         count(*) FILTER (
             WHERE tests.has_molecular
         ) molecular,
-        -- These two are encounters where there was at least one 
+        -- These two are encounters where there was at least one
         -- positive test of the respective type.  Note that for
         -- example `has_positive_antigens` isn't synonymos with
         -- `positive AND has_antigens`, because a patient could
@@ -406,7 +406,7 @@ WITH downloads AS (
             WHERE tests.has_positive_molecular
         ) positive_molecular,
         -- Non-followup test encounters where there was at least
-        -- one molecular test.  These are, I claim, the most 
+        -- one molecular test.  These are, I claim, the most
         -- appropriate for a positive rate calculation.
         count(*) FILTER (
             WHERE NOT tests.followup
