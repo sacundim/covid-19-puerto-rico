@@ -49,6 +49,7 @@ def cdc_download(args):
         Asset('covid_vaccine_allocations_state_moderna', 'b7pe-5nws'),
         Asset('covid_vaccine_allocations_state_janssen', 'w9zu-fywh'),
         Asset('nationwide_commercial_laborator_seroprevalence_survey', 'd2tw-32xv'),
+        Asset('nationwide_blood_donor_seroprevalence', 'wi5c-cscz')
     ]
     download_datasets(args, 'data.cdc.gov', datasets)
 
