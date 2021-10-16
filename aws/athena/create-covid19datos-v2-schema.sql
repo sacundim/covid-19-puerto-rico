@@ -40,6 +40,19 @@ TBLPROPERTIES (
     "skip.header.line.count"="1"
 );
 
+CREATE EXTERNAL TABLE covid19datos_v2_sources.vacunacion_city_names (
+    city STRING,
+    display_name STRING,
+    fips STRING
+) ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+ESCAPED BY '\\'
+LINES TERMINATED BY '\n'
+LOCATION 's3://covid-19-puerto-rico-data/Census/covid19datos_v2_vacunacion_city_names/'
+TBLPROPERTIES (
+    "skip.header.line.count"="1"
+);
+
 CREATE EXTERNAL TABLE covid19datos_v2_sources.municipal_population (
 	name STRING,
 	popest2019 INT,
