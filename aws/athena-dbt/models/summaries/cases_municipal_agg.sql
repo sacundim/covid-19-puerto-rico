@@ -18,7 +18,7 @@ WITH downloads AS (
 		city,
 		display_name,
 		fips
-	FROM covid19datos_v2_sources.casos_city_names
+	FROM {{ ref('covid19datos_v2_casos_city_names') }}
 	CROSS JOIN (
 		VALUES (SEQUENCE(DATE '2020-03-09', DATE '2021-12-31', INTERVAL '1' DAY))
 	) AS date_array (date_array)
@@ -61,7 +61,7 @@ RIGHT OUTER JOIN grid
 	ON grid.city = casos.city
 	AND grid.sample_date = casos.sample_date
 	AND grid.bulletin_date = date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
-INNER JOIN covid19datos_v2_sources.municipal_population popest
+INNER JOIN {{ ref('municipal_population') }} popest
 	USING (fips)
 GROUP BY
     grid.bulletin_date,

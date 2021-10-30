@@ -25,7 +25,7 @@ WITH downloads AS (
 		fips,
 		vendor,
 		dose_number
-	FROM covid19datos_v2_sources.vacunacion_city_names
+	FROM {{ ref('covid19datos_v2_vacunacion_city_names') }}
 	CROSS JOIN (
 		VALUES (SEQUENCE(DATE '2020-12-03', DATE '2021-12-31', INTERVAL '1' DAY))
 	) AS date_array (date_array)

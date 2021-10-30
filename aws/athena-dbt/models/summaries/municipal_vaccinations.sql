@@ -36,7 +36,7 @@ WITH prdoh AS (
 		total_dosis1 + total_dosis2
 			AS total_dosis
 	FROM covid19datos_sources.vacunaciones_municipios_totales_daily prdoh
-	INNER JOIN covid19datos_v2_sources.municipal_population pop
+	INNER JOIN {{ ref('municipal_population') }} pop
 		ON pop.name = prdoh.municipio
 	-- data in this source goes bad on the 22nd...
 	WHERE local_date <= DATE '2021-07-21'
@@ -70,6 +70,6 @@ SELECT
 		ORDER BY local_date
 	) AS salud_dosis
 FROM prdoh
-INNER JOIN covid19datos_v2_sources.municipal_population pop
+INNER JOIN {{ ref('municipal_population') }} pop
 	USING (fips)
 ORDER BY local_date, municipio;
