@@ -44,6 +44,8 @@ models:
     hhs:
       staging:
         +materialized: table
+      summaries:
+        +materialized: table
     reports:
       +materialized: view
 

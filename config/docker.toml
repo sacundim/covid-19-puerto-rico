@@ -1,11 +1,3 @@
-[postgres]
-drivername = "postgresql"
-host = "db"
-port = "5432"
-database = "postgres"
-username = "postgres"
-password = "password"
-
 [athena]
 region_name = "us-west-2"
 schema_name = "covid19_puerto_rico_model"

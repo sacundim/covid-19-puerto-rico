@@ -35,7 +35,6 @@ def main():
     args = process_arguments()
     logging.info("output-dir is %s", args.output_dir)
 
-    postgres = util.create_postgres_engine(args)
     athena = util.create_athena_engine(args)
     bulletin_date = compute_bulletin_date(args, athena)
     logging.info('Using bulletin date of %s', bulletin_date)
@@ -50,6 +49,10 @@ def main():
         #        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
         #        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
 
+        # TODO: Athenify these:
+        charts.ICUsByRegion(athena, args.output_dir, output_formats),
+        charts.ICUsByHospital(athena, args.output_dir, output_formats),
+
         molecular.VaccinationMap(athena, args.output_dir, output_formats),
         molecular.RecentAgeGroups(athena, args.output_dir, output_formats),
         molecular.AgeGroups(athena, args.output_dir, output_formats),
@@ -60,10 +63,6 @@ def main():
         charts.LatenessTiers(athena, args.output_dir, output_formats),
         charts.CurrentDeltas(athena, args.output_dir, output_formats),
         charts.DailyDeltas(athena, args.output_dir, output_formats),
-
-        # TODO: Athenify these:
-        charts.ICUsByRegion(postgres, args.output_dir, output_formats),
-        charts.ICUsByHospital(postgres, args.output_dir, output_formats),
 
         molecular.EncounterLag(athena, args.output_dir, output_formats),
         molecular.NaivePositiveRate(athena, args.output_dir, output_formats),

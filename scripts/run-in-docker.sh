@@ -18,19 +18,12 @@ set -e -x
 
 DOCKER_IMAGE="${DOCKER_IMAGE:=covid-19-puerto-rico}"
 
-# If your Docker Compose environment's network is named something
-# different you can override it by exporting your own value for
-# this variable:
-DOCKER_NETWORK="${DOCKER_NETWORK:-covid-19-puerto-rico_default}"
-
-
 cd "$(dirname $0)"/..
 ./scripts/build-docker-image.sh
 
 rm -rf output/*
 
 time docker run --rm \
-  --network="${DOCKER_NETWORK}" \
   -v ~/.aws:/awsconfig:ro \
   -v "$(pwd)"/config:/config:ro \
   -v "$(pwd)"/assets:/assets:ro \
