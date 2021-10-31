@@ -8,5 +8,5 @@ password = "password"
 
 [athena]
 region_name = "us-west-2"
-schema_name = "covid_pr_etl"
+schema_name = "covid19_puerto_rico_model"
 s3_staging_dir = "s3://covid-19-puerto-rico-athena/"

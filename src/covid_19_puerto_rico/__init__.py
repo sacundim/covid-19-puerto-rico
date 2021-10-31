@@ -121,7 +121,7 @@ def query_for_bulletin_date(engine):
     metadata = sqlalchemy.MetaData(engine)
     with engine.connect() as connection:
         table = sqlalchemy.Table('bulletin_cases', metadata,
-                                 schema='covid19datos_v2_etl', autoload=True)
+                                 schema='covid19_puerto_rico_model', autoload=True)
         query = sql.select([sqlfn.max(table.c.bulletin_date)])
         result = connection.execute(query)
         return result.fetchone()[0]
