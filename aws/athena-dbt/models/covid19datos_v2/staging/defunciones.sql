@@ -1,4 +1,4 @@
-{{ config(pre_hook=["MSCK REPAIR TABLE covid19datos_v2_sources.defunciones_parquet"]) }}
+{{ config(pre_hook=["MSCK REPAIR TABLE {{ source('covid19datos_v2', 'defunciones') }}"]) }}
 
 SELECT
 	CAST(from_iso8601_timestamp(
@@ -20,5 +20,5 @@ SELECT
  	date(date_parse(NULLIF(fe_registro, ''), '%Y-%m-%d %H:%i:%s'))
 		AS fe_registro,
 	NULLIF(tx_grupo_edad, '') tx_grupo_edad
-FROM covid19datos_v2_sources.defunciones_parquet
+FROM {{ source('covid19datos_v2', 'defunciones') }}
 ORDER BY downloaded_at, fe_muerte, fe_reporte;

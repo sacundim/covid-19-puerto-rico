@@ -1,6 +1,6 @@
 WITH max_path AS (
     SELECT max("$path") max_path
-    FROM covid_hhs_sources.reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries
+    FROM {{ source('hhs', 'hospital_facilities') }}
 )
 SELECT
 	date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
@@ -42,7 +42,7 @@ SELECT
         AS staffed_icu_adult_patients_confirmed_covid_7_day_sum,
     CAST(nullif(staffed_icu_adult_patients_confirmed_covid_7_day_coverage, '') AS INT)
         AS staffed_icu_adult_patients_confirmed_covid_7_day_coverage
-FROM covid_hhs_sources.reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries
+FROM {{ source('hhs', 'hospital_facilities') }}
 INNER JOIN max_path
     ON max_path = "$path"
 WHERE state = 'PR';

@@ -1,4 +1,4 @@
-{{ config(pre_hook=["MSCK REPAIR TABLE covid19datos_v2_sources.sistemas_salud_parquet"]) }}
+{{ config(pre_hook=["MSCK REPAIR TABLE {{ source('covid19datos_v2', 'sistemas_salud') }}"]) }}
 
 SELECT
 	from_iso8601_date(downloaded_date)
@@ -46,5 +46,5 @@ SELECT
     CAST(nullif(vent_rec, '') AS INT) vent_rec,
     CAST(nullif(vent_entr, '') AS INT) vent_entr,
     CAST(nullif(convalecientes, '') AS INT) convalecientes
-FROM covid19datos_v2_sources.sistemas_salud_parquet
+FROM {{ source('covid19datos_v2', 'sistemas_salud') }}
 ORDER BY downloaded_at, fe_reporte;

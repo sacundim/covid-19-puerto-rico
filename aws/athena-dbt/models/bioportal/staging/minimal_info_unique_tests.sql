@@ -6,7 +6,7 @@
 -- identify cases from it, but it does have municipalities.
 --
 
-{{ config(pre_hook=["MSCK REPAIR TABLE covid_pr_sources.minimal_info_unique_tests_parquet_v4"]) }}
+{{ config(pre_hook=["MSCK REPAIR TABLE {{ source('bioportal', 'minimal_info_unique_tests') }}"]) }}
 
 WITH first_clean AS (
     SELECT
@@ -42,7 +42,7 @@ WITH first_clean AS (
         END AS test_type,
         result,
         COALESCE(result, '') LIKE '%Positive%' AS positive
-    FROM covid_pr_sources.minimal_info_unique_tests_parquet_v4
+    FROM {{ source('bioportal', 'minimal_info_unique_tests') }}
     -- IMPORTANT: This prunes partitions
     WHERE downloaded_date >= cast(date_add('day', -32, current_date) AS VARCHAR)
 )

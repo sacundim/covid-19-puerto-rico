@@ -5,7 +5,7 @@
 -- as the daily report.
 --
 
-{{ config(pre_hook=["MSCK REPAIR TABLE covid_pr_sources.deaths_parquet_v1"]) }}
+{{ config(pre_hook=["MSCK REPAIR TABLE {{ source('bioportal', 'deaths') }}"]) }}
 
 WITH first_clean AS (
 	SELECT
@@ -21,7 +21,7 @@ WITH first_clean AS (
 	    region,
 	    sex,
 	   	ageRange AS age_range
-	FROM covid_pr_sources.deaths_parquet_v1
+	FROM {{ source('bioportal', 'deaths') }}
 )
 SELECT
 	*,

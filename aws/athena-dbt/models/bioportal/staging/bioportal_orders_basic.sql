@@ -2,12 +2,12 @@
 -- The `orders/basic` row-per-test dataset from Bioportal.
 --
 
-{{ config(pre_hook=["MSCK REPAIR TABLE covid_pr_sources.orders_basic_parquet_v2"]) }}
+{{ config(pre_hook=["MSCK REPAIR TABLE {{ source('bioportal', 'orders_basic') }}"]) }}
 
 WITH downloads AS (
 	SELECT
 		max(downloadedAt) max_downloaded_at
-	FROM covid_pr_sources.orders_basic_parquet_v2
+	FROM {{ source('bioportal', 'orders_basic') }}
 ), first_clean AS (
 	SELECT
 	    CAST(from_iso8601_timestamp(downloadedAt) AS TIMESTAMP)
@@ -46,7 +46,7 @@ WITH downloads AS (
         END AS test_type,
 	    result,
 	    COALESCE(result, '') LIKE '%Positive%' AS positive
-	FROM covid_pr_sources.orders_basic_parquet_v2 tests
+	FROM {{ source('bioportal', 'orders_basic') }} tests
 	INNER JOIN downloads
 	    ON downloads.max_downloaded_at = tests.downloadedAt
 )

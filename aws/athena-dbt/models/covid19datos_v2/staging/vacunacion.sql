@@ -1,4 +1,4 @@
-{{ config(pre_hook=["MSCK REPAIR TABLE covid19datos_v2_sources.vacunacion_parquet"]) }}
+{{ config(pre_hook=["MSCK REPAIR TABLE {{ source('covid19datos_v2', 'vacunacion') }}"]) }}
 
 SELECT
 	from_iso8601_date(downloaded_date)
@@ -16,5 +16,5 @@ SELECT
     nullif(co_manufacturero, '') co_manufacturero,
  	date(date_parse(NULLIF(fe_reporte, ''), '%Y-%m-%d %H:%i:%s'))
 		AS fe_reporte
-FROM covid19datos_v2_sources.vacunacion_parquet
+FROM {{ source('covid19datos_v2', 'vacunacion') }}
 ORDER BY downloaded_at, fe_vacuna;

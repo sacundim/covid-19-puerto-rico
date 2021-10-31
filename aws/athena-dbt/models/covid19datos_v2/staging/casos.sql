@@ -4,7 +4,7 @@
 -- Simple cleanup of the cases dataset.
 --
 
-{{ config(pre_hook=["MSCK REPAIR TABLE covid19datos_v2_sources.casos_parquet"]) }}
+{{ config(pre_hook=["MSCK REPAIR TABLE {{ source('covid19datos_v2', 'casos') }}"]) }}
 
 SELECT
 	CAST(from_iso8601_timestamp(
@@ -23,5 +23,5 @@ SELECT
 		AS fe_reporte,
 	from_iso8601_date(downloaded_date)
 		AS downloaded_date
-FROM covid19datos_v2_sources.casos_parquet
+FROM {{ source('covid19datos_v2', 'casos') }}
 ORDER BY downloaded_at, sample_date, fe_reporte;
