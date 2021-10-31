@@ -24,5 +24,5 @@ SELECT
 		PARTITION BY collected_date
 		ORDER BY bulletin_date
 	), 0) AS delta_cases
-FROM covid_pr_etl.bioportal_encounters_agg
+FROM {{ ref('bioportal_encounters_agg') }}
 ORDER BY bulletin_date DESC, collected_date DESC;
