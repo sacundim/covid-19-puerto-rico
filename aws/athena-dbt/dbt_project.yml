@@ -74,7 +74,7 @@ seeds:
           fips: VARCHAR(5)
 
     other:
-      codigos_censales_y_abrev_municipios:
+      municipal_abbreviations:
         +column_types:
-          CNTY: VARCHAR(3)
-          GEOID: VARCHAR(5)
+          county: VARCHAR(3)
+          fips: VARCHAR(5)
