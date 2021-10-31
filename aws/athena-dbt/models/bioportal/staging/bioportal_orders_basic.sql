@@ -2,6 +2,8 @@
 -- The `orders/basic` row-per-test dataset from Bioportal.
 --
 
+{{ config(pre_hook=["MSCK REPAIR TABLE covid_pr_sources.orders_basic_parquet_v2"]) }}
+
 WITH downloads AS (
 	SELECT
 		max(downloadedAt) max_downloaded_at

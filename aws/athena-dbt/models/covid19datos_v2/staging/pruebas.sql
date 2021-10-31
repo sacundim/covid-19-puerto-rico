@@ -1,3 +1,5 @@
+{{ config(pre_hook=["MSCK REPAIR TABLE covid19datos_v2_sources.pruebas_parquet"]) }}
+
 SELECT
 	from_iso8601_date(downloaded_date)
 		AS downloaded_date,

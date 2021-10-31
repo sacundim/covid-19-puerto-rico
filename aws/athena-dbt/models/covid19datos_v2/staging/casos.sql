@@ -3,6 +3,9 @@
 --
 -- Simple cleanup of the cases dataset.
 --
+
+{{ config(pre_hook=["MSCK REPAIR TABLE covid19datos_v2_sources.casos_parquet"]) }}
+
 SELECT
 	CAST(from_iso8601_timestamp(
 		regexp_extract("$path", '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z'))

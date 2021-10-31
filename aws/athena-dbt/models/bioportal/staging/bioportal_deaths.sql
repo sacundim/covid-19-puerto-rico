@@ -5,6 +5,8 @@
 -- as the daily report.
 --
 
+{{ config(pre_hook=["MSCK REPAIR TABLE covid_pr_sources.deaths_parquet_v1"]) }}
+
 WITH first_clean AS (
 	SELECT
 		date(downloaded_date) AS downloaded_date,
