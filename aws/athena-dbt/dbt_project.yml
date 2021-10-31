@@ -51,26 +51,30 @@ models:
 
 seeds:
   covid_19_puerto_rico_etl:
-    acs_2019_5y_family_income:
-      +column_types:
-        fips: VARCHAR(5)
-    acs_2019_5y_household_income:
-      +column_types:
-        fips: VARCHAR(5)
-    acs_2019_5y_race:
-      +column_types:
-        fips: VARCHAR(5)
-    codigos_censales_y_abrev_municipios:
-      +column_types:
-        CNTY: VARCHAR(3)
-        GEOID: VARCHAR(5)
-    covid19datos_v2_casos_city_names:
-      +column_types:
-        fips: VARCHAR(5)
-    covid19datos_v2_vacunacion_city_names:
-      +column_types:
-        fips: VARCHAR(5)
-    municipal_population:
-      +column_types:
-        fips: VARCHAR(5)
+    census:
+      acs_2019_5y_family_income:
+        +column_types:
+          fips: VARCHAR(5)
+      acs_2019_5y_household_income:
+        +column_types:
+          fips: VARCHAR(5)
+      acs_2019_5y_race:
+        +column_types:
+          fips: VARCHAR(5)
+      municipal_population:
+        +column_types:
+          fips: VARCHAR(5)
 
+    covid19datos_v2:
+      covid19datos_v2_casos_city_names:
+        +column_types:
+          fips: VARCHAR(5)
+      covid19datos_v2_vacunacion_city_names:
+        +column_types:
+          fips: VARCHAR(5)
+
+    other:
+      codigos_censales_y_abrev_municipios:
+        +column_types:
+          CNTY: VARCHAR(3)
+          GEOID: VARCHAR(5)
