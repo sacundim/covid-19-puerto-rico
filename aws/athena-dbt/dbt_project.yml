@@ -24,10 +24,23 @@ clean-targets:         # directories to be removed by `dbt clean`
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 models:
   covid_19_puerto_rico_etl:
-    staging:
-      +materialized: table
-    summaries:
-      +materialized: table
+    bioportal:
+      encounters:
+        +materialized: table
+      specimens:
+        +materialized: table
+      staging:
+        +materialized: table
+      summaries:
+        +materialized: table
+    covid19datos_v2:
+      staging:
+        +materialized: table
+      summaries:
+        +materialized: table
+    hhs:
+      staging:
+        +materialized: table
     reports:
       +materialized: view
 
