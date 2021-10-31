@@ -49,7 +49,6 @@ def main():
         #        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
         #        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
 
-        # TODO: Athenify these:
         charts.ICUsByRegion(athena, args.output_dir, output_formats),
         charts.ICUsByHospital(athena, args.output_dir, output_formats),
 
