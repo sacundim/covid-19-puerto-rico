@@ -47,11 +47,10 @@ def main():
     targets = [
         # Occasional:
         #        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
-        #        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
 
+        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
         charts.ICUsByRegion(athena, args.output_dir, output_formats),
         charts.ICUsByHospital(athena, args.output_dir, output_formats),
-
         molecular.VaccinationMap(athena, args.output_dir, output_formats),
         molecular.RecentAgeGroups(athena, args.output_dir, output_formats),
         molecular.AgeGroups(athena, args.output_dir, output_formats),
