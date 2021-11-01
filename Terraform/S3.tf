@@ -39,14 +39,14 @@ resource "aws_s3_bucket" "athena_bucket" {
     enabled = true
 
     expiration {
-      days = 3
+      days = 2
     }
 
     noncurrent_version_expiration {
-      days = 3
+      days = 2
     }
 
-    abort_incomplete_multipart_upload_days = 3
+    abort_incomplete_multipart_upload_days = 2
   }
 }
 
