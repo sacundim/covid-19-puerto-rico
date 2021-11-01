@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: covid19datos_v2
+    schema: covid19datos_v2_sources
+    tables:
+      - name: casos
+        identifier: casos_parquet
+      - name: defunciones
+        identifier: defunciones_parquet
+      - name: pruebas
+        identifier: pruebas_parquet
+      - name: sistemas_salud
+        identifier: sistemas_salud_parquet
+      - name: vacunacion
+        identifier: vacunacion_parquet

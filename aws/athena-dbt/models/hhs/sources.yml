@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: hhs
+    schema: covid_hhs_sources
+    tables:
+      - name: hospital_utilization_timeseries
+        identifier: reported_hospital_utilization_timeseries_PR
+      - name: hospital_utilization
+        identifier: reported_hospital_utilization_PR
+      - name: hospital_facilities
+        identifier: reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries

@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: bioportal
+    schema: covid_pr_sources
+    tables:
+      - name: deaths
+        identifier: deaths_parquet_v1
+      - name: orders_basic
+        identifier: orders_basic_parquet_v2
+      - name: minimal_info_unique_tests
+        identifier: minimal_info_unique_tests_parquet_v4

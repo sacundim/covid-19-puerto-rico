@@ -1,0 +1,80 @@
+name: 'covid_19_puerto_rico_etl'
+version: '1.0.0'
+config-version: 2
+
+profile: 'covid-19-puerto-rico-athena'
+
+# These configurations specify where dbt should look for different types of files.
+# The `source-paths` config, for example, states that models in this project can be
+# found in the "models/" directory. You probably won't need to change these!
+source-paths: ["models"]
+analysis-paths: ["analysis"]
+test-paths: ["tests"]
+data-paths: ["data"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"  # directory which will store compiled SQL files
+clean-targets:         # directories to be removed by `dbt clean`
+  - "target"
+  - "dbt_modules"
+
+# Athena hates the query comments often, so we disable them
+query-comment: null
+
+
+# Configuring models
+# Full documentation: https://docs.getdbt.com/docs/configuring-models
+models:
+  covid_19_puerto_rico_etl:
+    bioportal:
+      encounters:
+        +materialized: table
+      specimens:
+        +materialized: table
+      staging:
+        +materialized: table
+      summaries:
+        +materialized: table
+    covid19datos_v2:
+      staging:
+        +materialized: table
+      summaries:
+        +materialized: table
+    hhs:
+      staging:
+        +materialized: table
+      summaries:
+        +materialized: table
+    reports:
+      +materialized: view
+
+seeds:
+  covid_19_puerto_rico_etl:
+    census:
+      acs_2019_5y_family_income:
+        +column_types:
+          fips: VARCHAR(5)
+      acs_2019_5y_household_income:
+        +column_types:
+          fips: VARCHAR(5)
+      acs_2019_5y_race:
+        +column_types:
+          fips: VARCHAR(5)
+      municipal_population:
+        +column_types:
+          fips: VARCHAR(5)
+
+    covid19datos_v2:
+      covid19datos_v2_casos_city_names:
+        +column_types:
+          fips: VARCHAR(5)
+      covid19datos_v2_vacunacion_city_names:
+        +column_types:
+          fips: VARCHAR(5)
+
+    other:
+      municipal_abbreviations:
+        +column_types:
+          county: VARCHAR(3)
+          fips: VARCHAR(5)
