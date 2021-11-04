@@ -36,6 +36,8 @@ models:
         +materialized: table
       summaries:
         +materialized: table
+        +bucketed_by: ["bulletin_date"]
+        +bucket_count: 1
     covid19datos_v2:
       staging:
         +materialized: table
