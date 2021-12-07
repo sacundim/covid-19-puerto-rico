@@ -51,7 +51,16 @@ SELECT
 			grid.vendor,
 			grid.dose_number
 		ORDER BY grid.dose_date
-	) AS cumulative_doses
+	) AS cumulative_doses,
+	count(vax.downloaded_at)
+	    - lag(count(vax.downloaded_at)) OVER (
+	        PARTITION BY
+                grid.dose_date,
+                grid.fips,
+                grid.vendor,
+                grid.dose_number
+	        ORDER BY grid.bulletin_date
+	    ) AS delta_doses
 FROM {{ ref('vacunacion') }} vax
 RIGHT OUTER JOIN grid
 	ON grid.city = vax.co_municipio
