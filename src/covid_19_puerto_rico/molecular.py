@@ -1178,6 +1178,9 @@ class VaccinationMap(AbstractMolecularChart):
             table.c.salud_total_dosis2,
             table.c.salud_total_dosis2_pct,
             table.c.salud_dosis2,
+            table.c.salud_total_dosis3,
+            table.c.salud_total_dosis3_pct,
+            table.c.salud_dosis3,
             table.c.salud_total_dosis,
             table.c.salud_total_dosis_per_100,
             table.c.salud_dosis,
@@ -1189,6 +1192,7 @@ class VaccinationMap(AbstractMolecularChart):
         #     https://pandas.pydata.org/pandas-docs/stable/user_guide/integer_na.html
         for col in ['salud_total_dosis1', 'salud_dosis1',
                     'salud_total_dosis2', 'salud_dosis2',
+                    'salud_total_dosis3', 'salud_dosis3',
                     'salud_total_dosis', 'salud_dosis']:
             df[col] = df[col].astype('Int64')
 
@@ -1202,12 +1206,8 @@ class VaccinationMap(AbstractMolecularChart):
                       & (df['local_date'] <= until_date)]
 
     def make_chart(self, df, bulletin_date):
-        cumulative = self.make_cumulative_chart(
-            df, bulletin_date, 'salud_total_dosis2', 'Personas con régimen completo'
-        )
-
+        cumulative = self.make_cumulative_chart(df, bulletin_date)
         rate = self.make_daily_rate_chart(df)
-
         return alt.vconcat(cumulative, rate).configure_view(
             strokeWidth=0
         ).configure_concat(
@@ -1216,7 +1216,18 @@ class VaccinationMap(AbstractMolecularChart):
             color='independent'
         )
 
-    def make_cumulative_chart(self, df, bulletin_date, variable, title):
+    def make_cumulative_chart(self, df, bulletin_date):
+        complete = self.make_cumulative_subchart(
+            df, bulletin_date, 'salud_total_dosis2', 'Personas con régimen completo'
+        )
+        boosted = self.make_cumulative_subchart(
+            df, bulletin_date, 'salud_total_dosis3', 'Personas con refuerzo'
+        )
+        return alt.hconcat(complete, boosted).resolve_scale(
+            color='independent'
+        )
+
+    def make_cumulative_subchart(self, df, bulletin_date, variable, title):
         DOMAIN_MID = 0.775
 
         return alt.Chart(df).transform_filter(
@@ -1234,16 +1245,16 @@ class VaccinationMap(AbstractMolecularChart):
                                             domain=alt.DomainUnionWith(unionWith=[1.0]),
                                             domainMid=DOMAIN_MID, clamp=True),
                             legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
-                                              title=title, labelSeparation=10, format='.0%',
-                                              offset=-15, gradientLength=self.FULL_WIDTH - 10)),
+                                              title=title, format='.0%',
+                                              gradientLength=self.HALF_WIDTH - 10)),
             tooltip=[alt.Tooltip(field='local_date', type='temporal', title='Fecha'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
                      alt.Tooltip(field='pop2020', type='quantitative', format=',d', title='Población'),
                      alt.Tooltip(field=variable, title=title, type='quantitative', format=',d'),
                      alt.Tooltip(field='pct', type='quantitative', format='.1%', title='Porciento')]
         ).properties(
-            width=self.FULL_WIDTH,
-            height=self.FULL_HEIGHT
+            width=self.HALF_WIDTH,
+            height=self.HALF_HEIGHT
         )
 
     def make_daily_rate_chart(self, df):
@@ -1257,7 +1268,24 @@ class VaccinationMap(AbstractMolecularChart):
         ).properties(
             width=self.HALF_WIDTH, height=self.HALF_HEIGHT
         )
-        return alt.hconcat(rate1, rate2)
+        rate3 = self.make_daily_rate_subchart(
+            df, 'salud_dosis3', 'Velocidad refuerzo'
+        ).properties(
+            width=self.HALF_WIDTH, height=self.HALF_HEIGHT
+        )
+        rate_all = self.make_daily_rate_subchart(
+            df, 'salud_dosis', 'Velocidad (todas)'
+        ).properties(
+            width=self.HALF_WIDTH, height=self.HALF_HEIGHT
+        )
+        return alt.concat(
+            rate1, rate2,
+            # TODO: enable these when data settles down
+            # rate3, rate_all,
+            columns=2
+        ).resolve_scale(
+            color='independent'
+        )
 
     def make_daily_rate_subchart(self, df, variable, title):
         return alt.Chart(df).transform_calculate(
@@ -1283,10 +1311,10 @@ class VaccinationMap(AbstractMolecularChart):
                                             # and almost none exceeded.  So half that because we have
                                             # a first doses and a final doses map.
                                             domain=[0, 0.007], clamp=True),
-                            legend=alt.Legend(orient='top', titleLimit=self.FULL_WIDTH, titleOrient='top',
-                                              labelSeparation=10, offset=-15, gradientLength=self.FULL_WIDTH,
-                                              title='Velocidad (% vacunado diario, inicial vs. completo)',
-                                              format='%')),
+                            legend=alt.Legend(orient='top', titleLimit=self.HALF_WIDTH, titleOrient='top',
+                                              # labelSeparation=10,
+                                              offset=-15, gradientLength=self.HALF_WIDTH,
+                                              title=title, format='%')),
             tooltip=[alt.Tooltip(field='min_local_date', type='temporal', title='Desde'),
                      alt.Tooltip(field='max_local_date', type='temporal', title='Hasta'),
                      alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
