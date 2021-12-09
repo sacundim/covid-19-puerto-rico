@@ -16,6 +16,10 @@ WITH prdoh AS (
 		sum(doses) FILTER (
 			WHERE is_complete
 		) total_dosis2,
+		-- Persons with booster
+		sum(doses) FILTER (
+			WHERE is_booster
+		) total_dosis3,
 		-- Number of doses administered
 		sum(doses) AS total_dosis
 	FROM {{ ref('vacunacion_cube') }}
@@ -29,6 +33,9 @@ WITH prdoh AS (
 		total_dosis1,
 		-- Persons with complete regime
 		total_dosis2,
+		-- Persons with booster. This old data source didn't
+		-- have any.
+		0 AS total_dosis3,
 		-- Incorrect approximation of total number of doses.
 		-- The problem is that single-dose vaccines, when
 		-- administered, increment both dosis1 and dosis2.
@@ -62,6 +69,14 @@ SELECT
 		PARTITION BY fips
 		ORDER BY local_date
 	) AS salud_dosis2,
+	total_dosis3 AS salud_total_dosis3,
+	CAST(total_dosis3 AS DOUBLE)
+		/ pop2020
+		AS salud_total_dosis3_pct,
+	total_dosis3 - lag(total_dosis3) OVER (
+		PARTITION BY fips
+		ORDER BY local_date
+	) AS salud_dosis3,
 	total_dosis AS salud_total_dosis,
 	100.0 * (total_dosis) / pop2020
 		AS salud_total_dosis_per_100,

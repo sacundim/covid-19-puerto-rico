@@ -41,8 +41,12 @@ SELECT
 	grid.fips,
 	grid.vendor,
 	grid.dose_number,
-	grid.vendor = 'JSN' OR grid.dose_number = 2
+	(grid.vendor = 'JSN' AND grid.dose_number = 1)
+	    OR (grid.vendor != 'JSN' AND grid.dose_number = 2)
 		AS is_complete,
+	(grid.vendor = 'JSN' AND grid.dose_number > 1)
+	    OR (grid.vendor != 'JSN' AND grid.dose_number > 2)
+		AS is_booster,
 	count(vax.downloaded_at) doses,
 	sum(count(vax.downloaded_at)) OVER (
 		PARTITION BY
