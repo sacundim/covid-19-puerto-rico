@@ -5,7 +5,7 @@
 
 set -eu -o pipefail
 
-ENDPOINT="https://covid19datos.salud.gov.pr/estadisticas_v2/download/data"
+ENDPOINT="${ENDPOINT-https://covid19datos.salud.gov.pr/estadisticas_v2/download/data}"
 DATASETS=(casos defunciones sistemas_salud vigilancia vacunacion pruebas)
 
 HERE="$(dirname $0)"

@@ -3,9 +3,10 @@
 set -e
 set -o pipefail
 
-DEATHS_ENDPOINT="https://bioportal.salud.gov.pr/api/administration/reports/deaths/summary"
-TESTS_ENDPOINT="https://bioportal.salud.gov.pr/api/administration/reports/minimal-info-unique-tests"
-ORDERS_ENDPOINT="https://bioportal.salud.gov.pr/api/administration/reports/orders/basic"
+BIOPORTAL_URL="${BIOPORTAL_URL-https://bioportal.salud.gov.pr/api/administration/reports}"
+DEATHS_ENDPOINT="${BIOPORTAL_URL}/deaths/summary"
+TESTS_ENDPOINT="${BIOPORTAL_URL}/minimal-info-unique-tests"
+ORDERS_ENDPOINT="${BIOPORTAL_URL}/orders/basic"
 timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 downloaded_date="${timestamp:0:10}"
 ts_seconds="$(date -u +"%s")"
