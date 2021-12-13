@@ -3,7 +3,7 @@
 set -e
 set -o pipefail
 
-BIOPORTAL_URL="${BIOPORTAL_URL-https://bioportal.salud.gov.pr/api/administration/reports}"
+BIOPORTAL_URL="${BIOPORTAL_URL-https://bioportal.salud.pr.gov/api/administration/reports}"
 DEATHS_ENDPOINT="${BIOPORTAL_URL}/deaths/summary"
 TESTS_ENDPOINT="${BIOPORTAL_URL}/minimal-info-unique-tests"
 ORDERS_ENDPOINT="${BIOPORTAL_URL}/orders/basic"
