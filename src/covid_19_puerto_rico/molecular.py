@@ -1259,22 +1259,22 @@ class VaccinationMap(AbstractMolecularChart):
 
     def make_daily_rate_chart(self, df):
         rate1 = self.make_daily_rate_subchart(
-            df, 'salud_dosis1', 'Velocidad 1ra dosis'
+            df, 'salud_dosis1', 'Velocidad 1ra dosis', 0.007
         ).properties(
             width=self.HALF_WIDTH, height=self.HALF_HEIGHT
         )
         rate3 = self.make_daily_rate_subchart(
-            df, 'salud_dosis3', 'Velocidad refuerzo'
+            df, 'salud_dosis3', 'Velocidad refuerzo', 0.007
         ).properties(
             width=self.HALF_WIDTH, height=self.HALF_HEIGHT
         )
         rate2 = self.make_daily_rate_subchart(
-            df, 'salud_dosis2', 'Velocidad completos'
+            df, 'salud_dosis2', 'Velocidad completos', 0.007
         ).properties(
             width=self.HALF_WIDTH, height=self.HALF_HEIGHT
         )
         rate_all = self.make_daily_rate_subchart(
-            df, 'salud_dosis', 'Velocidad (todas)'
+            df, 'salud_dosis', 'Velocidad (todas)', 0.015
         ).properties(
             width=self.HALF_WIDTH, height=self.HALF_HEIGHT
         )
@@ -1286,7 +1286,7 @@ class VaccinationMap(AbstractMolecularChart):
             color='independent'
         )
 
-    def make_daily_rate_subchart(self, df, variable, title):
+    def make_daily_rate_subchart(self, df, variable, title, domain_hi):
         return alt.Chart(df).transform_calculate(
             dosis_pct=alt.datum[variable] / alt.datum.pop2020
         ).transform_aggregate(
@@ -1309,7 +1309,7 @@ class VaccinationMap(AbstractMolecularChart):
                                             # top rate that many countries have approached or achieved,
                                             # and almost none exceeded.  So half that because we have
                                             # a first doses and a final doses map.
-                                            domain=[0, 0.007], clamp=True),
+                                            domain=[0, domain_hi], clamp=True),
                             legend=alt.Legend(orient='top', titleLimit=self.HALF_WIDTH, titleOrient='top',
                                               # labelSeparation=10,
                                               offset=-15, gradientLength=self.HALF_WIDTH,
