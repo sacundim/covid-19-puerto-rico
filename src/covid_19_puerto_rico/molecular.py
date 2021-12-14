@@ -1264,7 +1264,7 @@ class VaccinationMap(AbstractMolecularChart):
             width=self.HALF_WIDTH, height=self.HALF_HEIGHT
         )
         rate2 = self.make_daily_rate_subchart(
-            df, 'salud_dosis2', 'Velocidad 2da dosis'
+            df, 'salud_dosis2', 'Velocidad completos'
         ).properties(
             width=self.HALF_WIDTH, height=self.HALF_HEIGHT
         )
@@ -1280,8 +1280,7 @@ class VaccinationMap(AbstractMolecularChart):
         )
         return alt.concat(
             rate1, rate2,
-            # TODO: enable these when data settles down
-            # rate3, rate_all,
+            rate3, rate_all,
             columns=2
         ).resolve_scale(
             color='independent'
