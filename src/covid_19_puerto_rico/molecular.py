@@ -1217,13 +1217,13 @@ class VaccinationMap(AbstractMolecularChart):
         )
 
     def make_cumulative_chart(self, df, bulletin_date):
-        boosted = self.make_cumulative_subchart(
-            df, bulletin_date, 'salud_total_dosis3', 'Personas con refuerzo'
-        )
         complete = self.make_cumulative_subchart(
             df, bulletin_date, 'salud_total_dosis2', 'Personas con régimen completo'
         )
-        return alt.hconcat(boosted, complete).resolve_scale(
+        boosted = self.make_cumulative_subchart(
+            df, bulletin_date, 'salud_total_dosis3', 'Personas con refuerzo'
+        )
+        return alt.hconcat(complete, boosted).resolve_scale(
             color='shared'
         )
 
