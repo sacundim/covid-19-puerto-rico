@@ -9,15 +9,8 @@ SELECT
 	bioportal.bulletin_date,
 	collected_date,
 	bioportal.tests,
-	bioportal.positive_tests AS positives,
-	CASE bioportal.test_type
-		WHEN 'Molecular'
-		THEN cases.confirmed_cases
-	END AS cases
+	bioportal.positive_tests AS positives
 FROM {{ ref('bioportal_collected_agg') }} bioportal
-INNER JOIN {{ ref('bulletin_cases') }} cases
-	ON cases.bulletin_date = bioportal.bulletin_date
-	AND cases.datum_date = bioportal.collected_date
 WHERE bioportal.test_type IN ('Molecular', 'Antígeno')
 AND bioportal.bulletin_date > DATE '2020-04-24'
 AND (
