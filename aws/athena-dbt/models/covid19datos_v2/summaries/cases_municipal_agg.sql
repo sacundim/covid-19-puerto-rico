@@ -13,6 +13,7 @@ WITH downloads AS (
     GROUP BY date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
 ), grid AS (
 	SELECT
+	    downloaded_at,
 		bulletin_date,
 		date(date_column) AS sample_date,
 		city,
@@ -60,7 +61,7 @@ FROM {{ ref('casos') }}
 RIGHT OUTER JOIN grid
 	ON grid.city = casos.city
 	AND grid.sample_date = casos.sample_date
-	AND grid.bulletin_date = date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+	AND grid.downloaded_at = casos.downloaded_at
 INNER JOIN {{ ref('municipal_population') }} popest
 	USING (fips)
 GROUP BY

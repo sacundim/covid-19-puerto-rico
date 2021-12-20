@@ -18,6 +18,7 @@ WITH downloads AS (
 	FROM {{ ref('vacunacion') }}
 ), grid AS (
 	SELECT
+	    downloaded_at,
 		bulletin_date,
 		date(date_column) AS dose_date,
 		city,
@@ -71,7 +72,7 @@ RIGHT OUTER JOIN grid
 	AND grid.dose_date = vax.fe_vacuna
 	AND grid.vendor = vax.co_manufacturero
 	AND grid.dose_number = vax.nu_dosis
-	AND grid.bulletin_date = date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+	AND grid.downloaded_at = vax.downloaded_at
 GROUP BY
 	grid.bulletin_date,
 	grid.dose_date,

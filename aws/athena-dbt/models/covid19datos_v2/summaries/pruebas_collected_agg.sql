@@ -4,9 +4,16 @@
 -- Tests according to Salud.
 --
 
+WITH downloads AS (
+    SELECT
+        date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+            AS bulletin_date,
+        max(downloaded_at) downloaded_at
+    FROM {{ ref('casos') }}
+    GROUP BY date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
+)
 SELECT
-	date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))
-		AS bulletin_date,
+	bulletin_date,
 	fe_prueba AS collected_date,
 	count(*) tests,
 	count(*) - lag(count(*), 1, 0) OVER (
@@ -93,6 +100,8 @@ SELECT
 		PARTITION BY downloaded_at
 		ORDER BY fe_prueba
 	) AS cumulative_positive_antigens
-FROM {{ ref('pruebas') }}
-GROUP BY downloaded_at, fe_prueba
-ORDER BY downloaded_at, fe_prueba;
+FROM {{ ref('pruebas') }} pruebas
+INNER JOIN downloads
+    USING (downloaded_at)
+GROUP BY bulletin_date, downloaded_at, fe_prueba
+ORDER BY bulletin_date, downloaded_at, fe_prueba;
