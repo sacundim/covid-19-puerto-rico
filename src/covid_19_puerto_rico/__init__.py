@@ -48,6 +48,7 @@ def main():
         # Occasional:
         #        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
 
+        charts.MunicipalMap(athena, args.output_dir, output_formats),
         molecular.VaccinationMap(athena, args.output_dir, output_formats),
         molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
         charts.ICUsByRegion(athena, args.output_dir, output_formats),
@@ -55,7 +56,6 @@ def main():
         molecular.RecentAgeGroups(athena, args.output_dir, output_formats),
         molecular.AgeGroups(athena, args.output_dir, output_formats),
         charts.Municipal(athena, args.output_dir, output_formats),
-        charts.MunicipalMap(athena, args.output_dir, output_formats),
         molecular.RecentHospitalizations(athena, args.output_dir, output_formats),
         charts.WeekdayBias(athena, args.output_dir, output_formats),
         charts.LatenessTiers(athena, args.output_dir, output_formats),
