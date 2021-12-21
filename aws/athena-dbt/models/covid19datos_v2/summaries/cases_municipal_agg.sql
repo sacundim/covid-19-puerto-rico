@@ -26,52 +26,64 @@ WITH downloads AS (
 	CROSS JOIN UNNEST(date_array) AS t2(date_column)
 	INNER JOIN downloads
 		ON CAST(date_column AS DATE) < bulletin_date
+), counts AS (
+    SELECT
+        grid.bulletin_date,
+        grid.sample_date,
+        popest.region,
+        display_name municipality,
+        fips,
+        pop2020,
+        count(casos.downloaded_at) new_cases,
+        count(casos.downloaded_at) FILTER (
+            WHERE class = 'CONFIRMADO'
+        ) AS new_confirmed,
+        count(casos.downloaded_at) FILTER (
+            WHERE class = 'PROBABLE'
+        ) AS new_probable
+    FROM {{ ref('casos') }}
+    RIGHT OUTER JOIN grid
+        ON grid.city = casos.city
+        AND grid.sample_date = casos.sample_date
+        AND grid.downloaded_at = casos.downloaded_at
+    INNER JOIN {{ ref('municipal_population') }} popest
+        USING (fips)
+    GROUP BY
+        grid.bulletin_date,
+        grid.sample_date,
+        fips,
+        display_name,
+        pop2020,
+        popest.region
 )
 SELECT
-	grid.bulletin_date,
-	grid.sample_date,
-	popest.region,
-	display_name municipality,
-	fips,
-	pop2020,
-	count(casos.downloaded_at) new_cases,
-	count(casos.downloaded_at) FILTER (
-		WHERE class = 'CONFIRMADO'
-	) AS new_confirmed,
-	count(casos.downloaded_at) FILTER (
-		WHERE class = 'PROBABLE'
-	) AS new_probable,
-	sum(count(casos.downloaded_at)) OVER (
-		PARTITION BY grid.bulletin_date, fips
-		ORDER BY grid.sample_date
+    *,
+	sum(new_cases) OVER (
+		PARTITION BY bulletin_date, fips
+		ORDER BY sample_date
 	) AS cumulative_cases,
-	sum(count(casos.downloaded_at) FILTER (
-		WHERE class = 'CONFIRMADO'
-	)) OVER (
-		PARTITION BY grid.bulletin_date, fips
-		ORDER BY grid.sample_date
+	sum(new_confirmed) OVER (
+		PARTITION BY bulletin_date, fips
+		ORDER BY sample_date
 	) AS cumulative_confirmed,
-	sum(count(casos.downloaded_at) FILTER (
-		WHERE class = 'PROBABLE'
-	)) OVER (
-		PARTITION BY grid.bulletin_date, fips
-		ORDER BY grid.sample_date
-	) AS cumulative_probable
-FROM {{ ref('casos') }}
-RIGHT OUTER JOIN grid
-	ON grid.city = casos.city
-	AND grid.sample_date = casos.sample_date
-	AND grid.downloaded_at = casos.downloaded_at
-INNER JOIN {{ ref('municipal_population') }} popest
-	USING (fips)
-GROUP BY
-    grid.bulletin_date,
-    grid.sample_date,
-    fips,
-    display_name,
-    pop2020,
-    popest.region
+	sum(new_probable) OVER (
+		PARTITION BY bulletin_date, fips
+		ORDER BY sample_date
+	) AS cumulative_probable,
+	new_cases - lag(new_cases, 1, 0) OVER (
+	    PARTITION BY sample_date, fips
+	    ORDER BY bulletin_date
+	) AS delta_cases,
+	new_confirmed - lag(new_confirmed, 1, 0) OVER (
+        PARTITION BY sample_date, fips
+        ORDER BY bulletin_date
+	) AS delta_confirmed,
+	new_probable - lag(new_probable, 1, 0) OVER (
+        PARTITION BY sample_date, fips
+        ORDER BY bulletin_date
+	) AS delta_probable
+FROM counts
 ORDER BY
-    grid.bulletin_date,
-    grid.sample_date,
-    display_name;
+    bulletin_date,
+    sample_date,
+    municipality;

@@ -599,7 +599,7 @@ class MunicipalMap(AbstractChart):
                                       # of the domain.
                                       domain=alt.DomainUnionWith(unionWith=[0, 40])),
                       legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
-                                        title='Casos diarios (por 100k de población, promedio 14 días)',
+                                        title='Casos diarios (por 100k de población, promedio 7 días)',
                                         offset=-15, labelSeparation=10,
                                         format=',~r', gradientLength=self.WIDTH)))
 
@@ -608,9 +608,10 @@ class MunicipalMap(AbstractChart):
             df,
             alt.Color('trend:Q', type='quantitative', sort='descending',
                       scale=alt.Scale(type='symlog', scheme='redgrey',
-                                      domain=[-1.0, 10.0], domainMid=0.0, clamp=True),
+                                      domainMid=0.0, clamp=True,
+                                      domain=alt.DomainUnionWith(unionWith=[-1.0, 10.0])),
                       legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
-                                        title='Cambio (14 días más recientes vs. 14 anteriores)',
+                                        title='Cambio (7 días más recientes vs. 7 anteriores)',
                                         offset=-15, labelSeparation=10,
                                         format='+,.0%', gradientLength=self.WIDTH)))
 
@@ -620,18 +621,18 @@ class MunicipalMap(AbstractChart):
             lookup='municipality',
             from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
         ).transform_calculate(
-            daily_cases=alt.datum.new_14day_cases / 14.0,
-            daily_cases_100k=((alt.datum.new_14day_cases * 1e5) / alt.datum.pop2020) / 14.0,
-            trend='(datum.new_14day_cases / if(datum.previous_14day_cases == 0, 1, datum.previous_14day_cases)) - 1.0'
+            daily_cases=alt.datum.new_7day_cases / 7.0,
+            daily_cases_100k=((alt.datum.new_7day_cases * 1e5) / alt.datum.pop2020) / 7.0,
+            trend='(datum.new_7day_cases / if(datum.previous_7day_cases == 0, 1, datum.previous_7day_cases)) - 1.0'
         ).mark_geoshape(stroke='black', strokeWidth=0.25).encode(
             color=color,
             tooltip=[alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha de boletín'),
                      alt.Tooltip(field='municipality', type='nominal', title='Municipio'),
                      alt.Tooltip(field='pop2020', type='quantitative', format=',d', title='Población'),
                      alt.Tooltip(field='daily_cases', type='quantitative', format=',.1f',
-                                 title='Casos (prom. 14 días)'),
+                                 title='Casos (prom. 7 días)'),
                      alt.Tooltip(field='daily_cases_100k', type='quantitative', format=',.1f',
-                                 title='Casos/100k (prom. 14 días)'),
+                                 title='Casos/100k (prom. 7 días)'),
                      alt.Tooltip(field='trend', type='quantitative', format='+,.0%', title='Cambio')]
         ).properties(
             width=self.WIDTH,
@@ -650,8 +651,8 @@ class MunicipalMap(AbstractChart):
             table.c.bulletin_date,
             table.c.municipality,
             table.c.pop2020,
-            table.c.new_14day_cases,
-            table.c.previous_14day_cases
+            table.c.new_7day_cases,
+            table.c.previous_7day_cases
         ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
                       table.c.bulletin_date <= max(bulletin_dates)))
         return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
