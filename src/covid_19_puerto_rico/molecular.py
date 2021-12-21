@@ -441,7 +441,7 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
 
         text = base.transform_filter(
             '(datum.value !== 0) & (datum.value !== null)'
-        ).mark_text(fontSize=7).encode(
+        ).mark_text(fontSize=6.5).encode(
             text=alt.Text('value:Q'),
             color=alt.condition(
                 '(datum.lo_mid_value < datum.value) & (datum.value < datum.hi_mid_value)',
@@ -450,7 +450,7 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
         )
 
         return (heatmap + text).properties(
-            width=580, height=120
+            width=580, height=200
         ).facet(
             columns=1,
             facet=alt.Facet('variable:N', title=None,
@@ -509,7 +509,7 @@ class MolecularDailyDeltas(AbstractMolecularChart):
                                             domain=alt.DomainUnionWith(unionWith=[0])))
         )
 
-        text = base.mark_text(fontSize=2.75).encode(
+        text = base.mark_text(fontSize=2.75, angle=270).encode(
             text=alt.Text('value:Q'),
             color=alt.condition(
                 '(datum.lo_mid_value < datum.value) & (datum.value < datum.hi_mid_value)',
@@ -518,7 +518,7 @@ class MolecularDailyDeltas(AbstractMolecularChart):
         )
 
         return (heatmap + text).properties(
-            width=580, height=120
+            width=580, height=150
         ).facet(
             columns=1,
             facet=alt.Facet('variable:N', title=None,
@@ -729,7 +729,7 @@ class CaseFatalityRate(AbstractMolecularChart):
                                     " ? timeFormat(datum.value, '%Y')"
                                     " : '']")),
             y=alt.Y('lagged_cfr:Q', title='Letalidad (CFR, 14 días)',
-                    axis=alt.Axis(format='%'), scale=alt.Scale(type='log', domain=[0.007, 0.2])),
+                    axis=alt.Axis(format='%'), scale=alt.Scale(type='log', domain=[0.004, 0.2])),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', title='Datos hasta',
                                       legend=alt.Legend(orient='top', titleOrient='left',
                                                         symbolStrokeWidth=3, symbolSize=300)),
@@ -740,7 +740,7 @@ class CaseFatalityRate(AbstractMolecularChart):
                      alt.Tooltip('smoothed_deaths:Q', format=",.1f", title='Muertes (promedio 14 días)'),
                      alt.Tooltip('lagged_cfr:Q', format=".2%", title='Letalidad (CFR, 14 días)')]
         ).properties(
-            width=585, height=275
+            width=585, height=300
         )
 
 
@@ -777,7 +777,7 @@ class Hospitalizations(AbstractMolecularChart):
                                     " ? timeFormat(datum.value, '%Y')"
                                     " : '']")),
             y=alt.Y('mean_value:Q', title='Promedio 7 días',
-                    scale=alt.Scale(type='log', domain=[5, 1000]),
+                    scale=alt.Scale(type='log', domain=[3, 1000]),
                     axis=alt.Axis(format='s')),
             color=alt.Color('variable:N', title=None,
                             sort=self.SORT_ORDER,

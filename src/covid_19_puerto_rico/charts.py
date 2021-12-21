@@ -282,13 +282,13 @@ class CurrentDeltas(AbstractChart):
                                             domain=alt.DomainUnionWith(unionWith=[0])))
         )
 
-        text = base.mark_text(fontSize=9).encode(
+        text = base.mark_text(fontSize=7.5).encode(
             text=alt.Text('value:Q'),
             color=util.heatmap_text_color(df, 'value')
         ).transform_filter("(datum.value !== 0) & (datum.value !== null)")
 
         return (heatmap + text).properties(
-            width=580, height=120
+            width=580, height=200
         ).facet(
             columns=1,
             facet=alt.Facet('variable', title=None,
