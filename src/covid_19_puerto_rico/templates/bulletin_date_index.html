@@ -87,9 +87,11 @@
         <dt>Casos</dt>
         <dd>Por prueba molecular o de antígenos, usando la fecha de la muestra más temprana.</dd>
 
-        <dt>Camas ocupadas por COVID</dt>
-        <dd>Número de camas hospitalarias corrientemente ocupadas por pacientes con COVID-19
-            confirmado o sospechado.</dd>
+        <dt>Ingresos por COVID</dt>
+        <dd>Número de pacientes admitidos en esa fecha al hospital por COVID-19 sospechado o confirmado.
+            (<strong>Ojo:</strong> Esto no es lo mismo que camas ocupadas por pacientes de COVID-19,
+            que es la estadística que más comunmente se reporta.  Esta de ingresos es cuantos pacientes
+            <em>nuevos</em> ingresaron en esa fecha.)</dd>
 
         <dt>Muertes</dt>
         <dd>Por fecha de deceso.</dd>
@@ -407,7 +409,7 @@
 
 
 <div class="section" id="NewCases_section">
-    <h1>Curva de casos nuevos (Bioportal)</h1>
+    <h1>Historial de casos</h1>
 
     <div id="NewCases"></div>
     <script type="text/javascript">
@@ -416,7 +418,7 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>La tendencia de los casos nuevos por prueba viral diagnóstica (= tanto molecular
+    <p>Las curvas de los casos nuevos por prueba viral diagnóstica (= tanto molecular
         como antígeno) y las muertes, vista por medio de:</p>
 
     <ul>
@@ -428,6 +430,14 @@
     <p>Las líneas sólidas representan los promedios de los 7 días que desembocan
         en esa fecha.  Las entrecortadas representan los valores que se obtienen solo
         con datos de 7 días antes de la fecha de este informe.</p>
+
+    <p>También ilustramos datos hospitalarios en la misma gráfica.  La ocupación
+        hospitalaria y de UCIs es según datos del Departamento de Salud de Puerto Rico,
+        excepto que para rellenar fechas viejas que Salud no tiene en su descarga,
+        hemos usado el COVID Tracking Project que recogió esas fechas.  Para los ingresos
+        a hospital hemos usado los datos del Departamento de Salud y Servicios Humanos (HHS)
+        de los Estados Unidos, excluyendo fechas más viejas cuyos valores muestran errores
+        obvios.</p>
 
 
     <h3>Advertencia</h3>
@@ -480,37 +490,6 @@
     </ul>
 
     <p>Así que ahora solo trazamos la curva por moleculares y antígenos en Bioportal.</p>
-
-
-    <h3>Casos descartados (curva verde)</h3>
-
-    <p>Esta curva muestra el volumen de casos que:</p>
-
-    <ul>
-        <li>Tuvieron una prueba molcular negativa por muestra de esa fecha;</li>
-        <li>No son pruebas de seguimiento a caso ya conocido, según mi análisis
-            a partir de datos de Bioportal.</li>
-    </ul>
-
-    <p>Como prueba de seguimiento cuento toda esta que se realice a la misma persona dentro
-        de un periodo de 90 días luego que esta tuviera una prueba de antígeno o molecular
-        positiva.  La idea de descartar estas de esta curva es que las pruebas de seguimiento
-        no ayudan a descartar potenciales casos nuevos.</p>
-
-    <p>Vale también apuntar que al momento no cuento negativos en prueba de antígenos como
-        caso descartado, debido a la sensibilidad mucho menor de estas y la consecuente
-        práctica común de confirmar negativos por antígeno con molecular.</p>
-
-    <p>Esta curva de casos descartados tiene dos usos principales:</p>
-
-    <ul>
-        <li>Ayuda a evaluar la tendencia de la positividad. Como trazamos las curvas en
-            escala logarítmica, la distancia entre la curva de descartados y la de casos
-            refleja la razón entre estos.</li>
-        <li>Se puede tomar como una aproximación al número de pruebas moleculares que se
-            hizo alrededor de las fechas graficadas, para evaluar a ojo cuán completos están
-            los datos recientes.</li>
-    </ul>
 
 
     <h3>Población de Puerto Rico</h3>

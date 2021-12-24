@@ -7,16 +7,16 @@ SELECT
 	    AS official,
 	encounters.cases AS bioportal,
 	bul.deaths AS deaths,
-	hosp.previous_day_admission_adult_covid_confirmed
-		+ hosp.previous_day_admission_adult_covid_suspected
-		+ hosp.previous_day_admission_pediatric_covid_confirmed
-		+ hosp.previous_day_admission_pediatric_covid_suspected
-		AS hospital_admissions
+	hospitalizations.previous_day_admission_adult_covid
+		+ hospitalizations.previous_day_admission_pediatric_covid
+		AS hospital_admissions,
+    hospitalizations.hospitalized_currently,
+    hospitalizations.in_icu_currently
 FROM {{ ref('bioportal_encounters_agg') }} encounters
 LEFT OUTER JOIN {{ ref('bulletin_cases') }} bul
 	ON bul.bulletin_date = encounters.bulletin_date
 	AND bul.datum_date = encounters.collected_date
-LEFT OUTER JOIN {{ ref('hhs_hospitals') }} hosp
-	ON encounters.collected_date = hosp.date
-	AND hosp.date >= DATE '2020-07-28'
+LEFT OUTER JOIN {{ ref('hospitalizations') }} hospitalizations
+	ON encounters.bulletin_date = hospitalizations.bulletin_date
+	AND encounters.collected_date = hospitalizations.date
 ORDER BY encounters.bulletin_date DESC, encounters.collected_date DESC;

@@ -12,7 +12,7 @@ SELECT
 	camas_adultos_nocovid nocovid,
 	camas_adultos_disp disp
 FROM {{ ref('hospitales_daily') }}
-WHERE fe_reporte >= date_add('day', -41, bulletin_date)
+WHERE fe_reporte >= date_add('day', -42, bulletin_date)
 UNION ALL
 SELECT
 	bulletin_date,
@@ -24,7 +24,7 @@ SELECT
 	camas_icu_nocovid nocovid,
 	camas_icu_disp disp
 FROM {{ ref('hospitales_daily') }}
-WHERE fe_reporte >= date_add('day', -41, bulletin_date)
+WHERE fe_reporte >= date_add('day', -42, bulletin_date)
 UNION ALL
 SELECT
 	bulletin_date,
@@ -48,5 +48,5 @@ SELECT
 	camas_picu_nocovid nocovid,
 	camas_picu_disp disp
 FROM {{ ref('hospitales_daily') }}
-WHERE fe_reporte >= date_add('day', -41, bulletin_date)
+WHERE fe_reporte >= date_add('day', -42, bulletin_date)
 ORDER BY date DESC, age, resource;
