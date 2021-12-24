@@ -200,7 +200,7 @@ class NewCases(AbstractMolecularChart):
                                                         symbolSize=300, symbolStrokeWidth=2,
                                                         symbolStrokeColor='black'))
         ).properties(
-            width=575, height=575
+            width=575, height=475
         )
 
 
