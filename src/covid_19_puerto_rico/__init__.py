@@ -68,7 +68,6 @@ def main():
         charts.DailyDeltas(athena, args.output_dir, output_formats),
         molecular.EncounterLag(athena, args.output_dir, output_formats),
         molecular.NaivePositiveRate(athena, args.output_dir, output_formats),
-        molecular.Hospitalizations(athena, args.output_dir, output_formats),
         molecular.CaseFatalityRate(athena, args.output_dir, output_formats),
         molecular.NewTestSpecimens(athena, args.output_dir, output_formats),
         molecular.ConfirmationsVsRejections(athena, args.output_dir, output_formats),

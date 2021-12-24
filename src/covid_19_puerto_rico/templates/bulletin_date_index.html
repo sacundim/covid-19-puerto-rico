@@ -29,7 +29,6 @@
         <li><a href="#NewCases_section">Curva de casos nuevos (Bioportal)</a></li>
         <li><a href="#RecentAgeGroups_section">Pruebas y casos por edad</a></li>
         <li><a href="#AgeGroups_section">Historial de casos por edad</a></li>
-        <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
         <li><a href="#NewTestSpecimens_section">Especímenes de prueba diarios</a></li>
         <li><a href="#NaivePositiveRate_section">Tasa de especímenes positivos</a></li>
         <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados</a></li>
@@ -491,38 +490,6 @@
     <p>El mismo análisis que la visualización de <a href="#RecentAgeGroups_section">pruebas
         y casos por edad</a>, pero solo los casos, e ilustrando la pandemia completa.</p>
 
-</div>
-
-
-<div class="section" id="Hospitalizations_section">
-    <h1>Historial de hospitalizaciones</h1>
-
-    <div id="Hospitalizations"></div>
-    <script type="text/javascript">
-      embedChart('Hospitalizations', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Promedio de 7 días de cuántos pacientes han estado hospitalizados por COVID-19. Datos
-        son una combinación de multiples fuentes:</p>
-
-    <ul>
-        <li>El API del <a href="https://covidtracking.com/">COVID Tracking Project</a>, que
-            originalmente funcionó como capturas diarias de páginas del Departamento de Salud
-            de Puerto Rico, y son por tanto la fuente más fiable para fechas más antiguas.
-            Este proyecto lamentablemente descontinuó captura de datos a partir del 7 de marzo
-            del 2021.</li>
-        <li>Los informes semanales y diarios del Departamento de Salud de los Estados Unidos,
-            que son la mejor fuente para fechas más tardías:
-            <ul>
-                <li>Diario: <a href="https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-state">
-                    COVID-19 Reported Patient Impact and Hospital Capacity by State</a></li>
-                <li>Semanal: <a href="https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-state-timeseries">
-                    COVID-19 Reported Patient Impact and Hospital Capacity by State Timeseries</a></li>
-            </ul>
-        </li>
-    </ul>
 </div>
 
 
