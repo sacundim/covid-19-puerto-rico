@@ -26,11 +26,9 @@
         <li><a href="#RecentHospitalizations_section">Disponibilidad hospitalaria</a></li>
         <li><a href="#EncounterLag_section">Rezagos de datos recientes</a></li>
         <li><a href="#VaccinationMap_section">Vacunados por municipio</a></li>
-        <li><a href="#OWID_vaccines">Vacunaciones según los CDC</a></li>
         <li><a href="#NewCases_section">Curva de casos nuevos (Bioportal)</a></li>
         <li><a href="#RecentAgeGroups_section">Pruebas y casos por edad</a></li>
         <li><a href="#AgeGroups_section">Historial de casos por edad</a></li>
-        <li><a href="#Hospitalizations_section">Historial de hospitalizaciones</a></li>
         <li><a href="#NewTestSpecimens_section">Especímenes de prueba diarios</a></li>
         <li><a href="#NaivePositiveRate_section">Tasa de especímenes positivos</a></li>
         <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados</a></li>
@@ -71,12 +69,9 @@
     <p>Una guía rápida de cuántas pruebas, casos, pacientes internados y muertes diarias se
         han dado las últimas 6 semanas mostrando tanto valores diarios crudos (barras) como
         promedio móvil de 7 días (línea).  Pruebas y casos son datos del Bioportal del
-        Departamento de Salud de Puerto Rico; admisiones a hospital según reportes del
-        Departamento de Salud y Servicios Humanos de los Estados Unidos
-        (<a href="https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/g62h-syeh">semanal</a>
-        de preferencia, y <a href="https://healthdata.gov/dataset/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/6xf2-c3ie">diario</a>
-        las fechas más recientes); muertes por el <a href="http://www.salud.gov.pr/Estadisticas-Registros-y-Publicaciones/Pages/COVID-19.aspx">informe
-            diario de casos del Departamento de Salud de Puerto Rico</a>.</p>
+        Departamento de Salud de Puerto Rico; muertes y hospitalizaciones son por descargas
+        del <a href="https://covid19datos.salud.gov.pr/">tablero de datos del Departamento
+            de Salud de Puerto Rico</a>.</p>
 
     <dl>
         <dt>Pruebas</dt>
@@ -87,9 +82,11 @@
         <dt>Casos</dt>
         <dd>Por prueba molecular o de antígenos, usando la fecha de la muestra más temprana.</dd>
 
-        <dt>Camas ocupadas por COVID</dt>
-        <dd>Número de camas hospitalarias corrientemente ocupadas por pacientes con COVID-19
-            confirmado o sospechado.</dd>
+        <dt>Ingresos por COVID</dt>
+        <dd>Número de pacientes admitidos en esa fecha al hospital por COVID-19 sospechado o confirmado.
+            (<strong>Ojo:</strong> Esto no es lo mismo que camas ocupadas por pacientes de COVID-19,
+            que es la estadística que más comunmente se reporta.  Esta de ingresos es cuantos pacientes
+            <em>nuevos</em> ingresaron en esa fecha.)</dd>
 
         <dt>Muertes</dt>
         <dd>Por fecha de deceso.</dd>
@@ -343,71 +340,8 @@
 </div>
 
 
-<div class="section" id="OWID_vaccines">
-    <h1>Vacunaciones según los CDC</h1>
-
-    <p>Estas gráficas son tomadas de <a href="https://ourworldindata.org/us-states-vaccinations">esta
-        página de World in Data</a>, quienes las elaboran a partir de datos que capturan de los CDC
-        de los Estados Unidos.</p>
-
-    <p>Nótese que para los cálculos de porciento de población o dosis per cápita, Our World in Data
-        parece usar el estimado del 2019 del Negociado del Censo de los EEUU, que da 3,193,694 personas.
-        El censo del 2020 da 3,285,874, y apunta a que los estimados anteriores son demasiado bajos;
-        por esto hay que entender que <b>estas gráficas inflan como un 3%</b>.</p>
-
-
-    <h3>Porción de personas completamente vacunada contra el COVID-19</h3>
-
-    <p>Porción de la población total que ha recibido todas las dosis prescritas por el protocolo
-        de vacunación.</p>
-
-    <iframe src="https://ourworldindata.org/grapher/us-covid-share-fully-vaccinated?time=earliest..{{bulletin_date}}&country=PRI~New+York+State~Florida~USA"
-            loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
-
-
-    <h3>Porción de personas que ha recibido al menos una dosis de vacuna de COVID-19</h3>
-
-    <p>Porción de la población total que ha recibido al menos una dosis de vacuna.  Esto podría
-        no igualar a la porción que está completamente vacunada si la vacuna requiere dos dosis.</p>
-
-    <iframe src="https://ourworldindata.org/grapher/us-covid-19-share-people-vaccinated?time=earliest..{{bulletin_date}}&country=PRI~New+York+State~Florida~USA"
-            loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
-
-
-    <h3>Total de dosis de vacuna de COVID-19 administradas por 100 personas</h3>
-
-    <p>Número total de dosis de vacunas administradas por 100 personas en la población total.
-        Esto se cuenta como una sola dosis, y podría no ser igual al número total de personas
-        vacunadas, dependiendo del régimen de dosis específico (e.g. la gente recibe múltiples
-        dosis).</p>
-
-    <iframe src="https://ourworldindata.org/grapher/us-state-covid-vaccines-per-100?time=earliest..{{bulletin_date}}&country=PRI~New+York+State~Florida~USA"
-            loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
-
-
-    <h3>Dosis de vacuna de COVID-19 administradas diarias por 100 personas</h3>
-
-    <p>Se muestra el promedio móvil de 7 días por 100 personas en la población total.  Esto se
-        cuenta como dosis sencilla, y podría no ser igual al número total de personas vacunadas,
-        dependiendo del régimen específico de dosis (e.g. personas que reciben múltiples dosis).</p>
-
-    <iframe src="https://ourworldindata.org/grapher/us-daily-covid-vaccine-doses-per-100?time=earliest..{{bulletin_date}}&country=PRI~New+York+State~Florida~USA"
-            loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
-
-
-    <h3>Porción de dosis de vacuna de COVID-19 dispobibles que han sido usadas</h3>
-
-    <p>Porción de dosis de vacunas distribuidas que han sido administradas/usadas en la
-        población.  Las cifras de distribuidas representan aquellas reportadas a la Operación
-        Warp Speed según entregadas.</p>
-
-    <iframe src="https://ourworldindata.org/grapher/us-share-covid-19-vaccine-doses-used?time=2021-01-12..{{bulletin_date}}&country=PRI~New+York+State~Florida~USA"
-            loading="lazy" style="width: 100%; height: 600px; border: 0px none;"></iframe>
-</div>
-
-
 <div class="section" id="NewCases_section">
-    <h1>Curva de casos nuevos (Bioportal)</h1>
+    <h1>Historial de casos</h1>
 
     <div id="NewCases"></div>
     <script type="text/javascript">
@@ -416,7 +350,7 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>La tendencia de los casos nuevos por prueba viral diagnóstica (= tanto molecular
+    <p>Las curvas de los casos nuevos por prueba viral diagnóstica (= tanto molecular
         como antígeno) y las muertes, vista por medio de:</p>
 
     <ul>
@@ -428,6 +362,14 @@
     <p>Las líneas sólidas representan los promedios de los 7 días que desembocan
         en esa fecha.  Las entrecortadas representan los valores que se obtienen solo
         con datos de 7 días antes de la fecha de este informe.</p>
+
+    <p>También ilustramos datos hospitalarios en la misma gráfica.  La ocupación
+        hospitalaria y de UCIs es según datos del Departamento de Salud de Puerto Rico,
+        excepto que para rellenar fechas viejas que Salud no tiene en su descarga,
+        hemos usado el COVID Tracking Project que recogió esas fechas.  Para los ingresos
+        a hospital hemos usado los datos del Departamento de Salud y Servicios Humanos (HHS)
+        de los Estados Unidos, excluyendo fechas más viejas cuyos valores muestran errores
+        obvios.</p>
 
 
     <h3>Advertencia</h3>
@@ -480,37 +422,6 @@
     </ul>
 
     <p>Así que ahora solo trazamos la curva por moleculares y antígenos en Bioportal.</p>
-
-
-    <h3>Casos descartados (curva verde)</h3>
-
-    <p>Esta curva muestra el volumen de casos que:</p>
-
-    <ul>
-        <li>Tuvieron una prueba molcular negativa por muestra de esa fecha;</li>
-        <li>No son pruebas de seguimiento a caso ya conocido, según mi análisis
-            a partir de datos de Bioportal.</li>
-    </ul>
-
-    <p>Como prueba de seguimiento cuento toda esta que se realice a la misma persona dentro
-        de un periodo de 90 días luego que esta tuviera una prueba de antígeno o molecular
-        positiva.  La idea de descartar estas de esta curva es que las pruebas de seguimiento
-        no ayudan a descartar potenciales casos nuevos.</p>
-
-    <p>Vale también apuntar que al momento no cuento negativos en prueba de antígenos como
-        caso descartado, debido a la sensibilidad mucho menor de estas y la consecuente
-        práctica común de confirmar negativos por antígeno con molecular.</p>
-
-    <p>Esta curva de casos descartados tiene dos usos principales:</p>
-
-    <ul>
-        <li>Ayuda a evaluar la tendencia de la positividad. Como trazamos las curvas en
-            escala logarítmica, la distancia entre la curva de descartados y la de casos
-            refleja la razón entre estos.</li>
-        <li>Se puede tomar como una aproximación al número de pruebas moleculares que se
-            hizo alrededor de las fechas graficadas, para evaluar a ojo cuán completos están
-            los datos recientes.</li>
-    </ul>
 
 
     <h3>Población de Puerto Rico</h3>
@@ -576,38 +487,6 @@
     <p>El mismo análisis que la visualización de <a href="#RecentAgeGroups_section">pruebas
         y casos por edad</a>, pero solo los casos, e ilustrando la pandemia completa.</p>
 
-</div>
-
-
-<div class="section" id="Hospitalizations_section">
-    <h1>Historial de hospitalizaciones</h1>
-
-    <div id="Hospitalizations"></div>
-    <script type="text/javascript">
-      embedChart('Hospitalizations', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Promedio de 7 días de cuántos pacientes han estado hospitalizados por COVID-19. Datos
-        son una combinación de multiples fuentes:</p>
-
-    <ul>
-        <li>El API del <a href="https://covidtracking.com/">COVID Tracking Project</a>, que
-            originalmente funcionó como capturas diarias de páginas del Departamento de Salud
-            de Puerto Rico, y son por tanto la fuente más fiable para fechas más antiguas.
-            Este proyecto lamentablemente descontinuó captura de datos a partir del 7 de marzo
-            del 2021.</li>
-        <li>Los informes semanales y diarios del Departamento de Salud de los Estados Unidos,
-            que son la mejor fuente para fechas más tardías:
-            <ul>
-                <li>Diario: <a href="https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-state">
-                    COVID-19 Reported Patient Impact and Hospital Capacity by State</a></li>
-                <li>Semanal: <a href="https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-state-timeseries">
-                    COVID-19 Reported Patient Impact and Hospital Capacity by State Timeseries</a></li>
-            </ul>
-        </li>
-    </ul>
 </div>
 
 

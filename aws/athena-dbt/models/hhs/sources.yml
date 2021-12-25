@@ -10,3 +10,5 @@ sources:
         identifier: reported_hospital_utilization_PR
       - name: hospital_facilities
         identifier: reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries
+      - name: covid_tracking_hospitalizations
+        identifier: covid_tracking_hospitalizations

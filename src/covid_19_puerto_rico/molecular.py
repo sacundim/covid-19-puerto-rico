@@ -26,7 +26,7 @@ class AbstractMolecularChart(charts.AbstractChart):
 
 
 class RecentCases(AbstractMolecularChart):
-    SORT_ORDER=['Pruebas', 'Casos', 'Camas ocupadas por COVID', 'Muertes']
+    SORT_ORDER=['Pruebas', 'Casos', 'Hospitalizados', 'Muertes']
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('recent_daily_cases', self.metadata,
@@ -35,8 +35,7 @@ class RecentCases(AbstractMolecularChart):
                         table.c.datum_date,
                         table.c.tests.label('Pruebas'),
                         table.c.cases.label('Casos'),
-                        table.c.inpatient_beds_used_covid
-                            .label('Camas ocupadas por COVID'),
+                        table.c.hospitalized_currently.label('Hospitalizados'),
                         table.c.deaths.label('Muertes')])\
             .where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
                         table.c.bulletin_date <= max(bulletin_dates)))
@@ -129,12 +128,13 @@ class NewCases(AbstractMolecularChart):
                                  schema='covid19_puerto_rico_model', autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.datum_date,
-                        table.c.rejections.label('Descartados'),
                         table.c.bioportal.label('Casos'),
                         # I don't trust the data for this one.
                         # Note for when/if I reenable: the color is
                         # '#f58518' (tableau10 orange)
-                        # table.c.hospital_admissions.label('Hospitalizados'),
+                        table.c.hospital_admissions.label('Ingresos a hospital'),
+                        table.c.hospitalized_currently.label('Ocupación hospital'),
+                        table.c.in_icu_currently.label('Ocupación UCI'),
                         table.c.deaths.label('Muertes')])\
             .where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
                         table.c.bulletin_date <= max(bulletin_dates)))
@@ -168,13 +168,14 @@ class NewCases(AbstractMolecularChart):
         ).transform_filter(
             alt.datum.mean_7day > 0.0
         ).mark_line().encode(
-            x=alt.X('datum_date:T', timeUnit='yearmonthdate', title='Fecha de muestra o deceso',
+            x=alt.X('datum_date:T', timeUnit='yearmonthdate',
+                    title='Fecha de suceso (muestra, hospitalización o deceso)',
                     axis=alt.Axis(
                         labelExpr="[timeFormat(datum.value, '%b'),"
                                   " timeFormat(datum.value, '%m') == '01'"
                                     " ? timeFormat(datum.value, '%Y')"
                                     " : '']")),
-            y = alt.Y('mean_7day:Q', title='Nuevos (promedio 7 días)',
+            y = alt.Y('mean_7day:Q', title='Promedio 7 días',
                       scale=alt.Scale(type='log'), axis=alt.Axis(format=',')),
             tooltip = [
                 alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
@@ -189,14 +190,13 @@ class NewCases(AbstractMolecularChart):
                 alt.Tooltip('mean_7day:Q', format=',.1f', title='Promedio 7 días'),
                 alt.Tooltip('mean_7day_100k:Q', format=',.1f', title='Promedio 7 días (/100k)')],
             color=alt.Color('variable:N', title='Curva',
-                            scale=alt.Scale(range=['#54a24b', '#4c78a8', '#e45756']),
-                            legend=alt.Legend(orient='top', direction='horizontal', labelLimit=250,
-                                              symbolStrokeWidth=3, symbolSize=300),
-                            sort=['Descartados',
-                                  'Casos',
-                                  'Muertes',]),
+                            scale=alt.Scale(range=['#4c78a8', '#b279a2', '#eeca3b', '#f58518', '#e45756']),
+                            legend=alt.Legend(orient='top', direction='horizontal', columns=2,
+                                              labelLimit=250, symbolStrokeWidth=3, symbolSize=300),
+                            sort=['Casos', 'Ingresos a hospital', 'Ocupación hospital',
+                                  'Ocupación UCI', 'Muertes',]),
             strokeDash=alt.StrokeDash('bulletin_date:T', title='Datos hasta', sort='descending',
-                                      legend=alt.Legend(orient='top', direction='horizontal',
+                                      legend=alt.Legend(orient='top', direction='vertical',
                                                         symbolSize=300, symbolStrokeWidth=2,
                                                         symbolStrokeColor='black'))
         ).properties(
@@ -754,15 +754,13 @@ class Hospitalizations(AbstractMolecularChart):
         table = sqlalchemy.Table('hospitalizations', self.metadata,
                                  schema='covid19_puerto_rico_model', autoload=True)
         query = select([
+            table.c.bulletin_date,
             table.c.date,
             table.c.hospitalized_currently.label('Hospitalizados'),
             table.c.in_icu_currently.label('Cuidado intensivo'),
         ]).where(table.c.date <= max(bulletin_dates) + datetime.timedelta(days=1))
-        df = pd.read_sql_query(query, connection, parse_dates=['date'])
-        return pd.melt(df, ['date']).dropna()
-
-    def filter_data(self, df, bulletin_date):
-        return df.loc[df['date'] <= pd.to_datetime(bulletin_date + datetime.timedelta(days=1))]
+        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'date'])
+        return pd.melt(df, ['bulletin_date', 'date']).dropna()
 
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df).transform_window(
@@ -784,6 +782,7 @@ class Hospitalizations(AbstractMolecularChart):
                             sort=self.SORT_ORDER,
                             legend=alt.Legend(orient='top')),
             tooltip=[
+                alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                 alt.Tooltip('date:T', title='Fecha'),
                 alt.Tooltip('variable:N', title='Variable'),
                 alt.Tooltip('value:Q', title='Valor'),

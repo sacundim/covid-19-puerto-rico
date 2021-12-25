@@ -50,6 +50,8 @@ models:
         +materialized: table
     reports:
       +materialized: view
+    summaries:
+      +materialized: table
 
 seeds:
   covid_19_puerto_rico_etl:

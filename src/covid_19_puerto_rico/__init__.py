@@ -48,6 +48,11 @@ def main():
         # Occasional:
         #        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
 
+        molecular.NewCases(athena, args.output_dir, output_formats),
+
+        # We always generate png for this because they're our Twitter cards
+        molecular.RecentCases(athena, args.output_dir, frozenset(['json', 'svg', 'png'])),
+
         charts.MunicipalMap(athena, args.output_dir, output_formats),
         molecular.VaccinationMap(athena, args.output_dir, output_formats),
         molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
@@ -61,15 +66,8 @@ def main():
         charts.LatenessTiers(athena, args.output_dir, output_formats),
         charts.CurrentDeltas(athena, args.output_dir, output_formats),
         charts.DailyDeltas(athena, args.output_dir, output_formats),
-
         molecular.EncounterLag(athena, args.output_dir, output_formats),
         molecular.NaivePositiveRate(athena, args.output_dir, output_formats),
-
-        # We always generate png for this because they're our Twitter cards
-        molecular.RecentCases(athena, args.output_dir, frozenset(['json', 'svg', 'png'])),
-
-        molecular.NewCases(athena, args.output_dir, output_formats),
-        molecular.Hospitalizations(athena, args.output_dir, output_formats),
         molecular.CaseFatalityRate(athena, args.output_dir, output_formats),
         molecular.NewTestSpecimens(athena, args.output_dir, output_formats),
         molecular.ConfirmationsVsRejections(athena, args.output_dir, output_formats),
