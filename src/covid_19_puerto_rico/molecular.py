@@ -353,8 +353,7 @@ class NewTestSpecimens(AbstractMolecularChart):
                     # We use axis tick increments of 3k because the population of
                     # Puerto Rico is about 3M, and this way we can easily read a
                     # rough per-capita figure
-                    axis=alt.Axis(format='s', values=[0, 3000, 6000, 9000, 12000, 15000,
-                                                      18000, 21000, 24000, 27000, 30000])),
+                    axis=alt.Axis(format='s', values=list(range(0, 60001, 3000)))),
             color=alt.Color('test_type:N', title='Tipo de prueba',
                             sort=self.TEST_TYPE_SORT_ORDER,
                             scale=alt.Scale(range=self.TEST_TYPE_COLORS),
