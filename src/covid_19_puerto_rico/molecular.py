@@ -248,7 +248,7 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
                                     " ? timeFormat(datum.value, '%Y')"
                                     " : '']")),
             y=alt.Y('rate:Q', title='% episodios que se confirma (7 días)',
-                    scale=alt.Scale(type='log', domain=[0.002, 0.3]),
+                    scale=alt.Scale(type='log', domain=[0.002, 0.5]),
                     axis=alt.Axis(format='%')),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending',
                                       legend=alt.Legend(orient='bottom-right', symbolSize=300,
@@ -288,7 +288,7 @@ class NaivePositiveRate(AbstractMolecularChart):
                                     " ? timeFormat(datum.value, '%Y')"
                                     " : '']")),
             y=alt.Y('rate:Q', title='Positividad',
-                    scale=alt.Scale(type='log', domain=[0.003, 0.3]),
+                    scale=alt.Scale(type='log', domain=[0.003, 0.5]),
                     axis=alt.Axis(format='%')),
             color=alt.Color('test_type:N', sort=self.SORT_ORDER, scale=alt.Scale(range=self.COLORS),
                             legend=alt.Legend(orient='bottom', direction='vertical',
