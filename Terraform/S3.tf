@@ -5,13 +5,25 @@ resource "aws_s3_bucket" "main_bucket" {
     Project = "covid-19-puerto-rico"
   }
 
+  versioning {
+    enabled = true
+  }
+
   lifecycle_rule {
-    id      = "Tiered storage"
+    id      = "Transition to Intelligent Tiering"
     enabled = true
 
     transition {
       days          = 31
       storage_class = "INTELLIGENT_TIERING"
+    }
+
+    expiration {
+      expired_object_delete_marker = true
+    }
+
+    noncurrent_version_expiration {
+      days = 7
     }
 
     abort_incomplete_multipart_upload_days = 7
@@ -123,7 +135,23 @@ resource "aws_s3_bucket" "logs_bucket" {
 
     abort_incomplete_multipart_upload_days = 7
   }
+
+  grant {
+    id          = data.aws_canonical_user_id.current_user.id
+    type        = "CanonicalUser"
+    permissions = ["FULL_CONTROL"]
+  }
+
+  grant {
+    id          = data.aws_cloudfront_log_delivery_canonical_user_id.current_user.id
+    type        = "CanonicalUser"
+    permissions = ["FULL_CONTROL"]
+  }
 }
+
+data "aws_canonical_user_id" "current_user" {}
+data "aws_cloudfront_log_delivery_canonical_user_id" "current_user" {}
+
 
 resource "aws_s3_bucket_public_access_block" "block_logs_bucket" {
   bucket = aws_s3_bucket.logs_bucket.id

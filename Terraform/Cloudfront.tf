@@ -66,7 +66,7 @@ output "cloudfront_domain_name" {
 }
 
 
-data "aws_iam_policy_document" "s3_policy" {
+data "aws_iam_policy_document" "cloudfront_access_to_main_bucket" {
   statement {
     actions   = ["s3:GetObject"]
     resources = ["${aws_s3_bucket.main_bucket.arn}/*"]
@@ -78,8 +78,8 @@ data "aws_iam_policy_document" "s3_policy" {
   }
 }
 
-resource "aws_s3_bucket_policy" "mybucket" {
+resource "aws_s3_bucket_policy" "cloudfront_access_to_main_bucket" {
   bucket = aws_s3_bucket.main_bucket.id
-  policy = data.aws_iam_policy_document.s3_policy.json
+  policy = data.aws_iam_policy_document.cloudfront_access_to_main_bucket.json
 }
 
