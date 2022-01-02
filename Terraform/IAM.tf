@@ -137,6 +137,30 @@ resource "aws_iam_policy" "athena_bucket_rw" {
 }
 
 
+resource "aws_iam_policy" "logs_bucket_ro" {
+  name        = "${var.project_name}-logs-reader"
+  description = "Grant list/read access to the S3 logs bucket."
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject",
+          "s3:GetObjectTagging",
+          "s3:ListBucket"
+        ],
+        Resource = [
+          aws_s3_bucket.logs_bucket.arn,
+          "${aws_s3_bucket.logs_bucket.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+
 #################################################################################
 #################################################################################
 ##
@@ -221,6 +245,11 @@ resource "aws_iam_group_policy_attachment" "uploaders_data_bucket_rw" {
 resource "aws_iam_group_policy_attachment" "uploaders_main_bucket_rw" {
   group      = aws_iam_group.uploaders.name
   policy_arn = aws_iam_policy.main_bucket_rw.arn
+}
+
+resource "aws_iam_group_policy_attachment" "uploaders_main_bucket_ro" {
+  group      = aws_iam_group.uploaders.name
+  policy_arn = aws_iam_policy.logs_bucket_ro.arn
 }
 
 
