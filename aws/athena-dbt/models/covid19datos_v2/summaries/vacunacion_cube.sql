@@ -28,7 +28,7 @@ WITH downloads AS (
 		dose_number
 	FROM {{ ref('covid19datos_v2_vacunacion_city_names') }}
 	CROSS JOIN (
-		VALUES (SEQUENCE(DATE '2020-12-03', DATE '2021-12-31', INTERVAL '1' DAY))
+		VALUES (SEQUENCE(DATE '{{ var("first_vax_date") }}', DATE '{{ var("end_date") }}', INTERVAL '1' DAY))
 	) AS date_array (date_array)
 	CROSS JOIN UNNEST(date_array) AS t2(date_column)
 	INNER JOIN downloads

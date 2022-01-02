@@ -21,7 +21,7 @@ WITH downloads AS (
 		fips
 	FROM {{ ref('covid19datos_v2_casos_city_names') }}
 	CROSS JOIN (
-		VALUES (SEQUENCE(DATE '2020-03-09', DATE '2021-12-31', INTERVAL '1' DAY))
+		VALUES (SEQUENCE(DATE '{{ var("first_sample_date") }}', DATE '{{ var("end_date") }}', INTERVAL '1' DAY))
 	) AS date_array (date_array)
 	CROSS JOIN UNNEST(date_array) AS t2(date_column)
 	INNER JOIN downloads

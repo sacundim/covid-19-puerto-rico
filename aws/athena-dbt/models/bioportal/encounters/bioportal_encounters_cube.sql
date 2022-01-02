@@ -6,7 +6,7 @@ WITH downloads AS (
 ), bulletins AS (
 	SELECT CAST(date_column AS DATE) AS bulletin_date
 	FROM (
-		VALUES (SEQUENCE(DATE '2020-04-24', DATE '2021-12-31', INTERVAL '1' DAY))
+		VALUES (SEQUENCE(DATE '{{ var("first_bulletin_date") }}', DATE '{{ var("end_date") }}', INTERVAL '1' DAY))
 	) AS date_array (date_array)
 	CROSS JOIN UNNEST(date_array) AS t2(date_column)
 	INNER JOIN downloads

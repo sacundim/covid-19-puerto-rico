@@ -76,8 +76,8 @@ SELECT
 	    -- generated (second precision values).  I'm going to assume
 	    -- that whichever of the two dates is earlier is likelier to
 	    -- be right.
-	    THEN least(coalesce(raw_collected_date, DATE '9999-12-31'),
-	               coalesce(raw_reported_date, DATE '9999-12-31'))
+	    THEN least(coalesce(raw_collected_date, DATE '{{ var("end_of_time") }}'),
+	               coalesce(raw_reported_date, DATE '{{ var("end_of_time") }}'))
 	    ELSE coalesce(raw_collected_date, raw_reported_date, downloaded_date)
     END AS collected_date,
     CASE
@@ -88,8 +88,8 @@ SELECT
 	        ELSE downloaded_date
 	    END
 	    WHEN test_type IN ('Antígeno')
-	    THEN greatest(coalesce(raw_collected_date, DATE '0001-01-01'),
-	                  coalesce(raw_reported_date, DATE '0001-01-01'))
+	    THEN greatest(coalesce(raw_collected_date, DATE '{{ var("beginning_of_time") }}'),
+	                  coalesce(raw_reported_date, DATE '{{ var("beginning_of_time") }}'))
 	    ELSE coalesce(raw_reported_date, raw_collected_date, downloaded_date)
     END AS reported_date
 FROM first_clean;
