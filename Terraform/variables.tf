@@ -22,6 +22,12 @@ variable "athena_bucket_name" {
   default = "covid-19-puerto-rico-athena"
 }
 
+variable "logs_bucket_name" {
+  type = string
+  description = "The name of the bucket to create/use for logs."
+  default = "covid-19-puerto-rico-logs"
+}
+
 variable "testing_bucket_name" {
   type = string
   description = "The name of the bucket to create/use for testing stuff."
