@@ -24,13 +24,10 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   is_ipv6_enabled     = true
 //  default_root_object = "index.html"
 
-  /*
   logging_config {
-    include_cookies = false
-    bucket          = aws_s3_bucket.logs_bucket
+    bucket          = aws_s3_bucket.logs_bucket.bucket_domain_name
     prefix          = "www"
   }
-  */
 
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
