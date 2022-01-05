@@ -5,23 +5,22 @@ WITH bulletins AS (
 	SELECT
 		bulletin_date,
 		bio.collected_date,
-			(bio.cumulative_cases - lag(bio.cumulative_cases, 7) OVER (
-		ORDER BY bio.collected_date
-		)) cases,
-		100.0 * (bio.cumulative_positive_antigens - lag(bio.cumulative_positive_antigens) OVER (
+		(bio.cumulative_cases - lag(bio.cumulative_cases, 7) OVER (
 			ORDER BY bio.collected_date
-		)) / (bio.cumulative_antigens - lag(bio.cumulative_antigens) OVER (
+		)) / 7.0 cases,
+		100.0 * (bio.cumulative_positive_antigens - lag(bio.cumulative_positive_antigens, 7) OVER (
+			ORDER BY bio.collected_date
+		)) / (bio.cumulative_antigens - lag(bio.cumulative_antigens, 7) OVER (
 			ORDER BY bio.collected_date
 		)) antigens,
-		100.0 * (bio.cumulative_positive_molecular - lag(bio.cumulative_positive_molecular) OVER (
+		100.0 * (bio.cumulative_positive_molecular - lag(bio.cumulative_positive_molecular, 7) OVER (
 			ORDER BY bio.collected_date
-		)) / (bio.cumulative_molecular - lag(bio.cumulative_molecular) OVER (
+		)) / (bio.cumulative_molecular - lag(bio.cumulative_molecular, 7) OVER (
 			ORDER BY bio.collected_date
 		)) molecular
 	FROM {{ ref('bioportal_encounters_agg') }} bio
 	INNER JOIN bulletins
 		ON bulletins.max_bulletin_date = bio.bulletin_date
-	WHERE day_of_week(collected_date) = day_of_week(bulletin_date)
 )
 SELECT
 	bulletin_date AS "Datos hasta",
