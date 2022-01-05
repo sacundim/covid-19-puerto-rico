@@ -5,6 +5,7 @@ import importlib.resources
 import io
 import json
 import logging
+from math import log10, floor
 import sqlalchemy
 import toml
 from urllib.parse import quote_plus
@@ -77,3 +78,23 @@ def get_json_resource(filename):
 def get_geojson_resource(filename):
     text = importlib.resources.read_text(resources, filename)
     return geojson.loads(text)
+
+
+def round_up_sig(x, sig=2):
+    """Round `x` upwards to `sig` significant digits."""
+    magnitude = int(floor(log10(abs(x))))
+    rounded = round(x, sig - magnitude - 1)
+    if rounded < x:
+        return rounded + 10 ** (magnitude - (sig - 1))
+    else:
+        return rounded
+
+def round_down_sig(x, sig=2):
+    """Round `x` downwards to `sig` significant digits."""
+    magnitude = int(floor(log10(abs(x))))
+    rounded = round(x, sig - magnitude - 1)
+    if rounded > x:
+        return rounded - 10 ** (magnitude - (sig - 1))
+    else:
+        return rounded
+

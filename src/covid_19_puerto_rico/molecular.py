@@ -148,6 +148,7 @@ class NewCases(AbstractMolecularChart):
                       | (df['bulletin_date'] == pd.to_datetime(week_ago))]
 
     def make_chart(self, df, bulletin_date):
+        max_y = util.round_up_sig(df['value'].max())
         return alt.Chart(df.dropna()).transform_window(
             groupby=['variable', 'bulletin_date'],
             sort=[{'field': 'datum_date'}],
@@ -176,7 +177,8 @@ class NewCases(AbstractMolecularChart):
                                     " ? timeFormat(datum.value, '%Y')"
                                     " : '']")),
             y = alt.Y('mean_7day:Q', title='Promedio 7 días',
-                      scale=alt.Scale(type='log'), axis=alt.Axis(format=',')),
+                      scale=alt.Scale(type='log', domain=[0.1, max_y]),
+                      axis=alt.Axis(format=',')),
             tooltip = [
                 alt.Tooltip('datum_date:T', title='Fecha muestra o muerte'),
                 alt.Tooltip('bulletin_date:T', title='Datos hasta'),
