@@ -1087,7 +1087,7 @@ class RecentAgeGroups(AbstractMolecularChart):
                 alt.Tooltip('edades:N', title='Edad'),
                 alt.Tooltip('variable:N', title='Variable'),
                 alt.Tooltip('mean_cases:Q', format=',.1f', title='Diarios (7 días)'),
-                alt.Tooltip('mean_cases:Q', format=',d', title='Diarios (7 días, por millón)')
+                alt.Tooltip('mean_cases_1m:Q', format=',d', title='Diarios (7 días, por millón)')
             ]
         ).properties(
             width=self.WIDTH, height=self.HEIGHT
