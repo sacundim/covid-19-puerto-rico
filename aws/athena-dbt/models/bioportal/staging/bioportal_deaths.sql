@@ -12,7 +12,8 @@ WITH first_clean AS (
 		date(downloaded_date) AS downloaded_date,
 	    CAST(from_iso8601_timestamp(downloadedAt) AS TIMESTAMP)
 	        AS downloaded_at,
-	    CAST(from_iso8601_timestamp(downloadedAt) AS DATE) - INTERVAL '1' DAY
+	    CAST(from_iso8601_timestamp(downloadedAt) AT TIME ZONE 'America/Puerto_Rico' AS DATE)
+	        - INTERVAL '1' DAY
 	        AS bulletin_date,
 	    date(from_iso8601_timestamp(nullif(deathDate, '')) AT TIME ZONE 'America/Puerto_Rico')
 	        AS raw_death_date,
