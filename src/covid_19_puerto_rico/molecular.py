@@ -332,8 +332,8 @@ class NaivePositiveRate(AbstractMolecularChart):
 class NewTestSpecimens(AbstractMolecularChart):
     """The original tests chart, counting test specimens naïvely out of Bioportal."""
     POPULATION_THOUSANDS = PUERTO_RICO_POPULATION / 1_000.0
-    TEST_TYPE_SORT_ORDER = ['Molecular', 'Antígeno', 'Serológica', 'Otro (¿inválido?)']
-    TEST_TYPE_COLORS = ['#4c78a8', '#e45756', 'lightgray', 'gray']
+    TEST_TYPE_SORT_ORDER = ['Molecular', 'Antígeno', 'Casera', 'Serológica', 'Otro (¿inválido?)']
+    TEST_TYPE_COLORS = ['#4c78a8', '#e45756', '#f58518', 'lightgray', 'gray']
     DATE_TYPE_SORT_ORDER = ['Fecha de muestra', 'Fecha de reporte']
 
     def make_chart(self, df, bulletin_date):
@@ -360,7 +360,7 @@ class NewTestSpecimens(AbstractMolecularChart):
                             sort=self.TEST_TYPE_SORT_ORDER,
                             scale=alt.Scale(range=self.TEST_TYPE_COLORS),
                             legend=alt.Legend(orient='bottom', titleOrient='top', direction='vertical',
-                                              padding=7.5, symbolStrokeWidth=3, symbolSize=300)),
+                                              padding=7.5, symbolStrokeWidth=3, symbolSize=300, columns=2)),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', title='Datos hasta',
                                       legend=alt.Legend(orient='bottom', titleOrient='top',
                                                         direction='vertical', padding=7.5,

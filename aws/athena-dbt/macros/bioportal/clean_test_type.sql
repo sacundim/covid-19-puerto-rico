@@ -10,8 +10,11 @@
             'Antigens', 'ANTIGENO'
         ) THEN 'Antígeno'
         WHEN {{raw}} IN (
+            'AntigensSelfTest'
+        ) THEN 'Casera'
+        WHEN {{raw}} IN (
             'Serological', 'Serological IgG Only', 'Total Antibodies', 'SEROLOGICAL'
         ) THEN 'Serológica'
-        ELSE {{raw}}
+        ELSE 'Otro (¿inválido?)'
     END
 {% endmacro %}
