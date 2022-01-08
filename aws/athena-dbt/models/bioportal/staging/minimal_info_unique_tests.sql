@@ -22,27 +22,11 @@ WITH first_clean AS (
             AS raw_reported_date,
         date_parse(createdAt, '%m/%d/%Y %H:%i') AS created_at,
         nullif(ageRange, '') AS age_range,
-        CASE city
-            WHEN '' THEN NULL
-            WHEN 'Loiza' THEN 'Loíza'
-            WHEN 'Rio Grande' THEN 'Río Grande'
-            ELSE city
-        END AS municipality,
+        {{ clean_municipality('city') }} AS municipality,
 	    testType AS raw_test_type,
-        CASE
-            WHEN testType IN (
-                'Molecular', 'MOLECULAR'
-            ) THEN 'Molecular'
-            WHEN testType IN (
-                'Antigens', 'ANTIGENO'
-            ) THEN 'Antígeno'
-            WHEN testType IN (
-                'Serological', 'Serological IgG Only', 'Total Antibodies', 'SEROLOGICAL'
-            ) THEN 'Serológica'
-            ELSE testType
-        END AS test_type,
+	    {{ clean_test_type('testType') }} AS test_type,
         result,
-        COALESCE(result, '') LIKE '%Positive%' AS positive
+        {{ parse_bioportal_result('result') }} AS positive
     FROM {{ source('bioportal', 'minimal_info_unique_tests') }}
     -- IMPORTANT: This prunes partitions
     WHERE downloaded_date >= cast(date_add('day', -32, current_date) AS VARCHAR)

@@ -32,20 +32,9 @@ WITH downloads AS (
 	    nullif(ageRange, '') AS age_range,
 	    nullif(region, '') AS region,
 	    testType AS raw_test_type,
-        CASE
-            WHEN testType IN (
-                'Molecular', 'MOLECULAR'
-            ) THEN 'Molecular'
-            WHEN testType IN (
-                'Antigens', 'ANTIGENO'
-            ) THEN 'Antígeno'
-            WHEN testType IN (
-                'Serological', 'Serological IgG Only', 'Total Antibodies', 'SEROLOGICAL'
-            ) THEN 'Serológica'
-            ELSE 'Otro (¿inválido?)'
-        END AS test_type,
+	    {{ clean_test_type('testType') }} AS test_type,
 	    result,
-	    COALESCE(result, '') LIKE '%Positive%' AS positive
+        {{ parse_bioportal_result('result') }} AS positive
 	FROM {{ source('bioportal', 'orders_basic') }} tests
 	INNER JOIN downloads
 	    ON downloads.max_downloaded_at = tests.downloadedAt
