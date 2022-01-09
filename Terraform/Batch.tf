@@ -9,6 +9,7 @@ resource "aws_batch_job_definition" "bioportal_download_and_sync" {
   tags = {
     Project = var.project_name
   }
+  propagate_tags = true
   type = "container"
   platform_capabilities = ["FARGATE"]
 
@@ -84,6 +85,7 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
   tags = {
     Project = var.project_name
   }
+  propagate_tags = true
   type = "container"
   platform_capabilities = ["FARGATE"]
 
@@ -158,6 +160,7 @@ resource "aws_batch_job_definition" "hhs_download_and_sync" {
   tags = {
     Project = var.project_name
   }
+  propagate_tags = true
   type = "container"
   platform_capabilities = ["FARGATE"]
 
