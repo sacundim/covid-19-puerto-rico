@@ -38,7 +38,7 @@ resource "aws_batch_job_definition" "bioportal_download_and_sync" {
       "options": {
           "awslogs-group" = aws_cloudwatch_log_group.covid_19_puerto_rico.name,
           "awslogs-region" = var.aws_region,
-          "awslogs-stream-prefix" = "batch"
+          "awslogs-stream-prefix" = "bioportal-download-and-sync"
       }
     }
   })
@@ -112,7 +112,7 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
       "options": {
           "awslogs-group" = aws_cloudwatch_log_group.covid_19_puerto_rico.name,
           "awslogs-region" = var.aws_region,
-          "awslogs-stream-prefix" = "batch"
+          "awslogs-stream-prefix" = "covid19datos-v2-download-and-sync"
       }
     }
   })
@@ -185,7 +185,7 @@ resource "aws_batch_job_definition" "hhs_download_and_sync" {
       "options": {
           "awslogs-group" = aws_cloudwatch_log_group.covid_19_puerto_rico.name,
           "awslogs-region" = var.aws_region,
-          "awslogs-stream-prefix" = "batch"
+          "awslogs-stream-prefix" = "hhs-download-and-sync"
       }
     }
   })
