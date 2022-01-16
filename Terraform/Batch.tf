@@ -28,8 +28,8 @@ resource "aws_batch_job_definition" "bioportal_download_and_sync" {
       "platformVersion": "LATEST"
     },
     resourceRequirements = [
-      {"type": "VCPU", "value": "2"},
-      {"type": "MEMORY", "value": "16384"}
+      {"type": "VCPU", "value": "4"},
+      {"type": "MEMORY", "value": "24576"}
     ]
     networkConfiguration = {
       "assignPublicIp": "ENABLED"
