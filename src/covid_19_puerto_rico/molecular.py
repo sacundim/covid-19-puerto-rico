@@ -731,7 +731,7 @@ class CaseFatalityRate(AbstractMolecularChart):
                                     " ? timeFormat(datum.value, '%Y')"
                                     " : '']")),
             y=alt.Y('lagged_cfr:Q', title='Letalidad (CFR, 14 días)',
-                    axis=alt.Axis(format='%'), scale=alt.Scale(type='log', domain=[0.004, 0.2])),
+                    axis=alt.Axis(format='%'), scale=alt.Scale(type='log', domain=[0.001, 0.2])),
             strokeDash=alt.StrokeDash('bulletin_date:T', sort='descending', title='Datos hasta',
                                       legend=alt.Legend(orient='top', titleOrient='left',
                                                         symbolStrokeWidth=3, symbolSize=300)),
@@ -742,7 +742,7 @@ class CaseFatalityRate(AbstractMolecularChart):
                      alt.Tooltip('smoothed_deaths:Q', format=",.1f", title='Muertes (promedio 14 días)'),
                      alt.Tooltip('lagged_cfr:Q', format=".2%", title='Letalidad (CFR, 14 días)')]
         ).properties(
-            width=585, height=300
+            width=585, height=325
         )
 
 
