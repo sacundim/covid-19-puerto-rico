@@ -4,11 +4,17 @@ sources:
   - name: hhs
     schema: covid_hhs_sources
     tables:
-      - name: hospital_utilization_timeseries
-        identifier: reported_hospital_utilization_timeseries_PR
-      - name: hospital_utilization
-        identifier: reported_hospital_utilization_PR
+      - name: reported_hospital_utilization_timeseries
+        freshness:
+          error_after: { count: 7, period: day }
+        loaded_at_field: date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
+      - name: reported_hospital_utilization
+        freshness:
+          error_after: { count: 1, period: day }
+        loaded_at_field: date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
       - name: hospital_facilities
         identifier: reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries
-      - name: covid_tracking_hospitalizations
-        identifier: covid_tracking_hospitalizations
+        freshness:
+          error_after: { count: 7, period: day }
+        loaded_at_field: date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
+      - name: covid_tracking_csv

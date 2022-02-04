@@ -3,6 +3,12 @@ version: 2
 sources:
   - name: covid19datos_v2
     schema: covid19datos_v2_sources
+    freshness:
+      error_after: { count: 1, period: day }
+    loaded_at_field: >
+      CAST(from_iso8601_timestamp(
+      		regexp_extract("$path", '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z'))
+      		AS TIMESTAMP)
     tables:
       - name: casos
         identifier: casos_parquet

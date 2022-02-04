@@ -16,7 +16,7 @@ SELECT
     previous_day_admission_adult_covid,
     previous_day_admission_pediatric_covid
 FROM {{ ref('hospitales_daily') }} prdoh
-LEFT OUTER JOIN {{ source('hhs', 'covid_tracking_hospitalizations') }} tracking
+LEFT OUTER JOIN {{ ref('covid_tracking_hospitalizations') }} tracking
 	ON tracking."date" = prdoh.fe_reporte
 LEFT OUTER JOIN {{ ref('hhs_hospitals') }} hhs
 	ON hhs.date = prdoh.fe_reporte
