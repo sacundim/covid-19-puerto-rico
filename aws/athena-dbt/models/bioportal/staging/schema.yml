@@ -2,8 +2,74 @@ version: 2
 
 models:
   - name: bioportal_orders_basic
+    description: >
+      A minimally processed and cleaned version of Bioportal's orders/basic API endpoint.
+      This data set has the `patient_id` column that allows us to deduplicate tests for
+      the same patient (and thus to count cases), but it doesn't have the patient's
+      municipality, only the region.
     columns:
+      - name: downloaded_at
+        description: >
+          An enriched field that we add, with the UTC timestamp of when we downloaded this data
+          from the Bioportal API endpoint.
+      - name: collected_date
+        description: >
+          The date (in Puerto Rico time) that the test specimen was taken.
+      - name: received_date
+        description: >
+          The date that Bioportal was notified of the result of the test.
+      - name: patient_id
+        description: A unique identifier of the patient that this test was adnimistered to.
+      - name: age_range
+        description: The range that the patient's age falls in.  Value is a textual enumeration.
+        tests:
+          - accepted_values:
+              values:
+                - 'N/A'
+                - '0 to 4'
+                - '5 to 9'
+                - '10 to 14'
+                - '15 to 19'
+                - '20 to 24'
+                - '25 to 29'
+                - '30 to 34'
+                - '35 to 39'
+                - '40 to 44'
+                - '45 to 49'
+                - '50 to 54'
+                - '55 to 59'
+                - '60 to 64'
+                - '65 to 69'
+                - '70 to 74'
+                - '75 to 79'
+                - '80 to 84'
+                - '85 to 89'
+                - '90 to 94'
+                - '95 to 99'
+                - '100 to 104'
+                - '105 to 109'
+                - '110 to 114'
+                - '115 to 119'
+                - '120 to 124'
+                - '125 to 129'
+      - name: region
+        description: >
+          The region that the test is recorded for. It's supposed to be where the patient
+          resides, but there have been hints in the past that it's often where the test site
+          is located instead, which seems wrong.
+        tests:
+          - accepted_values:
+              values:
+                - 'Arecibo'
+                - 'Bayamón'
+                - 'Caguas'
+                - 'Fajardo'
+                - 'Mayagüez'
+                - 'Metro'
+                - 'N/A'
+                - 'Ponce'
       - name: test_type
+        description: A cleaned test type enumeration value.
         tests:
           - accepted_values:
               values:
@@ -12,7 +78,32 @@ models:
                 - 'Casera'
                 - 'Serológica'
                 - 'Otro (¿inválido?)'
+      - name: positive
+        description: >
+          Whether the test returned positive.  This we compute off the raw `result` field, so
+          it's not perfect. We also don't currently try to distinguish invalid results from
+          negative results.
+      - name: reported_date
+        description: >
+          The date of the lab result, which means whatever the labs mean by that date.  With PCR
+          this usually is the date that they processed the test sample.  With other test types
+          it's not at all clear what they mean by it.
+      - name: raw_collected_at
+        description: >
+          The raw value of the `collectedAt` field in Bioportal. We have a cleaned version of this
+          in `collected_date`.
+      - name: raw_reported_at
+        description: >
+          The raw value of the `reportedAt` field in Bioportal. We have a cleaned version of this
+          in `reported_date`.
+      - name: result_created_at
+        description: >
+          The raw value of the `resultCreatedAt` field in Bioportal. We have a cleaned version of this
+          in `received_date`.
       - name: result
+        description: >
+          The raw value of the `result` field in Bioportal, which doesn't have much of a
+          defined format. Usually you want the cleaned `positive` field instead.
         tests:
           - relationships:
               to: ref('expected_test_results')
@@ -23,8 +114,13 @@ models:
               # `""` in my CSV into null.
               error_if: '>2'
   - name: minimal_info_unique_tests
+    description: >
+      A minimally processed and cleaned version of Bioportal's `minimal-info-unique-tests`
+      API endpoint.  This data set has one row per test specimen, and identifies the
+      municipality of the patient's test, but doesn't have the `patient_id` column.
     columns:
       - name: test_type
+        description: A cleaned test type enumeration value.
         tests:
           - accepted_values:
               values:

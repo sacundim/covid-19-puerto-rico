@@ -30,7 +30,7 @@ WITH downloads AS (
 	        AS raw_reported_date,
 	    from_hex(replace(nullif(patientId, ''), '-')) AS patient_id,
 	    nullif(ageRange, '') AS age_range,
-	    nullif(region, '') AS region,
+        {{ clean_region('region') }} AS region,
 	    testType AS raw_test_type,
 	    {{ clean_test_type('testType') }} AS test_type,
 	    result,
