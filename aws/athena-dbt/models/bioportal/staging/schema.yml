@@ -19,58 +19,21 @@ models:
       - name: age_range
         description: '{{ doc("age_range") }}'
         tests:
-          - accepted_values:
-              values:
-                - 'N/A'
-                - '0 to 4'
-                - '5 to 9'
-                - '10 to 14'
-                - '15 to 19'
-                - '20 to 24'
-                - '25 to 29'
-                - '30 to 34'
-                - '35 to 39'
-                - '40 to 44'
-                - '45 to 49'
-                - '50 to 54'
-                - '55 to 59'
-                - '60 to 64'
-                - '65 to 69'
-                - '70 to 74'
-                - '75 to 79'
-                - '80 to 84'
-                - '85 to 89'
-                - '90 to 94'
-                - '95 to 99'
-                - '100 to 104'
-                - '105 to 109'
-                - '110 to 114'
-                - '115 to 119'
-                - '120 to 124'
-                - '125 to 129'
+          - relationships:
+              to: ref('bioportal_age_ranges')
+              field: age_range
       - name: region
         description: '{{ doc("region") }}'
         tests:
-          - accepted_values:
-              values:
-                - 'Arecibo'
-                - 'Bayamón'
-                - 'Caguas'
-                - 'Fajardo'
-                - 'Mayagüez'
-                - 'Metro'
-                - 'N/A'
-                - 'Ponce'
+          - relationships:
+              to: ref('expected_regions')
+              field: region
       - name: test_type
         description: '{{ doc("test_type") }}'
         tests:
-          - accepted_values:
-              values:
-                - 'Molecular'
-                - 'Antígeno'
-                - 'Casera'
-                - 'Serológica'
-                - 'Otro (¿inválido?)'
+          - relationships:
+              to: ref('expected_test_types')
+              field: test_type
       - name: positive
         description: '{{ doc("positive") }}'
       - name: reported_date
@@ -87,19 +50,59 @@ models:
           - relationships:
               to: ref('expected_test_results')
               field: result
+
   - name: minimal_info_unique_tests
     description: >
       A minimally processed and cleaned version of Bioportal's `minimal-info-unique-tests`
       API endpoint.  This data set has one row per test specimen, and identifies the
       municipality of the patient's test, but doesn't have the `patient_id` column.
     columns:
-      - name: test_type
-        description: A cleaned test type enumeration value.
+      - name: municipality
         tests:
-          - accepted_values:
-              values:
-                - 'Molecular'
-                - 'Antígeno'
-                - 'Casera'
-                - 'Serológica'
-                - 'Otro (¿inválido?)'
+          - relationships:
+              enabled: false  # This is very slow and fiddly
+              to: ref('municipal_population')
+              field: name
+              where: >
+                municipality NOT LIKE '% Borough'
+                  AND municipality NOT LIKE '% County'
+                  AND municipality NOT LIKE '% Census Area'
+                  AND municipality NOT LIKE '% City'
+                  AND municipality NOT LIKE '% city'
+                  AND municipality NOT LIKE '% Municipality'
+                  AND municipality NOT LIKE '% Parish'
+                  AND municipality NOT IN (
+                    'No Domiciliado', 'N/A',
+                    'District of Columbia'
+                  )
+      - name: test_type
+        description: '{{ doc("test_type") }}'
+        tests:
+          - relationships:
+              enabled: false  # This is slow and we test the same logic elsewhere.
+              to: ref('expected_test_types')
+              field: test_type
+
+  - name: bioportal_deaths
+    description: >
+      A minimally processed and cleaned version of Bioportal's `deaths` API endpoint.
+      This is one row per death.
+    columns:
+      - name: age_range
+        description: '{{ doc("age_range") }}'
+        tests:
+          - relationships:
+              to: ref('bioportal_age_ranges')
+              field: age_range
+      - name: region
+        description: '{{ doc("region") }}'
+        tests:
+          - relationships:
+              to: ref('expected_regions')
+              field: region
+      - name: sex
+        tests:
+          - relationships:
+              to: ref('expected_sex')
+              field: sex
+

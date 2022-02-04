@@ -19,9 +19,9 @@ WITH first_clean AS (
 	        AS raw_death_date,
 	    date(from_iso8601_timestamp(nullif(reportDate, '')) AT TIME ZONE 'America/Puerto_Rico')
 	        AS report_date,
-	    region,
-	    sex,
-	   	ageRange AS age_range
+        {{ clean_region('region') }} AS region,
+	    nullif(sex, '') sex,
+        {{ clean_age_range('ageRange') }} AS age_range
 	FROM {{ source('bioportal', 'deaths') }}
 )
 SELECT

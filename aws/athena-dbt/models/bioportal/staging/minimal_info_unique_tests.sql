@@ -21,11 +21,11 @@ WITH first_clean AS (
         CAST(date_parse(nullif(reportedDate, ''), '%m/%d/%Y') AS DATE)
             AS raw_reported_date,
         date_parse(createdAt, '%m/%d/%Y %H:%i') AS created_at,
-        nullif(ageRange, '') AS age_range,
+        {{ clean_age_range('ageRange') }} AS age_range,
         {{ clean_municipality('city') }} AS municipality,
-	    testType AS raw_test_type,
+	    nullif(testType, '') AS raw_test_type,
 	    {{ clean_test_type('testType') }} AS test_type,
-        result,
+	    nullif(result, '') result,
         {{ parse_bioportal_result('result') }} AS positive
     FROM {{ source('bioportal', 'minimal_info_unique_tests') }}
     -- IMPORTANT: This prunes partitions

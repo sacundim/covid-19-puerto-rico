@@ -29,7 +29,7 @@ WITH downloads AS (
 	    date(from_iso8601_timestamp(nullif(reportedDate, '')) AT TIME ZONE 'America/Puerto_Rico')
 	        AS raw_reported_date,
 	    from_hex(replace(nullif(patientId, ''), '-')) AS patient_id,
-	    nullif(ageRange, '') AS age_range,
+        {{ clean_age_range('ageRange') }} AS age_range,
         {{ clean_region('region') }} AS region,
 	    nullif(testType, '') AS raw_test_type,
 	    {{ clean_test_type('testType') }} AS test_type,
