@@ -9,19 +9,15 @@ models:
       municipality, only the region.
     columns:
       - name: downloaded_at
-        description: >
-          An enriched field that we add, with the UTC timestamp of when we downloaded this data
-          from the Bioportal API endpoint.
+        description: '{{ doc("downloaded_at") }}'
       - name: collected_date
-        description: >
-          The date (in Puerto Rico time) that the test specimen was taken.
+        description: '{{ doc("collected_date") }}'
       - name: received_date
-        description: >
-          The date that Bioportal was notified of the result of the test.
+        description: '{{ doc("received_date") }}'
       - name: patient_id
-        description: A unique identifier of the patient that this test was adnimistered to.
+        description: '{{ doc("patient_id") }}'
       - name: age_range
-        description: The range that the patient's age falls in.  Value is a textual enumeration.
+        description: '{{ doc("age_range") }}'
         tests:
           - accepted_values:
               values:
@@ -53,10 +49,7 @@ models:
                 - '120 to 124'
                 - '125 to 129'
       - name: region
-        description: >
-          The region that the test is recorded for. It's supposed to be where the patient
-          resides, but there have been hints in the past that it's often where the test site
-          is located instead, which seems wrong.
+        description: '{{ doc("region") }}'
         tests:
           - accepted_values:
               values:
@@ -69,7 +62,7 @@ models:
                 - 'N/A'
                 - 'Ponce'
       - name: test_type
-        description: A cleaned test type enumeration value.
+        description: '{{ doc("test_type") }}'
         tests:
           - accepted_values:
               values:
@@ -79,23 +72,9 @@ models:
                 - 'Serológica'
                 - 'Otro (¿inválido?)'
       - name: positive
-        description: >
-          Whether the test returned positive.  This we compute off the raw `result` field, so
-          it's not perfect. We also don't currently try to distinguish invalid results from
-          negative results.
+        description: '{{ doc("positive") }}'
       - name: reported_date
-        description: >
-          The date of the lab result, which means whatever the labs mean by that date.  With PCR
-          this usually is the date that they processed the test sample.  With other test types
-          it's not at all clear what they mean by it.
-      - name: raw_collected_at
-        description: >
-          The raw value of the `collectedAt` field in Bioportal. We have a cleaned version of this
-          in `collected_date`.
-      - name: raw_reported_at
-        description: >
-          The raw value of the `reportedAt` field in Bioportal. We have a cleaned version of this
-          in `reported_date`.
+        description: '{{ doc("reported_date") }}'
       - name: result_created_at
         description: >
           The raw value of the `resultCreatedAt` field in Bioportal. We have a cleaned version of this
@@ -103,16 +82,11 @@ models:
       - name: result
         description: >
           The raw value of the `result` field in Bioportal, which doesn't have much of a
-          defined format. Usually you want the cleaned `positive` field instead.
+          defined format.  Usually you want the cleaned `positive` field instead.
         tests:
           - relationships:
               to: ref('expected_test_results')
               field: result
-              # I would like this to always be an error, but I have two records
-              # with an empty string `result` value and I can't figure out how
-              # to get an empty string into the DBT seed table--it translates
-              # `""` in my CSV into null.
-              error_if: '>2'
   - name: minimal_info_unique_tests
     description: >
       A minimally processed and cleaned version of Bioportal's `minimal-info-unique-tests`

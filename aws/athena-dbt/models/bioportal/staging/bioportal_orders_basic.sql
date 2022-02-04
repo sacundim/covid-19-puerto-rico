@@ -31,9 +31,9 @@ WITH downloads AS (
 	    from_hex(replace(nullif(patientId, ''), '-')) AS patient_id,
 	    nullif(ageRange, '') AS age_range,
         {{ clean_region('region') }} AS region,
-	    testType AS raw_test_type,
+	    nullif(testType, '') AS raw_test_type,
 	    {{ clean_test_type('testType') }} AS test_type,
-	    result,
+	    nullif(result, '') result,
         {{ parse_bioportal_result('result') }} AS positive
 	FROM {{ source('bioportal', 'orders_basic') }} tests
 	INNER JOIN downloads
