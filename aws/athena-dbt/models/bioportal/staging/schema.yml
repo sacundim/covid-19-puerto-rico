@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: bioportal_orders_basic
+    columns:
+      - name: test_type
+        tests:
+          - accepted_values:
+              values:
+                - 'Molecular'
+                - 'Antígeno'
+                - 'Casera'
+                - 'Serológica'
+                - 'Otro (¿inválido?)'
+      - name: result
+        tests:
+          - relationships:
+              to: ref('expected_test_results')
+              field: result
+              # I would like this to always be an error, but I have two records
+              # with an empty string `result` value and I can't figure out how
+              # to get an empty string into the DBT seed table--it translates
+              # `""` in my CSV into null.
+              error_if: '>2'
+  - name: minimal_info_unique_tests
+    columns:
+      - name: test_type
+        tests:
+          - accepted_values:
+              values:
+                - 'Molecular'
+                - 'Antígeno'
+                - 'Casera'
+                - 'Serológica'
+                - 'Otro (¿inválido?)'
