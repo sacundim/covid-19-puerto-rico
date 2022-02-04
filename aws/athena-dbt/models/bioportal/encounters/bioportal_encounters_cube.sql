@@ -23,6 +23,23 @@ WITH downloads AS (
             WHERE tests.positive
             AND NOT tests.followup
         ) cases,
+        -- Older version of the cases definition that used a stricter followup 
+        -- criterion (counted an antigen test up to 90 days later as followup)
+        count(*) FILTER (
+            WHERE tests.positive
+            AND NOT tests.followup_strict
+        ) cases_strict,
+        -- A first infection is a test encounter where the result was positive
+        -- and that patient has never had a positive test encounter before.
+        count(*) FILTER (
+            WHERE tests.first_infection
+        ) first_infections,
+        -- A possible infection is a case that's not a first infection.
+        count(*) FILTER (
+            WHERE tests.positive
+            AND NOT tests.followup
+            AND NOT tests.first_infection
+        ) possible_reinfections,
         -- An antigens case is a test encounter that had a positive antigens
         -- test and is not a followup to an earlier positive encounter.
         count(*) FILTER (
@@ -100,6 +117,18 @@ SELECT
         PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
     ) AS cumulative_cases,
+    sum(cases_strict) OVER (
+        PARTITION BY bulletin_date, age_range
+        ORDER BY collected_date
+    ) AS cumulative_cases_strict,
+    sum(first_infections) OVER (
+        PARTITION BY bulletin_date, age_range
+        ORDER BY collected_date
+    ) AS cumulative_first_infections,
+    sum(possible_reinfections) OVER (
+        PARTITION BY bulletin_date, age_range
+        ORDER BY collected_date
+    ) AS cumulative_possible_reinfections,
     sum(rejections) OVER (
         PARTITION BY bulletin_date, age_range
         ORDER BY collected_date

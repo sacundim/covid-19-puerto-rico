@@ -44,6 +44,10 @@ SELECT
 	-- patient on that date came back positive, irrespective
 	-- of the type of test.
 	bool_or(cur.positive) positive,
+    -- A first infection is the first positive encounter a patient has ever had.
+	bool_or(cur.positive)
+	    AND COALESCE(NOT bool_or(prev.positive), TRUE)
+		AS first_infection,
 	-- These two are true if and only if there is at least one
 	-- specimen for that patient on that date was of the respective
 	-- type, irrespective of positive and negative.
@@ -66,6 +70,17 @@ SELECT
 	COALESCE(bool_or(prev.collected_date >= date_add('day', -90, cur.collected_date)
 			            AND prev.positive),
              FALSE)
+		AS followup_strict,
+    -- Looser followup analysis, with shorter antigens cutoff.  The theory here
+    -- is that the 90-day cutoff is only appropriate for molecular tests, because
+    -- antigen tests stop being positive much sooner..
+    COALESCE(bool_or(prev.positive AND (
+                CASE cur.test_type
+                    WHEN 'Molecular'
+                    THEN prev.collected_date >= date_add('day', -90, cur.collected_date)
+                    WHEN 'Antígeno'
+                    THEN prev.collected_date >= date_add('day', -21, cur.collected_date)
+                END)), FALSE)
 		AS followup
 FROM {{ ref('bioportal_orders_basic') }} cur
 INNER JOIN downloads
