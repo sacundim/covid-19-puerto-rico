@@ -2,7 +2,7 @@ WITH downloads AS (
 	SELECT
 		date(file_timestamp AT TIME ZONE 'America/New_York') local_date,
 		max(file_timestamp) AS max_file_timestamp
-	FROM covid_hhs_sources.diagnostic_lab_testing_PR_downloads
+	FROM {{ ref('diagnostic_lab_testing_pr_downloads') }}
 	GROUP BY date(file_timestamp AT TIME ZONE 'America/New_York')
 )
 SELECT
@@ -32,7 +32,7 @@ SELECT
 		PARTITION BY file_timestamp
 		ORDER BY date
 	) AS cumulative_positive
-FROM {{ ref('diagnostic_lab_testing_PR_downloads') }}
+FROM {{ ref('diagnostic_lab_testing_pr_downloads') }}
 INNER JOIN downloads
 	ON max_file_timestamp = file_timestamp
 GROUP BY file_timestamp, local_date, date

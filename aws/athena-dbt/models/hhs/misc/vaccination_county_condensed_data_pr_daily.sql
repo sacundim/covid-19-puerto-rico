@@ -3,7 +3,7 @@ WITH downloads AS (
 		date,
 		max(runid) runid,
 		max(downloaded_at) downloaded_at
-	FROM covid_hhs_sources.vaccination_county_condensed_data_downloads
+	FROM {{ ref('vaccination_county_condensed_data_downloads') }}
 	GROUP BY date
 )
 SELECT *
