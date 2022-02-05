@@ -25,4 +25,3 @@ sources:
           warn_after: { count: 1, period: day }
           error_after: { count: 36, period: hour }
       - name: vaccination_county_condensed_data_json
-      - name: covid_tracking_csv

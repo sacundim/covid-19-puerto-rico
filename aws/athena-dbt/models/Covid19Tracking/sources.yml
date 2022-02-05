@@ -1,0 +1,9 @@
+---
+# Data from the Covid-19 Tracking Project
+version: 2
+
+sources:
+  - name: covid19tracking
+    schema: covid_hhs_sources
+    tables:
+      - name: covid_tracking_csv
