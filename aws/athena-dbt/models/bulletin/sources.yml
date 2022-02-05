@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: bulletin
+    schema: covid_pr_sources
+    tables:
+      - name: bulletin_cases_csv
+      - name: bulletin_municipal_molecular
+      - name: bulletin_municipal_antigens

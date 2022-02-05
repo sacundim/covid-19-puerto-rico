@@ -60,7 +60,7 @@ WITH casos AS (
         CAST(nullif(confirmed_cases, '') AS INTEGER) AS confirmed_cases,
         CAST(nullif(probable_cases, '') AS INTEGER) AS probable_cases,
         CAST(nullif(deaths, '') AS INTEGER) AS deaths
-    FROM covid_pr_sources.bulletin_cases_csv
+    FROM {{ source('bulletin', 'bulletin_cases_csv')}}
 )
 SELECT
 	bulletin_date,
