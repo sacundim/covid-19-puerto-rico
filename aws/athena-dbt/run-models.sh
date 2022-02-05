@@ -19,4 +19,4 @@ dbt source freshness
 
 dbt test --exclude 'source:*'
 
-dbt docs generate
+# dbt docs generate

@@ -5,7 +5,7 @@
 --
 
 SELECT
-	date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
+    {{ hhs_parse_filename_date('"$path"') }}
 		AS file_timestamp,
 	date(date_parse(date, '%Y/%m/%d')) AS date,
 	CAST(NULLIF(hospital_onset_covid, '') AS INTEGER)

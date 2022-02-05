@@ -3,9 +3,7 @@
 SELECT
 	from_iso8601_date(downloaded_date)
 		AS downloaded_date,
-	CAST(from_iso8601_timestamp(
-		regexp_extract("$path", '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z'))
-		AS TIMESTAMP)
+    {{ parse_filename_timestamp('"$path"') }}
 		AS downloaded_at,
     CAST(nullif(nu_edad, '') AS INT) nu_edad,
     nullif(co_municipio, '') co_municipio,

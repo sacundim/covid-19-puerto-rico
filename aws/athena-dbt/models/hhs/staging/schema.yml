@@ -1,0 +1,33 @@
+version: 2
+
+models:
+  - name: hhs_hospital_history
+    description: >
+      HHS's [COVID-19 Reported Patient Impact and Hospital Capacity by Facility](https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/anag-cw7u)
+      datasets, filtered to Puerto Rico.  We keep a history of versions we've downloaded indexed by the
+      `file_timestamp` column.
+    columns:
+      - name: file_timestamp
+        tests:
+          - not_null
+  - name: reported_hospital_utilization
+    description: >
+      HHS's [COVID-19 Reported Patient Impact and Hospital Capacity by State](https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/6xf2-c3ie)
+      datasets, filtered to Puerto Rico.  We keep a history of versions we've downloaded indexed by the
+      `file_timestamp` column.
+    columns:
+      - name: file_timestamp
+        tests:
+          - not_null
+      - name: date
+        tests:
+          - not_null
+  - name: reported_hospital_utilization_timeseries
+    description: >
+      HHS's [COVID-19 Reported Patient Impact and Hospital Capacity by State Timeseries](https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/g62h-syeh)
+      datasets, filtered to Puerto Rico.  We keep a history of versions we've downloaded indexed by the
+      `file_timestamp` column.
+    columns:
+      - name: file_timestamp
+        tests:
+          - not_null

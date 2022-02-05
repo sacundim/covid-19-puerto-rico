@@ -3,7 +3,7 @@ WITH max_path AS (
     FROM {{ source('hhs', 'hospital_facilities') }}
 )
 SELECT
-	date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
+    {{ hhs_parse_filename_date('"$path"') }}
 		AS file_timestamp,
 	date(date_parse(collection_week, '%Y/%m/%d'))
 		AS collection_week,

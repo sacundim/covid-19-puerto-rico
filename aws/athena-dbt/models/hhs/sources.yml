@@ -3,7 +3,15 @@ version: 2
 sources:
   - name: hhs
     schema: covid_hhs_sources
-    loaded_at_field: date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
+    # I would love to use a macro here but apparently DBT hasn't read
+    # them in yet when it interprets this field
+    loaded_at_field: >
+      CAST(parse_datetime(regexp_replace("$path",
+                                          '^.*(202[012](\d{4})_(\d{4})).*$',
+                                         '$1 America/New_York'),
+                          'yyyyMMdd_HHmm ZZZ')
+            AT TIME ZONE 'UTC'
+            AS TIMESTAMP)
     tables:
       - name: reported_hospital_utilization_timeseries
         freshness:
@@ -11,12 +19,10 @@ sources:
       - name: reported_hospital_utilization
         freshness:
           error_after: { count: 1, period: day }
-        loaded_at_field: date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
       - name: hospital_facilities
         identifier: reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries
         freshness:
           error_after: { count: 7, period: day }
-        loaded_at_field: date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
       - name: community_profile_report_county
         freshness:
           warn_after: { count: 1, period: day }
@@ -26,5 +32,9 @@ sources:
           warn_after: { count: 1, period: day }
           error_after: { count: 36, period: hour }
       - name: vaccination_county_condensed_data_json
+        loaded_at_field: >
+          CAST(from_iso8601_timestamp(
+                regexp_extract("$path", '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z'))
+                AS TIMESTAMP)
         freshness:
           warn_after: { count: 1, period: day }

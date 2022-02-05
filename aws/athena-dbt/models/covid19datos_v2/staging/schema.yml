@@ -1,0 +1,48 @@
+version: 2
+
+models:
+  - name: casos
+    description: >
+      The Puerto Rico Department of Health's daily COVID-19 cases datasets.
+      We make one (or more) download per day and keep them all, as tracked
+      by the `downloaded_at` column.  The dataset is one record per case.
+    columns:
+      - name: downloaded_at
+        tests:
+          - not_null
+  - name: defunciones
+    description: >
+      The Puerto Rico Department of Health's daily COVID-19 deaths datasets.
+      We make one (or more) download per day and keep them all, as tracked
+      by the `downloaded_at` column.  The dataset is one record per death.
+    columns:
+      - name: downloaded_at
+        tests:
+          - not_null
+  - name: pruebas
+    description: >
+      The Puerto Rico Department of Health's daily COVID-19 tests datasets.
+      We make one (or more) download per day and keep them all, as tracked
+      by the `downloaded_at` column.  The dataset is one record per test.
+    columns:
+      - name: downloaded_at
+        tests:
+          - not_null
+  - name: sistemas_salud
+    description: >
+      The Puerto Rico Department of Health's daily COVID-19 hospitals datasets.
+      We make one (or more) download per day and keep them all, as tracked
+      by the `downloaded_at` column.  The dataset is one record per reported date.
+    columns:
+      - name: downloaded_at
+        tests:
+          - not_null
+  - name: vacunacion
+    description: >
+      The Puerto Rico Department of Health's daily COVID-19 vaccination datasets.
+      We make one (or more) download per day and keep them all, as tracked by the
+      `downloaded_at` column.  The dataset is one record per administered dose.
+    columns:
+      - name: downloaded_at
+        tests:
+          - not_null
