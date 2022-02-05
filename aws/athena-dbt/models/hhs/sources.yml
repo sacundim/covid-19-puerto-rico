@@ -19,9 +19,12 @@ sources:
         loaded_at_field: date_parse(regexp_extract("$path", '202[012](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
       - name: community_profile_report_county
         freshness:
-          error_after: { count: 1, period: day }
+          warn_after: { count: 1, period: day }
+          error_after: { count: 3, period: day }
       - name: diagnostic_lab_testing
         freshness:
           warn_after: { count: 1, period: day }
           error_after: { count: 36, period: hour }
       - name: vaccination_county_condensed_data_json
+        freshness:
+          warn_after: { count: 1, period: day }
