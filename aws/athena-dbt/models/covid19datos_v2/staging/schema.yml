@@ -85,6 +85,40 @@ models:
         description: '{{ doc("downloaded_at") }}'
         tests:
           - not_null
+      - name: fe_prueba
+        tests:
+          - not_null
+        description: >
+          The date the test sample was collected.
+      - name: co_tipo
+        description: >
+          What type of test this is (antigen vs. NAAT).
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - ANTIGENO
+                - MOLECULAR
+      - name: co_resultado
+        description: >
+          The test's result.
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - NEGATIVA
+                - NO_CONCLUYENTE
+                - POSITIVA
+      - name: co_region
+        description: >
+          What region is recorded for the test.  Some official documentation
+          suggests this is supposed to mean where the patient resides, but there
+          has often been reason to suspect many cases might be recorded as the
+          region of the test center they went to.
+        tests:
+          - relationships:
+              to: ref('covid19datos_v2_casos_region_names')
+              field: region
   - name: sistemas_salud
     description: >
       The Puerto Rico Department of Health's daily COVID-19 hospitals datasets.
@@ -95,6 +129,11 @@ models:
         description: '{{ doc("downloaded_at") }}'
         tests:
           - not_null
+      - name: fe_reporte
+        tests:
+          - not_null
+        description: >
+          The date this record reports about.
   - name: vacunacion
     description: >
       The Puerto Rico Department of Health's daily COVID-19 vaccination datasets.
@@ -105,3 +144,43 @@ models:
         description: '{{ doc("downloaded_at") }}'
         tests:
           - not_null
+      - name: fe_vacuna
+        description: Date that the dose was administered.
+        tests:
+          - not_null
+      - name: co_manufacturero
+        description: >
+          A code for the manufacturer of the vaccine that was administered.
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - JSN
+                - MOD
+                - PFR
+      - name: nu_dosis
+        description: >
+          The "number" of the dose for the patient who received this dose.  It's
+          not the least bit clear (and likely not at all consistent anyway) whether
+          this really is how many doses the patient has received or whether, for
+          example, a patient who first gets a one-dose vaccine and then a booster
+          would be doses "1" and "3".
+        tests:
+          - not_null
+      - name: co_municipio
+        description: >
+          What municipality is recorded for the dose.  It's not clear if this is
+          meant to be where the patient resides or where the dose was administered,
+          but it's likely a mix.
+        tests:
+          - not_null:
+              # The first data set published for this was really dirty
+              enabled: false  # Scans 1.76 GB and growing
+              where: >
+                downloaded_date != DATE '2021-07-24'
+          - relationships:
+              enabled: false
+              to: ref('covid19datos_v2_vacunacion_city_names')
+              field: city
+              where: >
+                downloaded_date != DATE '2021-07-24'

@@ -12,11 +12,7 @@ SELECT
     nullif(co_sexo, '') co_sexo,
     nullif(co_region, '') co_region,
  	date(date_parse(NULLIF(fe_prueba, ''), '%Y-%m-%d %H:%i:%s'))
-		AS fe_prueba,
- 	date(date_parse(NULLIF(fe_reporte, ''), '%Y-%m-%d %H:%i:%s'))
-		AS fe_reporte,
- 	date(date_parse(NULLIF(fe_registro, ''), '%Y-%m-%d %H:%i:%s'))
-		AS fe_registro
+		AS fe_prueba
 FROM {{ source('covid19datos_v2', 'pruebas') }}
 -- IMPORTANT: This prunes partitions
 WHERE downloaded_date >= cast(date_add('day', -32, current_date) AS VARCHAR)
