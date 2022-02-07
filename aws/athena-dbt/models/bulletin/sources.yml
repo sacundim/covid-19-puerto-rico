@@ -28,7 +28,7 @@ sources:
             tests:
               - not_null
               - dbt_utils.accepted_range:
-                  min_value: '2020-04-20'
+                  min_value: "'2020-04-20'"
                   inclusive: true
           - name: datum_date
             description: >
@@ -38,7 +38,7 @@ sources:
             tests:
               - not_null
               - dbt_utils.accepted_range:
-                  min_value: '2020-03-01'
+                  min_value: "'2020-03-01'"
                   max_value: bulletin_date
                   inclusive: true
 
