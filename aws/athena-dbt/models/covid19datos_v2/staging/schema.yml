@@ -11,6 +11,14 @@ models:
         description: '{{ doc("downloaded_at") }}'
         tests:
           - not_null
+      - name: sample_date
+        description: Test sample date.
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: DATE '2020-03-01'
+              max_value: downloaded_at
+              inclusive: true
       - name: class
         description: >
           What type of case this record represents, "confirmed" or "probable."
@@ -75,6 +83,10 @@ models:
         description: Date of death.
         tests:
           - not_null
+          - dbt_utils.accepted_range:
+              min_value: DATE '2020-03-01'
+              max_value: downloaded_at
+              inclusive: true
   - name: pruebas
     description: >
       The Puerto Rico Department of Health's daily COVID-19 tests datasets.
@@ -86,10 +98,14 @@ models:
         tests:
           - not_null
       - name: fe_prueba
-        tests:
-          - not_null
         description: >
           The date the test sample was collected.
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: DATE '2020-03-01'
+              max_value: downloaded_at
+              inclusive: true
       - name: co_tipo
         description: >
           What type of test this is (antigen vs. NAAT).
@@ -130,10 +146,14 @@ models:
         tests:
           - not_null
       - name: fe_reporte
-        tests:
-          - not_null
         description: >
           The date this record reports about.
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: DATE '2020-03-01'
+              max_value: downloaded_at
+              inclusive: true
   - name: vacunacion
     description: >
       The Puerto Rico Department of Health's daily COVID-19 vaccination datasets.
@@ -148,6 +168,10 @@ models:
         description: Date that the dose was administered.
         tests:
           - not_null
+          - dbt_utils.accepted_range:
+              min_value: DATE '2020-12-01'
+              max_value: downloaded_at
+              inclusive: true
       - name: co_manufacturero
         description: >
           A code for the manufacturer of the vaccine that was administered.
@@ -167,6 +191,11 @@ models:
           would be doses "1" and "3".
         tests:
           - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 3
+              inclusive: true
+              severity: warn
       - name: co_municipio
         description: >
           What municipality is recorded for the dose.  It's not clear if this is
