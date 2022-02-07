@@ -3,7 +3,49 @@ version: 2
 sources:
   - name: bulletin
     schema: covid_pr_sources
+    description: '{{ doc("bulletin") }}'
     tables:
       - name: bulletin_cases_csv
+        description: >
+          Hand-copied values from all of the COVID-19 cases (confirmed, probable
+          and suspect) and deaths that we have collected from the daily PDF that
+          the Puerto Rico Department of Health published from April 2020 until
+          July 2021.
+        tests:
+          - dbt_utils.unique_combination_of_columns:
+              combination_of_columns:
+                - bulletin_date
+                - datum_date
+        columns:
+          - name: bulletin_date
+            description: >
+              The date of the PDF bulletin that this datum was taken from.  This
+              follows the convention that it's the "data up to" date, i.e., that
+              the counts in each row only reflect data received by the last second
+              of that date.  These bulletins were normally finished by the end of
+              the bulletin day, but published the next day, so many third-party
+              data collections look a day late compared to this field.
+            tests:
+              - not_null
+              - dbt_utils.accepted_range:
+                  min_value: '2020-04-20'
+                  inclusive: true
+          - name: datum_date
+            description: >
+              The date that the events that this row counts actually happened.
+              For cases, this is the test sample date, and for deaths it is the
+              date that the death happened.
+            tests:
+              - not_null
+              - dbt_utils.accepted_range:
+                  min_value: '2020-03-01'
+                  max_value: bulletin_date
+                  inclusive: true
+
       - name: bulletin_municipal_molecular
+        description: >
+          Daily "confirmed" (= NAAT) cases by municipality.
+
       - name: bulletin_municipal_antigens
+        description: >
+          Daily "probable" (= antigens) cases by municipality.

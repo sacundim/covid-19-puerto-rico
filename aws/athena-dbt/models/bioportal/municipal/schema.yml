@@ -1,0 +1,61 @@
+version: 2
+
+models:
+  - name: municipal_tests_cube
+    description: >
+      Aggregate table of test specimens by municipality.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          enabled: false  # scans like a gig of data
+          combination_of_columns:
+            - downloaded_at
+            - bulletin_date
+            - collected_date
+            - reported_date
+            - municipality
+            - test_type
+      - dbt_utils.expression_is_true:
+          enabled: false  # scans like a gig of data
+          expression: >
+            positives <= specimens
+    columns:
+      - name: collected_date
+        description: '{{ doc("collected_date") }}'
+        tests:
+          - not_null:
+              severity: warn
+          - dbt_utils.accepted_range:
+              enabled: false  # scans like 900 MB
+              min_value: DATE '2020-03-01'
+              max_value: bulletin_date
+              inclusive: true
+      - name: specimens
+        description: Count of the number test specimens.
+      - name: positives
+        description: Count of the number of positive test specimens.
+
+  - name: municipal_tests_collected_agg
+    description: |
+      Aggregate of `municipal_tests_cube` by test sample collection date.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          enabled: false  # scans like a gig of data
+          combination_of_columns:
+            - downloaded_at
+            - bulletin_date
+            - collected_date
+            - municipality
+            - test_type
+
+  - name: municipal_tests_per_capita
+    description: |
+      Aggregates of antigen and NAAT tests per municipality and test sample date,
+      with test type counts pivoted to columns instead of a `test_type` field.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          enabled: false  # scans like a gig of data
+          combination_of_columns:
+            - downloaded_at
+            - bulletin_date
+            - collected_date
+            - municipality

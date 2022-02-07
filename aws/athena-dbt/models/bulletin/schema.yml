@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: bulletin_municipal
+    description: Consolidated view of the old PDF bulletins' municipal cases tables.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - bulletin_date
+            - municipality

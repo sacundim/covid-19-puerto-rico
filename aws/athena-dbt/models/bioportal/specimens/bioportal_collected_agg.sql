@@ -22,5 +22,5 @@ SELECT
         ORDER BY collected_date
     ) AS cumulative_positives,
 	sum(delta_positive_tests) AS delta_positive_tests
-FROM {{ ref('bioportal_tritemporal_deltas') }}
+FROM {{ ref('bioportal_tritemporal_agg') }}
 GROUP BY test_type, bulletin_date, collected_date;
