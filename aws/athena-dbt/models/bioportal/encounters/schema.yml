@@ -1,0 +1,76 @@
+version: 2
+
+models:
+  - name: bioportal_encounters
+    description: '{{ doc("bioportal_encounters") }}'
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - downloaded_at
+            - collected_date
+            - patient_id
+    columns:
+      - name: downloaded_at
+        description: '{{ doc("downloaded_at") }}'
+        tests:
+          - not_null
+      - name: collected_date
+        description: '{{ doc("downloaded_at") }}'
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: DATE '2020-03-01'
+              max_value: downloaded_at
+              inclusive: true
+      - name: positive
+        description: >
+          True if and only if at least one specimen for that patient on that
+          date came back positive, irrespective of the type of test.
+      - name: first_infection
+        description: >
+          A first infection is the first positive encounter a patient has ever had.
+      - name: has_positive_molecular
+        description: >
+          True if and only if at least one molecular specimen that came
+          back positive was taken in this encounter.  Note that for example
+          this means that `has_positive_molecular` isn't synonymous with
+          `positive AND has_molecular`, because that could be true if the
+          patient has a negative PCR and a positive antigen test on that date.
+      - name: has_positive_antigens
+        description: >
+          True if and only if at least one antigens specimen that came
+          back positive was taken in this encounter.  Note that for example
+          this means that `has_positive_antigens` isn't synonymous with
+          `positive AND has_antigens`, because that could be true if the
+          patient has a negative antigens and a positive PCR test on that date.
+      - name: followup_strict
+        description: >
+          A strict followup test is any test—positive or negative—such that the same
+          patient had a positive test in the 90 days before. This is the same definition
+          that the UKHSA adopted on Feb. 1, 2022 regard to possible reinfections.  (And that
+          this analysis adopted well before that.)
+      - name: followup
+        description: >
+          A followup test is any test—positive or negative—such that the same patient had
+          either a positive NAAT test in the 90 days before or a positive antigen test
+          in the 21 days before.  This is a looser definition that allows for spotting
+          possible reinfections quicker because antigen tests are less sensitive.
+
+  - name: bioportal_encounters_cube
+    description: >
+      Our most detailed aggregate table over `bioportal_encounters`.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - bulletin_date
+            - collected_date
+            - age_range
+
+  - name: bioportal_encounters_agg
+    description: >
+      Daily aggregation over `bioportal_encounters`.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - bulletin_date
+            - collected_date
