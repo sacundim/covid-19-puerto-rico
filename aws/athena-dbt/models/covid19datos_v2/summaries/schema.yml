@@ -1,0 +1,90 @@
+version: 2
+
+models:
+  - name: bulletin_cases
+    columns:
+      - name: bulletin_date
+        tests:
+          - not_null
+          - sequential_values:
+              severity: warn  # This is not urgent
+              datepart: 'day'
+              partition_by:
+                - datum_date
+      - name: datum_date
+        tests:
+          - not_null
+          - sequential_values:
+              severity: warn  # This is not urgent
+              datepart: 'day'
+              partition_by:
+                - bulletin_date
+
+  - name: cases_municipal_agg
+    columns:
+      - name: bulletin_date
+        tests:
+          - not_null
+          - sequential_values:
+              datepart: 'day'
+              partition_by:
+                - sample_date, municipality
+      - name: sample_date
+        tests:
+          - not_null
+          - sequential_values:
+              datepart: 'day'
+              partition_by:
+                - bulletin_date, municipality
+
+  - name: hospitales_daily
+    columns:
+      - name: bulletin_date
+        tests:
+          - not_null
+          - sequential_values:
+              datepart: 'day'
+              partition_by:
+                - fe_reporte
+      - name: fe_reporte
+        tests:
+          - not_null
+          - sequential_values:
+              severity: warn  # has some issues, not urgent
+              datepart: 'day'
+              partition_by:
+                - bulletin_date
+
+  - name: municipal_vaccinations
+    columns:
+      - name: local_date
+        tests:
+          - not_null
+          - sequential_values:
+              where: >
+                local_date >= DATE '2021-07-23'
+              datepart: 'day'
+              partition_by:
+                - municipio
+      - name: municipio
+        tests:
+          - not_null
+
+  - name: pruebas_collected_agg
+    columns:
+      - name: bulletin_date
+        tests:
+          - not_null
+          - sequential_values:
+              datepart: 'day'
+              partition_by:
+                - collected_date
+      - name: collected_date
+        tests:
+          - not_null
+          - sequential_values:
+              where: >
+                collected_date >= DATE '2020-03-12'
+              datepart: 'day'
+              partition_by:
+                - bulletin_date
