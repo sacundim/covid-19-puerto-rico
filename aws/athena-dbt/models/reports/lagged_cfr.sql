@@ -18,28 +18,26 @@ SELECT
 	cases.bulletin_date,
 	cases.collected_date,
 	deaths.datum_date death_date,
-	(deaths.cumulative_deaths
-		- lag(deaths.cumulative_deaths, 14) OVER (
+	sum(deaths.deaths) OVER (
+		PARTITION BY deaths.bulletin_date
+		ORDER BY deaths.datum_date
+		ROWS 13 PRECEDING
+	) / 14.0 AS smoothed_deaths,
+	sum(cases.cases) OVER (
+		PARTITION BY deaths.bulletin_date
+		ORDER BY deaths.datum_date
+		ROWS 13 PRECEDING
+	) / 14.0 AS smoothed_cases,
+	CAST(sum(deaths.deaths) OVER (
 			PARTITION BY deaths.bulletin_date
 			ORDER BY deaths.datum_date
-		)) / 14.0
-		AS smoothed_deaths,
-	(cases.cumulative_cases
-		- lag(cases.cumulative_cases, 14) OVER (
-			PARTITION BY cases.bulletin_date
-			ORDER BY cases.collected_date
-		)) / 14.0
-		AS smoothed_cases,
-	CAST(deaths.cumulative_deaths
-		- lag(deaths.cumulative_deaths, 14) OVER (
-			PARTITION BY deaths.bulletin_date
-			ORDER BY deaths.datum_date
+			ROWS 13 PRECEDING
 		) AS DOUBLE PRECISION)
-		/ (cases.cumulative_cases
-			- lag(cases.cumulative_cases, 14) OVER (
-				PARTITION BY cases.bulletin_date
-				ORDER BY cases.collected_date
-			)) AS lagged_cfr
+		/ sum(cases.cases) OVER (
+			PARTITION BY deaths.bulletin_date
+			ORDER BY deaths.datum_date
+			ROWS 13 PRECEDING
+		) AS lagged_cfr
 FROM {{ ref('bioportal_curve') }} cases
 INNER JOIN deaths
 	ON cases.bulletin_date = deaths.bulletin_date

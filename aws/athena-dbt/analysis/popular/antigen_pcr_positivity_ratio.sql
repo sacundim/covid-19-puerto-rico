@@ -5,19 +5,29 @@ WITH bulletins AS (
 	SELECT
 		bulletin_date,
 		bio.collected_date,
-		(bio.cumulative_cases - lag(bio.cumulative_cases, 7) OVER (
+		sum(cases) OVER (
+		    PARTITION BY bulletin_date
 			ORDER BY bio.collected_date
-		)) / 7.0 cases,
-		100.0 * (bio.cumulative_positive_antigens - lag(bio.cumulative_positive_antigens, 7) OVER (
+			ROWS 6 PRECEDING
+		) / 7.0 AS cases,
+		100.0 * sum(bio.positive_antigens) OVER (
+		    PARTITION BY bulletin_date
 			ORDER BY bio.collected_date
-		)) / (bio.cumulative_antigens - lag(bio.cumulative_antigens, 7) OVER (
+			ROWS 6 PRECEDING
+		) / lag(bio.antigens) OVER (
+		    PARTITION BY bulletin_date
 			ORDER BY bio.collected_date
-		)) antigens,
-		100.0 * (bio.cumulative_positive_molecular - lag(bio.cumulative_positive_molecular, 7) OVER (
+			ROWS 6 PRECEDING
+		) antigens,
+		100.0 * sum(bio.positive_molecular) OVER (
+		    PARTITION BY bulletin_date
 			ORDER BY bio.collected_date
-		)) / (bio.cumulative_molecular - lag(bio.cumulative_molecular, 7) OVER (
+			ROWS 6 PRECEDING
+		) / lag(bio.molecular) OVER (
+		    PARTITION BY bulletin_date
 			ORDER BY bio.collected_date
-		)) molecular
+			ROWS 6 PRECEDING
+		) molecular
 	FROM {{ ref('bioportal_encounters_agg') }} bio
 	INNER JOIN bulletins
 		ON bulletins.max_bulletin_date = bio.bulletin_date

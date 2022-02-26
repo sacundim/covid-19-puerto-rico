@@ -7,17 +7,20 @@ WITH bulletins AS (
 	FROM {{ ref('bulletin_cases') }}
 )
 SELECT
-	max_bulletin_date "Datos",
+	bio.bulletin_date "Datos",
 	bio.collected_date AS "Muestras",
 	bul.confirmed_cases + COALESCE(bul.probable_cases, 0)
 		AS "Casos (oficial)",
-	((bul.cumulative_confirmed_cases + COALESCE(bul.cumulative_probable_cases, 0))
-		- lag(bul.cumulative_confirmed_cases + COALESCE(bul.cumulative_probable_cases , 0), 7) OVER (
+	sum(bul.cumulative_confirmed_cases + COALESCE(bul.cumulative_probable_cases , 0)) OVER (
+    	PARTITION BY bio.bulletin_date
 		ORDER BY bio.collected_date
-	)) / 7.0 AS "Promedio (7 días)",
+		ROWS 6 PRECEDING
+	) / 7.0 AS "Promedio (7 días)",
 	bio.cases "Casos (Bioportal)",
-	(bio.cumulative_cases - lag(bio.cumulative_cases, 7) OVER (
+	sum(bio.cumulative_cases) OVER (
+    	PARTITION BY bio.bulletin_date
 		ORDER BY bio.collected_date
+		ROWS 6 PRECEDING
 	)) / 7.0 AS "Promedio (7 días)",
 	bio.cases
 		- COALESCE(bul.confirmed_cases, 0)
