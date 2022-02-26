@@ -12,6 +12,10 @@ SELECT
 		AS hospital_onset_covid,
 	CAST(NULLIF(hospital_onset_covid_coverage , '') AS INTEGER)
 		AS hospital_onset_covid_coverage,
+	CAST(NULLIF(inpatient_beds, '') AS INTEGER)
+		AS inpatient_beds,
+	CAST(NULLIF(inpatient_beds_coverage , '') AS INTEGER)
+		AS inpatient_beds_coverage,
 	CAST(NULLIF(inpatient_beds_used, '') AS INTEGER)
 		AS inpatient_beds_used,
 	CAST(NULLIF(inpatient_beds_used_coverage , '') AS INTEGER)

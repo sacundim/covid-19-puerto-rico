@@ -21,15 +21,13 @@ SELECT
     	PARTITION BY encounters.bulletin_date
     	ORDER BY encounters.collected_date
     ) cumulative_cases,
-	hosp.previous_day_admission_adult_covid
-		+ hosp.previous_day_admission_pediatric_covid
+	hosp.previous_day_admission_covid
 		AS admissions,
-	sum(hosp.previous_day_admission_adult_covid
-		+ hosp.previous_day_admission_pediatric_covid) OVER (
+	sum(hosp.previous_day_admission_covid) OVER (
     	PARTITION BY encounters.bulletin_date
     	ORDER BY encounters.collected_date
     ) AS cumulative_admissions,
-    hosp.hospitalized_currently,
+    hosp.camas_covid hospitalized_currently,
 	bul.deaths AS deaths,
     sum(bul.deaths) OVER (
     	PARTITION BY encounters.bulletin_date

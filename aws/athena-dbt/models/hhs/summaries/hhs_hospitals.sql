@@ -3,6 +3,8 @@
 --
 SELECT
 	date,
+	inpatient_beds,
+	inpatient_beds_used,
 	inpatient_beds_used_covid,
 	staffed_icu_adult_patients_confirmed_and_suspected_covid,
     -- HHS's admissions data is bad before this

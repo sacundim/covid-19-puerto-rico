@@ -13,6 +13,10 @@ SELECT
 		AS hospital_onset_covid,
 	CAST(NULLIF(hospital_onset_covid_coverage , '') AS INTEGER)
 		AS hospital_onset_covid_coverage,
+	CAST(NULLIF(inpatient_beds, '') AS INTEGER)
+		AS inpatient_beds,
+	CAST(NULLIF(inpatient_beds_coverage , '') AS INTEGER)
+		AS inpatient_beds_coverage,
 	CAST(NULLIF(inpatient_beds_used, '') AS INTEGER)
 		AS inpatient_beds_used,
 	CAST(NULLIF(inpatient_beds_used_coverage , '') AS INTEGER)
@@ -53,6 +57,6 @@ SELECT
 		AS total_staffed_adult_icu_beds,
 	CAST(NULLIF(total_staffed_adult_icu_beds_coverage, '') AS INTEGER)
 		AS total_staffed_adult_icu_beds_coverage
-FROM covid_hhs_sources.reported_hospital_utilization
+FROM {{ source('hhs', 'reported_hospital_utilization') }}
 WHERE state = 'PR'
 ORDER BY "$path" DESC;

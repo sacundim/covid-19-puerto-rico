@@ -9,12 +9,19 @@
 SELECT
 	bulletin_date,
 	fe_reporte date,
+	-- PrDoh fields. Convention: names in Spanish
+	camas_adultos_total + camas_ped_total
+	    AS camas_total,
 	COALESCE(camas_adultos_covid + camas_ped_covid, tracking.hospitalized_currently)
-		AS hospitalized_currently,
+		AS camas_covid,
 	COALESCE(camas_icu_covid + camas_picu_covid, tracking.in_icu_currently)
-		AS in_icu_currently,
-    previous_day_admission_adult_covid,
-    previous_day_admission_pediatric_covid
+		AS camas_icu_covid,
+	-- HHS fields. Convention: names in English
+    previous_day_admission_adult_covid
+        + previous_day_admission_pediatric_covid
+        AS previous_day_admission_covid,
+    inpatient_beds,
+    inpatient_beds_used_covid
 FROM {{ ref('hospitales_daily') }} prdoh
 LEFT OUTER JOIN {{ ref('covid_tracking_hospitalizations') }} tracking
 	ON tracking."date" = prdoh.fe_reporte

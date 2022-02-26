@@ -7,11 +7,14 @@ SELECT
 	    AS official,
 	encounters.cases AS bioportal,
 	bul.deaths AS deaths,
-	hospitalizations.previous_day_admission_adult_covid
-		+ hospitalizations.previous_day_admission_pediatric_covid
+	hospitalizations.previous_day_admission_covid
 		AS hospital_admissions,
-    hospitalizations.hospitalized_currently,
-    hospitalizations.in_icu_currently
+    hospitalizations.camas_covid
+        AS hospitalized_currently,
+    hospitalizations.camas_total
+        AS total_beds,
+    hospitalizations.camas_icu_covid
+        AS in_icu_currently
 FROM {{ ref('bioportal_encounters_agg') }} encounters
 LEFT OUTER JOIN {{ ref('bulletin_cases') }} bul
 	ON bul.bulletin_date = encounters.bulletin_date
