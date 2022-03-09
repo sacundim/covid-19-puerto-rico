@@ -5,30 +5,27 @@ WITH bulletins AS (
 	SELECT
 		bulletin_date,
 		bio.collected_date,
-		(bio.cumulative_molecular - lag(bio.cumulative_molecular) OVER (
+		bio.cumulative_molecular - lag(bio.cumulative_molecular) OVER (
 			ORDER BY bio.collected_date
-		)) AS molecular,
-		(bio.cumulative_antigens - lag(bio.cumulative_antigens) OVER (
+		) AS molecular,
+		bio.cumulative_antigens - lag(bio.cumulative_antigens) OVER (
 			ORDER BY bio.collected_date
-		)) AS antigens,
+		) AS antigens,
+		bio.cumulative_positive_molecular - lag(bio.cumulative_positive_molecular) OVER (
+			ORDER BY bio.collected_date
+		) AS positive_molecular,
+		bio.cumulative_positive_antigens - lag(bio.cumulative_positive_antigens) OVER (
+			ORDER BY bio.collected_date
+		) AS positive_antigens,
 		(bio.cumulative_cases - lag(bio.cumulative_cases) OVER (
 			ORDER BY bio.collected_date
 		)) AS cases,
-		100.0 * (bio.cumulative_antigens_cases - lag(bio.cumulative_antigens_cases) OVER (
+		bio.cumulative_molecular_cases - lag(bio.cumulative_molecular_cases) OVER (
 			ORDER BY bio.collected_date
-		)) / (bio.cumulative_cases - lag(bio.cumulative_cases) OVER (
+		) AS molecular_cases,
+		bio.cumulative_antigens_cases - lag(bio.cumulative_antigens_cases) OVER (
 			ORDER BY bio.collected_date
-		)) pct_cases_antigens,
-		100.0 * (bio.cumulative_positive_antigens - lag(bio.cumulative_positive_antigens) OVER (
-			ORDER BY bio.collected_date
-		)) / (bio.cumulative_antigens - lag(bio.cumulative_antigens) OVER (
-			ORDER BY bio.collected_date
-		)) antigen_positivity,
-		100.0 * (bio.cumulative_positive_molecular - lag(bio.cumulative_positive_molecular) OVER (
-			ORDER BY bio.collected_date
-		)) / (bio.cumulative_molecular - lag(bio.cumulative_molecular) OVER (
-			ORDER BY bio.collected_date
-		)) molecular_positivity
+		) AS antigens_cases
 	FROM {{ ref('bioportal_encounters_agg') }} bio
 	INNER JOIN bulletins
 		USING (bulletin_date)
@@ -37,12 +34,13 @@ WITH bulletins AS (
 SELECT
 	bulletin_date AS "Data up to",
 	collected_date AS "Week ending",
-	antigens "Ag tests",
-	molecular "PCR tests",
-	cases "Cases",
-	pct_cases_antigens "% detected w/Ag",
-	antigen_positivity "Ag positive %",
-	molecular_positivity "PCR positive %",
-	100.0 * antigen_positivity / molecular_positivity "Ratio"
+	antigens AS "Ag tests",
+	molecular AS "PCR tests",
+	cases AS "Cases",
+	100.0 * antigens_cases / cases AS "% detected w/Ag",
+	100.0 * positive_antigens / antigens AS "Ag positive %",
+	100.0 * positive_molecular / molecular AS "PCR positive %",
+	100.0 * (1.0 * positive_antigens / antigens)
+		/ (1.0 * positive_molecular / molecular) "Ratio"
 FROM rates
 ORDER BY collected_date DESC;
