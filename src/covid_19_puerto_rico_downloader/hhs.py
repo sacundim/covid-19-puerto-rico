@@ -13,6 +13,8 @@ import subprocess
 
 def process_arguments():
     parser = argparse.ArgumentParser(description='Download HHS COVID-19 data sets')
+    parser.add_argument('--socrata-app-token', type=str,
+                        help='Socrata API App Token, not required but we get throttled without it.')
     parser.add_argument('--s3-sync-dir', type=str, required=True,
                         help='Directory to which to deposit the output files for sync')
     return parser.parse_args()
@@ -55,7 +57,7 @@ def cdc_download(args):
 
 
 def download_datasets(args, server, datasets):
-    with Socrata(server, None, timeout=60) as client:
+    with Socrata(server, args.socrata_app_token, timeout=60) as client:
         for dataset in datasets:
             logging.info('Fetching %s...', dataset.name)
             csv_file = dataset.get_csv(client)

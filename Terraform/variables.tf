@@ -30,3 +30,7 @@ variable "cidr_block" {
   description = "Private IP address range to use."
   default = "172.32.128.0/22"
 }
+
+variable "socrata_app_token" {
+  description = "Socrata app token to use.  Our HHS downloads get throttled without one."
+}
