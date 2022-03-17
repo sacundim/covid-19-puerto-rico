@@ -38,3 +38,7 @@ sources:
                 AS TIMESTAMP)
         freshness:
           warn_after: { count: 1, period: day }
+      - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status
+        freshness:
+          warn_after: { count: 31, period: day }
+          error_after: { count: 33, period: day }
