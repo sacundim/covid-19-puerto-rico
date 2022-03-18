@@ -5,6 +5,7 @@ WITH max_path AS (
 SELECT
     {{ hhs_parse_filename_date('"$path"') }}
 		AS file_timestamp,
+    mmwr_week,
 	date_add('day', -1, date(parse_datetime(mmwr_week, 'xxxxww')))
 		AS mmwr_week_start,
     outcome,
