@@ -3,6 +3,7 @@ from csv2parquet import csv2parquet
 import datetime
 import json
 import logging
+import os
 import os.path
 import pathlib
 import requests
@@ -14,7 +15,13 @@ import subprocess
 def process_arguments():
     parser = argparse.ArgumentParser(description='Download HHS COVID-19 data sets')
     parser.add_argument('--socrata-app-token', type=str,
-                        help='Socrata API App Token, not required but we get throttled without it.')
+                        help='Socrata API App Token. '
+                             'Not required but we get throttled without it. '
+                             'This parameter takes precedence over --socrata-app-token-env-var.')
+    parser.add_argument('--socrata-app-token-env-var', type=str,
+                        help='Environment variable from which to get Socrata API App Token. '
+                             'Not required but we get throttled without it. '
+                             'The --socrata-app-token parameter takes precedence over this one.')
     parser.add_argument('--s3-sync-dir', type=str, required=True,
                         help='Directory to which to deposit the output files for sync')
     return parser.parse_args()
@@ -26,6 +33,20 @@ def hhs_download():
     args = process_arguments()
     healthdata_download(args)
     cdc_download(args)
+
+def get_socrata_app_token(args):
+    if args.socrata_app_token:
+        return args.socrata_app_token
+    elif args.socrata_app_token_env_var:
+        env_var = args.socrata_app_token_env_var
+        try:
+            return os.environ[env_var]
+        except e:
+            logging.error('Environment variable %s not set', env_var)
+            raise e
+    else:
+        return None
+
 
 def healthdata_download(args):
     '''Download datasets hosted at healthdata.gov API endpoints'''
@@ -58,7 +79,7 @@ def cdc_download(args):
 
 
 def download_datasets(args, server, datasets):
-    with Socrata(server, args.socrata_app_token, timeout=60) as client:
+    with Socrata(server, get_socrata_app_token(args), timeout=60) as client:
         for dataset in datasets:
             logging.info('Fetching %s...', dataset.name)
             csv_file = dataset.get_csv(client)
