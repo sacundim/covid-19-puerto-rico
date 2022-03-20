@@ -36,15 +36,18 @@ def hhs_download():
 
 def get_socrata_app_token(args):
     if args.socrata_app_token:
+        logging.info("Using Socrata App Token from command line")
         return args.socrata_app_token
     elif args.socrata_app_token_env_var:
         env_var = args.socrata_app_token_env_var
+        logging.info("Using Socrata App Token from environment variable %s", env_var)
         try:
             return os.environ[env_var]
         except e:
             logging.error('Environment variable %s not set', env_var)
             raise e
     else:
+        logging.warning("No Socrata App Token. The API may throttle us.")
         return None
 
 
