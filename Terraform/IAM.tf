@@ -23,6 +23,26 @@ resource "aws_iam_policy" "data_bucket_rw" {
   })
 }
 
+resource "aws_iam_policy" "socrata_app_token" {
+  name        = "${var.project_name}-downloader-socrata-app-token"
+  description = "Grant read access to the Socrata app token secret."
+
+  policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "secretsmanager:GetSecretValue"
+        ],
+        "Resource": [
+          aws_secretsmanager_secret.socrata.arn
+        ]
+      }
+    ]
+  })
+}
+
 
 ##############################################################################
 ##############################################################################

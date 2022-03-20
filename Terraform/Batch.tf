@@ -168,13 +168,19 @@ resource "aws_batch_job_definition" "hhs_download_and_sync" {
     image = "${data.aws_ecr_image.downloader.registry_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${data.aws_ecr_image.downloader.repository_name}:${data.aws_ecr_image.downloader.image_tag}"
     command = [
       "hhs-download",
-      "--socrata-app-token",
-      var.socrata_app_token
+      "--socrata-app-token-env-var",
+      "SOCRATA_APP_TOKEN"
     ],
     environment = [
       {
         name = "S3_DATA_URL",
         value = "s3://${var.datalake_bucket_name}"
+      }
+    ],
+    secrets = [
+      {
+        name = "SOCRATA_APP_TOKEN"
+        valueFrom = aws_secretsmanager_secret.socrata.arn
       }
     ],
     executionRoleArn = aws_iam_role.ecs_task_role.arn
@@ -208,6 +214,12 @@ resource "aws_batch_job_definition" "hhs_download_and_sync" {
     attempt_duration_seconds = 1800
   }
 }
+
+resource "aws_secretsmanager_secret" "socrata" {
+  name = "cdc-app-token"
+  description = "Our app token for the CDC and HHS Socrata services. We get throttled without one."
+}
+
 
 resource "aws_cloudwatch_event_rule" "hhs_daily_download" {
   name        = "hhs-daily-download"
@@ -339,6 +351,12 @@ resource "aws_iam_role_policy_attachment" "ecs_task_role_policy" {
   role       = aws_iam_role.ecs_task_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
+
+resource "aws_iam_role_policy_attachment" "ecs_task_role_socrata_app_token" {
+  role       = aws_iam_role.ecs_task_role.name
+  policy_arn = aws_iam_policy.socrata_app_token.arn
+}
+
 
 
 resource "aws_iam_role" "batch_service_role" {
