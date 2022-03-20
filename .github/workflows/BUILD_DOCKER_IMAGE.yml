@@ -3,6 +3,8 @@ name: Build and push Docker image
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'Terraform/**'
 
 jobs:
   deploy:
