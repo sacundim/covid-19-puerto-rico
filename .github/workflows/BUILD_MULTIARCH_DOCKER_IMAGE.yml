@@ -32,16 +32,16 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build Image and Push to ECR
-      uses: docker/build-push-action@v2
+    - name: Build, tag, and push the image to Amazon ECR
+      id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
-        IMAGE_TAG: arm64
-      with:
-        registry: ${{ env.ECR_REGISTRY }}
-        context: .
-        platforms: linux/arm64
-        push: true
-        tags: |
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+        IMAGE_TAG: multiarch
+      run: |
+        docker buildx build --push \
+          --platform linux/amd64,linux/arm64 \
+          --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+          .
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
