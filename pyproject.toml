@@ -18,7 +18,7 @@ altair = "^4.1.0"
 toml = "^0.10.0"
 altair-saver = "^0.5.0"
 wand = "^0.5.9"
-jinja2 = "^2.11.2"
+jinja2 = "^2.11.3"
 geojson = "^2.5.0"
 PyAthena = "^1.11.2"
 
