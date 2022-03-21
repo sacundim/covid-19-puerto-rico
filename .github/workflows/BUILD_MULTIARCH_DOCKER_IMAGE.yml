@@ -37,12 +37,11 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
-        IMAGE_TAG: multiarch
+        IMAGE_TAG: arm64
       with:
+        registry: ${{ env.ECR_REGISTRY }}
         context: .
-        platforms: linux/amd64,linux/arm64
+        platforms: linux/arm64
         push: true
-        build-args: |
-          build_id=${{ github.sha }}
         tags: |
           ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
