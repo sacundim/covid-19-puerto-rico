@@ -39,8 +39,14 @@ jobs:
         ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
         IMAGE_TAG: multiarch
       run: |
+        # Log in manually here because somehow the "Login to Amazon ECR" action
+        # above ain't working right with buildx below.  We still need the action
+        # above though becxause it gets our value for `ECR_REGISTRY`.
+        aws ecr get-login-password --region "${AWS_REGION}" \
+          | docker login --username AWS --password-stdin "${ECR_REGISTRY}"
+
         docker buildx build --push \
-          --platform linux/amd64,linux/arm64 \
+          --platform linux/amd64 \
           --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
           .
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
