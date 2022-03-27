@@ -1,14 +1,17 @@
-FROM python:3.7-slim AS base
+FROM python:3.9-slim AS base
 
 FROM base AS poetry
-RUN pip install poetry==1.0.10
+ARG POETRY_VERSION="1.1.13"
+RUN pip install poetry=="${POETRY_VERSION}"
 
 
 FROM poetry AS requirements
 ENV POETRY_VIRTUALENVS_CREATE=false
 WORKDIR /covid-19-puerto-rico
 COPY pyproject.toml poetry.lock ./
-RUN poetry export -f requirements.txt >requirements.txt
+RUN poetry export \
+    --without-hashes \
+    -f requirements.txt >requirements.txt
 
 
 FROM requirements AS build
