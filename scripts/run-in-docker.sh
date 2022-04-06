@@ -34,4 +34,4 @@ time docker run --rm \
     --config-file /config/docker.toml \
     --assets-dir /assets \
     --output-dir /output \
-    $*
+    "$@"
