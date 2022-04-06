@@ -48,6 +48,7 @@ def main():
         # Occasional:
         #        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
 
+        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
         molecular.NewCases(athena, args.output_dir, output_formats),
 
         # We always generate png for this because they're our Twitter cards
@@ -55,7 +56,6 @@ def main():
 
         charts.MunicipalMap(athena, args.output_dir, output_formats),
         molecular.VaccinationMap(athena, args.output_dir, output_formats),
-        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
         charts.ICUsByRegion(athena, args.output_dir, output_formats),
         charts.ICUsByHospital(athena, args.output_dir, output_formats),
         molecular.RecentAgeGroups(athena, args.output_dir, output_formats),
