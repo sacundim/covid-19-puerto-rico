@@ -8,9 +8,15 @@ SELECT
     coalesce(sum(specimens) FILTER (
         WHERE test_type = 'Antígeno'
     ), 0) AS antigens,
+    coalesce(sum(positives) FILTER (
+        WHERE test_type = 'Antígeno'
+    ), 0) AS positive_antigens,
     coalesce(sum(specimens) FILTER (
         WHERE test_type = 'Molecular'
     ), 0) AS molecular,
+    coalesce(sum(positives) FILTER (
+        WHERE test_type = 'Molecular'
+    ), 0) AS positive_molecular,
     sum(cumulative_specimens) AS cumulative_specimens,
     coalesce(sum(cumulative_specimens) FILTER (
         WHERE test_type = 'Antígeno'

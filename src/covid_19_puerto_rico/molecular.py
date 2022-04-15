@@ -1516,6 +1516,8 @@ class EncounterLag(AbstractMolecularChart):
 
 
 class MunicipalTestingScatter(AbstractMolecularChart):
+    WIDTH = 575
+
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('municipal_testing_scatterplot', self.metadata,
                                  schema='covid19_puerto_rico_model', autoload=True)
@@ -1526,7 +1528,9 @@ class MunicipalTestingScatter(AbstractMolecularChart):
             table.c.population,
             table.c.daily_specimens,
             table.c.daily_antigens,
+            table.c.antigens_positivity,
             table.c.daily_molecular,
+            table.c.molecular_positivity,
         ]).where(
             and_(min(bulletin_dates) <= table.c.bulletin_date,
                  table.c.bulletin_date <= max(bulletin_dates))
@@ -1534,16 +1538,20 @@ class MunicipalTestingScatter(AbstractMolecularChart):
         return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
 
     def make_chart(self, df, bulletin_date):
-        scatter = alt.Chart(df).transform_calculate(
+        molecular_positivity = \
+            (df['molecular_positivity'] * df['daily_molecular']).sum() \
+                / df['daily_molecular'].sum()
+
+        base = alt.Chart(df).transform_calculate(
             collected_since="timeOffset('day', datum.bulletin_date, -20)",
             daily_specimens_1k='1000 * datum.daily_specimens / datum.population',
             daily_antigens_1k='1000 * datum.daily_antigens / datum.population',
             daily_molecular_1k='1000 * datum.daily_molecular / datum.population',
             daily_molecular_pct='datum.daily_molecular / datum.daily_specimens'
-        ).mark_point().encode(
+        ).encode(
             x=alt.X('daily_specimens_1k:Q', title='Especímenes por millar (promedio 21 días)',
                     scale=alt.Scale(type='log', nice=False), axis=alt.Axis(labelFlush=False)),
-            y=alt.Y('daily_molecular_pct:Q', title='% moleculares',
+            y=alt.Y('daily_molecular_pct:Q', title='% de volumen en moleculares',
                     scale=alt.Scale(type='log', nice=False), axis=alt.Axis(format='%')),
             tooltip=[
                 alt.Tooltip('municipality:N', title='Municipio'),
@@ -1554,13 +1562,24 @@ class MunicipalTestingScatter(AbstractMolecularChart):
                 alt.Tooltip('daily_specimens_1k:Q', format=',.1f', title='Especímenes diarios (/1k)'),
                 alt.Tooltip('daily_antigens:Q', format=',.1f', title='Antígenos diarios'),
                 alt.Tooltip('daily_antigens_1k:Q', format=',.1f', title='Antígenos diarios (/1k)'),
+                alt.Tooltip('antigens_positivity:Q', format='.1%', title='Positividad de antígenos'),
                 alt.Tooltip('daily_molecular:Q', format=',.1f', title='Moleculares diarias'),
                 alt.Tooltip('daily_molecular_1k:Q', format=',.1f', title='Moleculares diarias (/1k)'),
-                alt.Tooltip('daily_molecular_pct:Q', format=',.1%', title='% moleculares')
+                alt.Tooltip('molecular_positivity:Q', format='.1%', title='Positividad de moleculares'),
+                alt.Tooltip('daily_molecular_pct:Q', format=',.1%', title='% de volumen en moleculares')
             ]
         )
 
-        text = scatter.mark_text(align='right', fontSize=9, angle=0, dx=-5).encode(
+        scatter = base.mark_point(filled=True, size=90).encode(
+            color=alt.Color('molecular_positivity:Q', title='Positividad de moleculares (21 días)',
+                            scale=alt.Scale(scheme='turbo', domainMid=molecular_positivity),
+                            legend=alt.Legend(orient='top', format='%', labelSeparation=25,
+                                              gradientLength=self.WIDTH, titleLimit=self.WIDTH))
+        )
+
+        text = base.mark_text(
+            align='center', fontWeight='bold', fontSize=9, angle=0, dy=11
+        ).encode(
             text=alt.Text('abbreviation:N')
         )
 
@@ -1583,5 +1602,5 @@ class MunicipalTestingScatter(AbstractMolecularChart):
         )
 
         return alt.layer(mean_specimens, pct_molecular, text, scatter).properties(
-            width=575, height=575
+            width=self.WIDTH, height=self.WIDTH
         )

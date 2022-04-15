@@ -13,9 +13,13 @@ SELECT
 	sum(antigens) / 21.0 daily_antigens,
 	1e3 * sum(antigens) / population / 21.0
 		AS daily_antigens_1k,
+	1.0 * sum(positive_antigens) / sum(antigens)
+	    AS antigens_positivity,
 	sum(molecular) / 21.0 daily_molecular,
 	1e3 * sum(molecular) / population / 21.0
-		AS daily_molecular_1k
+		AS daily_molecular_1k,
+	1.0 * sum(positive_molecular) / sum(molecular)
+	    AS molecular_positivity
 FROM {{ ref('municipal_tests_per_capita') }}
 INNER JOIN {{ ref('municipal_abbreviations') }}
 	USING (municipality)
