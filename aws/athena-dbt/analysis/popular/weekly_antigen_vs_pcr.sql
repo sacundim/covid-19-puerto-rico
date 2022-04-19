@@ -29,7 +29,9 @@ WITH bulletins AS (
 	FROM {{ ref('bioportal_encounters_agg') }} bio
 	INNER JOIN bulletins
 		USING (bulletin_date)
-	WHERE day_of_week(collected_date) % 7 = abs(day_of_week(bulletin_date) - 3) % 7
+	-- Athena/Presto modulo function is broken with negative numbers; mod(-1, 7) = -1.
+	-- So we add seven, subtract, and then take mod 7.
+	WHERE day_of_week(collected_date) % 7 = mod(day_of_week(bulletin_date) + 7 - 4, 7)
 )
 SELECT
 	bulletin_date AS "Data up to",
