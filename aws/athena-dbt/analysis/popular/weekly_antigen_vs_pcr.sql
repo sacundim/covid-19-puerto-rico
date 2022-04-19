@@ -29,7 +29,7 @@ WITH bulletins AS (
 	FROM {{ ref('bioportal_encounters_agg') }} bio
 	INNER JOIN bulletins
 		USING (bulletin_date)
-	WHERE day_of_week(collected_date) % 7 = abs(day_of_week(bulletin_date) - 2) % 7
+	WHERE day_of_week(collected_date) % 7 = abs(day_of_week(bulletin_date) - 3) % 7
 )
 SELECT
 	bulletin_date AS "Data up to",
@@ -38,9 +38,9 @@ SELECT
 	molecular AS "PCR tests",
 	cases AS "Cases",
 	100.0 * antigens_cases / cases AS "% detected w/Ag",
-	100.0 * positive_antigens / antigens AS "Ag positive %",
-	100.0 * positive_molecular / molecular AS "PCR positive %",
+	100.0 * positive_antigens / antigens AS "Ag+ %",
+	100.0 * positive_molecular / molecular AS "PCR+ %",
 	100.0 * (1.0 * positive_antigens / antigens)
-		/ (1.0 * positive_molecular / molecular) "Ratio"
+		/ (1.0 * positive_molecular / molecular) "Ag+ % / PCR+ %"
 FROM rates
 ORDER BY collected_date DESC;
