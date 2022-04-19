@@ -29,7 +29,7 @@ WITH bulletins AS (
 	FROM {{ ref('bioportal_encounters_agg') }} bio
 	INNER JOIN bulletins
 		USING (bulletin_date)
-	WHERE day_of_week(collected_date) % 7 = (day_of_week(bulletin_date) - 2) % 7
+	WHERE day_of_week(collected_date) % 7 = abs(day_of_week(bulletin_date) - 2) % 7
 )
 SELECT
 	bulletin_date AS "Data up to",
