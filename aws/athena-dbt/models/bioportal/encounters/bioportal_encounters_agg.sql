@@ -80,6 +80,18 @@ SELECT
 	    PARTITION BY collected_date
 	    ORDER BY bulletin_date
 	) AS delta_cases,
+	sum(cases_strict) - lag(sum(cases_strict), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_cases_strict,
+	sum(first_infections) - lag(sum(first_infections), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_first_infections,
+	sum(possible_reinfections) - lag(sum(possible_reinfections), 1, 0) OVER (
+	    PARTITION BY collected_date
+	    ORDER BY bulletin_date
+	) AS delta_possible_reinfections,
 	sum(rejections) - lag(sum(rejections), 1, 0) OVER (
 	    PARTITION BY collected_date
 	    ORDER BY bulletin_date
