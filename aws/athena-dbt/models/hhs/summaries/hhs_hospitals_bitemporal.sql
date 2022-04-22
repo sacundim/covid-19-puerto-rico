@@ -17,12 +17,14 @@ WITH maxes AS (
     FROM UNNEST(SEQUENCE(DATE '2021-08-14', DATE '{{ var("end_date") }}', INTERVAL '1' DAY))
     	AS dates(bulletin_date)
 	INNER JOIN downloads
-	    ON downloads.file_timestamp <= bulletin_date
+	    ON bulletin_date <= downloads.file_timestamp
+	    AND downloads.file_timestamp < date_add('day', 1, bulletin_date)
     INNER JOIN maxes
     	ON bulletin_date <= max_file_timestamp
     GROUP BY bulletin_date
 )
 SELECT
+    file_timestamp,
     bulletin_date,
 	date,
 	inpatient_beds,

@@ -25,13 +25,9 @@ SELECT
 FROM {{ ref('hospitales_daily') }} prdoh
 LEFT OUTER JOIN {{ ref('covid_tracking_hospitalizations') }} tracking
 	ON tracking."date" = prdoh.fe_reporte
-/* One day:
 LEFT OUTER JOIN {{ ref('hhs_hospitals_bitemporal') }} hhs
 	ON hhs.bulletin_date = prdoh.bulletin_date
 	AND hhs.date = prdoh.fe_reporte
-*/
-LEFT OUTER JOIN {{ ref('hhs_hospitals') }} hhs
-	ON hhs.date = prdoh.fe_reporte
 	-- Older HHS data is quite bad
 	AND hhs.date >= DATE '2020-07-28'
 WHERE fe_reporte >= DATE '2020-04-18'
