@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: hhs_hospitals_bitemporal
+    columns:
+      - name: bulletin_date
+        tests:
+          - not_null
+          - sequential_values:
+              severity: warn  # This is not urgent
+              datepart: 'day'
+              partition_by:
+                - date
+      - name: date
+        tests:
+          - not_null
+          - sequential_values:
+              severity: warn  # This is not urgent
+              datepart: 'day'
+              partition_by:
+                - bulletin_date
+
