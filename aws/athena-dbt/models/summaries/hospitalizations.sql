@@ -7,7 +7,7 @@
 -- for that
 --
 SELECT
-	bulletin_date,
+	prdoh.bulletin_date,
 	fe_reporte date,
 	-- PrDoh fields. Convention: names in Spanish
 	camas_adultos_total + camas_ped_total
@@ -25,6 +25,11 @@ SELECT
 FROM {{ ref('hospitales_daily') }} prdoh
 LEFT OUTER JOIN {{ ref('covid_tracking_hospitalizations') }} tracking
 	ON tracking."date" = prdoh.fe_reporte
+/* One day:
+LEFT OUTER JOIN {{ ref('hhs_hospitals_bitemporal') }} hhs
+	ON hhs.bulletin_date = prdoh.bulletin_date
+	AND hhs.date = prdoh.fe_reporte
+*/
 LEFT OUTER JOIN {{ ref('hhs_hospitals') }} hhs
 	ON hhs.date = prdoh.fe_reporte
 	-- Older HHS data is quite bad

@@ -2,13 +2,25 @@
 -- Bitemporal and cleaned-up view of HHS hospital utilization
 -- timeseries dataset.
 --
-WITH timestamps AS (
-    SELECT
-        date(file_timestamp) bulletin_date,
-        max(file_timestamp) AS file_timestamp
+WITH maxes AS (
+    SELECT max(file_timestamp) AS max_file_timestamp
+    FROM  {{ ref('reported_hospital_utilization_timeseries') }}
+    WHERE file_timestamp >= DATE '2021-08-14'
+), downloads AS (
+    SELECT DISTINCT file_timestamp
     FROM {{ ref('reported_hospital_utilization_timeseries') }}
     WHERE file_timestamp >= DATE '2021-08-14'
-    GROUP BY date(file_timestamp)
+), grid AS (
+    SELECT 
+        date(bulletin_date) bulletin_date,
+        max(file_timestamp) AS file_timestamp
+    FROM UNNEST(SEQUENCE(DATE '2021-08-14', DATE '{{ var("end_date") }}', INTERVAL '1' DAY))
+    	AS dates(bulletin_date)
+	INNER JOIN downloads
+	    ON downloads.file_timestamp <= bulletin_date
+    INNER JOIN maxes
+    	ON bulletin_date <= max_file_timestamp
+    GROUP BY bulletin_date
 )
 SELECT
     bulletin_date,
@@ -27,7 +39,7 @@ SELECT
 		+ previous_day_admission_pediatric_covid_suspected
 	END AS previous_day_admission_pediatric_covid
 FROM {{ ref('reported_hospital_utilization_timeseries') }}
-INNER JOIN timestamps USING (file_timestamp)
+INNER JOIN grid USING (file_timestamp)
 -- This is the date when we start getting this timeseries daily instead of weekly
 WHERE file_timestamp >= DATE '2021-08-14'
 -- And dates earlier than this don't look like they're right

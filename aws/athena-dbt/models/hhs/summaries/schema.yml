@@ -7,7 +7,6 @@ models:
         tests:
           - not_null
           - sequential_values:
-              severity: warn  # This is not urgent
               datepart: 'day'
               partition_by:
                 - date
