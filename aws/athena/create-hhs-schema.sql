@@ -439,3 +439,27 @@ CREATE EXTERNAL TABLE covid_hhs_sources.rates_of_covid_19_cases_or_deaths_by_age
     Continuity_correction STRING
 ) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status/v2/parquet/';
+
+
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+--
+-- The CDC's Community Levels (a.k.a. the "green map") dataset.
+--
+-- https://data.cdc.gov/Public-Health-Surveillance/United-States-COVID-19-Community-Levels-by-County/3nnm-4jni/
+--
+CREATE EXTERNAL TABLE covid_hhs_sources.community_levels_by_county (
+    county STRING,
+    county_fips STRING,
+    state STRING,
+    county_population STRING,
+    health_service_area_number STRING,
+    health_service_area STRING,
+    health_service_area_population STRING,
+    covid_inpatient_bed_utilization STRING,
+    covid_hospital_admissions_per_100k STRING,
+    covid_cases_per_100k STRING,
+    `covid-19_community_level` STRING,
+    date_updated STRING
+) STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/HHS/united_states_covid_19_community_levels_by_county/v2/parquet/';
