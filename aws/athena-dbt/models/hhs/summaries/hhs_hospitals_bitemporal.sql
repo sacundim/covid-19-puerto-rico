@@ -37,9 +37,15 @@ SELECT
 		+ previous_day_admission_adult_covid_suspected
 	END AS previous_day_admission_adult_covid,
 	CASE WHEN date >= DATE '2021-05-16'
+	THEN previous_day_admission_adult_covid_confirmed
+	END AS previous_day_admission_adult_covid_confirmed,
+	CASE WHEN date >= DATE '2021-05-16'
 	THEN previous_day_admission_pediatric_covid_confirmed
 		+ previous_day_admission_pediatric_covid_suspected
-	END AS previous_day_admission_pediatric_covid
+	END AS previous_day_admission_pediatric_covid,
+	CASE WHEN date >= DATE '2021-05-16'
+	THEN previous_day_admission_pediatric_covid_confirmed
+	END AS previous_day_admission_pediatric_covid_confirmed
 FROM {{ ref('reported_hospital_utilization_timeseries') }}
 INNER JOIN grid USING (file_timestamp)
 -- This is the date when we start getting this timeseries daily instead of weekly
