@@ -33,6 +33,7 @@ WITH downloads AS (
         popest.region,
         display_name municipality,
         fips,
+        popest2019,
         pop2020,
         count(casos.downloaded_at) new_cases,
         count(casos.downloaded_at) FILTER (
@@ -53,6 +54,7 @@ WITH downloads AS (
         grid.sample_date,
         fips,
         display_name,
+        popest2019,
         pop2020,
         popest.region
 )
