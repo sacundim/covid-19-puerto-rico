@@ -320,7 +320,13 @@ resource "aws_iam_role_policy_attachment" "ecs_job_role_bucket_rw" {
 ##############################################################################
 ##
 ## IAM permissions that we need to grant to AWS services (Batch, ECS,
-## Cloudwatch).  These are generally formulaic (AWS-managed policies).
+## Cloudwatch).  These are generally either:
+##
+## 1. Formulaic (AWS-managed policies);
+## 2. Permissions that are needed not by our container code per-se, but
+##    rather by Batch or ECS to set up our container.  For example, if
+##    our container needs a secret from Secrets Manager, then ECS needs
+##    permission to read that secret in order to wire it in.
 ##
 
 resource "aws_iam_role" "ecs_task_role" {
