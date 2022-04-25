@@ -3,7 +3,7 @@
 --
 -- Minimal cleanup and type handling, plus filtering to Puerto Rico
 --
-
+{{ config(enabled=false) }}
 SELECT
     {{ hhs_parse_filename_date('"$path"') }}
 		AS file_timestamp,
