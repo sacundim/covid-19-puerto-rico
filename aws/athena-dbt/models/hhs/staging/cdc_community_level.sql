@@ -4,6 +4,8 @@
 SELECT
     {{ hhs_parse_filename_date('"$path"') }}
 		AS file_timestamp,
+	date_add('day', -1, date({{ hhs_parse_filename_date('"$path"') }}))
+		AS bulletin_date,
 	date(date_parse(date_updated, '%Y-%m-%d'))
 		AS date_updated,
     county,
