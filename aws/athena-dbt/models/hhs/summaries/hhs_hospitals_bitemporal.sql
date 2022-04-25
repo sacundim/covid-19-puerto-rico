@@ -31,6 +31,12 @@ SELECT
 	inpatient_beds_used,
 	inpatient_beds_used_covid,
 	inpatient_beds_used_covid_coverage,
+	total_adult_patients_hospitalized_confirmed_and_suspected_covid
+	    + total_pediatric_patients_hospitalized_confirmed_and_suspected_covid
+	    AS total_patients_hospitalized_confirmed_and_suspected_covid,
+    total_adult_patients_hospitalized_confirmed_covid
+        + total_pediatric_patients_hospitalized_confirmed_covid
+        AS total_patients_hospitalized_confirmed_covid,
 	total_adult_patients_hospitalized_confirmed_and_suspected_covid,
 	total_adult_patients_hospitalized_confirmed_covid,
     total_pediatric_patients_hospitalized_confirmed_and_suspected_covid,
@@ -50,7 +56,11 @@ SELECT
 	END AS previous_day_admission_pediatric_covid,
 	CASE WHEN date >= DATE '2021-05-16'
 	THEN previous_day_admission_pediatric_covid_confirmed
-	END AS previous_day_admission_pediatric_covid_confirmed
+	END AS previous_day_admission_pediatric_covid_confirmed,
+	CASE WHEN date >= DATE '2021-05-16'
+	THEN previous_day_admission_adult_covid_confirmed
+        + previous_day_admission_pediatric_covid_confirmed
+	END AS previous_day_admission_covid_confirmed
 FROM {{ ref('reported_hospital_utilization_timeseries') }}
 INNER JOIN grid USING (file_timestamp)
 -- This is the date when we start getting this timeseries daily instead of weekly
