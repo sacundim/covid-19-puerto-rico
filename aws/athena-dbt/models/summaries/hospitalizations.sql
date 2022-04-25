@@ -17,9 +17,8 @@ SELECT
 	COALESCE(camas_icu_covid + camas_picu_covid, tracking.in_icu_currently)
 		AS camas_icu_covid,
 	-- HHS fields. Convention: names in English
-    previous_day_admission_adult_covid
-        + previous_day_admission_pediatric_covid
-        AS previous_day_admission_covid,
+    admission_adult_covid + admission_pediatric_covid
+        AS admission_covid,
     inpatient_beds,
     inpatient_beds_used_covid
 FROM {{ ref('hospitales_daily') }} prdoh

@@ -21,9 +21,9 @@ SELECT
     	PARTITION BY encounters.bulletin_date
     	ORDER BY encounters.collected_date
     ) cumulative_cases,
-	hosp.previous_day_admission_covid
+	hosp.admission_covid
 		AS admissions,
-	sum(hosp.previous_day_admission_covid) OVER (
+	sum(hosp.admission_covid) OVER (
     	PARTITION BY encounters.bulletin_date
     	ORDER BY encounters.collected_date
     ) AS cumulative_admissions,

@@ -2,16 +2,17 @@ WITH green_agg AS (
 	SELECT
 		-- We are going to use this max to pick out the most recent version
 		-- of the CDC Levels file
-		max(file_timestamp) AS file_timestamp,
+		max(file_timestamp) AS max_file_timestamp,
 		-- Use Puerto Rico population according to the CDC Levels file
 		max(health_service_area_population) AS popest2019
 	FROM {{ ref('cdc_community_level' )}}
 ), hhs AS (
 	WITH bitemporal AS (
 		SELECT
+			file_timestamp,
 			bulletin_date,
 			date,
-			1e5 * sum(previous_day_admission_covid_confirmed) OVER (
+			1e5 * sum(admission_covid_confirmed) OVER (
 				PARTITION BY bulletin_date
 				ORDER BY date
 				ROWS 6 PRECEDING
@@ -33,6 +34,7 @@ WITH green_agg AS (
 	WHERE bulletin_date = date
 )
 SELECT
+	hhs.file_timestamp "HHS file version",
 	muni.bulletin_date AS "Data up to",
 	municipality "City",
 	1e5 * sum(delta_cases) OVER (
@@ -53,6 +55,6 @@ CROSS JOIN green_agg
 	ON green.date_updated = muni.bulletin_date
 		AND green.county_fips = muni.fips
 		-- Use most recent version of CDC Levels file:
-		AND green.file_timestamp  = green_agg.file_timestamp
+		AND green.file_timestamp  = max_file_timestamp
 WHERE municipality = 'San Juan'
 ORDER BY muni.bulletin_date DESC, fips;

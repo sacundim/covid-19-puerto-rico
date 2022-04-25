@@ -11,22 +11,27 @@ WITH maxes AS (
     FROM {{ ref('reported_hospital_utilization_timeseries') }}
     WHERE file_timestamp >= DATE '2021-08-14'
 ), grid AS (
+    -- We want for each bulletin_date the earliest file that's at least
+    -- one day later.  (Is this ideal? What if they issue a correction
+    -- intra-day?)
     SELECT 
         date(bulletin_date) bulletin_date,
-        max(file_timestamp) AS file_timestamp
+        min(file_timestamp) AS file_timestamp
     FROM UNNEST(SEQUENCE(DATE '2021-08-14', DATE '{{ var("end_date") }}', INTERVAL '1' DAY))
     	AS dates(bulletin_date)
-	INNER JOIN downloads
-	    ON bulletin_date <= downloads.file_timestamp
-	    AND downloads.file_timestamp < date_add('day', 1, bulletin_date)
     INNER JOIN maxes
     	ON bulletin_date <= max_file_timestamp
+	INNER JOIN downloads
+	    ON bulletin_date < date(downloads.file_timestamp)
     GROUP BY bulletin_date
 )
 SELECT
     file_timestamp,
     bulletin_date,
-	date,
+    -- We subtract 1 from the date field because of the
+    -- semantics of our `bulletin_date` field, which is
+    -- "data as of the closing of this date."
+	date(date_add('day', -1, date)) AS date,
 	inpatient_beds,
 	inpatient_beds_used,
 	inpatient_beds_used_covid,
@@ -42,25 +47,29 @@ SELECT
     total_pediatric_patients_hospitalized_confirmed_and_suspected_covid,
     total_pediatric_patients_hospitalized_confirmed_covid,
 	staffed_icu_adult_patients_confirmed_and_suspected_covid,
-    -- HHS's admissions data is bad before this
+    -- We do two things to HHS's admissions data:
+    --
+    -- 1. Cut it off before mid-May 2021 because it is bad before this
+    -- 2. Remove the `previous_day_*` names from columns because our
+    --    semantics is that we already subtracted one day from the date.
 	CASE WHEN date >= DATE '2021-05-16'
 	THEN previous_day_admission_adult_covid_confirmed
 		+ previous_day_admission_adult_covid_suspected
-	END AS previous_day_admission_adult_covid,
+	END AS admission_adult_covid,
 	CASE WHEN date >= DATE '2021-05-16'
 	THEN previous_day_admission_adult_covid_confirmed
-	END AS previous_day_admission_adult_covid_confirmed,
+	END AS admission_adult_covid_confirmed,
 	CASE WHEN date >= DATE '2021-05-16'
 	THEN previous_day_admission_pediatric_covid_confirmed
 		+ previous_day_admission_pediatric_covid_suspected
-	END AS previous_day_admission_pediatric_covid,
+	END AS admission_pediatric_covid,
 	CASE WHEN date >= DATE '2021-05-16'
 	THEN previous_day_admission_pediatric_covid_confirmed
-	END AS previous_day_admission_pediatric_covid_confirmed,
+	END AS admission_pediatric_covid_confirmed,
 	CASE WHEN date >= DATE '2021-05-16'
 	THEN previous_day_admission_adult_covid_confirmed
         + previous_day_admission_pediatric_covid_confirmed
-	END AS previous_day_admission_covid_confirmed
+	END AS admission_covid_confirmed
 FROM {{ ref('reported_hospital_utilization_timeseries') }}
 INNER JOIN grid USING (file_timestamp)
 -- This is the date when we start getting this timeseries daily instead of weekly

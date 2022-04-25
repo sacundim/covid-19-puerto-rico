@@ -7,7 +7,7 @@ SELECT
 	    AS official,
 	encounters.cases AS bioportal,
 	bul.deaths AS deaths,
-	hospitalizations.previous_day_admission_covid
+	hospitalizations.admission_covid
 		AS hospital_admissions,
     hospitalizations.camas_covid
         AS hospitalized_currently,
