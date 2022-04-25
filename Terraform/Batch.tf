@@ -224,7 +224,7 @@ resource "aws_secretsmanager_secret" "socrata" {
 resource "aws_cloudwatch_event_rule" "hhs_daily_download" {
   name        = "hhs-daily-download"
   description = "Run the daily HHS download."
-  schedule_expression = "cron(55 3,15 * * ? *)"
+  schedule_expression = "cron(25 4,16 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "hhs_daily_download" {
