@@ -1,5 +1,5 @@
+{{ config(enabled=false) }}
 {{ config(pre_hook=["MSCK REPAIR TABLE {{ source('covid19datos_v2', 'pruebas') }}"]) }}
-
 SELECT
 	from_iso8601_date(downloaded_date)
 		AS downloaded_date,
