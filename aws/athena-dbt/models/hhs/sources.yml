@@ -25,8 +25,8 @@ sources:
           error_after: { count: 7, period: day }
       - name: community_profile_report_county
         freshness:
+          # This dataset has been archived, so it'll never be fresh again.
           warn_after: { count: 1, period: day }
-          error_after: { count: 3, period: day }
       - name: diagnostic_lab_testing
         freshness:
           warn_after: { count: 1, period: day }
@@ -37,6 +37,7 @@ sources:
                 regexp_extract("$path", '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z'))
                 AS TIMESTAMP)
         freshness:
+          # I no longer pull this dataset, so it'll never be fresh again.
           warn_after: { count: 1, period: day }
       - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status
         freshness:
