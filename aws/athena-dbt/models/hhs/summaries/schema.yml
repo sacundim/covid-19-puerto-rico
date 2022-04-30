@@ -7,6 +7,8 @@ models:
         tests:
           - not_null
           - sequential_values:
+              severity: error
+              error_if: ">2"
               datepart: 'day'
               partition_by:
                 - date
