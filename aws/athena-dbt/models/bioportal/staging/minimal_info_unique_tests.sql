@@ -26,8 +26,10 @@ WITH first_clean AS (
 	    nullif(testType, '') AS raw_test_type,
 	    {{ clean_test_type('testType') }} AS test_type,
 	    nullif(result, '') result,
-        {{ parse_bioportal_result('result') }} AS positive
+        {{ parse_bioportal_result('result', 'positive') }} AS positive
     FROM {{ source('bioportal', 'minimal_info_unique_tests') }}
+    LEFT OUTER JOIN {{ ref('expected_test_results') }} results
+        USING (result)
     -- IMPORTANT: This prunes partitions
     WHERE downloaded_date >= cast(date_add('day', -32, current_date) AS VARCHAR)
 )

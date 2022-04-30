@@ -86,6 +86,12 @@ seeds:
         +column_types:
           fips: VARCHAR(5)
 
+    testing:
+      expected_test_results:
+        +column_types:
+          # I'd like BOOLEAN here, but DBT won't load it
+          positive: VARCHAR(5)
+
     other:
       municipal_abbreviations:
         +column_types:

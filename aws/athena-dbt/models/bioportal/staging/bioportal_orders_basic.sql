@@ -34,10 +34,12 @@ WITH downloads AS (
 	    nullif(testType, '') AS raw_test_type,
 	    {{ clean_test_type('testType') }} AS test_type,
 	    nullif(result, '') result,
-        {{ parse_bioportal_result('result') }} AS positive
+        {{ parse_bioportal_result('result', 'positive') }} AS positive
 	FROM {{ source('bioportal', 'orders_basic') }} tests
 	INNER JOIN downloads
 	    ON downloads.max_downloaded_at = tests.downloadedAt
+    LEFT OUTER JOIN {{ ref('expected_test_results') }} results
+        USING (result)
 )
 SELECT
     *,
