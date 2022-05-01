@@ -24,6 +24,6 @@ SELECT
     	AS covid_hospital_admissions_per_100k,
     CAST(nullif(covid_cases_per_100k, '') AS DOUBLE)
     	AS covid_cases_per_100k,
-    "covid-19_community_level" AS covid_19_community_level
+    covid_19_community_level
 FROM {{ source('hhs', 'community_levels_by_county') }}
 ORDER BY file_timestamp, date_updated, state, county_fips;

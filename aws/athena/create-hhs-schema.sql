@@ -459,7 +459,9 @@ CREATE EXTERNAL TABLE covid_hhs_sources.community_levels_by_county (
     covid_inpatient_bed_utilization STRING,
     covid_hospital_admissions_per_100k STRING,
     covid_cases_per_100k STRING,
-    `covid-19_community_level` STRING,
+    -- This is called `covid-19_community_level` (with a dash) in the CSV,
+    -- but our Parquet conversion replaces the dash with an underscore.
+    covid_19_community_level STRING,
     date_updated STRING
 ) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/united_states_covid_19_community_levels_by_county/v2/parquet/';
