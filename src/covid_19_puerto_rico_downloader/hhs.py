@@ -131,7 +131,10 @@ class Asset():
         metadata = self.get_metadata(client)
         updated_at = datetime.datetime.utcfromtimestamp(metadata['rowsUpdatedAt'])
         url = f'https://{client.domain}/api/views/{self.id}/rows.csv?accessType=DOWNLOAD'
-        r = requests.get(url)
+
+        # CODE SMELL: Is the `session` attribute in the client morally private?
+        r = client.session.get(url)
+
         outpath = f'{self.name}_{updated_at.strftime("%Y%m%d_%H%M")}.csv'
         with open(outpath, 'wb') as fd:
             for chunk in r.iter_content(chunk_size=128):
