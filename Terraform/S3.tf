@@ -14,7 +14,7 @@ resource "aws_s3_bucket" "main_bucket" {
     enabled = true
 
     transition {
-      days          = 31
+      days          = 0
       storage_class = "INTELLIGENT_TIERING"
     }
 
@@ -85,7 +85,7 @@ resource "aws_s3_bucket" "data_bucket" {
     enabled = true
 
     transition {
-      days          = 31
+      days          = 0
       storage_class = "INTELLIGENT_TIERING"
     }
 
@@ -121,7 +121,7 @@ resource "aws_s3_bucket" "logs_bucket" {
     enabled = true
 
     transition {
-      days          = 31
+      days          = 0
       storage_class = "INTELLIGENT_TIERING"
     }
 
