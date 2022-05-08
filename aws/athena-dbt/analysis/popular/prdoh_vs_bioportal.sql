@@ -11,13 +11,13 @@ SELECT
 	bio.collected_date AS "Muestras",
 	bul.confirmed_cases + COALESCE(bul.probable_cases, 0)
 		AS "Casos (oficial)",
-	sum(bul.cumulative_confirmed_cases + COALESCE(bul.cumulative_probable_cases , 0)) OVER (
+	sum(bul.confirmed_cases + COALESCE(bul.probable_cases , 0)) OVER (
     	PARTITION BY bio.bulletin_date
 		ORDER BY bio.collected_date
 		ROWS 6 PRECEDING
 	) / 7.0 AS "Promedio (7 días)",
 	bio.cases "Casos (Bioportal)",
-	sum(bio.cumulative_cases) OVER (
+	sum(bio.cases) OVER (
     	PARTITION BY bio.bulletin_date
 		ORDER BY bio.collected_date
 		ROWS 6 PRECEDING
