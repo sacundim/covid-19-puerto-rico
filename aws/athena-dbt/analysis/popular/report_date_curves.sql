@@ -6,7 +6,9 @@
 WITH population AS (
 	SELECT
 		3193496 AS popest2019,
-		3285874 AS census2020
+		3285874 AS census2020,
+		-- For whatever indefensible reason, NYT uses this:
+		3406672 AS popest2016
 ), official AS (
 	SELECT
 		bulletin_date,
