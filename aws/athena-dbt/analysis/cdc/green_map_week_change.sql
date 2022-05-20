@@ -19,10 +19,7 @@ SELECT
 		|| cast(round(100.0 * curr.covid_inpatient_bed_utilization, 1) AS VARCHAR)
 		AS "Bed %",
 	prev.covid_19_community_level || ' → ' || curr.covid_19_community_level
-		AS "Map level",
-	prev.covid_cases_per_100k >= 200
-		AND curr.covid_hospital_admissions_per_100k >= 10
-		AS "Should be High?"
+		AS "Map level"
 FROM {{ ref('cdc_community_level_all') }} curr
 INNER JOIN {{ ref('cdc_community_level_all') }} prev
 	USING (file_timestamp, county_fips)
