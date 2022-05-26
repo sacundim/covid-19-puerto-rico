@@ -64,4 +64,5 @@ SELECT
 FROM official
 INNER JOIN mine
 	USING (bulletin_date)
+CROSS JOIN population
 ORDER BY bulletin_date DESC;
