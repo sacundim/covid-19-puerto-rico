@@ -360,7 +360,9 @@ CREATE EXTERNAL TABLE covid_hhs_sources.community_profile_report_county (
 	pct_vents_used_avg_last_7_days STRING,
 	pct_vents_used_abs_change_from_prev_week STRING,
 	pct_vents_used_covid_avg_last_7_days STRING,
-	pct_vents_used_covid_abs_change_from_prev_week STRING
+	pct_vents_used_covid_abs_change_from_prev_week STRING,
+	pct_fully_vacc_total_pop STRING,
+	pct_fully_vacc_65_and_older STRING
 ) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/covid-19_community_profile_report_county/v2/parquet/';
 

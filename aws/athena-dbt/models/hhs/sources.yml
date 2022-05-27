@@ -25,8 +25,8 @@ sources:
           error_after: { count: 7, period: day }
       - name: community_profile_report_county
         freshness:
-          # This dataset has been archived, so it'll never be fresh again.
-          warn_after: { count: 1, period: day }
+          warn_after: { count: 5, period: day }
+          error_after: { count: 7, period: day }
       - name: diagnostic_lab_testing
         freshness:
           warn_after: { count: 1, period: day }

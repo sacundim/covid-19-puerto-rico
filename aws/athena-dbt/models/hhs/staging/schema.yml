@@ -31,3 +31,11 @@ models:
       - name: file_timestamp
         tests:
           - not_null
+  - name: community_profile_report
+    description: >
+      HHS's [COVID-19 Community Profile Report - County-Level](https://healthdata.gov/dataset/COVID-19-Community-Profile-Report-County-Level/di4u-7yu6)
+      datasets. We keep a history of versions we've downloaded indexed by the `file_timestamp` column.
+    columns:
+      - name: file_timestamp
+        tests:
+          - not_null
