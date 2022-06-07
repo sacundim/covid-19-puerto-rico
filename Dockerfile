@@ -21,7 +21,7 @@ FROM base as app
 
 # Install various prerequistes for our scripts
 RUN apt-get update
-RUN apt-get install -y wget bzip2 time jq
+RUN apt-get install -y ca-certificates wget bzip2 time jq
 RUN python3 -m pip install pipx
 RUN pipx install awscli
 RUN pipx install csv2parquet
