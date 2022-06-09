@@ -10,7 +10,7 @@
             'Antigens', 'ANTIGENO'
         ) THEN 'Antígeno'
         WHEN {{raw}} IN (
-            'AntigensSelfTest'
+            'AntigensSelfTest', 'MolecularSelfTest'
         ) THEN 'Casera'
         WHEN {{raw}} IN (
             'Serological', 'Serological IgG Only', 'Total Antibodies', 'SEROLOGICAL'

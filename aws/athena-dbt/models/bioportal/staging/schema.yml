@@ -91,6 +91,14 @@ models:
           - relationships:
               to: ref('expected_test_results')
               field: result
+      - name: raw_test_type
+        description: >
+          The raw value of the `testType` field in Bioportal, which doesn't have much of a
+          defined format.  Usually you want the cleaned `test_type` field instead.
+        tests:
+          - relationships:
+              to: ref('expected_raw_test_types')
+              field: raw_test_type
 
   - name: minimal_info_unique_tests
     description: >
