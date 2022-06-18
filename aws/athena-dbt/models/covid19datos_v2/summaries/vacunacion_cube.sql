@@ -58,7 +58,7 @@ SELECT
 		ORDER BY grid.dose_date
 	) AS cumulative_doses,
 	count(vax.downloaded_at)
-	    - lag(count(vax.downloaded_at)) OVER (
+	    - lag(count(vax.downloaded_at), 1, 0) OVER (
 	        PARTITION BY
                 grid.dose_date,
                 grid.fips,
