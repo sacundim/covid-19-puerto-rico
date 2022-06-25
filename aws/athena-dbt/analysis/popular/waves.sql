@@ -7,7 +7,7 @@ SELECT
 	bulletin_date "Datos hasta",
 	variant "Variante",
 	since "Muestras desde",
-	date_add('day', -1, until) "Hasta",
+	max(collected_date) "Hasta",
 	sum(confirmed_cases) + sum(probable_cases)
 		AS "Conteo oficial",
 	sum(cases) AS "Mi análisis"
@@ -17,7 +17,7 @@ INNER JOIN {{ ref('bioportal_encounters_agg') }}
 INNER JOIN (VALUES
     -- Esto es puro a ojo, especialmente en el 2020 que no
     -- es fácil discernir los fondos de las curvas:
-	(DATE '2022-03-14', DATE '2022-07-01', 'Omicron BA.2'),
+	(DATE '2022-03-14', DATE '2023-01-01', 'Omicron BA.2/4/5'),
 	(DATE '2021-12-12', DATE '2022-03-14', 'Omicron BA.1'),
 	(DATE '2021-06-26', DATE '2021-12-12', 'Delta'),
 	(DATE '2021-03-11', DATE '2021-06-26', 'Alfa'),
