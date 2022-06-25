@@ -47,6 +47,7 @@ SELECT
     total_pediatric_patients_hospitalized_confirmed_and_suspected_covid,
     total_pediatric_patients_hospitalized_confirmed_covid,
 	staffed_icu_adult_patients_confirmed_and_suspected_covid,
+
     -- We do two things to HHS's admissions data:
     --
     -- 1. Cut it off before mid-May 2021 because it is bad before this
@@ -57,19 +58,41 @@ SELECT
 		+ previous_day_admission_adult_covid_suspected
 	END AS admission_adult_covid,
 	CASE WHEN date >= DATE '2021-05-16'
+	THEN (previous_day_admission_adult_covid_confirmed_coverage
+		+ previous_day_admission_adult_covid_suspected_coverage) / 2.0
+	END AS admission_adult_covid_coverage,
+
+	CASE WHEN date >= DATE '2021-05-16'
 	THEN previous_day_admission_adult_covid_confirmed
 	END AS admission_adult_covid_confirmed,
+	CASE WHEN date >= DATE '2021-05-16'
+	THEN previous_day_admission_adult_covid_confirmed_coverage
+	END AS admission_adult_covid_confirmed_coverage,
+
 	CASE WHEN date >= DATE '2021-05-16'
 	THEN previous_day_admission_pediatric_covid_confirmed
 		+ previous_day_admission_pediatric_covid_suspected
 	END AS admission_pediatric_covid,
 	CASE WHEN date >= DATE '2021-05-16'
+	THEN (previous_day_admission_pediatric_covid_confirmed_coverage
+		+ previous_day_admission_pediatric_covid_suspected_coverage) / 2.0
+	END AS admission_pediatric_covid_coverage,
+
+	CASE WHEN date >= DATE '2021-05-16'
 	THEN previous_day_admission_pediatric_covid_confirmed
 	END AS admission_pediatric_covid_confirmed,
 	CASE WHEN date >= DATE '2021-05-16'
+	THEN previous_day_admission_pediatric_covid_confirmed_coverage
+	END AS admission_pediatric_covid_confirmed_coverage,
+
+	CASE WHEN date >= DATE '2021-05-16'
 	THEN previous_day_admission_adult_covid_confirmed
         + previous_day_admission_pediatric_covid_confirmed
-	END AS admission_covid_confirmed
+	END AS admission_covid_confirmed,
+	CASE WHEN date >= DATE '2021-05-16'
+	THEN (previous_day_admission_adult_covid_confirmed_coverage
+        + previous_day_admission_pediatric_covid_confirmed_coverage) / 2.0
+	END AS admission_covid_confirmed_coverage
 FROM {{ ref('reported_hospital_utilization_timeseries') }}
 INNER JOIN grid USING (file_timestamp)
 -- This is the date when we start getting this timeseries daily instead of weekly
