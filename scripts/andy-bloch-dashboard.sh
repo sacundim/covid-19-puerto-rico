@@ -24,7 +24,7 @@ S3_SYNC_DIR="${REPO_ROOT}/s3-bucket-sync/covid-19-puerto-rico-data"
 WALGREENS_SYNC_DIR="${S3_SYNC_DIR}/Walgreens"
 AGGREGATION_SYNC_DIR="${WALGREENS_SYNC_DIR}/Tracker_Aggregation"
 mkdir -p "${S3_SYNC_DIR}" "${WALGREENS_SYNC_DIR}" "${AGGREGATION_SYNC_DIR}"
-mkdir -p "${AGGREGATION_SYNC_DIR}"/csv/v1 "${AGGREGATION_SYNC_DIR}"/parquet/v1
+mkdir -p "${AGGREGATION_SYNC_DIR}"/csv_v1 "${AGGREGATION_SYNC_DIR}"/parquet_v1
 
 
 echo "$(date): Fetching from endpoint: ${ENDPOINT}"
@@ -40,9 +40,9 @@ bzip2 -9 "${TMP}/${BASENAME}.csv"
 
 echo "$(date): Moving to ${AGGREGATION_SYNC_DIR}..."
 mv "${TMP}/${BASENAME}.csv.bz2" \
-  "${AGGREGATION_SYNC_DIR}/csv/v1/${BASENAME}_${timestamp}.csv.bz2"
+  "${AGGREGATION_SYNC_DIR}/csv_v1/${BASENAME}_${timestamp}.csv.bz2"
 mv "${TMP}/${BASENAME}.parquet" \
-  "${AGGREGATION_SYNC_DIR}/parquet/v1/${BASENAME}_${timestamp}.parquet"
+  "${AGGREGATION_SYNC_DIR}/parquet_v1/${BASENAME}_${timestamp}.parquet"
 
 echo "$(date): Listing out ${AGGREGATION_SYNC_DIR}..."
 du -h "${AGGREGATION_SYNC_DIR}"/*
