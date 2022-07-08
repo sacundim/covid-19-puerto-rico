@@ -57,6 +57,9 @@ models:
         +materialized: table
       summaries:
         +materialized: table
+    Walgreens:
+      staging:
+        materialized: table
     reports:
       +materialized: view
     summaries:

@@ -105,3 +105,34 @@ CREATE EXTERNAL TABLE covid_pr_sources.deaths_parquet_v1 (
 ) PARTITIONED BY (downloaded_date STRING)
 STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/bioportal/deaths/parquet_v1/';
+
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+--
+-- Bioportal data
+--
+
+CREATE EXTERNAL TABLE covid_pr_sources.walgreens_tracker_parquet_v1 (
+    State STRING,
+    Date STRING,
+    `3day_mov_avgOmiOther` STRING,
+    `3day_mov_avgOmiBA2` STRING,
+    `3day_mov_avgOmiBA1` STRING,
+    `3day_mvOmiBA2_nmrtr` STRING,
+    `3day_mvPreOther_nmrtr` STRING,
+    `3day_mvPreOmiBA2_nmrtr` STRING,
+    `3day_mvPreOmiBA11_nmrtr` STRING,
+    `3day_mov_avgPreOmiBA2` STRING,
+    `3day_mov_avgPreOmiBA11` STRING,
+    `3day_mov_avgPreOther` STRING,
+    `3day_mvOmiBA1_nmrtr` STRING,
+    `Date_Range` STRING,
+    `3day_mvOmiBA4_nmrtr` STRING,
+    `3day_mov_avgOmiBA4` STRING,
+    `3day_mvOmiBA5_nmrtr` STRING,
+    `3day_mov_avgOmiBA5` STRING,
+    `3day_mvOmiOther_nmrtr` STRING,
+    `3day_mvOmiOtherOmi_nmrtr` STRING,
+    `3day_mov_avgOmiOtherOmi` STRING
+) STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/Walgreens/Tracker_Aggregation/parquet_v1/';
