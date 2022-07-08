@@ -98,22 +98,22 @@ SELECT
 		PARTITION BY downloaded_at, state
 		ORDER BY date
 		ROWS 6 PRECEDING
-	) / 7.0 AS PreOmiBA11_avg7,
+	) AS PreOmiBA11_sum7,
 	sum("PreOmiBA2") OVER (
 		PARTITION BY downloaded_at, state
 		ORDER BY date
 		ROWS 6 PRECEDING
-	) / 7.0 AS PreOmiBA2_avg7,
+	) AS PreOmiBA2_sum7,
 	sum("PreOther") OVER (
 		PARTITION BY downloaded_at, state
 		ORDER BY date
 		ROWS 6 PRECEDING
-	) / 7.0 AS PreOther_avg7,
+	) AS PreOther_avg7,
 	sum("PreOmiBA11" + "PreOmiBA2" + "PreOther") OVER (
 		PARTITION BY downloaded_at, state
 		ORDER BY date
 		ROWS 6 PRECEDING
-	) / 7.0 AS Total_avg7
+	) AS Total_sum7
 FROM daily
 ORDER BY
     downloaded_at,
