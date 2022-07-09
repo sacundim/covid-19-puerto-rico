@@ -108,7 +108,7 @@ SELECT
 		PARTITION BY downloaded_at, state
 		ORDER BY date
 		ROWS 6 PRECEDING
-	) AS PreOther_avg7,
+	) AS PreOther_sum7,
 	sum("PreOmiBA11" + "PreOmiBA2" + "PreOther") OVER (
 		PARTITION BY downloaded_at, state
 		ORDER BY date
