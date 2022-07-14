@@ -44,6 +44,7 @@ mkdir -p "${TMP}"
 
 echo "$(date): Fetching from endpoint: ${DEATHS_ENDPOINT}"
 wget \
+    --tries=3 \
     --no-verbose \
     --header="Accept-Encoding: gzip" \
     -O - "${DEATHS_ENDPOINT}" \
@@ -55,6 +56,7 @@ echo "$(date): Downloaded to ${DEATHS_JSON_TMP}"
 
 echo "$(date): Fetching from endpoint: ${TESTS_ENDPOINT}"
 wget \
+    --tries=3 \
     --no-verbose \
     --header="Accept-Encoding: gzip" \
     -O - "${TESTS_ENDPOINT}" \
@@ -65,6 +67,7 @@ echo "$(date): Downloaded to ${TESTS_JSON_TMP}"
 
 echo "$(date): Fetching from endpoint: ${ORDERS_ENDPOINT}"
 wget \
+    --tries=3 \
     --no-verbose \
     --header="Accept-Encoding: gzip" \
     -O - "${ORDERS_ENDPOINT}" \
