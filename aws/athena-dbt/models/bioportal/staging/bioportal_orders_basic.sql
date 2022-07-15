@@ -6,11 +6,13 @@
 
 WITH downloads AS (
 	SELECT
-		max(downloadedAt) max_downloaded_at
+		max(downloaded_date) max_downloaded_date,
+		max(downloadedAt) max_downloaded_at,
+		max("$path") max_path
 	FROM {{ source('bioportal', 'orders_basic') }}
 ), first_clean AS (
 	SELECT
-	    CAST(from_iso8601_timestamp(downloadedAt) AS TIMESTAMP)
+	    {{ parse_filename_timestamp('tests."$path"') }}
 	        AS downloaded_at,
 	    CAST(from_iso8601_timestamp(nullif(collectedDate, '')) AS TIMESTAMP)
 	    	AS raw_collected_at,
@@ -20,7 +22,7 @@ WITH downloads AS (
 	    	AS result_created_at,
 	    CAST(from_iso8601_timestamp(orderCreatedAt) AS TIMESTAMP)
 	    	AS order_created_at,
-	    date(from_iso8601_timestamp(downloadedAt) AT TIME ZONE 'America/Puerto_Rico')
+	    date({{ parse_filename_timestamp('tests."$path"') }} AT TIME ZONE 'America/Puerto_Rico')
 	        AS downloaded_date,
 	    date(from_iso8601_timestamp(resultCreatedAt) AT TIME ZONE 'America/Puerto_Rico')
 	        AS received_date,
@@ -37,9 +39,14 @@ WITH downloads AS (
         {{ parse_bioportal_result('result', 'positive') }} AS positive
 	FROM {{ source('bioportal', 'orders_basic') }} tests
 	INNER JOIN downloads
-	    ON downloads.max_downloaded_at = tests.downloadedAt
+	    ON downloads.max_path = tests."$path"
+	    -- This is redundant but it seems to prune how much data is scanned
+	    AND downloads.max_downloaded_at = tests.downloadedAt
+	    AND downloads.max_downloaded_date = tests.downloaded_date
     LEFT OUTER JOIN {{ ref('expected_test_results') }} results
         USING (result)
+    -- IMPORTANT: This prunes partitions to just the very most recent ones
+    WHERE downloaded_date >= cast(date_add('day', -1, current_date) AS VARCHAR)
 )
 SELECT
     *,
