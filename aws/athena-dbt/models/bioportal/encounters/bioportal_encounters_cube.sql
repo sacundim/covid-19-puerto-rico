@@ -17,49 +17,32 @@ WITH downloads AS (
         tests.collected_date,
         tests.age_range,
         count(*) AS encounters,
-        -- A case is a test encounter that had a positive test and
-        -- is not a followup to an earlier positive encounter.
         count(*) FILTER (
-            WHERE tests.positive
-            AND NOT tests.followup
+            WHERE tests.is_case
         ) cases,
-        -- Older version of the cases definition that used a stricter followup 
-        -- criterion (counted an antigen test up to 90 days later as followup)
-        count(*) FILTER (
-            WHERE tests.positive
-            AND NOT tests.followup_strict
-        ) cases_strict,
-        -- A first infection is a test encounter where the result was positive
-        -- and that patient has never had a positive test encounter before.
         count(*) FILTER (
             WHERE tests.first_infection
         ) first_infections,
-        -- A possible infection is a case that's not a first infection.
         count(*) FILTER (
-            WHERE tests.positive
-            AND NOT tests.followup
-            AND NOT tests.first_infection
+            WHERE tests.is_case AND NOT tests.first_infection
         ) possible_reinfections,
-        -- An antigens case is a test encounter that had a positive antigens
-        -- test and is not a followup to an earlier positive encounter.
         count(*) FILTER (
-            WHERE tests.has_positive_antigens
-            AND NOT tests.followup
+            WHERE tests.is_case
+              AND tests.has_positive_antigens
         ) antigens_cases,
         -- A molecular case is a test encounter that had a positive PCR
         -- test, no positive antigen test, and is not a followup to an
-        -- earlier positive encounter.
+        -- earlier positive encounter.  We exclude encounters with positive
+        -- antigens because we credit those to the antigen test.
         count(*) FILTER (
-            WHERE tests.has_positive_molecular
+            WHERE tests.is_case
+            AND tests.has_positive_molecular
             AND NOT tests.has_positive_antigens
-            AND NOT tests.followup
         ) molecular_cases,
         -- A rejected case is a non-followup encounter that had no
         -- positive tests and at least one of the tests is PCR.
         count(*) FILTER (
-            WHERE tests.has_molecular
-            AND NOT tests.followup
-            AND NOT tests.positive
+            WHERE NOT tests.is_case AND tests.has_molecular
         ) rejections,
         -- Note that `has_antigens` and `has_molecular` don't
         -- have to add up to `encounters` because a person may
@@ -86,14 +69,14 @@ WITH downloads AS (
         -- one molecular test.  These are, I claim, the most
         -- appropriate for a positive rate calculation.
         count(*) FILTER (
-            WHERE NOT tests.followup
+            WHERE tests.can_be_case
             AND tests.has_molecular
         ) AS initial_molecular,
         -- Non-followup test encounters where there was at least
         -- one molecular test that came back positive.  These are,
         -- I claim, the most appropriate for a positive rate calculation.
         count(*) FILTER (
-            WHERE NOT tests.followup
+            WHERE tests.can_be_case
             AND tests.has_positive_molecular
         ) AS initial_positive_molecular
     FROM {{ ref('bioportal_encounters') }} tests
@@ -117,10 +100,6 @@ SELECT
         PARTITION BY bulletin_date, age_range
         ORDER BY collected_date
     ) AS cumulative_cases,
-    sum(cases_strict) OVER (
-        PARTITION BY bulletin_date, age_range
-        ORDER BY collected_date
-    ) AS cumulative_cases_strict,
     sum(first_infections) OVER (
         PARTITION BY bulletin_date, age_range
         ORDER BY collected_date

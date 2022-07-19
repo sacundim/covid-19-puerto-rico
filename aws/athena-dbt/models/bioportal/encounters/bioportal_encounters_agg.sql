@@ -4,7 +4,6 @@ SELECT
 	date_diff('day', collected_date, bulletin_date) age,
 	sum(encounters) encounters,
 	sum(cases) cases,
-	sum(cases_strict) cases_strict,
 	sum(first_infections) first_infections,
 	sum(possible_reinfections) possible_reinfections,
 	sum(rejections) rejections,
@@ -24,10 +23,6 @@ SELECT
 	    PARTITION BY bulletin_date
 	    ORDER BY collected_date
 	) AS cumulative_cases,
-	sum(sum(cases_strict)) OVER (
-	    PARTITION BY bulletin_date
-	    ORDER BY collected_date
-	) AS cumulative_cases_strict,
 	sum(sum(first_infections)) OVER (
 	    PARTITION BY bulletin_date
 	    ORDER BY collected_date
@@ -80,10 +75,6 @@ SELECT
 	    PARTITION BY collected_date
 	    ORDER BY bulletin_date
 	) AS delta_cases,
-	sum(cases_strict) - lag(sum(cases_strict), 1, 0) OVER (
-	    PARTITION BY collected_date
-	    ORDER BY bulletin_date
-	) AS delta_cases_strict,
 	sum(first_infections) - lag(sum(first_infections), 1, 0) OVER (
 	    PARTITION BY collected_date
 	    ORDER BY bulletin_date
