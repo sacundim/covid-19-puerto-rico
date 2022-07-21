@@ -77,6 +77,8 @@ def cdc_download(args):
         Asset('nationwide_commercial_laborator_seroprevalence_survey', 'd2tw-32xv'),
         Asset('nationwide_blood_donor_seroprevalence', 'wi5c-cscz'),
         Asset('rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status', '3rge-nu2a'),
+        Asset('rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_booster_dose', 'd6p8-wqjm'),
+        Asset('rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_second_booster_dose', 'ukww-au2k'),
         Asset('united_states_covid_19_community_levels_by_county', '3nnm-4jni')
     ]
     download_datasets(args, 'data.cdc.gov', datasets)
