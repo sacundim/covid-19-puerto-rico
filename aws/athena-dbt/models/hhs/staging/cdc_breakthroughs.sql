@@ -1,39 +1,82 @@
-WITH max_path AS (
-    SELECT max("$path") max_path
-    FROM {{ source('hhs', 'rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status') }}
-)
+--
+-- Stitch together the CDC breakthrough data files into a single table.
+-- These three datasets must be compared very carefully, because the
+-- population with data for each is different from the others!  I.e.
+-- the `primary` dataset reports on more jurisdictions than the `booster1`
+-- dataset that in turn has more coverage than `booster2`.
+--
 SELECT
-    {{ hhs_parse_filename_date('"$path"') }}
-		AS file_timestamp,
-    mmwr_week,
-	date_add('day', -1, date(parse_datetime(mmwr_week, 'xxxxww')))
-		AS mmwr_week_start,
-    outcome,
-    age_group,
-    vaccine_product,
-    CAST(nullif(vaccinated_with_outcome, '') AS INT)
-    	AS vaccinated_with_outcome,
-    CAST(nullif(fully_vaccinated_population, '') AS DOUBLE) -- Yes, DOUBLE
-    	AS fully_vaccinated_population,
-    CAST(nullif(unvaccinated_with_outcome, '') AS INT)
-    	AS unvaccinated_with_outcome,
-    CAST(nullif(unvaccinated_population, '') AS DOUBLE)  -- Yes, DOUBLE
-    	AS unvaccinated_population,
-    CAST(nullif(crude_vax_ir, '') AS DOUBLE)
-    	AS crude_vax_ir,
-    CAST(nullif(crude_unvax_ir, '') AS DOUBLE)
-    	AS crude_unvax_ir,
-    CAST(nullif(crude_irr, '') AS DOUBLE)
-    	AS crude_irr,
-    CAST(nullif(age_adjusted_vax_ir, '') AS DOUBLE)
-    	AS age_adjusted_vax_ir,
-    CAST(nullif(age_adjusted_unvax_ir, '') AS DOUBLE)
-    	AS age_adjusted_unvax_ir,
-    CAST(nullif(age_adjusted_irr, '') AS DOUBLE)
-    	AS age_adjusted_irr,
-    CAST(nullif(continuity_correction, '') AS INT)
-    	AS continuity_correction
-FROM {{ source('hhs', 'rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status') }}
-INNER JOIN max_path
-    ON max_path = "$path"
-ORDER BY file_timestamp, mmwr_week_start;
+	mmwr_week,
+	mmwr_week_start,
+	outcome,
+	age_group,
+	vaccine_product,
+
+	primary.vaccinated_with_outcome
+	    AS primary_vaccinated_with_outcome,
+	primary.fully_vaccinated_population
+		AS primary_vaccinated_population,
+	primary.unvaccinated_with_outcome
+	    AS primary_unvaccinated_with_outcome,
+	primary.unvaccinated_population
+	    AS primary_unvaccinated_population,
+    primary.vaccinated_with_outcome
+        + primary.unvaccinated_with_outcome
+        AS primary_with_outcome,
+	primary.fully_vaccinated_population
+	    + primary.unvaccinated_population
+	    AS primary_population,
+
+	booster1.boosted_with_outcome
+	    AS booster1_boosted_with_outcome,
+	booster1.boosted_population
+	    AS booster1_boosted_population,
+	booster1.primary_series_only_with_outcome
+	    AS booster1_primary_series_only_with_outcome,
+	booster1.primary_series_only_population
+	    AS booster1_primary_series_only_population,
+    booster1.unvaccinated_with_outcome
+        AS booster1_unvaccinated_with_outcome,
+    booster1.unvaccinated_population
+        AS booster1_unvaccinated_population,
+    booster1.boosted_with_outcome
+	    + booster1.primary_series_only_with_outcome
+	    + booster1.unvaccinated_with_outcome
+	    AS booster1_with_outcome,
+    booster1.boosted_population
+	    + booster1.primary_series_only_population
+	    + booster1.unvaccinated_population
+	    AS booster1_population,
+
+	booster2.one_boosted_with_outcome
+	    AS booster2_one_boosted_with_outcome,
+	booster2.one_booster_population
+	    AS booster2_one_booster_population,
+	booster2.two_boosted_with_outcome
+	    AS booster2_two_boosted_with_outcome,
+	booster2.two_booster_population
+	    AS booster2_two_booster_population,
+    booster2.vaccinated_with_outcome
+        AS booster2_primary_series_only_with_outcome,
+    booster2.fully_vaccinated_population
+        AS booster2_primary_series_only_population,
+    booster2.unvaccinated_with_outcome
+        AS booster2_unvaccinated_with_outcome,
+    booster2.unvaccinated_population
+        AS booster2_unvaccinated_population,
+    booster2.one_boosted_with_outcome
+	    + booster2.two_boosted_with_outcome
+	    + booster2.vaccinated_with_outcome
+	    + booster2.unvaccinated_with_outcome
+	    AS booster2_with_outcome,
+    booster2.one_booster_population
+	    + booster2.two_booster_population
+	    + booster2.fully_vaccinated_population
+	    + booster2.unvaccinated_population
+	    AS booster2_population
+FROM {{ ref("cdc_primary_series_breakthroughs") }} primary
+LEFT OUTER JOIN {{ ref("cdc_booster_breakthroughs") }} booster1
+	USING (mmwr_week, mmwr_week_start, outcome, age_group, vaccine_product)
+LEFT OUTER JOIN {{ ref("cdc_second_booster_breakthroughs") }} booster2
+	USING (mmwr_week, mmwr_week_start, outcome, age_group, vaccine_product)
+ORDER BY mmwr_week_start;

@@ -442,6 +442,72 @@ CREATE EXTERNAL TABLE covid_hhs_sources.rates_of_covid_19_cases_or_deaths_by_age
 ) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status/v2/parquet/';
 
+--
+-- https://data.cdc.gov/Public-Health-Surveillance/Rates-of-COVID-19-Cases-or-Deaths-by-Age-Group-and/ukww-au2k
+--
+CREATE EXTERNAL TABLE covid_hhs_sources.rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_booster_dose (
+    outcome STRING,
+    month STRING,
+    MMWR_week STRING,
+    Age_group STRING,
+    Vaccine_product STRING,
+    boosted_with_outcome STRING,
+    boosted_population STRING,
+    primary_series_only_with_outcome STRING,
+    primary_series_only_population STRING,
+    Unvaccinated_with_outcome STRING,
+    Unvaccinated_population STRING,
+    crude_booster_ir STRING,
+    Crude_primary_series_only_ir STRING,
+    Crude_unvax_IR STRING,
+    crude_booster_irr STRING,
+    Crude_IRR STRING,
+    age_adj_booster_ir STRING,
+    age_adj_vax_ir STRING,
+    age_adj_unvax_ir STRING,
+    age_adj_booster_irr STRING,
+    age_adj_irr STRING,
+    Continuity_correction STRING
+) STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/HHS/rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_booster_dose/v2/parquet/';
+
+
+--
+-- https://data.cdc.gov/Public-Health-Surveillance/Rates-of-COVID-19-Cases-or-Deaths-by-Age-Group-and/ukww-au2k
+--
+CREATE EXTERNAL TABLE covid_hhs_sources.rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_second_booster_dose (
+    outcome STRING,
+    month STRING,
+    MMWR_week STRING,
+    Age_group STRING,
+    Vaccine_product STRING,
+    one_boosted_with_outcome STRING,
+    one_booster_population STRING,
+    two_boosted_with_outcome STRING,
+    two_booster_population STRING,
+    Vaccinated_with_outcome STRING,
+    Fully_vaccinated_population STRING,
+    Unvaccinated_with_outcome STRING,
+    Unvaccinated_population STRING,
+    crude_one_booster_ir STRING,
+    crude_two_booster_ir STRING,
+    Crude_vax_IR STRING,
+    Crude_unvax_IR STRING,
+    Crude_IRR STRING,
+    crude_one_booster_irr STRING,
+    crude_two_booster_irr STRING,
+    crude_one_two_booster_irr STRING,
+    age_adj_one_booster_ir STRING,
+    age_adj_two_booster_ir STRING,
+    age_adj_vax_ir STRING,
+    age_adj_unvax_ir STRING,
+    age_adj_one_booster_irr STRING,
+    age_adj_two_booster_irr STRING,
+    age_adj_vax_irr STRING,
+    Continuity_correction STRING
+) STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/HHS/rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_second_booster_dose/v2/parquet/';
+
 
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
