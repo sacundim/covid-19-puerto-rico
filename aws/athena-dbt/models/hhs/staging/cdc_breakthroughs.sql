@@ -79,4 +79,9 @@ LEFT OUTER JOIN {{ ref("cdc_booster_breakthroughs") }} booster1
 	USING (mmwr_week, mmwr_week_start, outcome, age_group, vaccine_product)
 LEFT OUTER JOIN {{ ref("cdc_second_booster_breakthroughs") }} booster2
 	USING (mmwr_week, mmwr_week_start, outcome, age_group, vaccine_product)
+-- FIXME: As of 2022-07-23, these datasets don't actually join up on the
+-- `age_group` column.  The primary dataset drills down into ages 18-29,
+-- 30-49, 65-79 and 80+, but the breakthrough datasets aggregate to 18-49
+-- and 65+.  So I'm restricting to 'all_ages_adj' for now.
+WHERE age_group = 'all_ages_adj'
 ORDER BY mmwr_week_start;
