@@ -13,15 +13,14 @@ batch:
               - images
 
 phases:
-    install:
-        commands:
-            - yum update -y
     pre_build:
         commands:
+            - set -euo pipefail
             - echo Logging in to Amazon ECR...
             - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
     build:
         commands:
+            - set -euo pipefail
             - echo Build started on `date`
             - echo Building the Docker manifest...
             - export DOCKER_CLI_EXPERIMENTAL=enabled
@@ -31,6 +30,7 @@ phases:
 
     post_build:
         commands:
+            - set -euo pipefail
             - echo Build completed on `date`
             - echo Pushing the Docker image...
             - docker manifest push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
