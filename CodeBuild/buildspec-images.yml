@@ -3,6 +3,10 @@
 #
 version: 0.2
 
+env:
+    variables:
+        IMAGE_REPO_NAME: covid-19-puerto-rico-downloader
+
 phases:
     pre_build:
         commands:
@@ -14,6 +18,10 @@ phases:
             - set -euo pipefail
             - echo Build started on `date`
             - echo Building the Docker image...
+            - echo "IMAGE_REPO_NAME=$IMAGE_REPO_NAME"
+            - echo "IMAGE_TAG=$IMAGE_TAG"
+            - echo "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION"
+            - echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID"
             - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
             - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
     post_build:
