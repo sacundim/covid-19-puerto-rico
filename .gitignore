@@ -1,5 +1,4 @@
 .idea/
-Terraform/.terraform/
 .venv/
 *.egg-info
 *.pyc
@@ -12,4 +11,3 @@ s3-bucket-sync/
 tmp/
 .DS_Store
 geckodriver.log
-*.iml

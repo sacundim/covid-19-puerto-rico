@@ -5,12 +5,8 @@ on:
 
   push:
     branches: [ master ]
-    paths-ignore:
-      - 'assets/**'
-      - 'aws/**'
-      - 'config/**'
-      - 'scripts/**'
-      - 'Terraform/**'
+    paths:
+      - 'website/**'
 
 jobs:
   deploy:
