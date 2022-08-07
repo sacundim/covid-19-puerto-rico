@@ -7,6 +7,7 @@ packages = [{ include = "covid_19_puerto_rico", from = "src"}]
 
 [tool.poetry.scripts]
 covid19pr = 'covid_19_puerto_rico:main'
+migrate-off-gh-pages = 'covid_19_puerto_rico.migrations:migrate_off_gh_pages'
 
 [tool.poetry.dependencies]
 python = "^3.9"
