@@ -14,10 +14,6 @@ WEBSITE_DIR="${REPO_ROOT}/output"
 
 if [ -d "${WEBSITE_DIR}" ];
 then
-  # TODO: stop using this
-  echo "$(date): Syncing to gh-pages..."
-  ghp-import -p -m "${MESSAGE}" "${WEBSITE_DIR}"
-
   echo "$(date): Syncing to S3..."
   aws s3 sync \
     --exclude '*.DS_Store' \
