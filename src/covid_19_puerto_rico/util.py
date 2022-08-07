@@ -17,16 +17,6 @@ def make_date_range(start, end):
     return [start + datetime.timedelta(n)
             for n in range(int((end - start).days) + 1)]
 
-def create_postgres_engine(args):
-    config = {
-        'drivername': 'postgres',
-        'port': 5432
-    }
-    toml_dict = toml.load(args.config_file)
-    config.update(toml_dict['postgres'])
-    url = sqlalchemy.engine.url.URL(**config)
-    return sqlalchemy.create_engine(url)
-
 def create_athena_engine(args):
     conn_str = "awsathena+rest://:@athena.{region_name}.amazonaws.com:443/{schema_name}?s3_staging_dir={s3_staging_dir}"
     toml_dict = toml.load(args.config_file)
@@ -97,4 +87,3 @@ def round_down_sig(x, sig=2):
         return rounded - 10 ** (magnitude - (sig - 1))
     else:
         return rounded
-
