@@ -50,22 +50,23 @@ resource "aws_iam_policy" "socrata_app_token" {
 ## IAM setup for GitHub Actions to push Docker image to ECR
 ##
 
-resource "aws_iam_user_policy" "ecr_push_user_policy" {
-  name = "covid-19-puerto-rico-downloader-ecr-push"
-  user = aws_iam_user.ecr_push_user.name
-
-  policy = jsonencode({
+resource "aws_iam_policy" "ecr_push" {
+  name = "${var.project_name}-downloader-ecr-push"
+  description = "Grnt ability to push to the ECR repo."
+    policy = jsonencode({
     "Version": "2012-10-17",
     "Statement": [
       {
         "Sid": "VisualEditor0",
         "Effect": "Allow",
         "Action": [
-          "ecr:CompleteLayerUpload",
-          "ecr:UploadLayerPart",
-          "ecr:InitiateLayerUpload",
           "ecr:BatchCheckLayerAvailability",
-          "ecr:PutImage"
+          "ecr:BatchGetImage",
+          "ecr:CompleteLayerUpload",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage",
+          "ecr:UploadLayerPart"
         ],
         "Resource": aws_ecr_repository.downloader_repo.arn
       },
@@ -85,4 +86,9 @@ resource "aws_iam_user" "ecr_push_user" {
   tags = {
     Project = var.project_name
   }
+}
+
+resource "aws_iam_user_policy_attachment" "ecr_push_user_push" {
+  user = aws_iam_user.ecr_push_user.name
+  policy_arn = aws_iam_policy.ecr_push.arn
 }
