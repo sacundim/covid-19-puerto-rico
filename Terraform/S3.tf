@@ -191,3 +191,42 @@ resource "aws_s3_bucket_public_access_block" "block_testing_bucket" {
   ignore_public_acls = true
   restrict_public_buckets = true
 }
+
+
+resource "aws_s3_bucket" "backups_bucket" {
+  bucket = var.backups_bucket_name
+
+  tags = {
+    Project = "covid-19-puerto-rico"
+  }
+
+  versioning {
+    enabled = true
+  }
+
+  lifecycle_rule {
+    id      = "Transition to Intelligent Tiering"
+    enabled = true
+
+    transition {
+      days          = 0
+      storage_class = "INTELLIGENT_TIERING"
+    }
+
+    expiration {
+      expired_object_delete_marker = true
+    }
+
+    noncurrent_version_expiration {
+      days = 7
+    }
+
+    abort_incomplete_multipart_upload_days = 7
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "block_backups_bucket" {
+  bucket = aws_s3_bucket.backups_bucket.id
+  block_public_acls   = true
+  block_public_policy = true
+}
