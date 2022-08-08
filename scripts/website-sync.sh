@@ -6,7 +6,6 @@
 set -euo pipefail
 
 S3_PATH="s3://covid-19-puerto-rico"
-MESSAGE="${1:?"No commit message given"}"
 
 HERE="$(dirname $0)"
 REPO_ROOT="${HERE}/.."
