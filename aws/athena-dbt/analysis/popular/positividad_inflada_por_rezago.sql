@@ -20,8 +20,9 @@ WITH bulletins AS (
 SELECT
 	perspectival.bulletin_date AS "Fecha de muestras",
 	perspectival.positive_rate "Con datos solo hasta esa fecha",
-	collected.bulletin_date AS "Datos más recientes disponibles",
-	collected.positive_rate AS "Con datos más recientes disponibles"
+	collected.bulletin_date AS "Datos más recientes",
+	collected.positive_rate AS "Con datos más recientes",
+	perspectival.positive_rate - collected.positive_rate AS "Inflación"
 FROM bitemporal collected
 INNER JOIN bulletins
 	ON bulletins.bulletin_date = collected.bulletin_date
