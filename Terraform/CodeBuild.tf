@@ -39,6 +39,7 @@ resource "aws_codebuild_project" "docker_image" {
   }
 
   source {
+    buildspec = "downloader/buildspec.yml"
     type            = "GITHUB"
     location        = var.downloader_github_url
     git_clone_depth = 1
@@ -176,7 +177,7 @@ resource "aws_iam_role_policy" "codebuild_batch_service" {
 ##
 
 resource "aws_cloudwatch_log_group" "codebuild" {
-  name = "${var.project_name}-downloader"
+  name = "${var.project_name}-codebuild"
   retention_in_days = 30
   tags = {
     Project = var.project_name
