@@ -41,7 +41,7 @@ resource "aws_codebuild_project" "docker_image" {
   source {
     buildspec = "downloader/buildspec.yml"
     type            = "GITHUB"
-    location        = var.downloader_github_url
+    location        = var.github_url
     git_clone_depth = 1
     report_build_status = false # TODO
     git_submodules_config {
@@ -49,7 +49,7 @@ resource "aws_codebuild_project" "docker_image" {
     }
   }
 
-  source_version = var.downloader_github_branch
+  source_version = var.github_branch
 
   logs_config {
     cloudwatch_logs {

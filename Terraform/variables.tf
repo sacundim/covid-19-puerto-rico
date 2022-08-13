@@ -51,16 +51,16 @@ variable "dns_name" {
   default = "covid-19-puerto-rico.org"
 }
 
-variable "downloader_github_url" {
+variable "github_url" {
   type = string
-  description = "The URL to the downloader GitHub repo."
-  default = "https://github.com/sacundim/covid-19-puerto-rico-downloader"
+  description = "The URL to the GitHub repo."
+  default = "https://github.com/sacundim/covid-19-puerto-rico"
 }
 
-variable "downloader_github_branch" {
+variable "github_branch" {
   type = string
-  description = "The Git brach to build."
-  default = "aws-codebuild"
+  description = "The Git branch to build."
+  default = "consolidate-repos"
 }
 
 variable "az_count" {
