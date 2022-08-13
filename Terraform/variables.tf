@@ -4,6 +4,18 @@ variable "project_name" {
   default = "covid-19-puerto-rico"
 }
 
+variable "downloader_github_url" {
+  type = string
+  description = "The URL to the downloader GitHub repo."
+  default = "https://github.com/sacundim/covid-19-puerto-rico-downloader"
+}
+
+variable "downloader_github_branch" {
+  type = string
+  description = "The Git brach to build."
+  default = "aws-codebuild"
+}
+
 variable "datalake_bucket_name" {
   type = string
   description = "The name of the datalake bucket to create/use. This is where downloads will be stored."
