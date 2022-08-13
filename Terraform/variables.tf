@@ -44,3 +44,10 @@ variable "aws_region" {
   description = "The AWS region things are created in."
   default     = "us-west-2"
 }
+
+variable "dns_name" {
+  type = string
+  description = "The DNS name of the project website."
+  default = "covid-19-puerto-rico.org"
+}
+
