@@ -7,7 +7,7 @@ batch:
     fast-fail: true
     build-graph:
         - identifier: arm64v8
-          buildspec: CodeBuild/buildspec-images.yml
+          buildspec: downloader/CodeBuild/buildspec-images.yml
           env:
             compute-type: BUILD_GENERAL1_SMALL
             type: ARM_CONTAINER
@@ -16,7 +16,7 @@ batch:
             variables:
               IMAGE_TAG: latest-arm64v8
         - identifier: amd64
-          buildspec: CodeBuild/buildspec-images.yml
+          buildspec: downloader/CodeBuild/buildspec-images.yml
           env:
             compute-type: BUILD_GENERAL1_SMALL
             type: LINUX_CONTAINER
@@ -25,7 +25,7 @@ batch:
             variables:
               IMAGE_TAG: latest-amd64
         - identifier: manifest
-          buildspec: CodeBuild/buildspec-manifest.yml
+          buildspec: downloader/CodeBuild/buildspec-manifest.yml
           env:
             compute-type: BUILD_GENERAL1_SMALL
             type: ARM_CONTAINER
