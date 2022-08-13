@@ -5,8 +5,8 @@ on:
 
   push:
     branches: [ main ]
-    paths-ignore:
-      - 'Terraform/**'
+    paths:
+      - 'downloader/**'
 
 jobs:
   deploy:
