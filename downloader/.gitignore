@@ -1,0 +1,13 @@
+.idea/
+.venv
+*.egg-info
+*.pyc
+dist/
+s3-bucket-sync/
+tmp/
+.DS_Store
+*.iml
+Terraform/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
