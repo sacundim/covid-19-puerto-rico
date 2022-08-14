@@ -36,7 +36,7 @@ INNER JOIN (VALUES
 	ON since <= c.datum_date
 	AND c.datum_date < until
 WHERE c.datum_date = b.collected_date
-AND bbulletin_date = (
+AND b.bulletin_date = (
 	SELECT max(bulletin_date)
 	FROM {{ ref('bioportal_encounters_agg') }}
 )
