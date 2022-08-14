@@ -4,10 +4,10 @@
 #
 set -e -o pipefail
 
-#PLATFORMS="linux/amd64"
+PLATFORMS="linux/arm64"
 
 # Some day:
-PLATFORMS="linux/amd64,linux/arm64"
+#PLATFORMS="linux/amd64,linux/arm64"
 
 IMAGE_NAME="${IMAGE_NAME-covid-19-puerto-rico-downloader}"
 cd "$(dirname $0)"
