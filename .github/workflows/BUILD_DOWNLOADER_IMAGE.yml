@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
 
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths:
-      - 'website/**'
+      - 'downloader/**'
 
 jobs:
   deploy:
@@ -32,7 +32,7 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: covid-19-puerto-rico
+        ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
         IMAGE_TAG: latest
       run: |
         # Build a docker container and push it to ECR

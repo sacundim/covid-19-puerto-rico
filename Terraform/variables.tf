@@ -44,3 +44,31 @@ variable "aws_region" {
   description = "The AWS region things are created in."
   default     = "us-west-2"
 }
+
+variable "dns_name" {
+  type = string
+  description = "The DNS name of the project website."
+  default = "covid-19-puerto-rico.org"
+}
+
+variable "github_url" {
+  type = string
+  description = "The URL to the GitHub repo."
+  default = "https://github.com/sacundim/covid-19-puerto-rico"
+}
+
+variable "github_branch" {
+  type = string
+  description = "The Git branch to build."
+  default = "consolidate-repos"
+}
+
+variable "az_count" {
+  description = "Number of AZs to cover in a given region. Depends on the AWS region. Most regions have 3."
+  default     = "4"
+}
+
+variable "cidr_block" {
+  description = "Private IP address range to use."
+  default = "172.32.128.0/22"
+}

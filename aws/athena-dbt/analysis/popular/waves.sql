@@ -4,16 +4,24 @@
 -- de ciencia.
 --
 SELECT
-	bulletin_date "Datos hasta",
+	c.bulletin_date "Datos hasta",
 	variant "Variante",
-	since "Muestras desde",
-	max(collected_date) "Hasta",
-	sum(confirmed_cases) + sum(probable_cases)
-		AS "Conteo oficial",
-	sum(cases) AS "Mi análisis"
-FROM {{ ref('bulletin_cases') }}
-INNER JOIN {{ ref('bioportal_encounters_agg') }}
-	USING (bulletin_date)
+	date_diff('day', since, max(b.collected_date)) "Días",
+	sum(c.confirmed_cases) + sum(c.probable_cases)
+		AS "Casos (oficial)",
+	sum(b.cases) AS "Casos (mío)",
+	min(b.collected_date) "Desde",
+	max(b.collected_date) "Hasta",
+	sum(d.deaths) AS "Muertes",
+	min(d.datum_date) AS "Desde",
+	max(d.datum_date) AS "Hasta"
+FROM {{ ref('bulletin_cases') }} c
+LEFT OUTER JOIN {{ ref('bulletin_cases') }} d
+	ON c.bulletin_date = d.bulletin_date
+	-- Contamos muertes en periodos 14 días después de los casos
+	AND d.datum_date = date_add('day', 14, c.datum_date)
+INNER JOIN {{ ref('bioportal_encounters_agg') }} b
+	ON b.bulletin_date = c.bulletin_date
 INNER JOIN (VALUES
     -- Esto es puro a ojo, especialmente en el 2020 que no
     -- es fácil discernir los fondos de las curvas:
@@ -25,12 +33,12 @@ INNER JOIN (VALUES
 	(DATE '2020-05-27', DATE '2020-10-08', 'Ancestral'),
 	(DATE '2020-03-01', DATE '2020-05-27', 'Ancestral')
 ) AS waves (since, until, variant)
-	ON since <= datum_date
-	AND datum_date < until
-WHERE datum_date = collected_date
-AND bulletin_date = (
+	ON since <= c.datum_date
+	AND c.datum_date < until
+WHERE c.datum_date = b.collected_date
+AND b.bulletin_date = (
 	SELECT max(bulletin_date)
 	FROM {{ ref('bioportal_encounters_agg') }}
 )
-GROUP BY bulletin_date, variant, since, until
+GROUP BY c.bulletin_date, variant, since, until
 ORDER BY since DESC;
