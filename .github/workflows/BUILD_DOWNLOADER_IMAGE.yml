@@ -1,4 +1,4 @@
-name: Build and push Docker image
+name: Downloader Docker image
 
 on:
   workflow_dispatch:
@@ -6,6 +6,7 @@ on:
   push:
     branches: [ main ]
     paths:
+      - '.github/workflows/BUILD_DOWNLOADER_IMAGE.yml'
       - 'downloader/**'
 
 jobs:
@@ -32,10 +33,11 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
+        ECR_REPOSITORY: covid-19-puerto-rico-downloader
         IMAGE_TAG: latest
       run: |
         # Build a docker container and push it to ECR
+        cd downloader/
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         echo "Pushing image to ECR..."
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

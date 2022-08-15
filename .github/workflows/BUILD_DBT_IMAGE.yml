@@ -1,4 +1,4 @@
-name: Build and push Docker image for the DBT project
+name: DBT Docker image
 
 on:
   workflow_dispatch:
@@ -6,6 +6,7 @@ on:
   push:
     branches: [ master ]
     paths:
+      - '.github/workflows/BUILD_DBT_IMAGE.yml'
       - 'aws/athena-dbt/**'
 
 jobs:
