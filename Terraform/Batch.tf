@@ -270,7 +270,7 @@ resource "aws_iam_role_policy_attachment" "batch_events_role_attach" {
 
 
 resource "aws_iam_instance_profile" "ecs_instance_role" {
-  name = "ecs_instance_role"
+  name = "${var.project_name}-ecs-instance-role"
   role = aws_iam_role.ecs_instance_role.name
 }
 
@@ -280,7 +280,7 @@ resource "aws_iam_role_policy_attachment" "ecs_instance_role" {
 }
 
 resource "aws_iam_role" "ecs_instance_role" {
-  name = "ecs_instance_role"
+  name = "${var.project_name}-ecs-instance-role"
 
   assume_role_policy = <<EOF
 {
