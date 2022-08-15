@@ -37,7 +37,7 @@ SELECT
 	NULLIF(city, '') city,
 	NULLIF(region, '') region,
 	NULLIF(class, '') class,
- 	date(date_parse(NULLIF(sample_date, ''), '%Y-%m-%d %H:%i:%s'))
+ 	date(date_parse(NULLIF("Sample Date", ''), '%Y-%m-%d %H:%i:%s'))
 		AS sample_date,
 	from_iso8601_date(downloaded_date)
 		AS downloaded_date

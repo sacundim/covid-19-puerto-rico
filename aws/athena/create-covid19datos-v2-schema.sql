@@ -30,7 +30,7 @@ CREATE EXTERNAL TABLE covid19datos_v2_sources.casos_parquet_v2 (
 	city STRING,
 	region STRING,
 	class STRING,
-	sample_date STRING,
+	`Sample Date` STRING,
 	fe_reporte STRING
 ) PARTITIONED BY (downloaded_date STRING)
 STORED AS PARQUET
