@@ -4,7 +4,9 @@ on:
   workflow_dispatch:
 
   push:
-    branches: [ master ]
+    branches:
+      - 'master'
+      - 'json2jsonl'
     paths:
       - 'downloader/**'
 
@@ -33,7 +35,7 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
-        IMAGE_TAG: latest
+        IMAGE_TAG: ${{ env.GITHUB_REF_NAME }}
       run: |
         # Build a docker container and push it to ECR
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
