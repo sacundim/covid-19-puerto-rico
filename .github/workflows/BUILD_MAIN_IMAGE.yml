@@ -1,4 +1,4 @@
-name: Build and push Docker image
+name: Website app Docker image
 
 on:
   workflow_dispatch:
