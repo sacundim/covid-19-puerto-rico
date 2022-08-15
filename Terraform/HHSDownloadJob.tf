@@ -79,7 +79,7 @@ resource "aws_cloudwatch_event_rule" "hhs_daily_download" {
 resource "aws_cloudwatch_event_target" "hhs_daily_download" {
   target_id = "hhs-daily-download"
   rule = aws_cloudwatch_event_rule.hhs_daily_download.name
-  arn = aws_batch_job_queue.batch_queue.arn
+  arn = aws_batch_job_queue.fargate_amd64.arn
   role_arn = aws_iam_role.ecs_events_role.arn
 
   batch_target {
