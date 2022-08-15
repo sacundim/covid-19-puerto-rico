@@ -8,6 +8,7 @@ on:
       - 'master'
       - 'json2jsonl'
     paths:
+      - '.github/workflows/BUILD_DOWNLOADER_IMAGE.yml'
       - 'downloader/**'
 
 jobs:
