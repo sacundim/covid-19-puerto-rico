@@ -10,13 +10,23 @@ sources:
       		regexp_extract("$path", '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z'))
       		AS TIMESTAMP)
     tables:
-      - name: casos
-        identifier: casos_parquet
-      - name: defunciones
-        identifier: defunciones_parquet
-      - name: pruebas
-        identifier: pruebas_parquet
-      - name: sistemas_salud
-        identifier: sistemas_salud_parquet
-      - name: vacunacion
-        identifier: vacunacion_parquet
+      - name: casos_v1
+        identifier: casos_parquet_v1
+      - name: defunciones_v1
+        identifier: defunciones_parquet_v1
+      - name: pruebas_v1
+        identifier: pruebas_parquet_v1
+      - name: sistemas_salud_v1
+        identifier: sistemas_salud_parquet_v1
+      - name: vacunacion_v1
+        identifier: vacunacion_parquet_v1
+      - name: casos_v2
+        identifier: casos_parquet_v2
+      - name: defunciones_v2
+        identifier: defunciones_parquet_v2
+      - name: pruebas_v2
+        identifier: pruebas_parquet_v2
+      - name: sistemas_salud_v2
+        identifier: sistemas_salud_parquet_v2
+      - name: vacunacion_v2
+        identifier: vacunacion_parquet_v2

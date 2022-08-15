@@ -6,7 +6,12 @@
 -- identify cases from it, but it does have municipalities.
 --
 
-{{ config(pre_hook=["MSCK REPAIR TABLE {{ source('bioportal', 'minimal_info_unique_tests') }}"]) }}
+{{
+    config(pre_hook=[
+        "MSCK REPAIR TABLE {{ source('bioportal', 'minimal_info_unique_tests_v4') }}",
+        "MSCK REPAIR TABLE {{ source('bioportal', 'minimal_info_unique_tests_v5') }}"
+    ])
+}}
 
 WITH first_clean AS (
     SELECT
@@ -27,7 +32,33 @@ WITH first_clean AS (
 	    {{ clean_test_type('testType') }} AS test_type,
 	    nullif(result, '') result,
         {{ parse_bioportal_result('result', 'positive') }} AS positive
-    FROM {{ source('bioportal', 'minimal_info_unique_tests') }} tests
+    FROM {{ source('bioportal', 'minimal_info_unique_tests_v4') }} tests
+    LEFT OUTER JOIN {{ ref('expected_test_results') }} results
+        USING (result)
+    -- IMPORTANT: This prunes partitions
+    WHERE downloaded_date >= cast(date_add('day', -32, current_date) AS VARCHAR)
+
+    UNION ALL
+
+    SELECT
+    	date(downloaded_date) AS downloaded_date,
+        {{ parse_filename_timestamp('tests."$path"') }}
+            AS downloaded_at,
+        CAST({{ parse_filename_timestamp('tests."$path"') }} AT TIME ZONE 'America/Puerto_Rico' AS DATE)
+            - INTERVAL '1' DAY
+            AS bulletin_date,
+        CAST(date_parse(nullif(collectedDate, ''), '%m/%d/%Y') AS DATE)
+            AS raw_collected_date,
+        CAST(date_parse(nullif(reportedDate, ''), '%m/%d/%Y') AS DATE)
+            AS raw_reported_date,
+        date_parse(createdAt, '%m/%d/%Y %H:%i') AS created_at,
+        {{ clean_age_range('ageRange') }} AS age_range,
+        {{ clean_municipality('city') }} AS municipality,
+	    nullif(testType, '') AS raw_test_type,
+	    {{ clean_test_type('testType') }} AS test_type,
+	    nullif(result, '') result,
+        {{ parse_bioportal_result('result', 'positive') }} AS positive
+    FROM {{ source('bioportal', 'minimal_info_unique_tests_v5') }} tests
     LEFT OUTER JOIN {{ ref('expected_test_results') }} results
         USING (result)
     -- IMPORTANT: This prunes partitions

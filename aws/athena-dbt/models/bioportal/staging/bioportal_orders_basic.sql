@@ -2,14 +2,18 @@
 -- The `orders/basic` row-per-test dataset from Bioportal.
 --
 
-{{ config(pre_hook=["MSCK REPAIR TABLE {{ source('bioportal', 'orders_basic') }}"]) }}
+{{
+    config(pre_hook=[
+        "MSCK REPAIR TABLE {{ source('bioportal', 'orders_basic_v2') }}",
+        "MSCK REPAIR TABLE {{ source('bioportal', 'orders_basic_v5') }}"
+    ])
+}}
 
 WITH downloads AS (
 	SELECT
 		max(downloaded_date) max_downloaded_date,
-		max(downloadedAt) max_downloaded_at,
 		max("$path") max_path
-	FROM {{ source('bioportal', 'orders_basic') }}
+	FROM {{ source('bioportal', 'orders_basic_v5') }}
 ), first_clean AS (
 	SELECT
 	    {{ parse_filename_timestamp('tests."$path"') }}
@@ -37,11 +41,10 @@ WITH downloads AS (
 	    {{ clean_test_type('testType') }} AS test_type,
 	    nullif(result, '') result,
         {{ parse_bioportal_result('result', 'positive') }} AS positive
-	FROM {{ source('bioportal', 'orders_basic') }} tests
+	FROM {{ source('bioportal', 'orders_basic_v5') }} tests
 	INNER JOIN downloads
 	    ON downloads.max_path = tests."$path"
 	    -- This is redundant but it seems to prune how much data is scanned
-	    AND downloads.max_downloaded_at = tests.downloadedAt
 	    AND downloads.max_downloaded_date = tests.downloaded_date
     LEFT OUTER JOIN {{ ref('expected_test_results') }} results
         USING (result)

@@ -16,7 +16,7 @@ SELECT
 			PARTITION BY municipality
 			ORDER BY bulletin_date
 		), 0) AS delta_cases
-FROM covid_pr_sources.bulletin_municipal_molecular pcr
-FULL OUTER JOIN covid_pr_sources.bulletin_municipal_antigens anti
+FROM {{ source("bulletin", "bulletin_municipal_molecular") }} pcr
+FULL OUTER JOIN {{ source("bulletin", "bulletin_municipal_antigens") }} anti
 	USING (bulletin_date, municipality)
 ORDER BY bulletin_date, municipality;

@@ -5,7 +5,12 @@
 -- as the daily report.
 --
 
-{{ config(pre_hook=["MSCK REPAIR TABLE {{ source('bioportal', 'deaths') }}"]) }}
+{{
+    config(pre_hook=[
+        "MSCK REPAIR TABLE {{ source('bioportal', 'deaths_v1') }}",
+        "MSCK REPAIR TABLE {{ source('bioportal', 'deaths_v5') }}"
+    ])
+}}
 
 WITH first_clean AS (
 	SELECT
@@ -22,7 +27,25 @@ WITH first_clean AS (
         {{ clean_region('region') }} AS region,
 	    nullif(sex, '') sex,
         {{ clean_age_range('ageRange') }} AS age_range
-	FROM {{ source('bioportal', 'deaths') }}
+	FROM {{ source('bioportal', 'deaths_v1') }}
+
+	UNION ALL
+
+	SELECT
+		date(downloaded_date) AS downloaded_date,
+        {{ parse_filename_timestamp('"$path"') }}
+            AS downloaded_at,
+	    CAST({{ parse_filename_timestamp('"$path"') }} AT TIME ZONE 'America/Puerto_Rico' AS DATE)
+	        - INTERVAL '1' DAY
+	        AS bulletin_date,
+	    date(from_iso8601_timestamp(nullif(deathDate, '')) AT TIME ZONE 'America/Puerto_Rico')
+	        AS raw_death_date,
+	    date(from_iso8601_timestamp(nullif(reportDate, '')) AT TIME ZONE 'America/Puerto_Rico')
+	        AS report_date,
+        {{ clean_region('region') }} AS region,
+	    nullif(sex, '') sex,
+        {{ clean_age_range('ageRange') }} AS age_range
+	FROM {{ source('bioportal', 'deaths_v5') }}
 )
 SELECT
 	*,
