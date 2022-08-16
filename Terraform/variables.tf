@@ -60,7 +60,7 @@ variable "github_url" {
 variable "github_branch" {
   type = string
   description = "The Git branch to build."
-  default = "consolidate-repos"
+  default = "master"
 }
 
 variable "az_count" {
