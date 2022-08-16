@@ -1,20 +1,18 @@
 [tool.poetry]
 name = "covid-19-puerto-rico-downloader"
-version = "0.1.0"
+version = "0.2.0"
 description = "Data downloader application for Puerto Rico-related COVID-19 data"
 authors = ["sacundim <anybody@sacundim.org>"]
 packages = [{ include = "covid_19_puerto_rico_downloader", from = "src"}]
 
 [tool.poetry.scripts]
-hhs-download = 'covid_19_puerto_rico_downloader:hhs_download'
+hhs-socrata-download = 'covid_19_puerto_rico_downloader:hhs_download'
 covid19datos-download = 'covid_19_puerto_rico_downloader:covid19datos'
 
 [tool.poetry.dependencies]
 python = "^3.9"
 requests = "^2.25.1"
 boto3 = "^1.17.22"
-csv2parquet = "^0.0.9"
-pyarrow = "^6.0.0"
 sodapy = "^2.1.0"
 pytz = "^2021.1"
 
