@@ -14,6 +14,10 @@ resource "aws_codebuild_project" "docker_image" {
       compute_types_allowed = ["BUILD_GENERAL1_SMALL"]
       maximum_builds_allowed = 8
     }
+
+    # If we don't set this, Terraform keeps toggling it back and
+    # forth between null and 2,160
+    timeout_in_mins = 480
   }
 
   environment {
