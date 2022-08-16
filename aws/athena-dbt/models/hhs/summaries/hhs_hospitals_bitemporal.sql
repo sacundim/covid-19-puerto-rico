@@ -7,14 +7,20 @@ WITH maxes AS (
     FROM  {{ ref('reported_hospital_utilization_timeseries') }}
     WHERE file_timestamp >= DATE '2021-08-14'
 ), downloads AS (
-    SELECT DISTINCT file_timestamp
+    SELECT
+        file_timestamp,
+        -- Edge case: cutover between two versions of the storage can
+        -- lead (and has led) to two copies of the same file at different
+        -- paths. So we pick the biggest version number on the path
+        max(s3_path) AS s3_path
     FROM {{ ref('reported_hospital_utilization_timeseries') }}
     WHERE file_timestamp >= DATE '2021-08-14'
+    GROUP BY file_timestamp
 ), grid AS (
     -- We want for each bulletin_date the earliest file that's at least
     -- one day later.  (Is this ideal? What if they issue a correction
     -- intra-day?)
-    SELECT 
+    SELECT
         date(bulletin_date) bulletin_date,
         min(file_timestamp) AS file_timestamp
     FROM UNNEST(SEQUENCE(DATE '2021-08-14', DATE '{{ var("end_date") }}', INTERVAL '1' DAY))
@@ -94,6 +100,7 @@ SELECT
         + previous_day_admission_pediatric_covid_confirmed_coverage) / 2.0
 	END AS admission_covid_confirmed_coverage
 FROM {{ ref('reported_hospital_utilization_timeseries') }}
+INNER JOIN downloads USING (file_timestamp, s3_path)
 INNER JOIN grid USING (file_timestamp)
 -- This is the date when we start getting this timeseries daily instead of weekly
 WHERE file_timestamp >= DATE '2021-08-14'

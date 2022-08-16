@@ -13,21 +13,27 @@ sources:
             AT TIME ZONE 'UTC'
             AS TIMESTAMP)
     tables:
-      - name: reported_hospital_utilization_timeseries
+      - name: reported_hospital_utilization_timeseries_v2
+      - name: reported_hospital_utilization_timeseries_v3
         freshness:
           error_after: { count: 7, period: day }
-      - name: reported_hospital_utilization
+      - name: reported_hospital_utilization_v2
+      - name: reported_hospital_utilization_v3
         freshness:
           error_after: { count: 1, period: day }
-      - name: hospital_facilities
-        identifier: reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries
+      - name: hospital_facilities_v2
+        identifier: reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries_v2
+      - name: hospital_facilities_v3
+        identifier: reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries_v3
         freshness:
           error_after: { count: 7, period: day }
-      - name: community_profile_report_county
+      - name: community_profile_report_county_v2
+      - name: community_profile_report_county_v3
         freshness:
           warn_after: { count: 5, period: day }
           error_after: { count: 7, period: day }
-      - name: diagnostic_lab_testing
+      - name: diagnostic_lab_testing_v2
+      - name: diagnostic_lab_testing_v3
         freshness:
           warn_after: { count: 1, period: day }
           error_after: { count: 36, period: hour }
@@ -39,19 +45,23 @@ sources:
         freshness:
           # I no longer pull this dataset, so it'll never be fresh again.
           warn_after: { count: 1, period: day }
-      - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status
+      - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_v2
+      - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_v3
         freshness:
           warn_after: { count: 31, period: day }
           error_after: { count: 33, period: day }
-      - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_booster_dose
+      - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_booster_dose_v2
+      - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_booster_dose_v3
         freshness:
           warn_after: { count: 31, period: day }
           error_after: { count: 33, period: day }
-      - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_second_booster_dose
+      - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_second_booster_dose_v2
+      - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_second_booster_dose_v3
         freshness:
           warn_after: { count: 31, period: day }
           error_after: { count: 33, period: day }
-      - name: community_levels_by_county
+      - name: community_levels_by_county_v2
+      - name: community_levels_by_county_v3
         freshness:
           warn_after: { count: 7, period: day }
           error_after: { count: 9, period: day }

@@ -15,11 +15,7 @@ resource "aws_batch_job_definition" "hhs_download_and_sync" {
 
   container_properties = jsonencode({
     image = "${data.aws_ecr_image.downloader.registry_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${data.aws_ecr_image.downloader.repository_name}:${data.aws_ecr_image.downloader.image_tag}"
-    command = [
-      "hhs-download",
-      "--socrata-app-token-env-var",
-      "SOCRATA_APP_TOKEN"
-    ],
+    command = ["hhs-download.sh"]
     environment = [
       {
         name = "S3_DATA_URL",
@@ -38,8 +34,8 @@ resource "aws_batch_job_definition" "hhs_download_and_sync" {
       "platformVersion": "LATEST"
     },
     resourceRequirements = [
-      {"type": "VCPU", "value": "1"},
-      {"type": "MEMORY", "value": "2048"}
+      {"type": "VCPU", "value": "2"},
+      {"type": "MEMORY", "value": "4096"}
     ]
     networkConfiguration = {
       "assignPublicIp": "ENABLED"
@@ -79,7 +75,7 @@ resource "aws_cloudwatch_event_rule" "hhs_daily_download" {
 resource "aws_cloudwatch_event_target" "hhs_daily_download" {
   target_id = "hhs-daily-download"
   rule = aws_cloudwatch_event_rule.hhs_daily_download.name
-  arn = aws_batch_job_queue.batch_queue.arn
+  arn = aws_batch_job_queue.fargate_amd64.arn
   role_arn = aws_iam_role.ecs_events_role.arn
 
   batch_target {

@@ -16,40 +16,39 @@ COVID19DATOS_V2_DIR="${S3_SYNC_DIR}"/covid19datos-v2
 
 timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 downloaded_date="${timestamp:0:10}"
-ts_seconds="$(date -u +"%s")"
 
 cd "${TMP}"
 for dataset in "${DATASETS[@]}"
 do
   url="${ENDPOINT}/${dataset}/completo"
-
-  # PyArrow tends to barf on filenames with colons (thinks they're URLs),
-  # so we have to generate a weird filename and rename it.
-  tempname="${dataset}_${ts_seconds}"
+  basename="${dataset}_${timestamp}"
 
   echo "$(date): Downloading ${dataset} from ${url}"
-  wget --compression gzip --no-verbose -O "${tempname}".csv "${url}"
+  wget \
+    --tries=3 \
+    --compression gzip \
+    --no-verbose \
+    -O "${basename}".csv \
+    "${url}"
+done
 
-  echo "$(date): Converting to Parquet"
-  csv2parquet --codec gzip --row-group-size 10000000 "${tempname}".csv
 
+echo "$(date): Converting downloads to Parquet..."
+ls *.csv \
+  | parallel --line-buffer "${HERE}"/csv-to-parquet.sh
+
+
+echo "$(date): Organizing files for S3 upload..."
+for dataset in "${DATASETS[@]}"
+do
   basename="${dataset}_${timestamp}"
-  mv "${tempname}".csv "${basename}".csv
-  mv "${tempname}".parquet "${basename}".parquet
-
-  echo "$(date): Compressing csv"
-  bzip2 -9 "${basename}".csv
-
-#  echo "$(date): File sizes:"
-#  du -h "${basename}".csv.bz2 "${basename}".parquet
-
   dataset_dir="${COVID19DATOS_V2_DIR}/${dataset}"
   echo "$(date): Moving to ${dataset_dir}"
   mkdir -p \
-    "${dataset_dir}"/csv_v1/downloaded_date="$downloaded_date" \
-    "${dataset_dir}"/parquet_v1/downloaded_date="$downloaded_date"
-  mv "${basename}".csv.bz2 "${dataset_dir}"/csv_v1/downloaded_date="$downloaded_date"/
-  mv "${basename}".parquet "${dataset_dir}"/parquet_v1/downloaded_date="$downloaded_date"/
+    "${dataset_dir}/csv_v1/downloaded_date=${downloaded_date}" \
+    "${dataset_dir}/parquet_v2/downloaded_date=${downloaded_date}"
+  mv "${basename}.csv.bz2" "${dataset_dir}/csv_v1/downloaded_date=${downloaded_date}/"
+  mv "${basename}.parquet" "${dataset_dir}/parquet_v2/downloaded_date=${downloaded_date}/"
 done
 
 echo "$(date): File sizes:"

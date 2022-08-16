@@ -9,6 +9,6 @@ SELECT
 		AS new_results_reported,
 	CAST(NULLIF(total_results_reported, '') AS INTEGER)
 		AS total_results_reported
-FROM {{ source('hhs', 'diagnostic_lab_testing' )}}
+FROM {{ source('hhs', 'diagnostic_lab_testing_v2' )}}
 WHERE state = 'PR'
 ORDER BY file_timestamp, date;

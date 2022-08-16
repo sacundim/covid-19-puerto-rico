@@ -11,7 +11,7 @@ resource "aws_batch_job_definition" "bioportal_download_and_sync" {
   }
   propagate_tags = true
   type = "container"
-  platform_capabilities = ["FARGATE"]
+  platform_capabilities = ["EC2"]
 
   container_properties = jsonencode({
     image = "${data.aws_ecr_image.downloader.registry_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${data.aws_ecr_image.downloader.repository_name}:${data.aws_ecr_image.downloader.image_tag}"
@@ -24,16 +24,10 @@ resource "aws_batch_job_definition" "bioportal_download_and_sync" {
     ],
     executionRoleArn = aws_iam_role.ecs_task_role.arn
     jobRoleArn = aws_iam_role.ecs_job_role.arn
-    fargatePlatformConfiguration = {
-      "platformVersion": "LATEST"
-    },
     resourceRequirements = [
-      {"type": "VCPU", "value": "4"},
-      {"type": "MEMORY", "value": "24576"}
+      {"type": "VCPU", "value": "2"},
+      {"type": "MEMORY", "value": "6144"}
     ]
-    networkConfiguration = {
-      "assignPublicIp": "ENABLED"
-    }
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
@@ -63,7 +57,7 @@ resource "aws_cloudwatch_event_rule" "bioportal_daily_download" {
 resource "aws_cloudwatch_event_target" "bioportal_daily_download" {
   target_id = "bioportal-daily-download"
   rule = aws_cloudwatch_event_rule.bioportal_daily_download.name
-  arn = aws_batch_job_queue.batch_queue.arn
+  arn = aws_batch_job_queue.ec2_amd64.arn
   role_arn = aws_iam_role.ecs_events_role.arn
 
   batch_target {

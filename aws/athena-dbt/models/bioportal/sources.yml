@@ -2,7 +2,7 @@ version: 2
 
 sources:
   - name: bioportal
-    schema: covid_pr_sources
+    schema: bioportal_sources
     freshness:
       error_after: { count: 1, period: day }
     loaded_at_field: >
@@ -10,9 +10,15 @@ sources:
       		regexp_extract("$path", '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z'))
       		AS TIMESTAMP)
     tables:
-      - name: deaths
+      - name: deaths_v1
         identifier: deaths_parquet_v1
-      - name: orders_basic
+      - name: orders_basic_v2
         identifier: orders_basic_parquet_v2
-      - name: minimal_info_unique_tests
+      - name: minimal_info_unique_tests_v4
         identifier: minimal_info_unique_tests_parquet_v4
+      - name: deaths_v5
+        identifier: deaths_parquet_v5
+      - name: orders_basic_v5
+        identifier: orders_basic_parquet_v5
+      - name: minimal_info_unique_tests_v5
+        identifier: minimal_info_unique_tests_parquet_v5

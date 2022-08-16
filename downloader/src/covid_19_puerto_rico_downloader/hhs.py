@@ -1,12 +1,9 @@
 import argparse
-from csv2parquet import csv2parquet
 import datetime
-import json
 import logging
 import os
 import os.path
 import pathlib
-import requests
 import shutil
 from sodapy import Socrata
 import subprocess
@@ -22,8 +19,6 @@ def process_arguments():
                         help='Environment variable from which to get Socrata API App Token. '
                              'Not required but we get throttled without it. '
                              'The --socrata-app-token parameter takes precedence over this one.')
-    parser.add_argument('--s3-sync-dir', type=str, required=True,
-                        help='Directory to which to deposit the output files for sync')
     return parser.parse_args()
 
 
@@ -89,35 +84,6 @@ def download_datasets(args, server, datasets):
         for dataset in datasets:
             logging.info('Fetching %s...', dataset.name)
             csv_file = dataset.get_csv(client)
-
-            logging.info('Dowloaded %s. Converting to Parquet...', csv_file)
-            basename, extension = os.path.splitext(csv_file)
-            parquet_file = basename + '.parquet'
-            csv2parquet.main_with_args(csv2parquet.convert, [
-                '--codec', 'gzip',
-                '--row-group-size', '10000000',
-                '--output', parquet_file,
-                csv_file
-            ])
-
-            logging.info('Generated Parquet. Compressing %s...', csv_file)
-            subprocess.run(['bzip2', '-f', '-9', csv_file])
-            s3_sync_dir = pathlib.Path(args.s3_sync_dir)
-            s3_sync_dir.mkdir(exist_ok=True)
-            hhs_sync_dir = pathlib.Path(f'{s3_sync_dir}/HHS')
-            hhs_sync_dir.mkdir(exist_ok=True)
-
-            logging.info('Copying files to target...')
-            dataset_dir = pathlib.Path(f'{hhs_sync_dir}/{dataset.name}/v2')
-            dataset_dir.mkdir(exist_ok=True, parents=True)
-            csv_dir = pathlib.Path(f'{dataset_dir}/csv')
-            csv_dir.mkdir(exist_ok=True)
-            parquet_dir = pathlib.Path(f'{dataset_dir}/parquet')
-            parquet_dir.mkdir(exist_ok=True)
-            shutil.move(f'{csv_file}.bz2', f'{csv_dir}/{csv_file}.bz2')
-            shutil.move(parquet_file, f'{parquet_dir}/{parquet_file}')
-
-        logging.info('All done!')
 
 
 class Asset():

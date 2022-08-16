@@ -29,7 +29,7 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
     },
     resourceRequirements = [
       {"type": "VCPU", "value": "2"},
-      {"type": "MEMORY", "value": "12288"}
+      {"type": "MEMORY", "value": "6144"}
     ]
     networkConfiguration = {
       "assignPublicIp": "ENABLED"
@@ -63,7 +63,7 @@ resource "aws_cloudwatch_event_rule" "covid19datos_v2_daily_download" {
 resource "aws_cloudwatch_event_target" "covid19datos_v2_daily_download" {
   target_id = "covid19datos-v2-daily-download"
   rule = aws_cloudwatch_event_rule.covid19datos_v2_daily_download.name
-  arn = aws_batch_job_queue.batch_queue.arn
+  arn = aws_batch_job_queue.fargate_amd64.arn
   role_arn = aws_iam_role.ecs_events_role.arn
 
   batch_target {

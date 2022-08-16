@@ -2,7 +2,7 @@ version: 2
 
 sources:
   - name: walgreens
-    schema: covid_pr_sources
+    schema: bioportal_sources
     freshness:
       error_after: { count: 1, period: day }
     loaded_at_field: >

@@ -2,7 +2,7 @@ version: 2
 
 sources:
   - name: bulletin
-    schema: covid_pr_sources
+    schema: bioportal_sources
     description: '{{ doc("bulletin") }}'
     tables:
       - name: bulletin_cases_csv
