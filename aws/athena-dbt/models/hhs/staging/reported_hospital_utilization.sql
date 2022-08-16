@@ -9,6 +9,40 @@ SELECT
 		AS file_timestamp,
 	date({{ hhs_parse_filename_date('"$path"') }})
 		AS date,
+	hospital_onset_covid,
+	hospital_onset_covid_coverage,
+	inpatient_beds,
+	inpatient_beds_coverage,
+	inpatient_beds_used,
+	inpatient_beds_used_coverage,
+	inpatient_beds_used_covid,
+	inpatient_beds_used_covid_coverage,
+	previous_day_admission_adult_covid_confirmed,
+	previous_day_admission_adult_covid_confirmed_coverage,
+	previous_day_admission_adult_covid_suspected,
+	previous_day_admission_adult_covid_suspected_coverage,
+	previous_day_admission_pediatric_covid_confirmed,
+	previous_day_admission_pediatric_covid_confirmed_coverage,
+	previous_day_admission_pediatric_covid_suspected,
+	previous_day_admission_pediatric_covid_suspected_coverage,
+	staffed_adult_icu_bed_occupancy,
+	staffed_adult_icu_bed_occupancy_coverage,
+	staffed_icu_adult_patients_confirmed_and_suspected_covid,
+	staffed_icu_adult_patients_confirmed_and_suspected_covid_coverage,
+	staffed_icu_adult_patients_confirmed_covid,
+	staffed_icu_adult_patients_confirmed_covid_coverage,
+	total_staffed_adult_icu_beds,
+	total_staffed_adult_icu_beds_coverage
+FROM {{ source('hhs', 'reported_hospital_utilization_v3') }}
+WHERE state = 'PR'
+
+UNION ALL
+
+SELECT
+    {{ hhs_parse_filename_date('"$path"') }}
+		AS file_timestamp,
+	date({{ hhs_parse_filename_date('"$path"') }})
+		AS date,
 	CAST(NULLIF(hospital_onset_covid, '') AS INTEGER)
 		AS hospital_onset_covid,
 	CAST(NULLIF(hospital_onset_covid_coverage , '') AS INTEGER)
@@ -57,6 +91,7 @@ SELECT
 		AS total_staffed_adult_icu_beds,
 	CAST(NULLIF(total_staffed_adult_icu_beds_coverage, '') AS INTEGER)
 		AS total_staffed_adult_icu_beds_coverage
-FROM {{ source('hhs', 'reported_hospital_utilization') }}
+FROM {{ source('hhs', 'reported_hospital_utilization_v2') }}
 WHERE state = 'PR'
-ORDER BY "$path" DESC;
+
+ORDER BY date;
