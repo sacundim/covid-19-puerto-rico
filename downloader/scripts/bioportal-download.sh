@@ -31,7 +31,7 @@ do
   url="${ENDPOINT}/${DATASETS[$dataset]}"
   basename="${dataset}_${timestamp}"
 
-  echo "$(date): Downloading ${dataset} to from ${url}"
+  echo "$(date): Downloading ${dataset} from ${url}"
   wget \
     --tries=3 \
     --no-verbose \
