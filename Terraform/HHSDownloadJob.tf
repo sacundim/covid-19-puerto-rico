@@ -15,11 +15,7 @@ resource "aws_batch_job_definition" "hhs_download_and_sync" {
 
   container_properties = jsonencode({
     image = "${data.aws_ecr_image.downloader.registry_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${data.aws_ecr_image.downloader.repository_name}:${data.aws_ecr_image.downloader.image_tag}"
-    command = [
-      "hhs-download",
-      "--socrata-app-token-env-var",
-      "SOCRATA_APP_TOKEN"
-    ],
+    command = ["hhs-download.sh"]
     environment = [
       {
         name = "S3_DATA_URL",
