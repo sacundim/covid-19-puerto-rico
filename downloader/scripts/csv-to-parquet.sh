@@ -21,5 +21,5 @@ csv2parquet \
 echo "$(date): Converted ${filename} to Parquet."
 
 echo "$(date): Compressing ${filename}..."
-bzip2 -9 "${basename}".csv
+lbzip2 -9 "${basename}".csv
 echo "$(date): Compressed ${filename}."

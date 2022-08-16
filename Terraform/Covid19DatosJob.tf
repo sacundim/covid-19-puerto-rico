@@ -29,7 +29,7 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
     },
     resourceRequirements = [
       {"type": "VCPU", "value": "2"},
-      {"type": "MEMORY", "value": "12288"}
+      {"type": "MEMORY", "value": "6144"}
     ]
     networkConfiguration = {
       "assignPublicIp": "ENABLED"

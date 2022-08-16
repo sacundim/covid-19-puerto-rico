@@ -20,7 +20,7 @@ echo "$(date): Converted ${basename}.json to ${basename}.jsonl."
 
 
 echo "$(date): Compressing ${basename}.json to ${basename}.json.bz2..."
-(bzip2 -9 "${basename}".json \
+(lbzip2 -9 "${basename}".json \
   && echo "$(date): Compressed ${basename}.json to ${basename}.json.bz2.") &
 BZIP2_PID=$!
 

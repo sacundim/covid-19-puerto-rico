@@ -38,8 +38,8 @@ resource "aws_batch_job_definition" "hhs_download_and_sync" {
       "platformVersion": "LATEST"
     },
     resourceRequirements = [
-      {"type": "VCPU", "value": "1"},
-      {"type": "MEMORY", "value": "2048"}
+      {"type": "VCPU", "value": "2"},
+      {"type": "MEMORY", "value": "4096"}
     ]
     networkConfiguration = {
       "assignPublicIp": "ENABLED"
