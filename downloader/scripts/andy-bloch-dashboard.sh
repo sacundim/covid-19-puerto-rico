@@ -39,7 +39,7 @@ csv2parquet \
   "${TMP}/${BASENAME}.parquet"
 
 echo "$(date): Compressing CSV..."
-bzip2 -9 "${TMP}/${BASENAME}.csv"
+lbzip2 -9 "${TMP}/${BASENAME}.csv"
 
 echo "$(date): Moving to ${AGGREGATION_SYNC_DIR}..."
 mv "${TMP}/${BASENAME}.csv.bz2" \
