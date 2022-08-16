@@ -5,6 +5,10 @@
 --
 
 SELECT
+    -- Edge case: cutover between two versions of the storage can
+    -- lead (and has led) to two copies of the same file
+    "$path" s3_path,
+
     {{ hhs_parse_filename_date('"$path"') }}
 		AS file_timestamp,
 	date(date_parse(date, '%Y/%m/%d')) AS date,
@@ -46,6 +50,11 @@ FROM {{ source('hhs', 'reported_hospital_utilization_timeseries_v3') }}
 UNION ALL
 
 SELECT
+    -- Edge case: cutover between two versions of the storage can
+    -- lead (and has led) to two copies of the same file at different
+    -- paths
+    "$path" s3_path,
+
     {{ hhs_parse_filename_date('"$path"') }}
 		AS file_timestamp,
 	date(date_parse(date, '%Y/%m/%d')) AS date,
