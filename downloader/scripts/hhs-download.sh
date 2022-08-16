@@ -32,7 +32,7 @@ datasets="$(
 # dataset names with a `*` wildcard, and reverse sort guarantees that
 # if X is a prefix of XY then we visit XY first.
 ls *.csv.bz2 \
-  | sed 's/\.csv\.bz2$//' \
+  | sed 's/_[0-9]\{8\}_[0-9]\{4\}\.csv\.bz2$//' \
   | sort --reverse \
   | uniq
 )"
@@ -45,7 +45,7 @@ do
     "${dataset_dir}/v3" \
     "${dataset_dir}/v3/csv" \
     "${dataset_dir}/v3/parquet"
-  mv "${dataset}".csv.bz2 "${dataset_dir}/v3/csv/"
-  mv "${dataset}".parquet "${dataset_dir}/v3/parquet/"
+  mv "${dataset}"_*.csv.bz2 "${dataset_dir}/v3/csv/"
+  mv "${dataset}"_*.parquet "${dataset_dir}/v3/parquet/"
   echo "$(date): Moved ${dataset} to ${HHS_SYNC_DIR}."
 done
