@@ -6,7 +6,7 @@ on:
   push:
     branches: [ master ]
     paths:
-      - '.github/workflows/BUILD_MAIN_IMAGE.yml'
+      - '.github/workflows/BUILD_WEBSITE_IMAGE.yml'
       - 'website/**'
 
 jobs:
