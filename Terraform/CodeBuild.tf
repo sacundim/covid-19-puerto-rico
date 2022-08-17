@@ -11,7 +11,7 @@ resource "aws_codebuild_project" "docker_image" {
   build_batch_config {
     service_role = aws_iam_role.codebuild_batch_service.arn
     restrictions {
-      compute_types_allowed = ["BUILD_GENERAL1_SMALL"]
+      compute_types_allowed = ["BUILD_GENERAL1_SMALL", "BUILD_GENERAL1_LARGE"]
       maximum_builds_allowed = 8
     }
 
