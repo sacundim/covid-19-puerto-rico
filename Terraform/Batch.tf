@@ -43,7 +43,7 @@ resource "aws_batch_job_queue" "fargate_amd64" {
 ##############################################################################
 ##############################################################################
 ##
-## EC2 compute environment
+## EC2 AMD64 compute environment
 ##
 
 resource "aws_batch_compute_environment" "ec2_amd64" {
@@ -54,7 +54,7 @@ resource "aws_batch_compute_environment" "ec2_amd64" {
   # * https://github.com/hashicorp/terraform-provider-aws/issues/2044
   # * https://discuss.hashicorp.com/t/error-error-deleting-batch-compute-environment-cannot-delete-found-existing-jobqueue-relationship/5408
   #
-  compute_environment_name_prefix = "${var.project_name}-ec2-amd64"
+  compute_environment_name_prefix = "${var.project_name}-ec2-amd64-"
   lifecycle {
     create_before_destroy = true
   }
@@ -82,7 +82,7 @@ resource "aws_batch_compute_environment" "ec2_amd64" {
       # We are dangerously close to running out of the default 20GB
       # ephemeral that we get with Fargate, and Batch doesn't as of
       # today (2022-08-14) allow
-      launch_template_id = aws_launch_template.ecs_ec2_amd64.id
+      launch_template_id = aws_launch_template.ecs_ec2_launch.id
     }
 
     max_vcpus = 16
@@ -117,7 +117,8 @@ resource "aws_batch_job_queue" "ec2_amd64" {
   ]
 }
 
-resource "aws_launch_template" "ecs_ec2_amd64" {
+
+resource "aws_launch_template" "ecs_ec2_launch" {
   tags = {
     Project = var.project_name
   }
@@ -132,6 +133,71 @@ resource "aws_launch_template" "ecs_ec2_amd64" {
       volume_size = 30
     }
   }
+}
+
+
+##############################################################################
+##############################################################################
+##
+## EC2 ARM64 compute environment
+##
+## TODO: Refactor this and the AMD64 instance into a submodule
+##
+
+resource "aws_batch_compute_environment" "ec2_arm64" {
+  compute_environment_name_prefix = "${var.project_name}-ec2-arm64-"
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = {
+    Project = var.project_name
+  }
+
+  compute_resources {
+    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
+
+    instance_type = [
+      "c7g", "c6g", "m6g", "r6g"
+    ]
+
+    launch_template {
+      # We are dangerously close to running out of the default 20GB
+      # ephemeral that we get with Fargate, and Batch doesn't as of
+      # today (2022-08-14) allow
+      launch_template_id = aws_launch_template.ecs_ec2_launch.id
+    }
+
+    max_vcpus = 16
+    # Important: 0 = compute environment scales down to nothing
+    min_vcpus = 0
+
+    security_group_ids = [
+      aws_security_group.outbound_only.id,
+    ]
+
+    subnets = aws_subnet.subnet.*.id
+
+    type = "EC2"
+    allocation_strategy = "BEST_FIT"
+  }
+
+  service_role = aws_iam_role.batch_service_role.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.batch_service_role]
+}
+
+
+resource "aws_batch_job_queue" "ec2_arm64" {
+  name     = "${var.project_name}-ec2-arm64-queue"
+  tags = {
+    Project = var.project_name
+  }
+  state    = "ENABLED"
+  priority = 1
+  compute_environments = [
+    aws_batch_compute_environment.ec2_arm64.arn
+  ]
 }
 
 
