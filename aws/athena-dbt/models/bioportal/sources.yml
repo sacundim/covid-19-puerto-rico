@@ -12,10 +12,13 @@ sources:
     tables:
       - name: deaths_v1
         identifier: deaths_parquet_v1
+        freshness: null
       - name: orders_basic_v2
         identifier: orders_basic_parquet_v2
+        freshness: null
       - name: minimal_info_unique_tests_v4
         identifier: minimal_info_unique_tests_parquet_v4
+        freshness: null
       - name: deaths_v5
         identifier: deaths_parquet_v5
       - name: orders_basic_v5

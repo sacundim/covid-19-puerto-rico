@@ -59,7 +59,7 @@ sources:
       - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_second_booster_dose_v3
         freshness:
           warn_after: { count: 31, period: day }
-          error_after: { count: 33, period: day }
+#          error_after: { count: 33, period: day }
       - name: community_levels_by_county_v2
       - name: community_levels_by_county_v3
         freshness:

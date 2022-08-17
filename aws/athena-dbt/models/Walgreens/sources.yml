@@ -11,3 +11,4 @@ sources:
       		AS TIMESTAMP)
     tables:
       - name: walgreens_tracker_parquet_v1
+        freshness: null

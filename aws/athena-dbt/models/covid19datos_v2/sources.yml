@@ -12,14 +12,19 @@ sources:
     tables:
       - name: casos_v1
         identifier: casos_parquet_v1
+        freshness: null
       - name: defunciones_v1
         identifier: defunciones_parquet_v1
+        freshness: null
       - name: pruebas_v1
         identifier: pruebas_parquet_v1
+        freshness: null
       - name: sistemas_salud_v1
         identifier: sistemas_salud_parquet_v1
+        freshness: null
       - name: vacunacion_v1
         identifier: vacunacion_parquet_v1
+        freshness: null
       - name: casos_v2
         identifier: casos_parquet_v2
       - name: defunciones_v2
