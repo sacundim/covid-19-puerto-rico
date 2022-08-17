@@ -173,6 +173,46 @@ resource "aws_iam_role_policy" "codebuild_batch_service" {
   })
 }
 
+##############################################################################
+##############################################################################
+##
+## We need to use a Docker Hub token or else we get throttled VERY often.
+##
+
+resource "aws_secretsmanager_secret" "docker_hub" {
+  name = "${var.project_name}-docker-hub"
+}
+
+resource "aws_iam_role_policy_attachment" "codebuild_secretsmanager_read_docker_hub" {
+  role = aws_iam_role.codebuild_service.name
+  policy_arn = aws_iam_policy.secretsmanager_read_docker_hub.arn
+}
+
+resource "aws_iam_policy" "secretsmanager_read_docker_hub" {
+  policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "secretsmanager:GetResourcePolicy",
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:ListSecretVersionIds"
+        ],
+        "Resource": [
+          aws_secretsmanager_secret.docker_hub.arn
+        ]
+      },
+      {
+        "Effect": "Allow",
+        "Action": "secretsmanager:ListSecrets",
+        "Resource": "*"
+      }
+    ]
+  })
+}
+
 
 ##############################################################################
 ##############################################################################
