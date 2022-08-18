@@ -26,7 +26,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          context: ./csv2parquet
+          context: csv2parquet
           platforms: linux/amd64,linux/arm64
           push: true
           tags: sacundim/csv2parquet:latest
