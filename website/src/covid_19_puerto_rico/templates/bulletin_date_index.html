@@ -25,7 +25,6 @@
         <li><a href="#RecentCases_section">Pruebas, casos y muertes recientes</a></li>
         <li><a href="#RecentHospitalizations_section">Disponibilidad hospitalaria</a></li>
         <li><a href="#EncounterLag_section">Rezagos de datos recientes</a></li>
-        <li><a href="#VaccinationMap_section">Vacunados por municipio</a></li>
         <li><a href="#NewCases_section">Historial de casos, hospitales y muertes</a></li>
         <li><a href="#RecentAgeGroups_section">Pruebas y casos por edad</a></li>
         <li><a href="#AgeGroups_section">Historial de casos por edad</a></li>
@@ -49,7 +48,6 @@
         <li><a href="#ConsecutiveBulletinMismatch_section">Descuadre de encabezado de boletín</a></li>
         <li><a href="#BulletinChartMismatch_section">Descuadre de boletín y gráficas</a></li>
 
-        <li><a href="#VaccinationMap_download_section">Descarga de datos de vacunas</a></li>
         <li><a href="#Revisions_section">Revisiones</a></li>
         <li><a href="#Terminology_section">Terminología</a></li>
         <li><a href="#Sources_section">Datos fuente para {{ bulletin_date }}</a></li>
@@ -254,86 +252,6 @@
         tardan más reflejan procesos irregulares que no son relevantes a cuán bien está funcionando el
         sistema de detección al presente.  Estos resultados super tardíos es mejor visualizarlos en otras
         gráficas de esta página.</p>
-</div>
-
-
-<div class="section" id="VaccinationMap_section">
-    <h1>Vacunados por municipio</h1>
-
-    <div id="VaccinationMap"></div>
-    <script type="text/javascript">
-      embedChart('VaccinationMap', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Por hileras:</p>
-
-    <ul>
-        <li>Porcentaje de la población de cada municipio con régimen completo de vacuna.  Por
-            "completo" quiérese decir una de las siguientes:
-
-            <ul>
-                <li>Dos dosis de Moderna o Pfizer;</li>
-                <li>Una dosis de Johnson & Johnson.</li>
-            </ul>
-        </li>
-
-        <li>Porcentaje de la población que ha recibido, además del régimen completo, una
-            dosis adicional. <b>Ojo:</b> Los datos no distinguen entre la llamada "tercera
-            dosis" a pocas semanas del régimen inicial (a grupos de mayor riesgo) y refuerzos
-            a los seis meses.</li>
-
-        <li>Velocidad de completos: promedio diario de 7 días de cuánto aumenta el porciento
-            de la población con régimen completo.</li>
-
-        <li>Velocidad de refuerzos: promedio diario de 7 días de cuánto aumenta el porciento
-            de la población con refuerzo.</li>
-
-        <li>Velocidad de primera dosis: promedio diario de 7 días de cuánto aumenta el porciento
-            de la población con al menos una dosis.</li>
-
-        <li>Velocidad de todas: promedio diario de 7 días de qué porciento de la población ha
-            recibido dosis en cualquiera de las categorías.</li>
-    </ul>
-
-    <p>Fuentes de datos:</p>
-
-    <ul>
-        <li>Vacunas: <a href="https://covid19datos.salud.gov.pr/">la página de datos de COVID-19
-            del Departamento de Salud de Puerto Rico</a> (<code>covid19datos.salud.gov.pr</code>);</li>
-        <li>Población: Censo del 2020.</li>
-    </ul>
-
-    <p>Estos datos son por fecha que se registran las dosis en los datos de la página del Departamento
-        de Salud; no son fecha que se administraron las dosis correspondientes, sino que llegan con
-        rezagos variables.  Además, los números que reportamos como dosis diarias son más bien el
-        cambio de los totales de una fecha para otra, y a veces, por revisiones que Salud hace a los
-        datos, da negativo.</p>
-
-    <p></p>
-
-
-    <h3>Población de Puerto Rico</h3>
-
-    <p>Para calcular los porcentajes usamos los valores del censo del 2020, que arroja una población de
-        3,285,874 en todo Puerto Rico al 1ero de abril del 2020.  Esto puede producir porcentajes más
-        bajos que los que reportan otras páginas que aún usen estimados poblacionales preparados a partir
-        de datos de base del censo del 2010.  Estos estimados de la década del 2010 subestiman mucho la
-        población de Puerto Rico, por ejemplo arrojan 3,193,694 el 1ero de julio del 2019, y por lo tanto
-        inflan los porcentajes de vacunados.</p>
-
-    <p>Otros análisis, especialmente los que dan porcentaje de vacunados por grupo de edad, usan estimados
-        de la Encuesta de Comunidades Estadounidenses (American Community Survey) del Negociado del Censo,
-        que también se ha observado que pueden discrepar mucho de los otros estimados y del censo del 2020.</p>
-
-
-    <h3>Descarga de datos</h3>
-
-    <p>Los datos que capturo y uso para estos mapas están <a href="../csv/VaccinationMap.csv">disponibles
-        para descargar como archivo CSV</a>.  Más abajo en esta página hay una
-        <a href="#VaccinationMap_download_section">sección documentando este archivo de datos</a>.</p>
-
 </div>
 
 
@@ -1614,148 +1532,15 @@
 </div>
 
 
-<div class="section" id="VaccinationMap_download_section">
-    <h1>Descarga de datos de vacunas</h1>
-
-    <p>Los datos que capturados de vacunaciones por municipio se pueden descargar de aquí:</p>
-
-    <ul>
-        <li><a href="../csv/VaccinationMap.csv"><code>VaccinationMap.csv</code></a></li>
-    </ul>
-
-    <p>Los datos provienen de:</p>
-
-    <ul>
-        <li>Desde el 23 de julio del 2021, descargas diarias de la nueva versión de
-            <a href="https://covid19datos.salud.gov.pr/">la página de datos de COVID-19 del Departamento de
-                Salud de Puerto Rico</a> (<code>covid19datos.salud.gov.pr</code>).</li>
-        <li>Desde el 24 de marzo hasta el 21 de julio del 2021, capturas ("scraping") dos veces al día de
-            la versión original de esa misma página.  Esas capturas dejaron de funcionar el 22 de julio, y
-            nuestra primera descarga de la nueva versión fue el 23 de julio, así que nos falta el 22.</li>
-        <li>El <a href="https://data.cdc.gov/Vaccinations/COVID-19-Vaccinations-in-the-United-States-County/8xkx-amqh">archivo
-            de datos diarios de vacunaciones por condado de los Centros de Control de Enfermedades (CDC) de los
-            Estados Unidos</a>.</li>
-        <li>Negociado del Censo, <a href="https://www.census.gov/programs-surveys/popest.html">Population
-            Estimates Program</a> (estimados 1ero de julio del 2019).</li>
-    </ul>
-
-    <p>Una versión anterior de este archivo de descarga incorporaba capturas ("scraping") del
-        <a href="https://covid.cdc.gov/covid-data-tracker/#county-view">rastreador de datos de COVID-19 del
-            Centro de Control de Enfermedades de los Estados Unidos</a> (Centers for Diseas Control, siglas
-        CDC), pero ya no las incorporamos porque los CDC ahora publican una descarga diaria bien completa
-        de esos mismos datos:</p>
-
-    <ul>
-        <li>
-            <a href="https://data.cdc.gov/Vaccinations/COVID-19-Vaccinations-in-the-United-States-County/8xkx-amqh">
-                COVID-19 Vaccinations in the United States, County
-            </a>
-        </li>
-    </ul>
-
-    <p>Las claves de la tabla de datos (conjuntos de campos que definen hileras únicas) son:</p>
-
-    <ul>
-        <li><code>local_date</code>, <code>municipio</code></li>
-        <li><code>local_date</code>, <code>fips_code</code></li>
-    </ul>
-
-    <p>Todas las fechas están en formato ISO 8601 (e.g., <code>2021-03-24</code>), y todos los
-        campos cuyos valores son porcentajes están expresados como fracción (e.g., <code>0.251</code>
-        en vez de <code>25.1</code>).</p>
-
-    <dl>
-        <dt>local_date</dt>
-        <dd>Fecha del dato.  Para datos de Salud imputo la fecha según la hora de las descargas
-            que realizo.  Para datos de HHS son los valores que aparecen en los mismos datos.
-            Se entiende que estas fechas representan cuándo se añadió una dosis o persona al
-            conteo, y no cuándo se administró la dosis correspondiente, y que las dosis que se
-            añaden en cualquier fecha dada son una mezcla de dosis administradas en múltiples
-            fechas anteriores.</dd>
-
-        <dt>municipio</dt>
-        <dd>Nombre del municipio.</dd>
-
-        <dt>fips_code</dt>
-        <dd>El <a href="https://en.wikipedia.org/wiki/FIPS_county_code">código FIPS</a> del
-            municipio, que usan muchas fuentes federales (e.g. el Censo).</dd>
-
-        <dt>pop2020</dt>
-        <dd>Población del municipio al 1ero de abril del 2020, según el
-            <a href="https://www.census.gov/programs-surveys/popest/data/tables.html">Programa
-                de Estimados Poblacionales</a> de la Oficina del Censo de los Estados Unidos.</dd>
-
-        <dt>salud_total_dosis1</dt>
-        <dd>Número de personas con al menos primera dosis en ese municipio y fecha, según capturamos de
-            <a href="https://covid19datos.salud.gov.pr/"><code>covid19datos.salud.gov.pr</code></a>.</dd>
-
-        <dt>salud_total_dosis1_pct</dt>
-        <dd>Estimado del porciento poblacional al menos primera dosis en ese municipio y fecha.
-            Este campo no viene de los datos de Salud, sino que lo calculamos al producir este archivo.
-            Su valor es el campo <code>salud_total_dosis1</code> dividido entre <code>pop2020</code>.
-            Este valor podría exceder 1.0 por varios motivos, por ejemplo que el Censo haya subestimado
-            la población de un municipio, o errores en los datos de vacunación.</dd>
-
-        <dt>salud_dosis1</dt>
-        <dd>Cambio en el valor de <code>salud_total_dosis1</code> comparado con la fecha anterior.
-            Este campo campo lo calculamos al producir este archivo.</dd>
-
-        <dt>salud_total_dosis2</dt>
-        <dd>Número de personas con régimen completo de dosis en ese municipio y fecha, según capturamos de
-            <a href="https://covid19datos.salud.gov.pr/"><code>covid19datos.salud.gov.pr</code></a>.</dd>
-
-        <dt>salud_total_dosis2_pct</dt>
-        <dd>Estimado del porciento poblacional con régimen completo de dosis en ese municipio y fecha.
-            Esto es el campo <code>salud_total_dosis2</code> dividido entre <code>pop2020</code>.
-            Las mismas salvedades aplican que a <code>salud_total_dosis1_pct</code>.</dd>
-
-        <dt>salud_dosis2</dt>
-        <dd>Cambio en el valor de <code>salud_total_dosis2</code> comparado con la fecha anterior.
-            Este campo lo calculamos al producir este archivo.</dd>
-
-        <dt>salud_total_dosis</dt>
-        <dd>Número cumulativos de dosis administradas en ese municipio hasta fecha, según capturamos de
-            de <a href="https://covid19datos.salud.gov.pr/"><code>covid19datos.salud.gov.pr</code></a>.
-            Este número lo calculamos a partir de comparar descargas diarias consecutivas de la segunda
-            versión del portal, y por eso solo lo tenemos disponible a partir del 23 de julio del 2021.</dd>
-
-        <dt>salud_total_dosis_per_100</dt>
-        <dd>Número cumulativo de dosis por cien personas en ese municipio hasta esa fecha.
-            Esto es el campo <code>salud_total_dosis2</code> dividido entre <code>pop2020</code>
-            y multiplicado por cien. Las mismas salvedades sobre estimados poblacionales aplican que
-            a <code>salud_total_dosis1_pct</code> y <code>salud_total_dosis2_pct</code>.</dd>
-
-        <dt>salud_dosis2</dt>
-        <dd>Cambio en el valor de <code>salud_total_dosis</code> comparado con la fecha anterior.</dd>
-    </dl>
-
-
-    <h3>Revisiones</h3>
-
-    <dl>
-        <dt>12 de agosto del 2021</dt>
-        <dd>Actualización para usar los datos de población municipal del censo del 2020.  Se retiró la
-            columna <code>popest2019</code> (estimado poblacional del 2019), y se remplaza con
-            <code>pop2020</code> (población según censo 2020).</dd>
-
-        <dt>27 de julio del 2021</dt>
-        <dd>Actualización para usar la nueva versión del portal Covid19Datos.  Las descargas del nuevo
-            portal las empatamos con los datos que capturábamos ("scraping") de la vieja versión, pero
-            desafortunadamente no logramos capturar datos correctos para el 22 de julio, fecha que
-            excluimos.  También eliminamos los campos de datos que capturábamos de los CDC de los EEUU
-            porque estos ya ofrecen
-            <a href="https://data.cdc.gov/Vaccinations/COVID-19-Vaccinations-in-the-United-States-County/8xkx-amqh">
-                un archivo diario con serie histórica</a>.</dd>
-
-        <dt>5 de junio del 2021</dt>
-        <dd>Versión inicial.</dd>
-    </dl>
-
-</div>
-
-
 <div class="section" id="Revisions_section">
     <h1>Revisiones</h1>
+
+    <h3 id="Revisions_2021-07-25">17 de agosto del 2022</h3>
+
+    <p>El mapa de vacunaciones lleva algunos días produciendo resultados claramente erróneos,
+        así que lo hemos desactivado.  No nos urge restaurarlo por el momento, ya que nunca ha
+        sido tan útil como <a href="https://rconnect.dfci.harvard.edu/vacunaspr/">el informe de
+            vacunas de COVID-19 en Puerto Rico que elaboran Rafael Irizarry y Mónica Robles Fontán</a>.</p>
 
     <h3 id="Revisions_2021-07-25">25 de julio del 2021</h3>
 

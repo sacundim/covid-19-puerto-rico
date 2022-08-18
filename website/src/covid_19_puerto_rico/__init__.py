@@ -54,8 +54,11 @@ def main():
         # We always generate png for this because they're our Twitter cards
         molecular.RecentCases(athena, args.output_dir, frozenset(['json', 'svg', 'png'])),
 
+        # Disabled because it's broken, the Athena staging times out, and others
+        # do it better than I do:
+        #molecular.VaccinationMap(athena, args.output_dir, output_formats),
+
         charts.MunicipalMap(athena, args.output_dir, output_formats),
-        molecular.VaccinationMap(athena, args.output_dir, output_formats),
         charts.ICUsByRegion(athena, args.output_dir, output_formats),
         charts.ICUsByHospital(athena, args.output_dir, output_formats),
         molecular.RecentAgeGroups(athena, args.output_dir, output_formats),

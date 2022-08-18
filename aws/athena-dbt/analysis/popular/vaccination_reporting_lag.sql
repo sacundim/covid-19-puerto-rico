@@ -1,6 +1,7 @@
 --
 -- Vaccination reporting lag
 --
+{{ config(enabled=false) }}
 WITH agg AS (
 	SELECT
 		bulletin_date,

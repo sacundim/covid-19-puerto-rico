@@ -2,7 +2,7 @@
 -- Big municipality data table for a SPLOM chart.  Depends on
 -- municipal bulletin data and minimal-info-unique-tests.
 --
-
+{{ config(enabled=false) }}
 WITH tests AS (
     SELECT
         bulletin_date,

@@ -1,5 +1,5 @@
 {{
-    config(pre_hook=[
+    config(enabled=false, pre_hook=[
         "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'vacunacion_v1') }}",
         "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'vacunacion_v2') }}"
     ])

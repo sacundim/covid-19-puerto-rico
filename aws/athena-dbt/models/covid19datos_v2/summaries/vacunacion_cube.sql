@@ -3,7 +3,7 @@
 --
 -- Vaccination analysis.
 --
-
+{{ config(enabled=false) }}
 WITH downloads AS (
 	SELECT
 		date_add('day', -1, date(downloaded_at AT TIME ZONE 'America/Puerto_Rico'))

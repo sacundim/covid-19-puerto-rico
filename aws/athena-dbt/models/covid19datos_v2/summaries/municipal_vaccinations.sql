@@ -3,7 +3,7 @@
 --
 -- Vaccinations summarized by municipality.
 --
-
+{{ config(enabled=false) }}
 WITH prdoh AS (
 	SELECT
 		bulletin_date local_date,
