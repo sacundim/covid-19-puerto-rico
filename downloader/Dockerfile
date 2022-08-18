@@ -27,17 +27,6 @@ RUN poetry build
 #####################################################################
 #####################################################################
 ##
-## Build third party utilities that we use in our application image.
-##
-FROM rust:1.63-slim-bullseye AS stuff2parquet
-RUN cargo install --root /usr/local \
-    csv2parquet \
-    json2parquet
-
-
-#####################################################################
-#####################################################################
-##
 ## The actual image that we're delivering
 ##
 FROM base as app
@@ -46,15 +35,13 @@ RUN apt-get update
 RUN apt-get install -y ca-certificates wget lbzip2 time jq parallel
 RUN python3 -m pip install pipx
 RUN pipx install awscli
-COPY --from=stuff2parquet \
+COPY --from=sacundim/csv2parquet \
     /usr/local/bin/csv2parquet \
-    /usr/local/bin/csv2parquet
-COPY --from=stuff2parquet \
     /usr/local/bin/json2parquet \
-    /usr/local/bin/json2parquet
+    /usr/local/bin/
 COPY --from=sacundim/json2jsonl \
     /usr/local/bin/json2jsonl \
-    /usr/local/bin/json2jsonl
+    /usr/local/bin/
 
 # Install our stuff proper
 WORKDIR /covid-19-puerto-rico
