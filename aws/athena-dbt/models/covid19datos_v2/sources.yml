@@ -35,3 +35,4 @@ sources:
         identifier: sistemas_salud_parquet_v2
       - name: vacunacion_v2
         identifier: vacunacion_parquet_v2
+        freshness: null
