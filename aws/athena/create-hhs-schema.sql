@@ -941,3 +941,56 @@ CREATE EXTERNAL TABLE covid_hhs_sources.community_levels_by_county_v3 (
     date_updated DATE
 ) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/united_states_covid_19_community_levels_by_county/v3/parquet/';
+
+
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+--
+-- The CDC's cases and deaths dataset:
+--
+-- https://data.cdc.gov/Case-Surveillance/United-States-COVID-19-Cases-and-Deaths-by-State-o/9mfq-cb36
+--
+CREATE EXTERNAL TABLE covid_hhs_sources.united_states_covid_19_cases_and_deaths_by_state_v3 (
+  submission_date STRING,
+  state STRING,
+  tot_cases BIGINT,
+  conf_cases BIGINT,
+  prob_cases BIGINT,
+  new_case BIGINT,
+  pnew_case BIGINT,
+  tot_death BIGINT,
+  conf_death BIGINT,
+  prob_death BIGINT,
+  new_death BIGINT,
+  pnew_death BIGINT,
+  created_at STRING,
+  consent_cases STRING,
+  consent_deaths STRING
+) STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/HHS/united_states_covid_19_cases_and_deaths_by_state/v3/parquet/';
+
+
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+--
+-- The CDC excess deaths dataset:
+--
+-- https://data.cdc.gov/NCHS/Excess-Deaths-Associated-with-COVID-19/xkkf-xrst
+--
+CREATE EXTERNAL TABLE covid_hhs_sources.excess_deaths_associated_with_covid_19_v3 (
+  `Week Ending Date` DATE,
+  `State` STRING,
+  `Observed Number` BIGINT,
+  `Upper Bound Threshold` BIGINT,
+  `Exceeds Threshold` BOOLEAN,
+  `Average Expected Count` BIGINT,
+  `Excess Estimate` BIGINT,
+  `Total Excess Estimate` BIGINT,
+  `Percent Excess Estimate` DOUBLE,
+  `Year` BIGINT,
+  `Type` STRING,
+  `Outcome` STRING,
+  `Suppress` STRING,
+  `Note` STRING
+) STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/HHS/excess_deaths_associated_with_covid_19/v3/parquet/';
