@@ -64,6 +64,7 @@ def healthdata_download(args):
 def cdc_download(args):
     '''Download datasets hosted at data.cdc.gov endpoints'''
     datasets = [
+        Asset('excess_deaths_associated_with_covid_19', 'xkkf-xrst'),
         Asset('covid_vaccinations_state', 'unsk-b7fc'),
         Asset('covid_vaccinations_county', '8xkx-amqh'),
         Asset('covid_vaccine_allocations_state_pfizer', 'saz5-9hgg'),
