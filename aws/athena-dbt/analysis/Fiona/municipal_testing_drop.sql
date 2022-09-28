@@ -51,7 +51,7 @@ SELECT
 FROM baseline
 INNER JOIN fiona
 	USING (bulletin_date, municipality)
-INNER JOIN {{ ref('cases_municipal_ag') }} muni
+INNER JOIN {{ ref('cases_municipal_agg') }} muni
 	ON muni.name = municipality
 GROUP BY bulletin_date, region
 ORDER BY "% cambio";
