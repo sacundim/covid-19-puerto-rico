@@ -3,7 +3,7 @@ WITH breakthroughs AS (
 	-- proportion of the deaths that it covers is among fully
 	-- vaccinated people.  Note that CDC dataset doesn't cover
 	-- all USA jurisdictions--when it started in mid-2021 it
-	-- covered about 25 only, now (Oct. 2022) it's up to about 60.
+	-- covered about 25 only, now (Oct. 2022) it's up to 32.
 	SELECT
 		mmwr_week_start,
 		date_add('day', 6, mmwr_week_start)
