@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-S3_PATH="s3://covid-19-puerto-rico"
+RCLONE_DESTINATION="covid-19-puerto-rico:covid-19-puerto-rico"
 
 HERE="$(dirname $0)"
 REPO_ROOT="${HERE}/.."
@@ -14,9 +14,12 @@ WEBSITE_DIR="${REPO_ROOT}/output"
 if [ -d "${WEBSITE_DIR}" ];
 then
   echo "$(date): Syncing to S3..."
-  aws s3 sync \
+  rclone copy \
+    --fast-list \
+    --verbose \
+    --checksum \
     --exclude '*.DS_Store' \
-    "${WEBSITE_DIR}" "${S3_PATH}"
+    "${WEBSITE_DIR}" "${RCLONE_DESTINATION}"
 else
   echo "$(date): No such directory: ${WEBSITE_DIR}"
   exit 1
