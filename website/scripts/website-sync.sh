@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 #
-# Sync the website to the cloud server infra
+# Sync the website to the cloud server infra.
 #
+# Prerequisite tool:
+#
+# * https://rclone.org/
+#
+# The Rclone S3 endpoint must be preconfigured in
+# the environment.
 
 set -euo pipefail
 
-RCLONE_DESTINATION="covid-19-puerto-rico:covid-19-puerto-rico"
+# Set environment variable to override default
+RCLONE_DESTINATION="${RCLONE_DESTINATION:="covid-19-puerto-rico:covid-19-puerto-rico"}"
 
 HERE="$(dirname $0)"
 REPO_ROOT="${HERE}/.."
