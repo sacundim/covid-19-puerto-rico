@@ -23,6 +23,7 @@ then
   echo "$(date): Syncing to S3..."
   rclone copy \
     --fast-list \
+    --progress \
     --verbose \
     --checksum \
     --exclude '*.DS_Store' \
