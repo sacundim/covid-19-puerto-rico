@@ -14,7 +14,7 @@ WITH bulletins AS (
 		    PARTITION BY bulletin_date
 			ORDER BY bio.collected_date
 			ROWS 6 PRECEDING
-		) / lag(bio.antigens) OVER (
+		) / sum(bio.antigens) OVER (
 		    PARTITION BY bulletin_date
 			ORDER BY bio.collected_date
 			ROWS 6 PRECEDING
@@ -23,7 +23,7 @@ WITH bulletins AS (
 		    PARTITION BY bulletin_date
 			ORDER BY bio.collected_date
 			ROWS 6 PRECEDING
-		) / lag(bio.molecular) OVER (
+		) / sum(bio.molecular) OVER (
 		    PARTITION BY bulletin_date
 			ORDER BY bio.collected_date
 			ROWS 6 PRECEDING
