@@ -5,6 +5,9 @@ resource "aws_athena_workgroup" "main" {
   }
 
   configuration {
+    engine_version {
+      selected_engine_version = "AUTO"
+    }
     result_configuration {
       output_location = "s3://${aws_s3_bucket.athena_bucket.bucket}/"
     }
