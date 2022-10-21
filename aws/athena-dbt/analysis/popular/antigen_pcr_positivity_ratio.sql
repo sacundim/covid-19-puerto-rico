@@ -1,44 +1,50 @@
 WITH bulletins AS (
-	SELECT max(bulletin_date) AS max_bulletin_date
-	FROM {{ ref('bioportal_curve') }}
+	SELECT max(bulletin_date) AS bulletin_date
+	FROM {{ ref('bioportal_encounters_agg') }}
 ), rates AS (
 	SELECT
 		bulletin_date,
-		bio.collected_date,
+		collected_date,
 		sum(cases) OVER (
 		    PARTITION BY bulletin_date
-			ORDER BY bio.collected_date
+			ORDER BY collected_date
 			ROWS 6 PRECEDING
 		) / 7.0 AS cases,
-		100.0 * sum(bio.positive_antigens) OVER (
+		sum(positive_antigens) OVER (
 		    PARTITION BY bulletin_date
-			ORDER BY bio.collected_date
+			ORDER BY collected_date
 			ROWS 6 PRECEDING
-		) / sum(bio.antigens) OVER (
+		) AS positive_antigens,
+		sum(antigens) OVER (
 		    PARTITION BY bulletin_date
-			ORDER BY bio.collected_date
+			ORDER BY collected_date
 			ROWS 6 PRECEDING
-		) antigens,
-		100.0 * sum(bio.positive_molecular) OVER (
+		) AS antigens,
+		sum(positive_molecular) OVER (
 		    PARTITION BY bulletin_date
-			ORDER BY bio.collected_date
+			ORDER BY collected_date
 			ROWS 6 PRECEDING
-		) / sum(bio.molecular) OVER (
+		) AS positive_molecular,
+		sum(molecular) OVER (
 		    PARTITION BY bulletin_date
-			ORDER BY bio.collected_date
+			ORDER BY collected_date
 			ROWS 6 PRECEDING
-		) molecular
-	FROM {{ ref('bioportal_encounters_agg') }} bio
-	INNER JOIN bulletins
-		ON bulletins.max_bulletin_date = bio.bulletin_date
+		) AS molecular
+	FROM {{ ref('bioportal_encounters_agg') }}
+	INNER JOIN bulletins USING (bulletin_date)
 )
 SELECT
-	bulletin_date AS "Datos hasta",
-	date_add('day', -6, collected_date) "Muestras desde",
-	collected_date AS "Muestras hasta",
+	bulletin_date AS "Datos",
+	collected_date AS "Muestras",
 	cases "Casos",
-	antigens "Positividad antígenos",
-	molecular "Positividad molecular",
-	100.0 * antigens / molecular "Razón"
+	antigens / 7.0 AS "Antígenos",
+	100.0 * positive_antigens / antigens
+		AS "Positividad antígenos",
+	molecular / 7.0 AS "Moleculares",
+	100.0 * positive_molecular / molecular
+		AS "Positividad molecular",
+	100.0 * (1.0 * positive_antigens / antigens)
+		/ (1.0 * positive_molecular / molecular)
+		AS "Razón de positividades"
 FROM rates
 ORDER BY collected_date DESC;
