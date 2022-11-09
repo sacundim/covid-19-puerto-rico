@@ -31,7 +31,7 @@ WITH raw AS (
 			ORDER BY date
 			ROWS 6 PRECEDING
 		) AS new_positives_reported_7d
-	FROM {{ source('covid_hhs_sources', 'diagnostic_lab_testing_v3') }}
+	FROM {{ source('hhs', 'diagnostic_lab_testing_v3') }}
 	GROUP BY "$path", date
 )
 SELECT
