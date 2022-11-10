@@ -69,7 +69,9 @@ resource "aws_secretsmanager_secret" "socrata" {
 resource "aws_cloudwatch_event_rule" "hhs_daily_download" {
   name        = "hhs-daily-download"
   description = "Run the daily HHS download."
-  schedule_expression = "cron(25 4,16 * * ? *)"
+  # 9:25am and 9:25pm Pacific Standard Time
+  # 12:25am and 12:25pm Eastern Standard Time
+  schedule_expression = "cron(25 5,17 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "hhs_daily_download" {
