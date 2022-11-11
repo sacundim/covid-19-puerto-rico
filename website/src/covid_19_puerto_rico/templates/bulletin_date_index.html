@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 
 {% block meta %}
+<meta property="og:title" content="Análisis COVID-19 Puerto Rico — {{ bulletin_date }}" />
+<meta property="og:description" content="Diversas visualizaciones de los datos del COVID-19 en Puerto Rico." />
+<meta property="og:locale" content="es_PR" />
+<meta property="og:url" content="https://covid-19-puerto-rico.org/{{ bulletin_date }}/index.html" />
+<meta property="og:image" content="https://covid-19-puerto-rico.org/{{ bulletin_date }}/{{ bulletin_date }}_RecentCases.png" />
+<meta property="og:image:width" content="654" />
+<meta property="og:image:height" content="342" />
+
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@midnucas">
 <meta name="twitter:creator" content="@midnucas">
