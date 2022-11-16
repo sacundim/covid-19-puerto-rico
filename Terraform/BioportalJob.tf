@@ -20,6 +20,10 @@ resource "aws_batch_job_definition" "bioportal_download_and_sync" {
       {
         name = "S3_DATA_URL",
         value = "s3://${var.datalake_bucket_name}"
+      },
+      {
+        name = "ENDPOINT",
+        value = var.bioportal_api_url
       }
     ],
     executionRoleArn = aws_iam_role.ecs_task_role.arn

@@ -72,3 +72,8 @@ variable "cidr_block" {
   description = "Private IP address range to use."
   default = "172.32.128.0/22"
 }
+
+variable "bioportal_api_url" {
+  description = "Bioportal API endpoint base URL"
+  default = "https://bioportal.salud.pr.gov/api"
+}
