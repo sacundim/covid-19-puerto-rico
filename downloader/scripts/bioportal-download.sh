@@ -5,14 +5,14 @@
 
 set -eu -o pipefail
 
-ENDPOINT="${ENDPOINT-https://bioportal.salud.pr.gov/api/administration/reports}"
+ENDPOINT="${ENDPOINT-https://bioportal-apim.salud.pr.gov/bioportal}"
 
 # Bash associative array; needs Bash v4+. MacOS comes with v3;
 # you will need to `brew install bash`.
 declare -r -A DATASETS=(
-  ["deaths"]="deaths/summary"
-  ["minimal-info-unique-tests"]="minimal-info-unique-tests"
-  ["orders-basic"]="orders/basic"
+  ["deaths"]="administration/reports/deaths/summary"
+  ["minimal-info-unique-tests"]="administration/reports/minimal-info-unique-tests"
+  ["orders-basic"]="administration/reports/orders/basic"
 )
 
 

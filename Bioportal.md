@@ -4,7 +4,7 @@ Esta lista fue compilada por el Dr. Rafael Irizarry (@rafalab) y
 [el original está aquí](https://github.com/rafalab/pr-covid/blob/master/dashboard/apis.md)
 (posiblemente más al día que esta copia).
 
-* URL BASE: ```https://bioportal.salud.pr.gov/api```
+* URL BASE: ```https://bioportal-apim.salud.pr.gov/bioportal```
 
 * Método: HTTP GET
 
