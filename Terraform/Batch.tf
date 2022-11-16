@@ -11,6 +11,11 @@ resource "aws_batch_compute_environment" "fargate_amd64" {
   }
 
   compute_resources {
+    # These tags get applied to the compute resources created:
+    tags = {
+      Project = var.project_name
+    }
+
     max_vcpus = 16
 
     security_group_ids = [
@@ -64,6 +69,11 @@ resource "aws_batch_compute_environment" "ec2_amd64" {
   }
 
   compute_resources {
+    # These tags get applied to the compute resources created:
+    tags = {
+      Project = var.project_name
+    }
+
     instance_role = aws_iam_instance_profile.ecs_instance_role.arn
 
     # These have reasonably recent, high-performance processors, and
@@ -155,6 +165,11 @@ resource "aws_batch_compute_environment" "ec2_arm64" {
   }
 
   compute_resources {
+    # These tags get applied to the compute resources created:
+    tags = {
+      Project = var.project_name
+    }
+
     instance_role = aws_iam_instance_profile.ecs_instance_role.arn
 
     instance_type = [
