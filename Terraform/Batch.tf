@@ -11,11 +11,6 @@ resource "aws_batch_compute_environment" "fargate_amd64" {
   }
 
   compute_resources {
-    # These tags get applied to the compute resources created:
-    tags = {
-      Project = var.project_name
-    }
-
     max_vcpus = 16
 
     security_group_ids = [
