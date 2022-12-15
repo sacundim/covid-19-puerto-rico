@@ -75,5 +75,9 @@ variable "cidr_block" {
 
 variable "bioportal_api_url" {
   description = "Bioportal API endpoint base URL"
-  default = "https://bioportal.salud.pr.gov/api"
+  # The official one is this, but it's a load balancer or something that's slow as heck
+#  default = "https://bioportal-apim.salud.pr.gov/bioportal"
+
+  # This bypasses the HTTP front-end and goes straight to the hosts:
+  default = "https://api-bioportal-prod-eastus2-01.azurewebsites.net"
 }

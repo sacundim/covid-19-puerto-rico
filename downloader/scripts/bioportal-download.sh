@@ -5,7 +5,12 @@
 
 set -eu -o pipefail
 
-ENDPOINT="${ENDPOINT-https://bioportal.salud.pr.gov/api}"
+# Official URL:
+#ENDPOINT="${ENDPOINT-https://bioportal-apim.salud.pr.gov/bioportal}"
+
+# ...but that one's slow, so we're using this one:
+ENDPOINT="${ENDPOINT-https://api-bioportal-prod-eastus2-01.azurewebsites.net}"
+
 
 # Bash associative array; needs Bash v4+. MacOS comes with v3;
 # you will need to `brew install bash`.
