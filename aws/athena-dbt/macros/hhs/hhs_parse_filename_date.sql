@@ -7,5 +7,5 @@
 -- you typically want to pass '"$path"' as the argument.
 --
 {% macro hhs_parse_filename_date(path) %}
-date_parse(regexp_extract({{ path }}, '202[0123](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
+date_parse(regexp_extract({{ path }}, '202[0-9](\d{4})_(\d{4})'), '%Y%m%d_%H%i')
 {% endmacro %}
