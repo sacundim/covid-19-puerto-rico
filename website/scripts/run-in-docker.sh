@@ -16,6 +16,8 @@
 
 set -e -x
 
+# Override this to use e.g. podman instead of docker:
+DOCKER="${DOCKER:=docker}"
 DOCKER_IMAGE="${DOCKER_IMAGE:=covid-19-puerto-rico}"
 
 cd "$(dirname $0)"/..
@@ -23,7 +25,7 @@ cd "$(dirname $0)"/..
 
 rm -rf output/*
 
-time docker run --rm \
+time "${DOCKER}" run --rm \
   -v ~/.aws:/awsconfig:ro \
   -v "$(pwd)"/config:/config:ro \
   -v "$(pwd)"/assets:/assets:ro \
