@@ -1,3 +1,4 @@
+{{ config(enabled=false) }}
 SELECT
     {{ hhs_parse_filename_date('"$path"') }}
 		AS file_timestamp,
@@ -5,7 +6,13 @@ SELECT
 	    AS fips,
 	county,
 	state,
-    fema_region,
+	CASE
+	    WHEN fema_region = '' OR fema_region = 'NA'
+	    THEN null
+	    WHEN fema_region LIKE 'Region %'
+	    THEN CAST(replace(fema_region, 'Region ', '') AS BIGINT)
+	    ELSE CAST(fema_region AS BIGINT)
+	END AS fema_region,
 	date(date_parse(date, '%m/%d/%Y %r'))
 	    AS date,
     cases_last_7_days,

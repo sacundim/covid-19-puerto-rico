@@ -3,6 +3,7 @@
 -- with those implied by the county-level Community Profile Report,
 -- for dates that are nominally the same for both.
 --
+{{ config(enabled=false) }}
 SELECT
 	green.date_updated "Date",
 	green.state "State",

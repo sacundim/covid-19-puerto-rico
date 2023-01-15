@@ -619,7 +619,7 @@ CREATE EXTERNAL TABLE covid_hhs_sources.community_profile_report_county_v3 (
 	fips BIGINT,  -- needs to be cleaned to 5 digit string
 	county STRING,
 	state STRING,
-	fema_region BIGINT,
+	fema_region STRING,
 	date STRING,
 	cases_last_7_days BIGINT,
 	cases_per_100k_last_7_days DOUBLE,
