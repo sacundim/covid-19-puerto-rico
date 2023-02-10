@@ -39,6 +39,7 @@ resource "aws_iam_policy" "main_bucket_rw" {
         Effect = "Allow",
         Action = [
           "s3:PutObject",
+          "s3:PutObjectAcl",
           "s3:PutObjectTagging",
           "s3:GetObject",
           "s3:GetObjectTagging",
