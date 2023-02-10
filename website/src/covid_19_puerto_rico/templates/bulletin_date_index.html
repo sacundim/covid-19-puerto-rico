@@ -43,8 +43,6 @@
         <li><a href="#MolecularCurrentDeltas_section">Pruebas añadidas a Bioportal</a></li>
         <li><a href="#MolecularDailyDeltas_section">Historial de pruebas en Bioportal</a></li>
         <li><a href="#MolecularLatenessTiers_section">Rezagos de resultados de pruebas moleculares</a></li>
-        <li><a href="#ICUsByRegion_section">Historial de cuidado intensivo, regiones</a></li>
-        <li><a href="#ICUsByHospital_section">Historial de cuidado intensivo, hospitales individuales</a></li>
 
         <li><a href="#CurrentDeltas_section">Cambio entre boletín actual y anterior</a></li>
         <li><a href="#DailyDeltas_section">Cambios entre boletines recientes</a></li>
@@ -755,80 +753,6 @@
         del resultado en Bioportal, agrupando los resultados por la fecha en que se recibieron.
         El panel superior muestra los volúmenes absolutos; el panel inferior es los mismos datos,
         pero en porcentajes.</p>
-</div>
-
-
-<div class="section" id="ICUsByRegion_section">
-    <h1>Historial de cuidado intensivo, regiones</h1>
-
-    <div id="ICUsByRegion"></div>
-    <script type="text/javascript">
-      embedChart('ICUsByRegion', bulletin_date);
-    </script>
-
-    <h2>¿Qué es esto?</h2>
-
-    <p>Una gráfica <b>imprecisa e incompleta</b> de promedios semanales de disponibilidad
-        y uso de camas de cuidado intensivo <em>de adultos</em>, según el
-        <a href="https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/anag-cw7u">reporte
-            semanal del Departamento de Salud de los EEUU</a>. Hay que subrayar que este
-        informe tiene dos limitaciones serias que impiden tener un cuadro completo y
-        preciso:</p>
-
-    <ol>
-        <li>No incluye todos los hospitales en Puerto Rico (e.g., el de Veteranos);</li>
-        <li>Como medida de privacidad, suprime todos los valores que sean menos de 4.0
-            (pero retiene los que son 0.0).</li>
-    </ol>
-
-    <p>Por este motivo optamos por la medida pesimista de ilustrar el número de camas como el
-        mínimo que se puede deducir del informe, pero el máximo de ocupadas y pacientes de COVID
-        (sospechado o confirmado).  Dejando aparte el fallo obvio que esta gráfica no abarca todos
-        los hospitales, esto significa que aún para los que sí cubre, el número de camas que estimamos
-        a veces podría ser menor que el real (aunque casi nunca parece serlo), y nuestros números de
-        camas ocupadas y pacientes de COVID generalmente son mayores que los reales.</p>
-
-    <h2>Nota técnica</h2>
-
-    <p>El informe de Salud federal reporta tres cifras para cada elemento:</p>
-
-    <dl>
-        <dt><code>_7_day_coverage</code></dt>
-        <dd>Cuántos de los siete días de la semana en cuestión reportó el hospital
-            sus números;</dd>
-
-        <dt><code>_7_day_sum</code></dt>
-        <dd>Suma de los valores de todos los reportes de ese hospital en esa semana;</dd>
-
-        <dt><code>_7_day_avg</code></dt>
-        <dd>Promedio de esa semana, que con los récords no suprimidos se corrobora
-            que es <code>_7_day_sum / _7_day_coverage</code>.</dd>
-    </dl>
-
-    <p>Como la supresión de valores menores que 4 se aplica superficialmente tanto a
-        <code>_7_day_sum</code> como a <code>_7_day_avg</code>, se pueden reconstruir
-        muchísimos de los promedios suprimidos realizando la división uno mismo, y así
-        hacemos en esta visualización.  Cuando sí está suprimida la suma el promedio que
-        imputamos a ese hospital para esa semana cae siempre entre 4/7 y 4/1.</p>
-</div>
-
-
-<div class="section" id="ICUsByHospital_section">
-    <h1>Historial de cuidado intensivo, hospitales individuales</h1>
-
-    <p>Promedios de 7 días de disponibilidad de camas de cuidado intensivo <em>de adultos</em>,
-        y cuántas están ocupadas por pacientes de COVID-19 (sospechado o confirmado). Datos del
-        <a href="https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/anag-cw7u">reporte
-            semanal del Departamento de Salud de los EEUU</a>. Como el informe federal suprime
-        algunos valores pequeños por privacidad, en esos casos imputamos el mínimo de camas
-        disponibles que sea compatible con los datos (que casi siempre es igual al máximo), pero
-        el máximo de ocupadas y COVID; ver las notas de <a href="#ICUsByRegion_section">nuestra
-            gráfica de cuidado intensivo por región</a>.</p>
-
-    <div id="ICUsByHospital"></div>
-    <script type="text/javascript">
-      embedChart('ICUsByHospital', bulletin_date);
-    </script>
 </div>
 
 
