@@ -287,6 +287,13 @@ resource "aws_iam_role_policy_attachment" "ecs_task_role_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# We need to grant the Batch service itself (not the task) permission to access
+# our secret, which it needs to set up our task
+resource "aws_iam_role_policy_attachment" "ecs_task_role_docker_hub_app_token" {
+  role       = aws_iam_role.ecs_task_role.name
+  policy_arn = aws_iam_policy.docker_hub_app_token.arn
+}
+
 resource "aws_iam_role" "batch_service_role" {
   name = "${var.project_name}-batch-service-role"
   description = "Grants permissions to the Batch service."
