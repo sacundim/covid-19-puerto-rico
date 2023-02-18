@@ -125,6 +125,7 @@ resource "aws_iam_policy" "athena_bucket_rw" {
           "s3:PutObjectTagging",
           "s3:GetObject",
           "s3:GetObjectTagging",
+          "s3:DeleteObject",
           "s3:ListBucket",
           "s3:DescribeJob"
         ],
