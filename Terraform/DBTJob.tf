@@ -44,7 +44,7 @@ resource "aws_batch_job_definition" "dbt_run_models" {
       },
       {
         name = "ATHENA_WORK_GROUP",
-        value = aws_athena_workgroup.main.name
+        value = aws_athena_workgroup.dbt.name
       },
       {
         name = "ATHENA_THREADS",
