@@ -1,3 +1,6 @@
+# Special `profiles.yml` file for use in Docker image.
+# For that use case it needs to be moved one directory
+# level up to the root of the DBT project.
 covid-19-puerto-rico-athena:
   target: prod
   outputs:
