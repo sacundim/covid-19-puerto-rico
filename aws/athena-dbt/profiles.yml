@@ -1,0 +1,12 @@
+covid-19-puerto-rico-athena:
+  target: prod
+  outputs:
+    prod:
+      type: athena
+      region_name: "{{ env_var('AWS_REGION') }}"
+      s3_staging_dir: "{{ env_var('ATHENA_S3_STAGING_DIR') }}"
+      schema: "{{ env_var('ATHENA_S3_SCHEMA') }}"
+      database: "{{ env_var('ATHENA_DATABASE', 'awsdatacatalog') }}"
+      aws_profile_name: "{{ env_var('AWS_PROFILE', 'default') }}"
+      work_group: "{{ env_var('ATHENA_WORK_GROUP') }}"
+      threads: "{{ env_var('ATHENA_THREADS', 20) }}"
