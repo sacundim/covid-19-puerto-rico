@@ -83,7 +83,7 @@ resource "aws_batch_job_definition" "dbt_run_models" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_task_role_athena" {
-  role       = aws_iam_role.ecs_task_role.name
+resource "aws_iam_role_policy_attachment" "ecs_job_role_athena" {
+  role       = aws_iam_role.ecs_job_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonAthenaFullAccess"
 }
