@@ -87,3 +87,8 @@ resource "aws_iam_role_policy_attachment" "ecs_job_role_athena" {
   role       = aws_iam_role.ecs_job_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonAthenaFullAccess"
 }
+
+resource "aws_iam_role_policy_attachment" "ecs_job_role_athena_bucket" {
+  role       = aws_iam_role.ecs_job_role.name
+  policy_arn = aws_iam_policy.athena_bucket_rw.arn
+}
