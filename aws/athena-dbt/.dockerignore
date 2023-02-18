@@ -3,5 +3,6 @@ logs/
 target/
 .dockerignore
 .gitignore
+.user.yml
 run-in-docker.sh
 build-docker-image.sh

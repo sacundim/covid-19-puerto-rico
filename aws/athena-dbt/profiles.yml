@@ -9,3 +9,6 @@ covid-19-puerto-rico-athena:
       database: "{{ env_var('ATHENA_DATABASE', 'awsdatacatalog') }}"
       work_group: "{{ env_var('ATHENA_WORK_GROUP') }}"
       threads: "{{ env_var('ATHENA_THREADS', 20) | as_number }}"
+
+config:
+  use_colors: False
