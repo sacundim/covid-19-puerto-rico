@@ -32,7 +32,7 @@ resource "aws_batch_job_definition" "dbt_run_models" {
       },
       {
         name = "ATHENA_S3_STAGING_DIR",
-        value = "s3:/${var.athena_bucket_name}/"
+        value = "s3://${var.athena_bucket_name}/"
       },
       {
         name = "ATHENA_S3_SCHEMA",
