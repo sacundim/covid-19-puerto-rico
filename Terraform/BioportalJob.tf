@@ -14,7 +14,7 @@ resource "aws_batch_job_definition" "bioportal_download_and_sync" {
   platform_capabilities = ["EC2"]
 
   container_properties = jsonencode({
-    image = "${data.aws_ecr_image.downloader.registry_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${data.aws_ecr_image.downloader.repository_name}:${data.aws_ecr_image.downloader.image_tag}"
+    image = "ghcr.io/sacundim/covid-19-puerto-rico-downloader:latest"
     command = ["bioportal-download.sh"],
     environment = [
       {
