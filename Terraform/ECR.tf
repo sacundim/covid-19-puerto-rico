@@ -1,86 +1,6 @@
 ##############################################################################
 ##############################################################################
 ##
-## Repo for the website application image
-##
-
-resource "aws_ecr_repository" "main_repo" {
-  name = var.project_name
-  image_tag_mutability = "MUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-}
-
-resource "aws_ecr_lifecycle_policy" "main_repo_cleanup" {
-  repository = aws_ecr_repository.main_repo.name
-
-  policy = <<EOF
-{
-    "rules": [
-        {
-            "rulePriority": 1,
-            "description": "Expire images older than 7 days",
-            "selection": {
-                "tagStatus": "untagged",
-                "countType": "sinceImagePushed",
-                "countUnit": "days",
-                "countNumber": 7
-            },
-            "action": {
-                "type": "expire"
-            }
-        }
-    ]
-}
-EOF
-}
-
-
-##############################################################################
-##############################################################################
-##
-## Repo for the DBT project image
-##
-
-resource "aws_ecr_repository" "dbt_repo" {
-  name = "${var.project_name}-dbt"
-  image_tag_mutability = "MUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-}
-
-resource "aws_ecr_lifecycle_policy" "dbt_repo_cleanup" {
-  repository = aws_ecr_repository.dbt_repo.name
-
-  policy = <<EOF
-{
-    "rules": [
-        {
-            "rulePriority": 1,
-            "description": "Expire images older than 7 days",
-            "selection": {
-                "tagStatus": "untagged",
-                "countType": "sinceImagePushed",
-                "countUnit": "days",
-                "countNumber": 7
-            },
-            "action": {
-                "type": "expire"
-            }
-        }
-    ]
-}
-EOF
-}
-
-
-##############################################################################
-##############################################################################
-##
 ## Repo for the downloader image
 ##
 
@@ -161,8 +81,6 @@ resource "aws_iam_policy" "ecr_push" {
           "ecr:UploadLayerPart"
         ],
         "Resource": [
-          aws_ecr_repository.main_repo.arn,
-          aws_ecr_repository.dbt_repo.arn,
           aws_ecr_repository.downloader_repo.arn
         ]
       },
