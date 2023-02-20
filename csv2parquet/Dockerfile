@@ -20,7 +20,7 @@ RUN cargo install \
       json2parquet
 
 FROM debian:bullseye-slim
-COPY --from=build \
+COPY --link --from=build \
     /csv2parquet/bin/csv2parquet \
     /csv2parquet/bin/json2parquet \
     /usr/local/bin/
