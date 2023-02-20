@@ -4,16 +4,6 @@
 ## DBT/Athena model build task
 ##
 
-locals {
-  # If these are not strings we get errors
-  cores = "0.25"
-  mem_mb = "1024"
-
-  registry = "sacundim"
-  repository = "covid-19-puerto-rico-dbt"
-  tag = "latest"
-}
-
 resource "aws_batch_job_definition" "dbt_run_models" {
   name = "dbt-run-models"
   tags = {
@@ -24,7 +14,11 @@ resource "aws_batch_job_definition" "dbt_run_models" {
   platform_capabilities = ["FARGATE"]
 
   container_properties = jsonencode({
-    image = "${local.registry}/${local.repository}:${local.tag}"
+    image = "sacundim/covid-19-puerto-rico-dbt:latest"
+    resourceRequirements = [
+      {"type": "VCPU", "value": "0.25"},
+      {"type": "MEMORY", "value": "1024"}
+    ]
     environment = [
       {
         name = "AWS_REGION",
@@ -56,10 +50,6 @@ resource "aws_batch_job_definition" "dbt_run_models" {
     fargatePlatformConfiguration = {
       "platformVersion": "LATEST"
     },
-    resourceRequirements = [
-      {"type": "VCPU", "value": local.cores},
-      {"type": "MEMORY", "value": local.mem_mb}
-    ]
     networkConfiguration = {
       "assignPublicIp": "ENABLED"
     }
