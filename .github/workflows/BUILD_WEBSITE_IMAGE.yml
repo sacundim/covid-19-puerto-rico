@@ -29,7 +29,7 @@ jobs:
     - name: Build and push
       uses: docker/build-push-action@v3
       with:
-        context: aws/athena-dbt
+        context: website
         platforms: linux/amd64,linux/arm64
         push: true
         tags: sacundim/covid-19-puerto-rico-website:latest
