@@ -223,17 +223,6 @@ resource "aws_iam_group_policy_attachment" "athena_full_access" {
 }
 
 
-resource "aws_iam_group" "ecr" {
-  name = "ecr-users"
-  path = "/"
-}
-
-resource "aws_iam_group_policy_attachment" "ecr_ecr_power_user" {
-  group      = aws_iam_group.ecr.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
-}
-
-
 resource "aws_iam_group" "uploaders" {
   name = "uploaders"
   path = "/"
@@ -273,7 +262,6 @@ resource "aws_iam_user_group_membership" "user_athena_member" {
   user = aws_iam_user.user.name
   groups = [
     aws_iam_group.athena.name,
-    aws_iam_group.ecr.name,
     aws_iam_group.uploaders.name,
   ]
 }
