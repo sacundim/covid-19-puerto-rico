@@ -3,7 +3,7 @@
 # This script is meant to be used as an optional image entrypoint
 # for jobs that want to also sync to S3
 #
-set -euo pipefail
+set -euxo pipefail
 
 # Set environment variables to override defaults
 RCLONE_DESTINATION="${RCLONE_DESTINATION:=":s3,provider=AWS,env_auth:${MAIN_BUCKET:?"MAIN_BUCKET not set"}"}"
