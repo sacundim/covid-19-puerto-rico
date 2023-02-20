@@ -40,4 +40,3 @@ COPY --from=build /covid-19-puerto-rico/dist/covid_19_puerto_rico-*.whl .
 RUN pip install covid_19_puerto_rico-*.whl && rm covid_19_puerto_rico-*.whl
 COPY docker/run-and-sync.sh .
 ENV PATH=/covid-19-puerto-rico:$PATH
-ENTRYPOINT ["covid19pr"]

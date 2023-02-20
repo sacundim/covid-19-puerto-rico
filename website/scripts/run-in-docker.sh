@@ -33,7 +33,8 @@ time "${DOCKER}" run --rm \
   --env AWS_CONFIG_FILE=/awsconfig/config \
   --env AWS_SHARED_CREDENTIALS_FILE=/awsconfig/credentials \
   "${DOCKER_IMAGE}" \
-    --config-file /config/docker.toml \
-    --assets-dir /assets \
-    --output-dir /output \
-    "$@"
+    covid19pr \
+      --config-file /config/docker.toml \
+      --assets-dir /assets \
+      --output-dir /output \
+      "$@"
