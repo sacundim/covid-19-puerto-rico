@@ -15,7 +15,8 @@ schema_name = "${ATHENA_SCHEMA_NAME?"ATHENA_SCHEMA_NAME not set"}"
 s3_staging_dir = "${ATHENA_S3_STAGING_DIR?"ATHENA_S3_STAGING_DIR not set"}"
 EOF
 
-WEBSITE_DIR="/output"
+WEBSITE_DIR="output"
+mkdir -p "${WEBSITE_DIR}"
 
 echo "$(date): Building website"
 covid19pr \
