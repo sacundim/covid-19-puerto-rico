@@ -5,11 +5,11 @@ import os
 import pathlib
 import shutil
 from wand.image import Image
-from . import util
 
 
 class Website:
     def __init__(self, args):
+        self.build_assets = args.build_assets
         self.assets_dir = args.assets_dir
         self.output_dir = args.output_dir
         self.jinja = Environment(
@@ -20,7 +20,10 @@ class Website:
     def render(self, date_range):
         for bulletin_date in date_range:
             self.render_bulletin_date(bulletin_date, date_range)
-        self.copy_assets()
+        if self.build_assets and self.assets_dir:
+            self.copy_assets()
+        else:
+            logging.info("Skipping assets copy")
 
     def copy_assets(self):
         for directory, subdirs, filenames in os.walk(self.assets_dir):

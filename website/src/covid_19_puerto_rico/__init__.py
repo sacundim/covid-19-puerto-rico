@@ -15,7 +15,7 @@ def process_arguments():
     parser = argparse.ArgumentParser(description='Generate Puerto Rico COVID-19 charts')
     parser.add_argument('--config-file', type=str, required=True,
                         help='TOML config file (for DB credentials and such')
-    parser.add_argument('--assets-dir', type=str, required=True,
+    parser.add_argument('--assets-dir', type=str, required=False,
                         help='Static website assets directory')
     parser.add_argument('--output-dir', type=str, required=True,
                         help='Directory into which to place output')
@@ -24,10 +24,14 @@ def process_arguments():
     parser.add_argument('--earliest-date', type=datetime.date.fromisoformat,
                         default=datetime.date(2021, 7, 24),
                         help='Earliest date to generate website for. Has a sensible built-in default.')
+    parser.add_argument('--days-back', type=int, default=15,
+                        help='How many days back from the most recent to build for. Default: 15.')
     parser.add_argument('--no-svg', action='store_false', dest='svg',
                         help="Switch turn off the svg files (which is a bit slow)")
-    parser.add_argument('--no-website', action='store_false', dest='website',
+    parser.add_argument('--no-website', action='store_false', dest='build_website',
                         help="Switch to turn off website generation (which is a bit slow)")
+    parser.add_argument('--no-assets', action='store_false', dest='build_assets',
+                        help="Switch to turn off website static assets generation (which is slow)")
     return parser.parse_args()
 
 def main():
@@ -76,12 +80,12 @@ def main():
         molecular.MolecularCurrentDeltas(athena, args.output_dir, output_formats),
         molecular.MolecularDailyDeltas(athena, args.output_dir, output_formats),
     ]
-    if args.website:
+    if args.build_website:
         site = website.Website(args)
         targets.append(site)
 
     start_date = max([args.earliest_date,
-                      bulletin_date - datetime.timedelta(days=31)])
+                      bulletin_date - datetime.timedelta(days=args.days_back)])
     date_range = list(
         util.make_date_range(start_date, bulletin_date)
     )
@@ -89,7 +93,7 @@ def main():
     for target in targets:
         target.render(date_range)
 
-    if args.website:
+    if args.build_website:
         site.render_top(bulletin_date)
 
 
