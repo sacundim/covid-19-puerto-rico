@@ -18,7 +18,8 @@ set -e -x
 
 # Override this to use e.g. podman instead of docker:
 DOCKER="${DOCKER:=docker}"
-DOCKER_IMAGE="${DOCKER_IMAGE:=covid-19-puerto-rico}"
+
+export DOCKER_IMAGE="${DOCKER_IMAGE:=covid-19-puerto-rico-website}"
 
 cd "$(dirname $0)"/..
 ./scripts/build-docker-image.sh
