@@ -15,7 +15,7 @@ resource "aws_batch_job_definition" "website_generator" {
 
   container_properties = jsonencode({
     image = "sacundim/covid-19-puerto-rico-website:latest"
-    command = "run-and-sync.sh"
+    command = ["run-and-sync.sh"]
     resourceRequirements = [
       # If these are not strings we get errors
       {"type": "VCPU", "value": "1"},
