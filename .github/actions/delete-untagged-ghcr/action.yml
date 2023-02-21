@@ -1,0 +1,16 @@
+name: 'Delete untagged GHCR images'
+description: 'Delete untagged GHCR images'
+inputs:
+  owner:
+    description: 'Owner of GHCR package'
+    required: true
+  package:
+    description: 'Name of GHCR package'
+    required: true
+  per-page:
+    description: 'How many versions to process per request.'
+    required: true
+    default: '100'
+runs:
+  using: 'node16'
+  main: 'main.js'

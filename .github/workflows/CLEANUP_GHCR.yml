@@ -1,0 +1,40 @@
+name: Clean up old Docker image versions
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Clean up covid-19-puerto-rico-website
+        uses: ./.github/actions/delete-untagged-ghcr
+        id: delete-untagged-ghcr
+        with:
+          owner: sacundim
+          package: covid-19-puerto-rico-website
+
+      - name: Clean up covid-19-puerto-rico-dbt
+        uses: ./.github/actions/delete-untagged-ghcr
+        id: delete-untagged-ghcr
+        with:
+          owner: sacundim
+          package: covid-19-puerto-rico-dbt
+
+      - name: Clean up covid-19-puerto-rico-downloader
+        uses: ./.github/actions/delete-untagged-ghcr
+        id: delete-untagged-ghcr
+        with:
+          owner: sacundim
+          package: covid-19-puerto-rico-downloader
+
+      - name: Clean up csv2parquet
+        uses: ./.github/actions/delete-untagged-ghcr
+        id: delete-untagged-ghcr
+        with:
+          owner: sacundim
+          package: csv2parquet
