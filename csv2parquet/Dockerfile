@@ -16,8 +16,8 @@ WORKDIR /csv2parquet
 RUN cargo install \
       --target $(cat /.platform) \
       --root /csv2parquet \
-      csv2parquet \
-      json2parquet
+      csv2parquet@0.4.0 \
+      json2parquet@0.4.0
 
 FROM debian:bullseye-slim
 COPY --link --from=build \
