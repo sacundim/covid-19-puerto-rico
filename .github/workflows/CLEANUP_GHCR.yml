@@ -11,23 +11,19 @@ jobs:
       - name: Clean up covid-19-puerto-rico-website
         uses: sacundim/delete-untagged-ghcr-action@main
         with:
-          owner: sacundim
           package: covid-19-puerto-rico-website
 
       - name: Clean up covid-19-puerto-rico-dbt
         uses: sacundim/delete-untagged-ghcr-action@main
         with:
-          owner: sacundim
           package: covid-19-puerto-rico-dbt
 
       - name: Clean up covid-19-puerto-rico-downloader
         uses: sacundim/delete-untagged-ghcr-action@main
         with:
-          owner: sacundim
           package: covid-19-puerto-rico-downloader
 
       - name: Clean up csv2parquet
         uses: sacundim/delete-untagged-ghcr-action@main
         with:
-          owner: sacundim
           package: csv2parquet
