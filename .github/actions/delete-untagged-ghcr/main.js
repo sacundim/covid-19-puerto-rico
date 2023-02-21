@@ -6,7 +6,7 @@ try {
     const package = core.getInput('package');
     const per_page = core.getInput('per-page');
 
-    const response = await github.request(
+    const response = github.request(
         "GET /${owner}/packages/container/${package}/versions",
         { per_page: per_page }
     );
@@ -15,7 +15,7 @@ try {
         if (version.metadata.container.tags.length == 0) {
             console.log("delete " + version.id)
             /*
-            const deleteResponse = await github.request(
+            const deleteResponse = github.request(
                 "DELETE /${owner}/packages/container/${package}/versions/" + version.id,
                 { }
             );
