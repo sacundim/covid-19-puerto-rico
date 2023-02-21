@@ -17,6 +17,8 @@ COVID19DATOS_V2_DIR="${S3_SYNC_DIR}"/covid19datos-v2
 timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 downloaded_date="${timestamp:0:10}"
 
+echo "$(date): $(csv2parquet --version)"
+
 cd "${TMP}"
 for dataset in "${DATASETS[@]}"
 do

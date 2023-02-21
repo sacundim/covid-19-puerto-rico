@@ -30,6 +30,8 @@ BIOPORTAL_SYNC_DIR="${S3_SYNC_DIR}/bioportal"
 timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 downloaded_date="${timestamp:0:10}"
 
+echo "$(date): $(json2parquet --version)"
+
 cd "${TMP}"
 for dataset in "${!DATASETS[@]}"
 do

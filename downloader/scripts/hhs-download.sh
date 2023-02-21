@@ -11,6 +11,7 @@ TMP="${REPO_ROOT}"/tmp
 S3_SYNC_DIR="${REPO_ROOT}"/s3-bucket-sync/covid-19-puerto-rico-data
 HHS_SYNC_DIR="${S3_SYNC_DIR}/HHS"
 
+echo "$(date): $(csv2parquet --version)"
 
 # We use a Python script to interact with the API to download the CSVs
 echo "$(date): Downloading datasets from HHS & CDC Socrata API servers..."

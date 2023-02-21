@@ -26,6 +26,7 @@ AGGREGATION_SYNC_DIR="${WALGREENS_SYNC_DIR}/Tracker_Aggregation"
 mkdir -p "${S3_SYNC_DIR}" "${WALGREENS_SYNC_DIR}" "${AGGREGATION_SYNC_DIR}"
 mkdir -p "${AGGREGATION_SYNC_DIR}"/csv_v1 "${AGGREGATION_SYNC_DIR}"/parquet_v2
 
+echo "$(date): $(csv2parquet --version)"
 
 echo "$(date): Fetching from endpoint: ${ENDPOINT}"
 wget --no-verbose -O "${TMP}/${BASENAME}.csv" "${ENDPOINT}"
