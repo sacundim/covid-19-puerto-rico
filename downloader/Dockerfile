@@ -35,11 +35,11 @@ RUN apt-get update
 RUN apt-get install -y ca-certificates wget lbzip2 time jq parallel
 RUN python3 -m pip install pipx
 RUN pipx install awscli
-COPY --from=ghcr.io/sacundim/csv2parquet \
+COPY --from=sacundim/csv2parquet \
     /usr/local/bin/csv2parquet \
     /usr/local/bin/json2parquet \
     /usr/local/bin/
-COPY --from=ghcr.io/sacundim/json2jsonl \
+COPY --from=sacundim/json2jsonl \
     /usr/local/bin/json2jsonl \
     /usr/local/bin/
 

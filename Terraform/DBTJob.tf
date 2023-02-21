@@ -14,7 +14,7 @@ resource "aws_batch_job_definition" "dbt_run_models" {
   platform_capabilities = ["FARGATE"]
 
   container_properties = jsonencode({
-    image = "ghcr.io/sacundim/covid-19-puerto-rico-dbt:latest"
+    image = "sacundim/covid-19-puerto-rico-dbt:latest"
     resourceRequirements = [
       {"type": "VCPU", "value": "0.25"},
       {"type": "MEMORY", "value": "1024"}

@@ -14,7 +14,7 @@ resource "aws_batch_job_definition" "walgreens_download_and_sync" {
   platform_capabilities = ["FARGATE"]
 
   container_properties = jsonencode({
-    image = "ghcr.io/sacundim/covid-19-puerto-rico-downloader:latest"
+    image = "sacundim/covid-19-puerto-rico-downloader:latest"
     command = ["andy-bloch-dashboard.sh"],
     environment = [
       {
