@@ -38,4 +38,4 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: |
-            sacundim/csv2parquet:latest
+            sacundim/csv2parquet:0.6.0
