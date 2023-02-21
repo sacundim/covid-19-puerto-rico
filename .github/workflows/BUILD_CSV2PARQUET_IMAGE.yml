@@ -47,3 +47,8 @@ jobs:
           tags: |
             sacundim/csv2parquet:latest
             ghcr.io/sacundim/csv2parquet:latest
+
+      - name: Clean up untagged images from GHCR
+        uses: sacundim/delete-untagged-ghcr-action@v1
+        with:
+          package: csv2parquet
