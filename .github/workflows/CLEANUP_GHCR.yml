@@ -8,9 +8,6 @@ jobs:
     name: Cleanup
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
       - name: Clean up covid-19-puerto-rico-website
         uses: sacundim/delete-untagged-ghcr-action@main
         with:
