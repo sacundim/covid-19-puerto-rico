@@ -40,8 +40,3 @@ jobs:
         cache-to: type=gha,mode=max
         tags: |
           sacundim/covid-19-puerto-rico-website:latest
-
-    - name: Clean up untagged images from GHCR
-      uses: sacundim/delete-untagged-ghcr-action@v1
-      with:
-        package: covid-19-puerto-rico-website
