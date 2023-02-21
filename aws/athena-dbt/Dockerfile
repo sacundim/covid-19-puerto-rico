@@ -22,4 +22,4 @@ COPY . .
 # Docker
 RUN mv docker/profiles.yml .
 
-ENTRYPOINT ["./run-models.sh"]
+CMD ["./run-models.sh"]
