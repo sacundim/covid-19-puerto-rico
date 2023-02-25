@@ -12,7 +12,7 @@ cat >config.toml <<EOF
 [athena]
 region_name = "${AWS_REGION?"AWS_REGION not set"}"
 schema_name = "${ATHENA_SCHEMA_NAME?"ATHENA_SCHEMA_NAME not set"}"
-work_group_name = "${ATHENA_WORK_GROUP?"ATHENA_WORK_GROUP not set"}"
+work_group = "${ATHENA_WORK_GROUP?"ATHENA_WORK_GROUP not set"}"
 EOF
 
 WEBSITE_DIR="output"
