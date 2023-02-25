@@ -18,13 +18,13 @@ def make_date_range(start, end):
             for n in range(int((end - start).days) + 1)]
 
 def create_athena_engine(args):
-    conn_str = "awsathena+rest://:@athena.{region_name}.amazonaws.com:443/{schema_name}?s3_staging_dir={s3_staging_dir}"
+    conn_str = "awsathena+rest://:@athena.{region_name}.amazonaws.com:443/{schema_name}?work_group={work_group}"
     toml_dict = toml.load(args.config_file)
     config = (toml_dict['athena'])
     return sqlalchemy.create_engine(conn_str.format(
         region_name=config['region_name'],
         schema_name=config['schema_name'],
-        s3_staging_dir=quote_plus(config['s3_staging_dir'])))
+        work_group=config['work_group']))
 
 def save_chart(chart, basename, formats):
     for format in formats:
