@@ -31,12 +31,12 @@ resource "aws_batch_job_definition" "website_generator" {
         value = data.aws_region.current.name
       },
       {
-        name = "ATHENA_S3_STAGING_DIR",
-        value = "s3://${var.athena_bucket_name}/"
-      },
-      {
         name = "ATHENA_SCHEMA_NAME",
         value = "covid19_puerto_rico_model"
+      },
+      {
+        name = "ATHENA_WORK_GROUP",
+        value = aws_athena_workgroup.main.name
       }
     ],
     executionRoleArn = aws_iam_role.ecs_task_role.arn
