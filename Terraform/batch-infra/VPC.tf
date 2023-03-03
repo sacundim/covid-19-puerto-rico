@@ -25,6 +25,8 @@ resource "aws_route_table" "main" {
   }
 }
 
+data "aws_availability_zones" "available" {}
+
 resource "aws_subnet" "subnet" {
   vpc_id     = aws_vpc.main.id
   count = var.az_count

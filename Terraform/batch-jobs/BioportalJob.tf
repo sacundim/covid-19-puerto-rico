@@ -61,7 +61,7 @@ resource "aws_cloudwatch_event_rule" "bioportal_daily_download" {
 resource "aws_cloudwatch_event_target" "bioportal_daily_download" {
   target_id = "bioportal-daily-download"
   rule = aws_cloudwatch_event_rule.bioportal_daily_download.name
-  arn = aws_batch_job_queue.ec2_amd64.arn
+  arn = data.aws_batch_job_queue.ec2.arn
   role_arn = aws_iam_role.ecs_events_role.arn
 
   batch_target {

@@ -2,5 +2,6 @@
 *.tfstate
 *.tfstate.*
 *.tfvars
-Backend.tf
+backend.tf
+provider.tf
 tmp/

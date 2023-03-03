@@ -36,7 +36,7 @@ resource "aws_batch_job_definition" "website_generator" {
       },
       {
         name = "ATHENA_WORK_GROUP",
-        value = aws_athena_workgroup.main.name
+        value = var.athena_workgroup_main_name
       }
     ],
     executionRoleArn = aws_iam_role.ecs_task_role.arn
@@ -69,5 +69,5 @@ resource "aws_batch_job_definition" "website_generator" {
 
 resource "aws_iam_role_policy_attachment" "ecs_job_role_main_bucket" {
   role       = aws_iam_role.ecs_job_role.name
-  policy_arn = aws_iam_policy.main_bucket_rw.arn
+  policy_arn = data.aws_iam_policy.main_bucket_rw.arn
 }

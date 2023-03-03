@@ -1,11 +1,11 @@
 #################################################################################
 #################################################################################
 ##
-## Covid19Datos V2 daily download task
+## Walgreens/Aegis daily download task
 ##
 
-resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
-  name = "covid19datos-v2-download-and-sync"
+resource "aws_batch_job_definition" "walgreens_download_and_sync" {
+  name = "walgreens-download-and-sync"
   tags = {
     Project = var.project_name
   }
@@ -15,7 +15,7 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
 
   container_properties = jsonencode({
     image = "sacundim/covid-19-puerto-rico-downloader:latest"
-    command = ["covid19datos-v2.sh"],
+    command = ["andy-bloch-dashboard.sh"],
     environment = [
       {
         name = "S3_DATA_URL",
@@ -28,8 +28,8 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
       "platformVersion": "LATEST"
     },
     resourceRequirements = [
-      {"type": "VCPU", "value": "2"},
-      {"type": "MEMORY", "value": "6144"}
+      {"type": "VCPU", "value": "0.25"},
+      {"type": "MEMORY", "value": "512"}
     ]
     networkConfiguration = {
       "assignPublicIp": "ENABLED"
@@ -39,7 +39,7 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
       "options": {
           "awslogs-group" = aws_cloudwatch_log_group.covid_19_puerto_rico.name,
           "awslogs-region" = var.aws_region,
-          "awslogs-stream-prefix" = "covid19datos-v2-download-and-sync"
+          "awslogs-stream-prefix" = "walgreens-download-and-sync"
       }
     }
   })
@@ -49,25 +49,25 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
   }
 
   timeout {
-    # Half an hour
-    attempt_duration_seconds = 1800
+    # 10 minutes, which is overkill
+    attempt_duration_seconds = 600
   }
 }
 
-resource "aws_cloudwatch_event_rule" "covid19datos_v2_daily_download" {
-  name        = "covid19datos-v2-daily-download"
-  description = "Run the daily covid19datos-v2 download."
+resource "aws_cloudwatch_event_rule" "walgreens_daily_download" {
+  name        = "walgreens-daily-download"
+  description = "Run the daily Walgreens download."
   schedule_expression = "cron(25 16 * * ? *)"
 }
 
-resource "aws_cloudwatch_event_target" "covid19datos_v2_daily_download" {
-  target_id = "covid19datos-v2-daily-download"
-  rule = aws_cloudwatch_event_rule.covid19datos_v2_daily_download.name
-  arn = aws_batch_job_queue.fargate_amd64.arn
+resource "aws_cloudwatch_event_target" "walgreens_daily_download" {
+  target_id = "walgreens-daily-download"
+  rule = aws_cloudwatch_event_rule.walgreens_daily_download.name
+  arn = data.aws_batch_job_queue.fargate.arn
   role_arn = aws_iam_role.ecs_events_role.arn
 
   batch_target {
-    job_definition = aws_batch_job_definition.covid19datos_v2_download_and_sync.arn
-    job_name       = aws_batch_job_definition.covid19datos_v2_download_and_sync.name
+    job_definition = aws_batch_job_definition.walgreens_download_and_sync.arn
+    job_name       = aws_batch_job_definition.walgreens_download_and_sync.name
   }
 }

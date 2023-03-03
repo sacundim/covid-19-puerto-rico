@@ -38,7 +38,7 @@ resource "aws_batch_job_definition" "dbt_run_models" {
       },
       {
         name = "ATHENA_WORK_GROUP",
-        value = aws_athena_workgroup.dbt.name
+        value = var.athena_workgroup_dbt_name
       },
       {
         name = "ATHENA_THREADS",
@@ -80,7 +80,7 @@ resource "aws_iam_role_policy_attachment" "ecs_job_role_athena" {
 
 resource "aws_iam_role_policy_attachment" "ecs_job_role_athena_bucket" {
   role       = aws_iam_role.ecs_job_role.name
-  policy_arn = aws_iam_policy.athena_bucket_rw.arn
+  policy_arn = data.aws_iam_policy.athena_bucket_rw.arn
 }
 
 
@@ -94,7 +94,7 @@ resource "aws_cloudwatch_event_rule" "dbt_daily_refresh" {
 resource "aws_cloudwatch_event_target" "dbt_daily_refresh" {
   target_id = "hhs-daily-download"
   rule = aws_cloudwatch_event_rule.dbt_daily_refresh.name
-  arn = aws_batch_job_queue.fargate_amd64.arn
+  arn = data.aws_batch_job_queue.fargate.arn
   role_arn = aws_iam_role.ecs_events_role.arn
 
   batch_target {

@@ -1,9 +1,9 @@
 locals {
-  s3_origin_id = "covid-19-puerto-rico"
+  s3_origin_id = var.project_name
 }
 
 resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
-  comment = "covid-19-puerto-rico-web"
+  comment = "${var.project_name}-web"
 }
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
@@ -70,11 +70,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   }
 }
 
-# to get the Cloud front URL if doamin/alias is not configured
-output "cloudfront_domain_name" {
-  value = aws_cloudfront_distribution.s3_distribution.domain_name
-}
-
 
 data "aws_iam_policy_document" "cloudfront_access_to_main_bucket" {
   statement {
@@ -136,6 +131,13 @@ resource "aws_acm_certificate_validation" "cert_validation" {
 #  validation_record_fqdns = [for record in aws_route53_record.root-a : record.fqdn]
 }
 
+# This provider is here only to support AWS Certificate Manager
+# ("ACM"), which works only in us-east-1
+provider "aws" {
+  alias = "acm_provider"
+  profile = "admin"
+  region = "us-east-1"
+}
 
 #############################################################
 #############################################################
