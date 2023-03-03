@@ -67,6 +67,7 @@ sources:
           warn_after: { count: 7, period: day }
           error_after: { count: 9, period: day }
       - name: united_states_covid_19_cases_and_deaths_by_state_v3
+      - name: weekly_united_states_covid_19_cases_and_deaths_by_state_v2
       - name: weekly_united_states_covid_19_cases_and_deaths_by_state_v3
         freshness:
           error_after: { count: 7, period: day }

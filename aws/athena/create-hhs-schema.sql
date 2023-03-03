@@ -951,11 +951,25 @@ LOCATION 's3://covid-19-puerto-rico-data/HHS/united_states_covid_19_community_le
 --
 -- https://data.cdc.gov/Case-Surveillance/Weekly-United-States-COVID-19-Cases-and-Deaths-by-/pwn4-m3yp
 --
-CREATE EXTERNAL TABLE covid_hhs_sources.weekly_united_states_covid_19_cases_and_deaths_by_state_v3 (
+CREATE EXTERNAL TABLE covid_hhs_sources.weekly_united_states_covid_19_cases_and_deaths_by_state_v2 (
   date_updated DATE,
   state STRING,
   start_date DATE,
   end_date DATE,
+  tot_cases BIGINT,
+  new_cases BIGINT,
+  tot_deaths BIGINT,
+  new_deaths BIGINT,
+  new_historic_cases BIGINT,
+  new_historic_deaths BIGINT
+) STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/HHS/weekly_united_states_covid_19_cases_and_deaths_by_state/v2/parquet/';
+
+CREATE EXTERNAL TABLE covid_hhs_sources.weekly_united_states_covid_19_cases_and_deaths_by_state_v3 (
+  date_updated STRING,
+  state STRING,
+  start_date STRING,
+  end_date STRING,
   tot_cases BIGINT,
   new_cases BIGINT,
   tot_deaths BIGINT,
