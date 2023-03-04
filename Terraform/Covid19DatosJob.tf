@@ -57,7 +57,7 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
 resource "aws_cloudwatch_event_rule" "covid19datos_v2_daily_download" {
   name        = "covid19datos-v2-daily-download"
   description = "Run the daily covid19datos-v2 download."
-  schedule_expression = "cron(25 16 * * ? *)"
+  schedule_expression = "cron(55 16 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "covid19datos_v2_daily_download" {
