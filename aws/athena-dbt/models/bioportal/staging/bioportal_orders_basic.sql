@@ -4,8 +4,8 @@
 
 {{
     config(pre_hook=[
-        "MSCK REPAIR TABLE {{ source('bioportal', 'orders_basic_v2') }}",
-        "MSCK REPAIR TABLE {{ source('bioportal', 'orders_basic_v5') }}"
+        "MSCK REPAIR TABLE {{ source('bioportal', 'orders_basic_v2').render_hive() }}",
+        "MSCK REPAIR TABLE {{ source('bioportal', 'orders_basic_v5').render_hive() }}"
     ])
 }}
 

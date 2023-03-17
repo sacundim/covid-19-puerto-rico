@@ -1,7 +1,7 @@
 {{
     config(enabled=false, pre_hook=[
-        "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'vacunacion_v1') }}",
-        "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'vacunacion_v2') }}"
+        "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'vacunacion_v1').render_hive() }}",
+        "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'vacunacion_v2').render_hive() }}"
     ])
 }}
 SELECT

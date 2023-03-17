@@ -8,8 +8,8 @@
 
 {{
     config(pre_hook=[
-        "MSCK REPAIR TABLE {{ source('bioportal', 'minimal_info_unique_tests_v4') }}",
-        "MSCK REPAIR TABLE {{ source('bioportal', 'minimal_info_unique_tests_v5') }}"
+        "MSCK REPAIR TABLE {{ source('bioportal', 'minimal_info_unique_tests_v4').render_hive() }}",
+        "MSCK REPAIR TABLE {{ source('bioportal', 'minimal_info_unique_tests_v5').render_hive() }}"
     ])
 }}
 

@@ -7,8 +7,8 @@
 
 {{
     config(pre_hook=[
-        "MSCK REPAIR TABLE {{ source('bioportal', 'deaths_v1') }}",
-        "MSCK REPAIR TABLE {{ source('bioportal', 'deaths_v5') }}"
+        "MSCK REPAIR TABLE {{ source('bioportal', 'deaths_v1').render_hive() }}",
+        "MSCK REPAIR TABLE {{ source('bioportal', 'deaths_v5').render_hive() }}"
     ])
 }}
 
