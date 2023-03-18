@@ -31,8 +31,8 @@ sources:
       - name: community_profile_report_county_v2
       - name: community_profile_report_county_v3
         freshness:
-          warn_after: { count: 5, period: day }
-          error_after: { count: 7, period: day }
+          warn_after: { count: 7, period: day }
+          error_after: { count: 9, period: day }
       - name: diagnostic_lab_testing_v2
       - name: diagnostic_lab_testing_v3
         freshness:
