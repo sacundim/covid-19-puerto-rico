@@ -85,7 +85,14 @@ def cdc_download(args):
         Asset('State-Level-Restrictions-on-Vaccine-Mandates-All', '3m2r-fh4s'),
         Asset('State-Level-Vaccine-Mandates-All', 'kw6u-z8u2'),
         Asset('US-State-and-Territorial-Orders-Closing-and-Reopening-Restaurants-By-County-2020-03-11-to-2021-05-31', '647a-wjd2'),
-        Asset('US-State-and-Territorial-Orders-Closing-and-Reopening-Bars-By-County-2020-03-11-to-2021-05-31', 'kp49-9dp8')
+        Asset('US-State-and-Territorial-Orders-Closing-and-Reopening-Bars-By-County-2020-03-11-to-2021-05-31', 'kp49-9dp8'),
+        Asset('US-State-and-Territorial-Public-Mask-Mandates-By-County-2020-04-10-to-2021-09-15', '62d6-pm5i'),
+        Asset('US-State-and-Territorial-Stay-At-Home-Orders-By-County-2020-03-15-to-2021-09-15', 'y2iy-8irm'),
+        Asset('US-State-and-Territorial-Public-Mask-Mandates-By-County-2020-04-10-to-2021-07-20', '42jj-z7fa'),
+        Asset('US-State-and-Territorial-Gathering-Bans-By-County-2020-03-11-to-2021-09-15', '7xvh-y5vh'),
+        Asset('US-State-and-Territorial-Stay-At-Home-Orders-By-County-2020-03-15-to-2021-05-31', 'hm3s-vk7u'),
+        Asset('US-State-and-Territorial-Gathering-Bans-By-County-2020-03-15-to-2021-05-31', '3qs9-qnbs'),
+        Asset('Efforts-to-sustain-education-and-subsidized-meal-programs', 'jkmz-c8jz'),
     ]
     download_datasets(args, 'data.cdc.gov', datasets)
 
