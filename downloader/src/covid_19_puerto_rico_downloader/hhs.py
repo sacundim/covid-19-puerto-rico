@@ -76,7 +76,16 @@ def cdc_download(args):
         Asset('rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status', '3rge-nu2a'),
         Asset('rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_booster_dose', 'd6p8-wqjm'),
         Asset('rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_second_booster_dose', 'ukww-au2k'),
-        Asset('united_states_covid_19_community_levels_by_county', '3nnm-4jni')
+        Asset('united_states_covid_19_community_levels_by_county', '3nnm-4jni'),
+
+        Asset('US-State-Territorial-and-County-Stay-At-Home-Orders-By-County-March-15-to-May-5', 'qz3x-mf9n'),
+        Asset('US-State-and-Territorial-Public-Mask-Mandates-By-State-2020-04-08-to-2021-09-15', 'tzyy-aayg'),
+        Asset('US-State-and-Territorial-Orders-Closing-and-Reopening-Bars-By-County-2020-03-11-to-2021-09-15', '9kjw-3miq'),
+        Asset('US-State-and-Territorial-Orders-Closing-and-Reopening-Restaurants-By-County-2020-03-11-to-2021-09-15', 'azmd-939x'),
+        Asset('State-Level-Restrictions-on-Vaccine-Mandates-All', '3m2r-fh4s'),
+        Asset('State-Level-Vaccine-Mandates-All', 'kw6u-z8u2'),
+        Asset('US-State-and-Territorial-Orders-Closing-and-Reopening-Restaurants-By-County-2020-03-11-to-2021-05-31', '647a-wjd2'),
+        Asset('US-State-and-Territorial-Orders-Closing-and-Reopening-Bars-By-County-2020-03-11-to-2021-05-31', 'kp49-9dp8')
     ]
     download_datasets(args, 'data.cdc.gov', datasets)
 
