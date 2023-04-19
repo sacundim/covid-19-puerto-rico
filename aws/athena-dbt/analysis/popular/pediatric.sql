@@ -6,25 +6,30 @@ WITH bulletins AS (
 	FROM {{ ref('bioportal_encounters_cube') }}
 )
 SELECT
-	bulletin_date,
-	collected_date,
-	COALESCE(age_lt <= 20, FALSE) under_20,
-	sum(population) population_2019,
-	sum(encounters) people_tested,
+	bulletin_date datos_hasta,
+	collected_date fecha_muestra,
+	COALESCE(age_lt <= 20, FALSE) menores,
+	sum(population) poblacion_2019,
+	sum(encounters) pruebas,
 	sum(sum(encounters)) OVER (
 		PARTITION BY bulletin_date, COALESCE(age_lt <= 20, FALSE)
 		ORDER BY collected_date
-	) cumulative_people_tested,
-	sum(cases) cases,
+	) pruebas_acumuladas,
+	sum(antigens) antigenos,
+	sum(sum(antigens)) OVER (
+		PARTITION BY bulletin_date, COALESCE(age_lt <= 20, FALSE)
+		ORDER BY collected_date
+	) antigenos_acumuladas,
+	sum(molecular) moleculares,
+	sum(sum(molecular)) OVER (
+		PARTITION BY bulletin_date, COALESCE(age_lt <= 20, FALSE)
+		ORDER BY collected_date
+	) moleculares_acumuladas,
+	sum(cases) casos,
 	sum(sum(cases)) OVER (
 		PARTITION BY bulletin_date, COALESCE(age_lt <= 20, FALSE)
 		ORDER BY collected_date
-	) cumulative_cases,
-	sum(deaths) deaths,
-	sum(sum(deaths)) OVER (
-		PARTITION BY bulletin_date, COALESCE(age_lt <= 20, FALSE)
-		ORDER BY collected_date
-	) cumulative_deaths,
+	) casos_acumulados,
 	CASE COALESCE(age_lt <= 20, FALSE)
 		WHEN TRUE
 		THEN max(hospitalizations.camas_ped_covid)
@@ -39,7 +44,7 @@ SELECT
 		WHEN TRUE
 		THEN max(hospitalizations.admission_pediatric_covid)
 		ELSE max(hospitalizations.admission_adult_covid)
-	END AS admission_covid
+	END AS admisiones_covid_hhs
 FROM {{ ref('bioportal_acs_age_curve') }} encounters
 INNER JOIN bulletins
 	USING (bulletin_date)
@@ -80,4 +85,4 @@ SELECT
 INNER JOIN bulletins
 	ON bulletins.max_bulletin_date = encounters.bulletin_date
 WHERE age_lt <= 20
-ORDER BY bulletin_date, collected_date DESC, age_lt;
+ORDER BY bulletin_date, collected_date, age_lt;
