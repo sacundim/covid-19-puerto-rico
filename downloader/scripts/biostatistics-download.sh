@@ -17,7 +17,7 @@ declare -r -A DATASETS=(
   ["deaths"]="deaths/covid-19/minimal"
   ["tests"]="orders/tests/covid-19/minimal"
   ["tests-grouped"]="orders/tests/covid-19/grouped-by-sample-collected-date-and-entity"
-  ["persons-with-vaccination-status"]="/vaccines/covid-19/persons-with-vaccination-status"
+  ["persons-with-vaccination-status"]="vaccines/covid-19/persons-with-vaccination-status"
 )
 
 HERE="$(dirname $0)"
