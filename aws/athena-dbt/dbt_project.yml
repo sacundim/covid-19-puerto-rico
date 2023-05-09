@@ -47,6 +47,9 @@ models:
         +materialized: table
         +bucketed_by: ["bulletin_date"]
         +bucket_count: 1
+    biostatistics:
+      staging:
+        +materialized: table
     covid19datos_v2:
       staging:
         +materialized: table
