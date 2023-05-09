@@ -73,6 +73,11 @@ variable "cidr_block" {
   default = "172.32.128.0/22"
 }
 
+variable "biostatistics_api_url" {
+  description = "Biostatistics API endpoint base URL"
+  default = "https://biostatistics.salud.pr.gov"
+}
+
 variable "bioportal_api_url" {
   description = "Bioportal API endpoint base URL"
   # The official one is this, but it's a load balancer or something that's slow as heck
