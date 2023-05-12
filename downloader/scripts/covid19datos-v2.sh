@@ -49,8 +49,8 @@ do
   mkdir -p \
     "${dataset_dir}/csv_v1/downloaded_date=${downloaded_date}" \
     "${dataset_dir}/parquet_v2/downloaded_date=${downloaded_date}"
-  mv "${basename}.csv.bz2" "${dataset_dir}/csv_v1/downloaded_date=${downloaded_date}/"
-  mv "${basename}.parquet" "${dataset_dir}/parquet_v2/downloaded_date=${downloaded_date}/"
+  mv "${basename}.csv.bz2" "${dataset_dir}/csv_v3/downloaded_date=${downloaded_date}/"
+  mv "${basename}.parquet" "${dataset_dir}/parquet_v3/downloaded_date=${downloaded_date}/"
 done
 
 echo "$(date): File sizes:"
