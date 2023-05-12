@@ -25,14 +25,31 @@ sources:
       - name: vacunacion_v1
         identifier: vacunacion_parquet_v1
         freshness: null
+
       - name: casos_v2
         identifier: casos_parquet_v2
+        freshness: null
       - name: defunciones_v2
         identifier: defunciones_parquet_v2
+        freshness: null
       - name: pruebas_v2
         identifier: pruebas_parquet_v2
+        freshness: null
       - name: sistemas_salud_v2
         identifier: sistemas_salud_parquet_v2
+        freshness: null
       - name: vacunacion_v2
         identifier: vacunacion_parquet_v2
+        freshness: null
+
+      - name: casos_v3
+        identifier: casos_parquet_v3
+      - name: defunciones_v3
+        identifier: defunciones_parquet_v3
+      - name: pruebas_v3
+        identifier: pruebas_parquet_v3
+      - name: sistemas_salud_v3
+        identifier: sistemas_salud_parquet_v3
+      - name: vacunacion_v3
+        identifier: vacunacion_parquet_v3
         freshness: null
