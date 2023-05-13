@@ -51,11 +51,12 @@ def healthdata_download(args):
     datasets = [
         Asset('covid-19_community_profile_report_county', 'di4u-7yu6'),
         Asset('covid-19_diagnostic_lab_testing', 'j8mb-icvb'),
-        Asset('estimated_icu', '7ctx-gtb7'),
-        Asset('estimated_inpatient_all', 'jjp9-htie'),
-        Asset('estimated_inpatient_covid', 'py8k-j5rq'),
+
         Asset('reported_hospital_utilization', '6xf2-c3ie'),
         Asset('reported_hospital_utilization_timeseries', 'g62h-syeh'),
+        # Newer dataset
+        Asset('reported_patient_impact_hospital_capacity_timeseries', 'sgxm-t72h'),
+
         Asset('reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries', 'anag-cw7u'),
         Asset('reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries_raw', 'uqq2-txqb'),
     ]
@@ -68,32 +69,9 @@ def cdc_download(args):
         Asset('excess_deaths_associated_with_covid_19', 'xkkf-xrst'),
         Asset('covid_vaccinations_state', 'unsk-b7fc'),
         Asset('covid_vaccinations_county', '8xkx-amqh'),
-        Asset('covid_vaccine_allocations_state_pfizer', 'saz5-9hgg'),
-        Asset('covid_vaccine_allocations_state_moderna', 'b7pe-5nws'),
-        Asset('covid_vaccine_allocations_state_janssen', 'w9zu-fywh'),
-        Asset('nationwide_commercial_laborator_seroprevalence_survey', 'd2tw-32xv'),
-        Asset('nationwide_blood_donor_seroprevalence', 'wi5c-cscz'),
         Asset('rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status', '3rge-nu2a'),
         Asset('rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_booster_dose', 'd6p8-wqjm'),
         Asset('rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_second_booster_dose', 'ukww-au2k'),
-        Asset('united_states_covid_19_community_levels_by_county', '3nnm-4jni'),
-
-        # Policy surveillance datasets. These have all been discontinued, so no need to download them again...
-#        Asset('US-State-Territorial-and-County-Stay-At-Home-Orders-By-County-March-15-to-May-5', 'qz3x-mf9n'),
-#        Asset('US-State-and-Territorial-Public-Mask-Mandates-By-State-2020-04-08-to-2021-09-15', 'tzyy-aayg'),
-#        Asset('US-State-and-Territorial-Orders-Closing-and-Reopening-Bars-By-County-2020-03-11-to-2021-09-15', '9kjw-3miq'),
-#        Asset('US-State-and-Territorial-Orders-Closing-and-Reopening-Restaurants-By-County-2020-03-11-to-2021-09-15', 'azmd-939x'),
-#        Asset('State-Level-Restrictions-on-Vaccine-Mandates-All', '3m2r-fh4s'),
-#        Asset('State-Level-Vaccine-Mandates-All', 'kw6u-z8u2'),
-#        Asset('US-State-and-Territorial-Orders-Closing-and-Reopening-Restaurants-By-County-2020-03-11-to-2021-05-31', '647a-wjd2'),
-#        Asset('US-State-and-Territorial-Orders-Closing-and-Reopening-Bars-By-County-2020-03-11-to-2021-05-31', 'kp49-9dp8'),
-#        Asset('US-State-and-Territorial-Public-Mask-Mandates-By-County-2020-04-10-to-2021-09-15', '62d6-pm5i'),
-#        Asset('US-State-and-Territorial-Stay-At-Home-Orders-By-County-2020-03-15-to-2021-09-15', 'y2iy-8irm'),
-#        Asset('US-State-and-Territorial-Public-Mask-Mandates-By-County-2020-04-10-to-2021-07-20', '42jj-z7fa'),
-#        Asset('US-State-and-Territorial-Gathering-Bans-By-County-2020-03-11-to-2021-09-15', '7xvh-y5vh'),
-#        Asset('US-State-and-Territorial-Stay-At-Home-Orders-By-County-2020-03-15-to-2021-05-31', 'hm3s-vk7u'),
-#        Asset('US-State-and-Territorial-Gathering-Bans-By-County-2020-03-15-to-2021-05-31', '3qs9-qnbs'),
-#        Asset('Efforts-to-sustain-education-and-subsidized-meal-programs', 'jkmz-c8jz'),
     ]
     download_datasets(args, 'data.cdc.gov', datasets)
 
