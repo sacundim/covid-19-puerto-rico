@@ -46,7 +46,8 @@ models:
       - name: reported_date
         description: '{{ doc("reported_date") }}'
         tests:
-          - not_null
+          - not_null:
+              severity: warn
       - name: result
         description: >
           The raw value of the `result` field in Biostatistics, which doesn't have much of a

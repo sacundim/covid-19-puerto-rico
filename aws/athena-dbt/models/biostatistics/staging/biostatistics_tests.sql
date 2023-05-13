@@ -29,60 +29,64 @@ WITH first_clean AS (
 	    nullif(orderTestResult, '') AS result,
         {{ parse_bioportal_result('orderTestResult', 'results.positive') }}
             AS positive,
+        -- Elvis has told me and I have validated that the `orderTestCreatedAt` in
+        -- Biostatistics, unlike the similar named field in old Bioportal, is a very
+        -- timestamp of when PRDoH actually received the result from the lab.
 	    {{ clean_utc_timestamp('orderTestCreatedAt') }}
-            AS created_at_utc
+            AS received_utc,
+        {{ utc_to_pr_date('orderTestCreatedAt') }}
+            AS received_date
     FROM {{ source('biostatistics', 'tests_v1') }} tests
     LEFT OUTER JOIN {{ ref('expected_test_results') }} results
         ON tests.orderTestResult = results.result
     WHERE orderTestCategory IN ('Covid-19')
     -- IMPORTANT: This prunes partitions
     AND downloaded_date >= cast(date_add('day', -32, current_date) AS VARCHAR)
+), date_aux_calculations AS (
+    SELECT
+        *,
+        {{ guess_mistyped_field_diff('year', 'raw_collected_date', 'received_date') }}
+            AS guessed_mistyped_year_collected_diff,
+        {{ guess_mistyped_field_diff('month', 'raw_collected_date', 'received_date') }}
+            AS guessed_mistyped_month_collected_diff,
+        {{ guess_mistyped_field_diff('year', 'raw_reported_date', 'received_date') }}
+            AS guessed_mistyped_year_reported_diff,
+        {{ guess_mistyped_field_diff('month', 'raw_reported_date', 'received_date') }}
+            AS guessed_mistyped_month_reported_diff
+    FROM first_clean
 )
 SELECT
-    *,
-    CASE
-	    WHEN test_type IN ('Molecular')
-	    THEN CASE
-	        -- Null out nonsense collected dates. As of 2021-04-15,
-	        -- out of over 1.9M PCR records there were only 267 with
-	        -- `raw_collected_date` earlier than March 1 2020 and
-	        -- 2,658 with nulls, so we don't really lose much.
-	        WHEN raw_collected_date >= DATE '2020-03-01'
-	        THEN raw_collected_date
-	        -- This was the original method I used to clean up null
-	        -- `collected_date` values, but now only for very early
-	        -- dates.  Suggested originally by @rafalab; he uses two
-	        -- days as the value and says that's the average, but my
-	        -- spot check said 2.8 days so I use that.
-	        WHEN DATE '2020-03-13' <= raw_reported_date
-	                AND raw_reported_date <= DATE '2020-07-01'
-	        THEN date_add('day', -3, raw_reported_date)
-	    END
-	    WHEN test_type IN ('Antígeno')
-	    -- As of 2021-04-15, out of 652k antigen test records,
-	    -- over 32k have `raw_collected_date` > `raw_reported_date`,
-	    -- generally off by one day but some by a handful.  A lot of
-	    -- the `raw_collected_date` look handwritten and approximate
-	    -- like `2021-02-03 11:25:00` (five minute increments, no
-	    -- seconds) while the `raw_reported_date` ones look computer
-	    -- generated (second precision values).  I'm going to assume
-	    -- that whichever of the two dates is earlier is likelier to
-	    -- be right.
-	    THEN least(coalesce(raw_collected_date, DATE '{{ var("end_of_time") }}'),
-	               coalesce(raw_reported_date, DATE '{{ var("end_of_time") }}'))
-	    ELSE coalesce(raw_collected_date, raw_reported_date, downloaded_date)
-    END AS collected_date,
-    CASE
-	    WHEN test_type IN ('Molecular')
-	    THEN CASE
-	        WHEN raw_reported_date >= DATE '2020-03-13'
-	        THEN raw_reported_date
-	        ELSE downloaded_date
-	    END
-	    WHEN test_type IN ('Antígeno')
-	    THEN greatest(coalesce(raw_collected_date, DATE '{{ var("beginning_of_time") }}'),
-	                  coalesce(raw_reported_date, DATE '{{ var("beginning_of_time") }}'))
-	    ELSE coalesce(raw_reported_date, raw_collected_date, downloaded_date)
-    END AS reported_date
-FROM first_clean
+    downloaded_date,
+    downloaded_at,
+    bulletin_date,
+    order_test_id,
+    patient_id,
+    age_range,
+    region,
+    municipality,
+    raw_test_type,
+    test_type,
+    raw_collected_utc,
+    raw_collected_date,
+    raw_result_report_utc,
+    raw_reported_date,
+    result,
+    positive,
+    received_utc,
+    received_date,
+    {{ clean_hand_reported_date(
+            'raw_collected_date',
+            'guessed_mistyped_year_collected_diff',
+            'guessed_mistyped_month_collected_diff',
+            'raw_reported_date',
+            'received_date')
+    }} AS collected_date,
+    {{ clean_hand_reported_date(
+            'raw_reported_date',
+            'guessed_mistyped_year_reported_diff',
+            'guessed_mistyped_month_reported_diff',
+            'raw_collected_date',
+            'received_date')
+    }} AS reported_date
+FROM date_aux_calculations
 ORDER BY downloaded_at, raw_collected_utc;
