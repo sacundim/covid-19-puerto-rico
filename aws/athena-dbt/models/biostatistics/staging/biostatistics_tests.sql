@@ -11,8 +11,8 @@ WITH first_clean AS (
         CAST({{ parse_filename_timestamp('tests."$path"') }} AT TIME ZONE 'America/Puerto_Rico' AS DATE)
             - INTERVAL '1' DAY
             AS bulletin_date,
-        orderTestId AS order_test_id,
-        patientId as patient_id,
+	    from_hex(replace(nullif(orderTestId, ''), '-')) AS order_test_id,
+	    from_hex(replace(nullif(patientId, ''), '-')) AS patient_id,
         {{ clean_age_range('patientAgeRange') }} AS age_range,
         {{ clean_region('patientRegion') }} AS region,
         {{ clean_municipality('patientCity') }} AS municipality,
