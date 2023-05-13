@@ -47,8 +47,8 @@ do
   dataset_dir="${COVID19DATOS_V2_DIR}/${dataset}"
   echo "$(date): Moving to ${dataset_dir}"
   mkdir -p \
-    "${dataset_dir}/csv_v1/downloaded_date=${downloaded_date}" \
-    "${dataset_dir}/parquet_v2/downloaded_date=${downloaded_date}"
+    "${dataset_dir}/csv_v3/downloaded_date=${downloaded_date}" \
+    "${dataset_dir}/parquet_v3/downloaded_date=${downloaded_date}"
   mv "${basename}.csv.bz2" "${dataset_dir}/csv_v3/downloaded_date=${downloaded_date}/"
   mv "${basename}.parquet" "${dataset_dir}/parquet_v3/downloaded_date=${downloaded_date}/"
 done
