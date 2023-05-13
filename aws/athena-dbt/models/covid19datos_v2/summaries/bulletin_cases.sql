@@ -98,4 +98,5 @@ SELECT
             ORDER BY bulletin_date
         ), 0) AS delta_deaths
 FROM joined
+WHERE datum_date IS NOT NULL
 ORDER BY bulletin_date, datum_date;

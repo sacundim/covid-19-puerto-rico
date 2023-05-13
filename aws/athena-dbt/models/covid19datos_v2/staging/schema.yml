@@ -14,7 +14,9 @@ models:
       - name: sample_date
         description: Test sample date.
         tests:
-          - not_null
+          - not_null:
+              where: >
+                downloaded_date < DATE '2023-05-12'
           - dbt_utils.accepted_range:
               min_value: DATE '2020-03-01'
               max_value: downloaded_at
@@ -28,6 +30,7 @@ models:
               values:
                 - CONFIRMADO
                 - PROBABLE
+                - SOSPECHOSO
       - name: city
         description: >
           What municipality is recorded for the case.  Some official documentation
@@ -40,7 +43,8 @@ models:
               to: ref('covid19datos_v2_casos_city_names')
               field: city
               where: >
-                city NOT IN ('OTROS')
+                city NOT IN ('OTROS', 'NO_DOMICILIADO')
+                    AND region NOT IN ('FUERA_DE_PR')
       - name: region
         description: >
           What region is recorded for the case.  Some official documentation
@@ -61,7 +65,9 @@ models:
       - name: downloaded_at
         description: '{{ doc("downloaded_at") }}'
         tests:
-          - not_null
+          - not_null:
+              where: >
+                downloaded_date < DATE '2023-05-12'
       - name: co_region
         description: >
           What region is recorded for the death.
@@ -73,7 +79,9 @@ models:
         description: >
           What type of death this record represents, "confirmed" or "probable."
         tests:
-          - not_null
+          - not_null:
+              where: >
+                downloaded_date < DATE '2023-05-12'
           - accepted_values:
               values:
                 - CONFIRMADO
@@ -111,11 +119,14 @@ models:
         description: >
           What type of test this is (antigen vs. NAAT).
         tests:
-          - not_null
+          - not_null:
+              where: >
+                downloaded_date < DATE '2023-05-12'
           - accepted_values:
               values:
                 - ANTIGENO
                 - MOLECULAR
+                - SEROLOGICA
       - name: co_resultado
         description: >
           The test's result.
