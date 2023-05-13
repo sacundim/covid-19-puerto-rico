@@ -48,6 +48,8 @@ models:
         +bucketed_by: ["bulletin_date"]
         +bucket_count: 1
     biostatistics:
+      deaths:
+        +materialized: table
       encounters:
         +materialized: table
       specimens:

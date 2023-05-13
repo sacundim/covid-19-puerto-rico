@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: biostatistics_deaths_cube
+    description: >
+      Our most detailed aggregate table over `biostatistics_deaths`.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - bulletin_date
+            - death_date
+            - age_range
+            - region
+            - vaccination_status_at_death
