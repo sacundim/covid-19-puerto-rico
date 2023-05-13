@@ -1,0 +1,61 @@
+version: 2
+
+models:
+  - name: biostatistics_specimens_cube
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - bulletin_date
+            - collected_date
+            - reported_date
+            - received_date
+            - test_type
+            - municipality
+            - age_range
+      - dbt_utils.expression_is_true:
+          expression: >
+            positive_specimens <= specimens
+    columns:
+      - name: collected_date
+        description: '{{ doc("collected_date") }}'
+        tests:
+          - not_null:
+              severity: warn
+          - dbt_utils.accepted_range:
+              min_value: DATE '2020-03-01'
+              max_value: bulletin_date
+              inclusive: true
+      - name: tests
+        description: Count of the number test specimens.
+      - name: positive_tests
+        description: Count of the number of positive test specimens.
+
+  - name: biostatistics_specimens_collected_agg
+    description: |
+      Aggregate of `biostatistics_specimens_cube` by test sample collection date.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - test_type
+            - bulletin_date
+            - collected_date
+
+  - name: biostatistics_specimens_repoted_agg
+    description: |
+      Aggregate of `biostatistics_specimens_cube` by lab report date.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - test_type
+            - bulletin_date
+            - reported_date
+
+  - name: biostatistics_specimens_repoted_agg
+    description: |
+      Aggregate of `biostatistics_specimens_cube` by result received date.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - test_type
+            - bulletin_date
+            - received_date
