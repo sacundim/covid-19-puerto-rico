@@ -14,12 +14,16 @@ SELECT
     test_type,
     municipality,
     age_range,
+    age_gte,
+    age_lt,
     count(*) specimens,
     count(*) FILTER (WHERE positive)
         AS positive_specimens
 FROM {{ ref('biostatistics_tests') }} specimens
 INNER JOIN bulletins
     USING (downloaded_at)
+INNER JOIN {{ ref('bioportal_age_ranges') }}
+    USING (age_range)
 WHERE downloaded_date >= CURRENT_DATE - INTERVAL '17' DAY
 AND test_type IN ('Molecular', 'Antígeno')
 AND DATE '2020-03-01' <= collected_date
@@ -36,7 +40,9 @@ GROUP BY
     received_date,
     test_type,
     municipality,
-    age_range
+    age_range,
+    age_gte,
+    age_lt
 ORDER BY
     downloaded_at,
     downloaded_date,
@@ -46,5 +52,5 @@ ORDER BY
     received_date,
     test_type,
     municipality,
-    age_range
+    age_gte
 ;

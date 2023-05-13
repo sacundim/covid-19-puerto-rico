@@ -1,9 +1,12 @@
 WITH grouped AS (
     SELECT
+        downloaded_at,
         bulletin_date,
         collected_date,
     	municipality,
         age_range,
+        age_gte,
+        age_lt,
         count(*) AS encounters,
         -- A case is a test encounter that had a positive test and
         -- is not a followup to an earlier positive encounter.
@@ -84,12 +87,17 @@ WITH grouped AS (
             WHERE NOT followup
             AND has_positive_molecular
         ) AS initial_positive_molecular
-    FROM {{ ref('biostatistics_encounters') }} tests
+    FROM {{ ref('biostatistics_encounters') }}
+    INNER JOIN {{ ref('bioportal_age_ranges') }}
+        USING (age_range)
     GROUP BY
+        downloaded_at,
         bulletin_date,
         collected_date,
         municipality,
-        age_range
+        age_range,
+        age_gte,
+        age_lt
 )
 SELECT
     *,
@@ -123,11 +131,12 @@ SELECT
         AS cumulative_initial_positive_molecular
 FROM grouped
 WINDOW collected AS (
-    PARTITION BY bulletin_date, municipality, age_range
+    PARTITION BY bulletin_date, municipality, age_gte
     ORDER BY collected_date
 )
 ORDER BY
+    downloaded_at,
 	bulletin_date,
 	collected_date,
 	municipality,
-	age_range;
+	age_gte;

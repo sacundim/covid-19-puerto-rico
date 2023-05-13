@@ -1,8 +1,10 @@
 SELECT
+    downloaded_at,
     bulletin_date,
 	collected_date,
 	age_range,
-	date_diff('day', collected_date, bulletin_date) age,
+	age_gte,
+	age_lt,
 	sum(encounters) encounters,
 	sum(cases) cases,
 	sum(cases_strict) cases_strict,
@@ -91,8 +93,11 @@ SELECT
 	    AS delta_initial_positive_molecular
 FROM {{ ref('biostatistics_encounters_cube') }}
 GROUP BY
+    downloaded_at,
 	bulletin_date,
 	age_range,
+	age_gte,
+	age_lt,
 	collected_date
 WINDOW cumulative AS (
     PARTITION BY bulletin_date, age_range
@@ -102,7 +107,8 @@ WINDOW cumulative AS (
     ORDER BY bulletin_date
 )
 ORDER BY
+    downloaded_at,
 	bulletin_date,
-	age_range,
+	age_gte,
 	collected_date
 ;
