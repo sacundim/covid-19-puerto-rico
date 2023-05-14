@@ -21,6 +21,9 @@ sources:
       - name: reported_hospital_utilization_v3
         freshness:
           warn_after: { count: 1, period: day }
+      - name: reported_patient_impact_hospital_capacity_timeseries_v3
+        freshness:
+          error_after: { count: 1, period: day }
       - name: hospital_facilities_v2
         identifier: reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries_v2
       - name: hospital_facilities_v3

@@ -334,6 +334,75 @@ CREATE EXTERNAL TABLE covid_hhs_sources.reported_hospital_utilization_v3 (
 ) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/reported_hospital_utilization/v3/parquet/';
 
+--
+-- https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/sgxm-t72h
+--
+
+CREATE EXTERNAL TABLE covid_hhs_sources.reported_patient_impact_hospital_capacity_timeseries_v3 (
+    state STRING,
+    date STRING,
+    critical_staffing_shortage_today_yes BIGINT,
+    critical_staffing_shortage_today_no BIGINT,
+    critical_staffing_shortage_today_not_reported BIGINT,
+    critical_staffing_shortage_anticipated_within_week_yes BIGINT,
+    critical_staffing_shortage_anticipated_within_week_no BIGINT,
+    critical_staffing_shortage_anticipated_within_week_not_reported BIGINT,
+    hospital_onset_covid BIGINT,
+    hospital_onset_covid_coverage BIGINT,
+    inpatient_beds BIGINT,
+    inpatient_beds_coverage BIGINT,
+    inpatient_beds_used BIGINT,
+    inpatient_beds_used_coverage BIGINT,
+    inpatient_beds_used_covid BIGINT,
+    inpatient_beds_used_covid_coverage BIGINT,
+    previous_day_admission_adult_covid_confirmed BIGINT,
+    previous_day_admission_adult_covid_confirmed_coverage BIGINT,
+    previous_day_admission_adult_covid_suspected BIGINT,
+    previous_day_admission_adult_covid_suspected_coverage BIGINT,
+    previous_day_admission_pediatric_covid_confirmed BIGINT,
+    previous_day_admission_pediatric_covid_confirmed_coverage BIGINT,
+    previous_day_admission_pediatric_covid_suspected BIGINT,
+    previous_day_admission_pediatric_covid_suspected_coverage BIGINT,
+    staffed_adult_icu_bed_occupancy BIGINT,
+    staffed_adult_icu_bed_occupancy_coverage BIGINT,
+    staffed_icu_adult_patients_confirmed_and_suspected_covid BIGINT,
+    staffed_icu_adult_patients_confirmed_and_suspected_covid_coverage BIGINT,
+    staffed_icu_adult_patients_confirmed_covid BIGINT,
+    staffed_icu_adult_patients_confirmed_covid_coverage BIGINT,
+    total_adult_patients_hospitalized_confirmed_and_suspected_covid BIGINT,
+    total_adult_patients_hospitalized_confirmed_and_suspected_covid_coverage BIGINT,
+    total_adult_patients_hospitalized_confirmed_covid BIGINT,
+    total_adult_patients_hospitalized_confirmed_covid_coverage BIGINT,
+    total_pediatric_patients_hospitalized_confirmed_and_suspected_covid BIGINT,
+    total_pediatric_patients_hospitalized_confirmed_and_suspected_covid_coverage BIGINT,
+    total_pediatric_patients_hospitalized_confirmed_covid BIGINT,
+    total_pediatric_patients_hospitalized_confirmed_covid_coverage BIGINT,
+    total_staffed_adult_icu_beds BIGINT,
+    total_staffed_adult_icu_beds_coverage BIGINT,
+    inpatient_beds_utilization DOUBLE,
+    inpatient_beds_utilization_coverage BIGINT,
+    inpatient_beds_utilization_numerator BIGINT,
+    inpatient_beds_utilization_denominator BIGINT,
+    percent_of_inpatients_with_covid DOUBLE,
+    percent_of_inpatients_with_covid_coverage BIGINT,
+    percent_of_inpatients_with_covid_numerator BIGINT,
+    percent_of_inpatients_with_covid_denominator BIGINT,
+    inpatient_bed_covid_utilization DOUBLE,
+    inpatient_bed_covid_utilization_coverage BIGINT,
+    inpatient_bed_covid_utilization_numerator BIGINT,
+    inpatient_bed_covid_utilization_denominator BIGINT,
+    adult_icu_bed_covid_utilization DOUBLE,
+    adult_icu_bed_covid_utilization_coverage BIGINT,
+    adult_icu_bed_covid_utilization_numerator BIGINT,
+    adult_icu_bed_covid_utilization_denominator BIGINT,
+    adult_icu_bed_utilization DOUBLE,
+    adult_icu_bed_utilization_coverage BIGINT,
+    adult_icu_bed_utilization_numerator BIGINT,
+    adult_icu_bed_utilization_denominator BIGINT
+    -- There's a bunch more columns that I haven't incorporated yet
+) STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/HHS/reported_patient_impact_hospital_capacity_timeseries/v3/parquet/';
+
 
 --
 -- https://healthdata.gov/dataset/covid-19-reported-patient-impact-and-hospital-capacity-facility
