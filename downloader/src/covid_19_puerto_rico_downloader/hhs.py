@@ -84,6 +84,7 @@ def download_datasets(args, server, datasets):
         for dataset in datasets:
             logging.info('Fetching %s...', dataset.name)
             csv_file = dataset.get_csv(client)
+            logging.info('Fetched %s as %s', dataset.name, csv_file)
 
 
 class Asset():
