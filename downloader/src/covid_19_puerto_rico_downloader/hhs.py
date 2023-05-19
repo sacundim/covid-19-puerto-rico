@@ -68,6 +68,7 @@ def cdc_download(args):
         # Discontinued on 2023-05-11, will have a final release on 2023-06-01
         Asset('weekly_united_states_covid_19_cases_and_deaths_by_state', 'pwn4-m3yp'),
 
+        Asset('provisional_covid_19_deaths_by_sex_and_age', '9bhg-hcku'),
         Asset('excess_deaths_associated_with_covid_19', 'xkkf-xrst'),
         Asset('covid_vaccinations_state', 'unsk-b7fc'),
         Asset('covid_vaccinations_county', '8xkx-amqh'),
