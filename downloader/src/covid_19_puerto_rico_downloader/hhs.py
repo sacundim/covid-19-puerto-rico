@@ -65,7 +65,9 @@ def healthdata_download(args):
 def cdc_download(args):
     '''Download datasets hosted at data.cdc.gov endpoints'''
     datasets = [
+        # Discontinued on 2023-05-11, will have a final release on 2023-06-01
         Asset('weekly_united_states_covid_19_cases_and_deaths_by_state', 'pwn4-m3yp'),
+
         Asset('excess_deaths_associated_with_covid_19', 'xkkf-xrst'),
         Asset('covid_vaccinations_state', 'unsk-b7fc'),
         Asset('covid_vaccinations_county', '8xkx-amqh'),
