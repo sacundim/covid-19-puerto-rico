@@ -1101,3 +1101,29 @@ CREATE EXTERNAL TABLE covid_hhs_sources.excess_deaths_associated_with_covid_19_v
   `Note` STRING
 ) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/excess_deaths_associated_with_covid_19/v3/parquet/';
+
+
+--
+-- CDC Provisional COVID-19 Deaths by Sex and Age
+--
+-- https://data.cdc.gov/NCHS/Provisional-COVID-19-Deaths-by-Sex-and-Age/9bhg-hcku
+--
+CREATE EXTERNAL TABLE covid_hhs_sources.provisional_covid_19_deaths_by_sex_and_age_parquet_v3 (
+  `Data As Of` STRING,
+  `Start Date` String,
+  `End Date` String,
+  `Group` STRING,
+  `Year` BIGINT,
+  `Month` BIGINT,
+  `State` STRING,
+  `Sex` STRING,
+  `Age Group` STRING,
+  `COVID-19 Deaths` BIGINT,
+  `Total Deaths` BIGINT,
+  `Pneumonia Deaths` BIGINT,
+  `Pneumonia and COVID-19 Deaths` BIGINT,
+  `Influenza Deaths` BIGINT,
+  `Pneumonia, Influenza, or COVID-19 Deaths` BIGINT,
+  `Footnote` STRING
+) STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/HHS/provisional_covid_19_deaths_by_sex_and_age/v3/parquet/';
