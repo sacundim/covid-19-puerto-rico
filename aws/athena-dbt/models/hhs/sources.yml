@@ -33,9 +33,6 @@ sources:
           error_after: { count: 9, period: day }
       - name: community_profile_report_county_v2
       - name: community_profile_report_county_v3
-        freshness:
-          warn_after: { count: 7, period: day }
-          error_after: { count: 9, period: day }
       - name: diagnostic_lab_testing_v2
       - name: diagnostic_lab_testing_v3
         freshness:
@@ -46,9 +43,6 @@ sources:
           CAST(from_iso8601_timestamp(
                 regexp_extract("$path", '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z'))
                 AS TIMESTAMP)
-        freshness:
-          # I no longer pull this dataset, so it'll never be fresh again.
-          warn_after: { count: 1, period: day }
       - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_v2
       - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_v3
         freshness:
@@ -66,9 +60,6 @@ sources:
 #          error_after: { count: 33, period: day }
       - name: community_levels_by_county_v2
       - name: community_levels_by_county_v3
-        freshness:
-          warn_after: { count: 7, period: day }
-          error_after: { count: 9, period: day }
       - name: united_states_covid_19_cases_and_deaths_by_state_v3
       - name: weekly_united_states_covid_19_cases_and_deaths_by_state_v2
       - name: weekly_united_states_covid_19_cases_and_deaths_by_state_v3
