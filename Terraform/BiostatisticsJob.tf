@@ -32,7 +32,7 @@ resource "aws_batch_job_definition" "biostatistics_download_and_sync" {
     jobRoleArn = aws_iam_role.ecs_job_role.arn
     resourceRequirements = [
       {"type": "VCPU", "value": "4"},
-      {"type": "MEMORY", "value": "14336"}
+      {"type": "MEMORY", "value": "28672"}
     ]
     "logConfiguration": {
       "logDriver": "awslogs",
