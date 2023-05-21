@@ -32,7 +32,7 @@ STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/biostatistics.salud.pr.gov/data-sources/parquet_v1/';
 
 CREATE EXTERNAL TABLE biostatistics_sources.data_sources_parquet_v2 (
-    id BINARY,
+    id STRING,
     name STRING,
     recordCount BIGINT,
     lastUpdated TIMESTAMP,
@@ -62,7 +62,7 @@ STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/biostatistics.salud.pr.gov/deaths/parquet_v1/';
 
 CREATE EXTERNAL TABLE biostatistics_sources.deaths_parquet_v2 (
-    deathId BINARY,
+    deathId STRING,
     deathDate DATE,
     deathReportDate DATE,
     sex STRING,
@@ -99,11 +99,11 @@ STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/biostatistics.salud.pr.gov/cases/parquet_v1/';
 
 CREATE EXTERNAL TABLE biostatistics_sources.cases_parquet_v2 (
-    caseId BINARY,
+    caseId STRING,
     caseCategory STRING,
     caseType STRING,
     caseClassification STRING,
-    patientId BINARY,
+    patientId STRING,
     patientAgeRange STRING,
     patientSex STRING,
     patientPhysicalCity STRING,
@@ -140,8 +140,8 @@ STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/biostatistics.salud.pr.gov/tests/parquet_v1/';
 
 CREATE EXTERNAL TABLE biostatistics_sources.tests_parquet_v2 (
-    orderTestId BINARY,
-    patientId BINARY,
+    orderTestId STRING,
+    patientId STRING,
     patientAgeRange STRING,
     patientRegion STRING,
     patientCity STRING,
