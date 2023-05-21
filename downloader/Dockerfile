@@ -1,4 +1,4 @@
-FROM python:3.9-slim AS base
+FROM python:3.9 AS base
 
 #####################################################################
 #####################################################################
@@ -7,7 +7,7 @@ FROM python:3.9-slim AS base
 ## and cache our Python library dependencies.
 ##
 FROM base AS poetry
-RUN pip install poetry==1.1.14
+RUN pip install poetry==1.5.0
 
 
 FROM poetry AS requirements
@@ -84,7 +84,6 @@ RUN mkdir -p \
     scripts \
     tmp
 COPY scripts/*.sh ./scripts/
-COPY duckdb duckdb
 RUN chmod +x ./scripts/*.sh
 
 ENV PATH=/root/.local/bin:/covid-19-puerto-rico/scripts:$PATH

@@ -8,13 +8,14 @@ packages = [{ include = "covid_19_puerto_rico_downloader", from = "src"}]
 [tool.poetry.scripts]
 hhs-socrata-download = 'covid_19_puerto_rico_downloader:hhs_download'
 covid19datos-download = 'covid_19_puerto_rico_downloader:covid19datos'
+biostatistics-download = 'covid_19_puerto_rico_downloader:biostatistics'
 
 [tool.poetry.dependencies]
 python = "^3.9"
 requests = "^2.25.1"
-boto3 = "^1.17.22"
 sodapy = "^2.1.0"
-pytz = "^2021.1"
+duckdb = "^0.8.0"
+jinja2 = "^3.1.2"
 
 [tool.poetry.dev-dependencies]
 
