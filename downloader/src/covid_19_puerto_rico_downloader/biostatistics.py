@@ -1,9 +1,11 @@
 import argparse
 import datetime
 import duckdb
-from jinja2 import Environment, PackageLoader, select_autoescape
+from jinja2 import Environment, PackageLoader
 import logging
+import pathlib
 import requests
+import shutil
 import subprocess
 from threading import Thread, Lock
 
@@ -11,6 +13,9 @@ from threading import Thread, Lock
 
 def process_arguments():
     parser = argparse.ArgumentParser(description='Download PRDoH Biostatistics COVID-19 data sets')
+    parser.add_argument('--s3-sync-dir', type=str,
+                        default='/covid-19-puerto-rico/s3-bucket-sync/covid-19-puerto-rico-data',
+                        help='Override for directory to which to deposit the output files for sync')
     parser.add_argument('--endpoint-url', type=str, default='https://biostatistics.salud.pr.gov',
                         help='Override for the URL of the Biostatistics API endpoint root.')
     parser.add_argument('--bzip2-command', type=str, default='lbzip2',
@@ -20,10 +25,10 @@ def process_arguments():
     return parser.parse_args()
 
 DATASETS = {
+    "tests": "orders/tests/covid-19/minimal",
     "data-sources": "data-sources",
     "cases": "cases/covid-19/minimal",
     "deaths": "deaths/covid-19/minimal",
-    "tests": "orders/tests/covid-19/minimal",
     "tests-grouped": "orders/tests/covid-19/grouped-by-sample-collected-date-and-entity",
     "persons-with-vaccination-status": "vaccines/covid-19/persons-with-vaccination-status",
 }
@@ -83,12 +88,13 @@ class Task():
         self.jinja = jinja
         self.mutex = mutex
         self.endpoint_url = args.endpoint_url
-        self.args = args
+        self.s3_sync_dir = pathlib.Path(args.s3_sync_dir)
 
     def __call__(self):
         jsonfile = self.download()
         parquetfile = self.convert(jsonfile)
         bzip2file = self.compress(jsonfile)
+        self.move_to_sync_dir(bzip2file, parquetfile)
 
     def download(self):
         url = f'{self.endpoint_url}/{self.path}'
@@ -125,3 +131,20 @@ class Task():
         logging.info("Compressing %s to bzip2 format...", jsonfile)
         subprocess.run(['lbzip2', '-f', '-9', jsonfile])
         logging.info("Compressed %s to bzip2 format.", jsonfile)
+        return f'{jsonfile}.bz2'
+
+    def move_to_sync_dir(self, jsonfile, parquetfile):
+        logging.info("Moving files to sync dir %s...", self.s3_sync_dir)
+        self.s3_sync_dir.mkdir(exist_ok=True)
+        biostatistics_dir = pathlib.Path(f'{self.s3_sync_dir}/{self.dataset}')
+        biostatistics_dir.mkdir(exist_ok=True)
+
+        json_dir = pathlib.Path(f'{biostatistics_dir}/json_v1')
+        json_dir.mkdir(exist_ok=True)
+        shutil.move(jsonfile, json_dir)
+        logging.info("Moved %s to %s...", jsonfile, json_dir)
+
+        parquet_dir = pathlib.Path(f'{biostatistics_dir}/parquet_v2')
+        parquet_dir.mkdir(exist_ok=True)
+        shutil.move(parquetfile, parquet_dir)
+        logging.info("Moved %s to %s...", parquetfile, parquet_dir)
