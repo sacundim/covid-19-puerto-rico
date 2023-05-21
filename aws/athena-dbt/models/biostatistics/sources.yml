@@ -5,20 +5,36 @@ sources:
     schema: biostatistics_sources
     freshness:
       error_after: { count: 1, period: day }
-    loaded_at_field: >
-      CAST(from_iso8601_timestamp(
-      		regexp_extract("$path", '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z'))
-      		AS TIMESTAMP)
+    loaded_at_field: downloadedAt
     tables:
       - name: cases_v1
         identifier: cases_parquet_v1
+        freshness:
       - name: data_sources_v1
         identifier: data_sources_parquet_v1
+        freshness:
       - name: deaths_v1
         identifier: deaths_parquet_v1
+        freshness:
       - name: tests_v1
         identifier: tests_parquet_v1
+        freshness:
       - name: tests_grouped_v1
         identifier: tests_grouped_parquet_v1
+        freshness:
       - name: persons_with_vax_status_v1
         identifier: persons_with_vax_status_parquet_v1
+        freshness:
+
+      - name: cases_v2
+        identifier: cases_parquet_v2
+      - name: data_sources_v2
+        identifier: data_sources_parquet_v2
+      - name: deaths_v2
+        identifier: deaths_parquet_v2
+      - name: tests_v2
+        identifier: tests_parquet_v2
+      - name: tests_grouped_v2
+        identifier: tests_grouped_parquet_v2
+      - name: persons_with_vax_status_v2
+        identifier: persons_with_vax_status_parquet_v2

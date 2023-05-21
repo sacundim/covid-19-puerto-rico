@@ -1,14 +1,13 @@
 {{
     config(pre_hook=[
-        "MSCK REPAIR TABLE {{ source('biostatistics', 'tests_v1').render_hive() }}"
+        "MSCK REPAIR TABLE {{ source('biostatistics', 'tests_v2').render_hive() }}"
     ])
 }}
 WITH first_clean AS (
     SELECT
         date(downloaded_date) AS downloaded_date,
-        {{ parse_filename_timestamp('tests."$path"') }}
-            AS downloaded_at,
-        CAST({{ parse_filename_timestamp('tests."$path"') }} AT TIME ZONE 'America/Puerto_Rico' AS DATE)
+        downloadedAt AS downloaded_at,
+        CAST(downloadedAt AT TIME ZONE 'America/Puerto_Rico' AS DATE)
             - INTERVAL '1' DAY
             AS bulletin_date,
 	    from_hex(replace(nullif(orderTestId, ''), '-')) AS order_test_id,
@@ -18,13 +17,12 @@ WITH first_clean AS (
         {{ clean_municipality('patientCity') }} AS municipality,
 	    nullif(orderTestType, '') AS raw_test_type,
 	    {{ clean_test_type('orderTestType') }} AS test_type,
-	    {{ clean_utc_timestamp('sampleCollectedDate') }}
-            AS raw_collected_utc,
-        {{ utc_to_pr_date('sampleCollectedDate') }}
+	    sampleCollectedDate AS raw_collected_utc,
+        date(sampleCollectedDate AT TIME ZONE 'America/Puerto_Rico')
             AS raw_collected_date,
-	    {{ clean_utc_timestamp('resultReportDate') }}
+        date(resultReportDate AT TIME ZONE 'America/Puerto_Rico')
             AS raw_result_report_utc,
-        {{ utc_to_pr_date('resultReportDate') }}
+        date(resultReportDate AT TIME ZONE 'America/Puerto_Rico')
             AS raw_reported_date,
 	    nullif(orderTestResult, '') AS result,
         {{ parse_bioportal_result('orderTestResult', 'results.positive') }}
@@ -32,11 +30,10 @@ WITH first_clean AS (
         -- Elvis has told me and I have validated that the `orderTestCreatedAt` in
         -- Biostatistics, unlike the similar named field in old Bioportal, is a very
         -- timestamp of when PRDoH actually received the result from the lab.
-	    {{ clean_utc_timestamp('orderTestCreatedAt') }}
-            AS received_utc,
-        {{ utc_to_pr_date('orderTestCreatedAt') }}
+	    orderTestCreatedAt AS received_utc,
+        date(orderTestCreatedAt AT TIME ZONE 'America/Puerto_Rico')
             AS received_date
-    FROM {{ source('biostatistics', 'tests_v1') }} tests
+    FROM {{ source('biostatistics', 'tests_v2') }} tests
     LEFT OUTER JOIN {{ ref('expected_test_results') }} results
         ON tests.orderTestResult = results.result
     WHERE orderTestCategory IN ('Covid-19')

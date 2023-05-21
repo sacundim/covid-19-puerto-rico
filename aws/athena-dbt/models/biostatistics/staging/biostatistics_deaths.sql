@@ -1,26 +1,25 @@
 {{
     config(pre_hook=[
-        "MSCK REPAIR TABLE {{ source('biostatistics', 'deaths_v1').render_hive() }}"
+        "MSCK REPAIR TABLE {{ source('biostatistics', 'deaths_v2').render_hive() }}"
     ])
 }}
 
 WITH first_clean AS (
 	SELECT
 		date(downloaded_date) AS downloaded_date,
-        {{ parse_filename_timestamp('"$path"') }}
-            AS downloaded_at,
-	    CAST({{ parse_filename_timestamp('"$path"') }} AT TIME ZONE 'America/Puerto_Rico' AS DATE)
+        downloadedAt AS downloaded_at,
+	    CAST(downloadedAt AT TIME ZONE 'America/Puerto_Rico' AS DATE)
 	        - INTERVAL '1' DAY
 	        AS bulletin_date,
         deathId AS death_id,
-        date(deathDate) AS raw_death_date,
-        date(deathReportDate) AS raw_death_report_date,
+        deathDate AS raw_death_date,
+        deathReportDate AS raw_death_report_date,
 	    nullif(sex, '') sex,
         {{ clean_age_range('ageRange') }} AS age_range,
         {{ clean_region('physicalRegion') }} AS region,
         nullif(vaccinationStatusAtDeath, '')
             AS vaccination_status_at_death
-	FROM {{ source('biostatistics', 'deaths_v1') }}
+	FROM {{ source('biostatistics', 'deaths_v2') }}
 )
 SELECT
 	*,

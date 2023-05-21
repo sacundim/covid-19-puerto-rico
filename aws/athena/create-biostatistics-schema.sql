@@ -182,7 +182,8 @@ CREATE EXTERNAL TABLE biostatistics_sources.tests_grouped_parquet_v2 (
     totalMolecularTestsNegative BIGINT,
     totalAntigensTestsProcessed BIGINT,
     totalAntigensTestsPositive BIGINT,
-    totalAntigensTestsNegative BIGINT
+    totalAntigensTestsNegative BIGINT,
+    downloadedAt TIMESTAMP
 ) PARTITIONED BY (downloaded_date STRING)
 STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/biostatistics.salud.pr.gov/tests-grouped/parquet_v2/';
