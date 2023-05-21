@@ -79,6 +79,8 @@ def make_jinja():
     )
 
 class Task():
+    TS_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
+
     def __init__(self, dataset, path, now, http, duck, jinja, mutex, args):
         self.dataset = dataset
         self.path = path
@@ -100,7 +102,7 @@ class Task():
         url = f'{self.endpoint_url}/{self.path}'
         with self.mutex:
             logging.info("Downloading %s from %s...", self.dataset, url)
-            jsonfile = f'{self.dataset}_{self.now.isoformat()}.json'
+            jsonfile = f'{self.dataset}_{self.now.strftime(Task.TS_FORMAT)}.json'
 
             request = self.http.get(url)
             with open(jsonfile, 'wb') as fd:
@@ -112,7 +114,7 @@ class Task():
 
     def convert(self, jsonfile):
         logging.info("Converting %s to Parquet...", self.dataset)
-        parquetfile = f'{self.dataset}_{self.now.isoformat()}.parquet'
+        parquetfile = f'{self.dataset}_{self.now.strftime(Task.TS_FORMAT)}.parquet'
 
         template = self.jinja.get_template(f'{self.dataset}.sql.j2')
         sql = template.render(
