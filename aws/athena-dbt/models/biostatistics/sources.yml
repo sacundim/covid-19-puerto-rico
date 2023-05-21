@@ -1,0 +1,24 @@
+version: 2
+
+sources:
+  - name: biostatistics
+    schema: biostatistics_sources
+    freshness:
+      error_after: { count: 1, period: day }
+    loaded_at_field: >
+      CAST(from_iso8601_timestamp(
+      		regexp_extract("$path", '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z'))
+      		AS TIMESTAMP)
+    tables:
+      - name: cases_v1
+        identifier: cases_parquet_v1
+      - name: data_sources_v1
+        identifier: data_sources_parquet_v1
+      - name: deaths_v1
+        identifier: deaths_parquet_v1
+      - name: tests_v1
+        identifier: tests_parquet_v1
+      - name: tests_grouped_v1
+        identifier: tests_grouped_parquet_v1
+      - name: persons_with_vax_status_v1
+        identifier: persons_with_vax_status_parquet_v1

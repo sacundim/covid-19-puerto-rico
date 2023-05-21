@@ -1,0 +1,29 @@
+COPY (
+    SELECT
+        *,
+        TIMESTAMP '{{ downloaded_at }}' AS downloadedAt
+    FROM read_json(
+            '{{ input_json }}',
+            format='array',
+            union_by_name=true,
+            columns={
+                caseId: 'UUID',
+                caseCategory: 'STRING',
+                caseType: 'STRING',
+                caseClassification: 'STRING',
+                patientId: 'UUID',
+                patientAgeRange: 'STRING',
+                patientSex: 'STRING',
+                patientPhysicalCity: 'STRING',
+                patientPhysicalRegion: 'STRING',
+                earliestPositiveRankingTestSampleCollectedDate: 'TIMESTAMP WITH TIME ZONE',
+                earliestPositiveDiagnosticTestSampleCollectedDate: 'TIMESTAMP WITH TIME ZONE',
+                caseCreatedAt: 'TIMESTAMP WITH TIME ZONE'
+            }
+    )
+    ORDER BY
+        earliestPositiveRankingTestSampleCollectedDate
+)
+TO '{{ output_parquet }}' (
+    FORMAT 'parquet', COMPRESSION 'GZIP'
+);

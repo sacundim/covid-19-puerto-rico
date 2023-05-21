@@ -1,0 +1,22 @@
+COPY (
+    SELECT
+        *,
+        TIMESTAMP '{{ downloaded_at }}' AS downloadedAt
+    FROM read_json(
+            '{{ input_json }}',
+            format='array',
+            union_by_name=true,
+            columns={
+                id: 'UUID',
+                name: 'STRING',
+                recordCount: 'UBIGINT',
+                lastUpdated: 'TIMESTAMP WITH TIME ZONE',
+                originTimeZone: 'STRING'
+            }
+    )
+    ORDER BY
+        lastUpdated
+)
+TO '{{ output_parquet }}' (
+    FORMAT 'parquet', COMPRESSION 'GZIP'
+);

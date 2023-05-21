@@ -47,6 +47,17 @@ models:
         +materialized: table
         +bucketed_by: ["bulletin_date"]
         +bucket_count: 1
+    biostatistics:
+      deaths:
+        +materialized: table
+      encounters:
+        +materialized: table
+      specimens:
+        +materialized: table
+      staging:
+        +materialized: table
+      summaries:
+        +materialized: table
     covid19datos_v2:
       staging:
         +materialized: table

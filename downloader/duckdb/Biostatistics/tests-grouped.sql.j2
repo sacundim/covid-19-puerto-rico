@@ -1,0 +1,27 @@
+COPY (
+    SELECT
+        *,
+        TIMESTAMP '{{ downloaded_at }}' AS downloadedAt
+    FROM read_json(
+            '{{ input_json }}',
+            format='array',
+            union_by_name=true,
+            columns={
+                sampleCollectedDate: 'DATE',
+                entity: 'STRING',
+                entityCity: 'STRING',
+                totalTestsProcessed: 'UBIGINT',
+                totalMolecularTestsProcessed: 'UBIGINT',
+                totalMolecularTestsPositive: 'UBIGINT',
+                totalMolecularTestsNegative: 'UBIGINT',
+                totalAntigensTestsProcessed: 'UBIGINT',
+                totalAntigensTestsPositive: 'UBIGINT',
+                totalAntigensTestsNegative: 'UBIGINT'
+            }
+    )
+    ORDER BY
+        sampleCollectedDate
+)
+TO '{{ output_parquet }}' (
+    FORMAT 'parquet', COMPRESSION 'GZIP'
+);
