@@ -16,7 +16,7 @@ jinja \
   -D input_json "${input_json}" \
   -D output_parquet "${output_parquet}" \
   "${TEMPLATES_DIR}/${dataset}.sql.j2" \
-  | duckdb -bail
+  | duckdb -bail "${dataset}.duckdb"
 echo "$(date): Converted ${input_json} to Parquet."
 
 
