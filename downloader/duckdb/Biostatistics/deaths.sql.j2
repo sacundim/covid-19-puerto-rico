@@ -1,0 +1,24 @@
+COPY (
+    SELECT
+        *,
+        TIMESTAMP '{{ downloaded_at }}' AS downloadedAt
+    FROM read_json(
+            '{{ input_json }}',
+            format='array',
+            union_by_name=true,
+            columns={
+                deathId: 'UUID',
+                deathDate: 'DATE',
+                deathReportDate: 'DATE',
+                sex: 'STRING',
+                ageRange: 'STRING',
+                physicalRegion: 'STRING',
+                vaccinationStatusAtDeath: 'STRING'
+            }
+    )
+    ORDER BY
+        deathDate
+)
+TO '{{ output_parquet }}' (
+    FORMAT 'parquet', COMPRESSION 'GZIP'
+);

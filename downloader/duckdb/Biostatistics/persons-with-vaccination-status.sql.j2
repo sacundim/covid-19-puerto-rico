@@ -1,0 +1,24 @@
+COPY (
+    SELECT
+        *,
+        TIMESTAMP '{{ downloaded_at }}' AS downloadedAt
+    FROM read_json(
+            '{{ input_json }}',
+            format='array',
+            union_by_name=true,
+            columns={
+                personAgeRange: 'STRING',
+                personSex: 'STRING',
+                personState: 'STRING',
+                personCity: 'STRING',
+                personRegion: 'STRING',
+                personVaccinationStatus: 'STRING',
+                personLastVaccinationDate: 'DATE'
+            }
+    )
+    ORDER BY
+        personLastVaccinationDate
+)
+TO '{{ output_parquet }}' (
+    FORMAT 'parquet', COMPRESSION 'GZIP'
+);

@@ -1,0 +1,28 @@
+COPY (
+    SELECT
+        *,
+        TIMESTAMP '{{ downloaded_at }}' AS downloadedAt
+    FROM read_json(
+            '{{ input_json }}',
+            format='array',
+            union_by_name=true,
+            columns={
+                orderTestId: 'UUID',
+                patientId: 'UUID',
+                patientAgeRange: 'STRING',
+                patientRegion: 'STRING',
+                patientCity: 'STRING',
+                orderTestCategory: 'STRING',
+                orderTestType: 'STRING',
+                sampleCollectedDate: 'TIMESTAMP WITH TIME ZONE',
+                resultReportDate: 'TIMESTAMP WITH TIME ZONE',
+                orderTestResult: 'STRING',
+                orderTestCreatedAt: 'TIMESTAMP WITH TIME ZONE'
+            }
+    )
+    ORDER BY
+        sampleCollectedDate
+)
+TO '{{ output_parquet }}' (
+    FORMAT 'parquet', COMPRESSION 'GZIP'
+);

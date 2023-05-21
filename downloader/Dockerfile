@@ -27,20 +27,37 @@ RUN poetry build
 #####################################################################
 #####################################################################
 ##
+## Aux image for DuckDB
+##
+FROM base as duckdb
+COPY docker/install-duckdb.sh /usr/local/bin/
+RUN apt-get update \
+ && apt-get install -y wget unzip \
+ && chmod +x /usr/local/bin/install-duckdb.sh \
+ && install-duckdb.sh
+
+
+#####################################################################
+#####################################################################
+##
 ## The actual image that we're delivering
 ##
 FROM base as app
 # Install various prerequistes for our scripts
 RUN apt-get update
-RUN apt-get install -y ca-certificates wget lbzip2 time jq parallel
+RUN apt-get install -y ca-certificates wget lbzip2 time jq parallel unzip
 RUN python3 -m pip install pipx
 RUN pipx install awscli
+RUN pipx install jinja-cli
 COPY --link --from=sacundim/csv2parquet:0.6.0 \
     /usr/local/bin/csv2parquet \
     /usr/local/bin/json2parquet \
     /usr/local/bin/
 COPY --link --from=sacundim/json2jsonl \
     /usr/local/bin/json2jsonl \
+    /usr/local/bin/
+COPY --link --from=duckdb \
+    /usr/local/bin/duckdb \
     /usr/local/bin/
 
 # Install our stuff proper
@@ -67,6 +84,7 @@ RUN mkdir -p \
     scripts \
     tmp
 COPY scripts/*.sh ./scripts/
+COPY duckdb duckdb
 RUN chmod +x ./scripts/*.sh
 
 ENV PATH=/root/.local/bin:/covid-19-puerto-rico/scripts:$PATH
