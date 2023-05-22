@@ -5,7 +5,7 @@ on:
 
   push:
     branches:
-      - 'master'
+#      - 'master'
     paths:
       - '.github/workflows/BUILD_DOWNLOADER_IMAGE.yml'
       - 'downloader/**'
