@@ -13,8 +13,7 @@ from threading import Thread, Lock
 
 def process_arguments():
     parser = argparse.ArgumentParser(description='Download PRDoH Biostatistics COVID-19 data sets')
-    parser.add_argument('--s3-sync-dir', type=str,
-                        default='/covid-19-puerto-rico/s3-bucket-sync/covid-19-puerto-rico-data',
+    parser.add_argument('--s3-sync-dir', type=str, required=True,
                         help='Override for directory to which to deposit the output files for sync')
     parser.add_argument('--endpoint-url', type=str, default='https://biostatistics.salud.pr.gov',
                         help='Override for the URL of the Biostatistics API endpoint root.')
