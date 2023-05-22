@@ -138,15 +138,17 @@ class Task():
     def move_to_sync_dir(self, jsonfile, parquetfile):
         logging.info("Moving files to sync dir %s...", self.s3_sync_dir)
         self.s3_sync_dir.mkdir(exist_ok=True)
-        biostatistics_dir = pathlib.Path(f'{self.s3_sync_dir}/{self.dataset}')
+        biostatistics_dir = self.s3_sync_dir / self.dataset
         biostatistics_dir.mkdir(exist_ok=True)
 
-        json_dir = pathlib.Path(f'{biostatistics_dir}/json_v1')
+        json_dir = biostatistics_dir / 'json_v1'
         json_dir.mkdir(exist_ok=True)
         shutil.move(jsonfile, json_dir)
         logging.info("Moved %s to %s...", jsonfile, json_dir)
 
-        parquet_dir = pathlib.Path(f'{biostatistics_dir}/parquet_v2')
+        parquet_dir = biostatistics_dir / 'parquet_v2'
         parquet_dir.mkdir(exist_ok=True)
-        shutil.move(parquetfile, parquet_dir)
-        logging.info("Moved %s to %s...", parquetfile, parquet_dir)
+        partition_dir = parquet_dir / f'downloaded_date={self.now.strftime("%Y-%m-%d")}'
+        partition_dir.mkdir(exist_ok=True)
+        shutil.move(parquetfile, partition_dir)
+        logging.info("Moved %s to %s...", parquetfile, partition_dir)
