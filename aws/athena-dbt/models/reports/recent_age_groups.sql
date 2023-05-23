@@ -5,9 +5,9 @@
 SELECT
 	bulletin_date,
 	collected_date,
-	age_gte AS youngest,
-	age_lt - 1 AS oldest,
-	population,
+	acs_age_gte AS youngest,
+	encounters.acs_age_lt - 1 AS oldest,
+	encounters.acs_population AS population,
 	encounters,
 	antigens,
 	molecular,
@@ -17,9 +17,12 @@ SELECT
 	deaths,
 	positive_antigens,
 	positive_molecular
-FROM {{ ref('bioportal_acs_age_curve') }}
-WHERE collected_date >= date_add('day', -175, bulletin_date)
+FROM {{ ref('biostatistics_encounters_acs_age_agg') }} encounters
+INNER JOIN {{ ref('biostatistics_deaths_acs_age_agg') }} deaths
+    USING (downloaded_at, bulletin_date, acs_age_gte)
+WHERE collected_date = death_date
+AND collected_date >= date_add('day', -175, bulletin_date)
 ORDER BY
-	bulletin_date DESC,
-	collected_date DESC,
+	bulletin_date,
+	collected_date,
 	youngest;

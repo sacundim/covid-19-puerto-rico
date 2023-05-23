@@ -10,6 +10,6 @@ SELECT
 	collected_date,
 	initial_positive_molecular AS novels,
 	rejections
-FROM {{ ref('bioportal_encounters_agg') }}
+FROM {{ ref('biostatistics_encounters_agg') }}
 WHERE bulletin_date > DATE '2020-04-24'
-ORDER BY bulletin_date DESC, collected_date DESC;
+ORDER BY bulletin_date, collected_date;

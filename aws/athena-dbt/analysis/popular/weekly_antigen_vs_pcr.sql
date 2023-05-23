@@ -1,6 +1,6 @@
 WITH bulletins AS (
 	SELECT max(bulletin_date) AS bulletin_date
-	FROM {{ ref('bioportal_curve') }}
+	FROM {{ ref('bioportal_encounters_agg') }}
 ), rates AS (
 	SELECT
 		bulletin_date,

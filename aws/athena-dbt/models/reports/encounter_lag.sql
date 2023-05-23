@@ -12,7 +12,7 @@ SELECT
 	sum(delta_antigens_cases) delta_antigens_cases,
 	sum(delta_molecular) delta_molecular,
 	sum(delta_molecular_cases) delta_molecular_cases
-FROM {{ ref('bioportal_encounters_agg') }}
+FROM {{ ref('biostatistics_encounters_agg') }}
 WHERE age <= 20
 GROUP BY
 	bulletin_date,
@@ -22,4 +22,4 @@ GROUP BY
 		WHEN 7 <= age AND age < 14 THEN 14
 		WHEN 14 <= age AND age < 21 THEN 21
 	END
-ORDER BY bulletin_date DESC, age_lt;
+ORDER BY bulletin_date, age_lt;

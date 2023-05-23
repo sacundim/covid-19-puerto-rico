@@ -3,7 +3,7 @@
 --
 WITH bulletins AS (
 	SELECT max(bulletin_date) AS max_bulletin_date
-	FROM {{ ref('bioportal_curve') }} bioportal_curve
+	FROM {{ ref('bioportal_encounters_agg') }} bioportal_curve
 )
 SELECT
 	max_bulletin_date "Datos",
