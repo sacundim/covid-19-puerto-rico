@@ -24,12 +24,12 @@ def process_arguments():
     return parser.parse_args()
 
 DATASETS = {
-#    "tests": "orders/tests/covid-19/minimal",
+    "tests": "orders/tests/covid-19/minimal",
     "data-sources": "data-sources",
     "cases": "cases/covid-19/minimal",
     "deaths": "deaths/covid-19/minimal",
-#    "tests-grouped": "orders/tests/covid-19/grouped-by-sample-collected-date-and-entity",
-#    "persons-with-vaccination-status": "vaccines/covid-19/persons-with-vaccination-status",
+    "tests-grouped": "orders/tests/covid-19/grouped-by-sample-collected-date-and-entity",
+    "persons-with-vaccination-status": "vaccines/covid-19/persons-with-vaccination-status",
 }
 
 def biostatistics():
