@@ -57,7 +57,4 @@ SELECT
 		AS fe_prueba
 FROM {{ source('covid19datos_v2', 'pruebas_v3') }}
 -- IMPORTANT: This prunes partitions
-WHERE downloaded_date >= cast(date_add('day', -17, current_date) AS VARCHAR)
-
-ORDER BY downloaded_at, fe_prueba;
-
+WHERE downloaded_date >= cast(date_add('day', -17, current_date) AS VARCHAR);
