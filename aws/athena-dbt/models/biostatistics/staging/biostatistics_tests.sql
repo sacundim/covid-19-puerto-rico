@@ -85,5 +85,4 @@ SELECT
             'raw_collected_date',
             'received_date')
     }} AS reported_date
-FROM date_aux_calculations
-ORDER BY downloaded_at, raw_collected_utc;
+FROM date_aux_calculations;
