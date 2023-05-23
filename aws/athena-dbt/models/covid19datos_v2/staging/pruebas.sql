@@ -1,7 +1,5 @@
 {{
     config(pre_hook=[
-        "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'pruebas_v1').render_hive() }}",
-        "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'pruebas_v2').render_hive() }}",
         "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'pruebas_v3').render_hive() }}"
     ])
 }}
@@ -21,7 +19,7 @@ SELECT
 		AS fe_prueba
 FROM {{ source('covid19datos_v2', 'pruebas_v1') }}
 -- IMPORTANT: This prunes partitions
-WHERE downloaded_date >= cast(date_add('day', -32, current_date) AS VARCHAR)
+WHERE downloaded_date >= cast(date_add('day', -17, current_date) AS VARCHAR)
 
 UNION ALL
 
@@ -40,7 +38,7 @@ SELECT
 		AS fe_prueba
 FROM {{ source('covid19datos_v2', 'pruebas_v2') }}
 -- IMPORTANT: This prunes partitions
-WHERE downloaded_date >= cast(date_add('day', -32, current_date) AS VARCHAR)
+WHERE downloaded_date >= cast(date_add('day', -17, current_date) AS VARCHAR)
 
 UNION ALL
 
@@ -59,7 +57,7 @@ SELECT
 		AS fe_prueba
 FROM {{ source('covid19datos_v2', 'pruebas_v3') }}
 -- IMPORTANT: This prunes partitions
-WHERE downloaded_date >= cast(date_add('day', -32, current_date) AS VARCHAR)
+WHERE downloaded_date >= cast(date_add('day', -17, current_date) AS VARCHAR)
 
 ORDER BY downloaded_at, fe_prueba;
 

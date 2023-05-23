@@ -3,12 +3,12 @@ name: Downloader Docker image
 on:
   workflow_dispatch:
 
-  push:
-    branches:
+#  push:
+#    branches:
 #      - 'master'
-    paths:
-      - '.github/workflows/BUILD_DOWNLOADER_IMAGE.yml'
-      - 'downloader/**'
+#    paths:
+#      - '.github/workflows/BUILD_DOWNLOADER_IMAGE.yml'
+#      - 'downloader/**'
 
 jobs:
   deploy:
