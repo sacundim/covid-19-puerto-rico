@@ -56,8 +56,6 @@ models:
         +materialized: table
       staging:
         +materialized: table
-      summaries:
-        +materialized: table
     covid19datos_v2:
       staging:
         +materialized: table

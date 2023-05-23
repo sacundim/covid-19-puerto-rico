@@ -15,7 +15,9 @@ resource "aws_batch_job_definition" "biostatistics_download_and_sync" {
 
   container_properties = jsonencode({
     image = "sacundim/covid-19-puerto-rico-downloader:latest"
-    command = ["biostatistics-download.sh"],
+    command = [
+      "biostatistics-download"
+    ],
     environment = [
       {
         name = "S3_DATA_URL",

@@ -40,7 +40,7 @@ models:
             - bulletin_date
             - collected_date
 
-  - name: biostatistics_specimens_repoted_agg
+  - name: biostatistics_specimens_reported_agg
     description: |
       Aggregate of `biostatistics_specimens_cube` by lab report date.
     tests:
@@ -50,7 +50,7 @@ models:
             - bulletin_date
             - reported_date
 
-  - name: biostatistics_specimens_repoted_agg
+  - name: biostatistics_specimens_received_agg
     description: |
       Aggregate of `biostatistics_specimens_cube` by result received date.
     tests:

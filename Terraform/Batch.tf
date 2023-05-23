@@ -135,7 +135,7 @@ resource "aws_launch_template" "ecs_ec2_launch" {
     device_name = "/dev/xvda"
 
     ebs {
-      volume_size = 30
+      volume_size = 100
     }
   }
 }

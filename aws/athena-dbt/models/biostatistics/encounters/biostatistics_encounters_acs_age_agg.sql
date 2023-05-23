@@ -1,10 +1,14 @@
+--
+-- Aggregated to the age ranges from the {{ ref('acs_2019_1y_age_ranges') }}
+-- table, which are less detailed than Biostatistics cases.
+--
 SELECT
     downloaded_at,
     bulletin_date,
 	collected_date,
-	age_range,
-	age_gte,
-	age_lt,
+	acs.age_gte AS acs_age_gte,
+	acs.age_lt AS acs_age_lt,
+	acs.population AS acs_population,
 	sum(encounters) encounters,
 	sum(cases) cases,
 	sum(cases_strict) cases_strict,
@@ -91,24 +95,27 @@ SELECT
 	sum(initial_positive_molecular)
 	    - lag(sum(initial_positive_molecular), 1, 0) OVER delta
 	    AS delta_initial_positive_molecular
-FROM {{ ref('biostatistics_encounters_cube') }}
+FROM {{ ref('biostatistics_encounters_cube') }} encounters
+INNER JOIN {{ ref('acs_2019_1y_age_ranges') }} acs
+    ON acs.age_gte <= encounters.age_gte
+    AND encounters.age_gte < COALESCE(acs.age_lt, 9999)
 GROUP BY
     downloaded_at,
 	bulletin_date,
-	age_range,
-	age_gte,
-	age_lt,
+	acs.age_gte,
+	acs.age_lt,
+	acs.population,
 	collected_date
 WINDOW cumulative AS (
-    PARTITION BY bulletin_date, age_range
+    PARTITION BY bulletin_date, acs.age_gte
     ORDER BY collected_date
 ), delta AS (
-    PARTITION BY collected_date, age_range
+    PARTITION BY collected_date, acs.age_gte
     ORDER BY bulletin_date
 )
 ORDER BY
     downloaded_at,
 	bulletin_date,
-	age_gte,
+	acs.age_gte,
 	collected_date
 ;
