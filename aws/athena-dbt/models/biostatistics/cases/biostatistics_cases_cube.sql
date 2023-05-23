@@ -31,6 +31,7 @@ LEFT OUTER JOIN {{ ref('biostatistics_deaths_age_ranges') }} ranges
 	USING (age_range)
 WHERE case_category IN ('Covid19')
 AND case_type IN ('Probable', 'Confirmed')
+AND diagnostic_collected_date <= bulletin_date
 GROUP BY
     downloaded_at,
 	bulletin_date,

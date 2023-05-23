@@ -100,12 +100,14 @@ LEFT OUTER JOIN {{ ref('biostatistics_tests') }} prev
 	AND prev.collected_date <= prev.received_date
 	AND DATE '2020-03-01' <= prev.reported_date
 	AND prev.reported_date <= prev.received_date
+    AND prev.received_date <= bulletins.bulletin_date
 WHERE cur.downloaded_date >= CURRENT_DATE - INTERVAL '17' DAY
 AND cur.test_type IN ('Molecular', 'Antígeno')
 AND DATE '2020-03-01' <= cur.collected_date
 AND cur.collected_date <= cur.received_date
 AND DATE '2020-03-01' <= cur.reported_date
 AND cur.reported_date <= cur.received_date
+AND cur.received_date <= bulletins.bulletin_date
 GROUP BY
 	cur.downloaded_at,
 	cur.downloaded_date,

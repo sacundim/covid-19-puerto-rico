@@ -20,6 +20,7 @@ INNER JOIN bulletins
 	USING (downloaded_at)
 INNER JOIN {{ ref('biostatistics_deaths_age_ranges') }}
 	USING (age_range)
+WHERE death_date <= bulletin_date
 GROUP BY
 	downloaded_at,
 	downloaded_date,
