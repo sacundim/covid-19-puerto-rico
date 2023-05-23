@@ -9,6 +9,17 @@ models:
           combination_of_columns:
             - bulletin_date
             - death_date
-            - age_range
+            - age_gte
             - region
             - vaccination_status_at_death
+
+  - name: biostatistics_deaths_acs_age_agg
+    description: >
+      Deaths aggregated to American Community Survey age bands,
+      with population estimates cooked in.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - bulletin_date
+            - death_date
+            - acs_age_gte

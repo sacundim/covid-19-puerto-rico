@@ -67,13 +67,13 @@ models:
             - municipality
             - age_range
 
-  - name: biostatistics_encounters_age_agg
+  - name: biostatistics_encounters_acs_age_agg
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns:
             - bulletin_date
             - collected_date
-            - age_range
+            - acs_age_gte
 
   - name: biostatistics_encounters_municipal_agg
     tests:
