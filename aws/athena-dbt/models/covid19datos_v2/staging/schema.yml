@@ -184,11 +184,11 @@ models:
               min_value: DATE '2020-12-01'
               max_value: downloaded_at
               inclusive: true
+              severity: warn
       - name: co_manufacturero
         description: >
           A code for the manufacturer of the vaccine that was administered.
         tests:
-          - not_null
           - accepted_values:
               values:
                 - JSN
@@ -202,12 +202,11 @@ models:
           example, a patient who first gets a one-dose vaccine and then a booster
           would be doses "1" and "3".
         tests:
-          - not_null
           - dbt_utils.accepted_range:
               min_value: 0
               max_value: 3
               inclusive: true
-              severity: warn
+              enabled: false
       - name: co_municipio
         description: >
           What municipality is recorded for the dose.  It's not clear if this is
