@@ -24,12 +24,12 @@ def process_arguments():
     return parser.parse_args()
 
 DATASETS = {
-    "tests": "orders/tests/covid-19/minimal",
+#    "tests": "orders/tests/covid-19/minimal",
     "data-sources": "data-sources",
     "cases": "cases/covid-19/minimal",
     "deaths": "deaths/covid-19/minimal",
-    "tests-grouped": "orders/tests/covid-19/grouped-by-sample-collected-date-and-entity",
-    "persons-with-vaccination-status": "vaccines/covid-19/persons-with-vaccination-status",
+#    "tests-grouped": "orders/tests/covid-19/grouped-by-sample-collected-date-and-entity",
+#    "persons-with-vaccination-status": "vaccines/covid-19/persons-with-vaccination-status",
 }
 
 def biostatistics():
@@ -137,15 +137,17 @@ class Task():
     def move_to_sync_dir(self, jsonfile, parquetfile):
         logging.info("Moving files to sync dir %s...", self.s3_sync_dir)
         self.s3_sync_dir.mkdir(exist_ok=True)
-        biostatistics_dir = self.s3_sync_dir / self.dataset
+        biostatistics_dir = self.s3_sync_dir / 'biostatistics.salud.pr.gov'
         biostatistics_dir.mkdir(exist_ok=True)
+        dataset_dir = biostatistics_dir / self.dataset
+        dataset_dir.mkdir(exist_ok=True)
 
-        json_dir = biostatistics_dir / 'json_v1'
+        json_dir = dataset_dir / 'json_v1'
         json_dir.mkdir(exist_ok=True)
         shutil.move(jsonfile, json_dir)
         logging.info("Moved %s to %s...", jsonfile, json_dir)
 
-        parquet_dir = biostatistics_dir / 'parquet_v2'
+        parquet_dir = dataset_dir / 'parquet_v2'
         parquet_dir.mkdir(exist_ok=True)
         partition_dir = parquet_dir / f'downloaded_date={self.now.strftime("%Y-%m-%d")}'
         partition_dir.mkdir(exist_ok=True)
