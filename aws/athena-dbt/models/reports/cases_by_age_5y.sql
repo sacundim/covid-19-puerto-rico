@@ -21,7 +21,7 @@ SELECT
 		AS deaths_1m
 FROM {{ ref('biostatistics_encounters_acs_age_agg') }} encounters
 INNER JOIN {{ ref('biostatistics_deaths_acs_age_agg') }} deaths
-    USING (downloaded_at, bulletin_date, acs_age_gte)
+    USING (bulletin_date, acs_age_gte)
 WHERE collected_date = death_date
 ORDER BY
 	bulletin_date,
