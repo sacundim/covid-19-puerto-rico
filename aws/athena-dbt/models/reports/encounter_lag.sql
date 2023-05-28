@@ -14,6 +14,7 @@ SELECT
 	sum(delta_molecular_cases) delta_molecular_cases
 FROM {{ ref('biostatistics_encounters_agg') }}
 WHERE age <= 20
+AND bulletin_date >= DATE '2023-05-17'
 GROUP BY
 	bulletin_date,
 	CASE
