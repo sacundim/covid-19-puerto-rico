@@ -1,9 +1,12 @@
 "result","positive"
 COVID-19 Negative,false
 COVID-19 Positive,true
+DETECTED,true
+Detected,true
 Inconclusive,
 Invalid,
 Negative,false
+NOT DETECTED,false
 Not Detected,false
 Not Tested,
 Not Valid,
