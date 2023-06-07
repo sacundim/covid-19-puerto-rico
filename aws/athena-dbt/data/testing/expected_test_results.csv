@@ -5,6 +5,7 @@ DETECTED,true
 Detected,true
 Inconclusive,
 Invalid,
+NEGATIVE,false
 Negative,false
 NOT DETECTED,false
 Not Detected,false
