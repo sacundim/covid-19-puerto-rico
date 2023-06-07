@@ -5,8 +5,9 @@
 
 set -eu -o pipefail
 
-ENDPOINT="${ENDPOINT-https://covid19datos.salud.gov.pr/estadisticas_v2/download/data}"
+ENDPOINT="${ENDPOINT-https://covid19datos.salud.pr.gov/estadisticas_v2/download/data}"
 DATASETS=(casos defunciones sistemas_salud vigilancia vacunacion pruebas)
+WGET_OPTIONS="${WGET_OPTIONS-""}"
 
 HERE="$(dirname $0)"
 REPO_ROOT="${HERE}"/..
@@ -26,7 +27,7 @@ do
   basename="${dataset}_${timestamp}"
 
   echo "$(date): Downloading ${dataset} from ${url}"
-  wget \
+  wget ${WGET_OPTIONS} \
     --tries=3 \
     --compression gzip \
     --no-verbose \

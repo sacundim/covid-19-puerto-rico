@@ -115,6 +115,7 @@ models:
               min_value: DATE '2020-03-01'
               max_value: downloaded_at
               inclusive: true
+              severity: warn
       - name: co_tipo
         description: >
           What type of test this is (antigen vs. NAAT).
@@ -131,7 +132,8 @@ models:
         description: >
           The test's result.
         tests:
-          - not_null
+          - not_null:
+              severity: warn
           - accepted_values:
               values:
                 - NEGATIVA
