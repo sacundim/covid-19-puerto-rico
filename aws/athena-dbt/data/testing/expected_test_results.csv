@@ -24,6 +24,7 @@ Positive for influenza A,false
 Positive for influenza A and COVID-19,true
 Positive for influenza A and influenza B,false
 Positive for influenza B,false
+Positive for influenza B and COVID-19,true
 Presumptive Negative,false
 Presumptive Positive,true
 Presumptive Positive IgG Only,true
