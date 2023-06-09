@@ -49,7 +49,6 @@ def get_socrata_app_token(args):
 def healthdata_download(args):
     '''Download datasets hosted at healthdata.gov API endpoints'''
     datasets = [
-        Asset('covid-19_community_profile_report_county', 'di4u-7yu6'),
         Asset('covid-19_diagnostic_lab_testing', 'j8mb-icvb'),
 
         Asset('reported_hospital_utilization', '6xf2-c3ie'),
@@ -65,9 +64,6 @@ def healthdata_download(args):
 def cdc_download(args):
     '''Download datasets hosted at data.cdc.gov endpoints'''
     datasets = [
-        # Discontinued on 2023-05-11, will have a final release on 2023-06-01
-        Asset('weekly_united_states_covid_19_cases_and_deaths_by_state', 'pwn4-m3yp'),
-
         Asset('provisional_covid_19_deaths_by_sex_and_age', '9bhg-hcku'),
         Asset('excess_deaths_associated_with_covid_19', 'xkkf-xrst'),
         Asset('covid_vaccinations_state', 'unsk-b7fc'),
