@@ -72,9 +72,7 @@ def cdc_download(args):
         Asset('excess_deaths_associated_with_covid_19', 'xkkf-xrst'),
         Asset('covid_vaccinations_state', 'unsk-b7fc'),
         Asset('covid_vaccinations_county', '8xkx-amqh'),
-        Asset('rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status', '3rge-nu2a'),
-        Asset('rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_booster_dose', 'd6p8-wqjm'),
-        Asset('rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_second_booster_dose', 'ukww-au2k'),
+        Asset('rates_of_covid_19_cases_or_deaths_by_age_group_and_updated_bivalent_booster_status', '54ys-qyzm')
     ]
     download_datasets(args, 'data.cdc.gov', datasets)
 
