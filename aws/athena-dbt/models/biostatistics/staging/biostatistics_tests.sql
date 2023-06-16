@@ -38,7 +38,7 @@ WITH first_clean AS (
         ON tests.orderTestResult = results.result
     WHERE orderTestCategory IN ('Covid-19')
     -- IMPORTANT: This prunes partitions
-    AND downloaded_date >= cast(date_add('day', -32, current_date) AS VARCHAR)
+    AND downloaded_date >= cast(date_add('day', -44, current_date) AS VARCHAR)
 ), date_aux_calculations AS (
     SELECT
         *,
