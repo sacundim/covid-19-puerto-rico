@@ -33,9 +33,10 @@ FROM {{ ref('hospitales_daily') }} prdoh
 LEFT OUTER JOIN {{ ref('covid_tracking_hospitalizations') }} tracking
 	ON tracking."date" = prdoh.fe_reporte
 LEFT OUTER JOIN {{ ref('hhs_hospitals_bitemporal') }} hhs
-	ON hhs.bulletin_date = prdoh.bulletin_date
+	ON hhs.bulletin_date <= prdoh.bulletin_date
+	AND prdoh.bulletin_date < coalesce(hhs.valid_until, DATE '9999-12-31')
 	AND hhs.date = prdoh.fe_reporte
 	-- Older HHS data is quite bad
 	AND hhs.date >= DATE '2020-07-28'
 WHERE fe_reporte >= DATE '2020-04-18'
-ORDER BY bulletin_date DESC, fe_reporte;
+ORDER BY bulletin_date, fe_reporte;

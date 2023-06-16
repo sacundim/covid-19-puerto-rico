@@ -3,12 +3,12 @@ name: Downloader Docker image
 on:
   workflow_dispatch:
 
-#  push:
-#    branches:
-#      - 'master'
-#    paths:
-#      - '.github/workflows/BUILD_DOWNLOADER_IMAGE.yml'
-#      - 'downloader/**'
+  push:
+    branches:
+      - 'master'
+    paths:
+      - '.github/workflows/BUILD_DOWNLOADER_IMAGE.yml'
+      - 'downloader/**'
 
 jobs:
   deploy:
@@ -35,8 +35,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: downloader
-#        platforms: linux/amd64,linux/arm64
-        platforms: linux/amd64
+        platforms: linux/amd64,linux/arm64
         push: true
         cache-from: type=gha
         cache-to: type=gha,mode=max

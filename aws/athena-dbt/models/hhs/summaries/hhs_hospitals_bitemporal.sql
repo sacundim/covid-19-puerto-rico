@@ -34,6 +34,9 @@ WITH maxes AS (
 SELECT
     file_timestamp,
     bulletin_date,
+    lead(bulletin_date)
+        OVER bulletin
+        AS valid_until,
     -- We subtract 1 from the date field because of the
     -- semantics of our `bulletin_date` field, which is
     -- "data as of the closing of this date."
@@ -106,4 +109,8 @@ INNER JOIN grid USING (file_timestamp)
 WHERE file_timestamp >= DATE '2021-08-14'
 -- And dates earlier than this don't look like they're right
 AND date >= DATE '2020-03-01'
+WINDOW bulletin AS (
+	PARTITION BY date
+	ORDER BY bulletin_date
+)
 ORDER BY bulletin_date, date;
