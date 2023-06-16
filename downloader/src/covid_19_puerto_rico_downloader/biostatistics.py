@@ -73,7 +73,7 @@ def make_requests_session():
 
 def make_jinja():
     return Environment(
-        loader=PackageLoader('covid_19_puerto_rico_downloader', 'templates'),
+        loader=PackageLoader('covid_19_puerto_rico_downloader.templates', 'biostatistics'),
 #        autoescape=select_autoescape(['html', 'xml'])
     )
 
