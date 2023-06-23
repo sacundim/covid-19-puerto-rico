@@ -282,7 +282,7 @@ class CurrentDeltas(AbstractChart):
                                             domain=alt.DomainUnionWith(unionWith=[0])))
         )
 
-        text = base.mark_text(fontSize=7.5).encode(
+        text = base.mark_text(fontSize=7).encode(
             text=alt.Text('value:Q'),
             color=util.heatmap_text_color(df, 'value')
         ).transform_filter("(datum.value !== 0) & (datum.value !== null)")
@@ -341,7 +341,7 @@ class DailyDeltas(AbstractChart):
                                             domain=alt.DomainUnionWith(unionWith=[0])))
         )
 
-        text = base.mark_text(fontSize=2.75).encode(
+        text = base.mark_text(fontSize=3).encode(
             text=alt.Text('value:Q'),
             color=util.heatmap_text_color(df, 'value')
         )

@@ -104,7 +104,6 @@ def global_configuration():
 
     alt.themes.register("custom_theme", lambda: util.get_json_resource('theme.json'))
     alt.themes.enable("custom_theme")
-    alt.renderers.enable('altair_saver', fmts=['svg', 'png'])
     alt.renderers.set_embed_options(
         timeFormatLocale=util.get_json_resource('es-PR.json')
     )

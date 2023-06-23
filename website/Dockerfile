@@ -1,7 +1,7 @@
 FROM python:3.9-slim AS base
 
 FROM base AS poetry
-ARG POETRY_VERSION="1.1.13"
+ARG POETRY_VERSION="1.5.1"
 RUN pip install poetry=="${POETRY_VERSION}"
 
 
@@ -20,9 +20,8 @@ COPY src src
 RUN poetry build
 
 
-FROM base AS chromium
+FROM base AS app
 RUN apt-get update
-RUN apt-get install -y chromium-driver
 RUN apt-get install -y libmagickwand-dev
 # The rclone packaged with the OS distribution is always hopelessly out
 # of date, better to get it from the official rclone Docker images.
@@ -30,9 +29,6 @@ RUN apt-get install -y libmagickwand-dev
 COPY --from=rclone/rclone:1.61.1 \
     /usr/local/bin/rclone \
     /usr/local/bin/rclone
-
-
-FROM chromium AS app
 WORKDIR /covid-19-puerto-rico
 COPY --from=requirements /covid-19-puerto-rico/requirements.txt ./
 RUN pip install -r requirements.txt && rm requirements.txt
