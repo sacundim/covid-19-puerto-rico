@@ -103,9 +103,9 @@ class Task():
             logging.info("Downloading %s from %s...", self.dataset, url)
             jsonfile = f'{self.dataset}_{self.now.strftime(Task.TS_FORMAT)}.json'
 
-            request = self.http.get(url)
+            request = self.http.get(url, stream=True)
             with open(jsonfile, 'wb') as fd:
-                for chunk in request.iter_content(chunk_size=128):
+                for chunk in request.iter_content(chunk_size=1024 * 1024):
                     fd.write(chunk)
 
             logging.info("Downloaded %s", jsonfile)
