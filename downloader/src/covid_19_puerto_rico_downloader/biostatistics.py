@@ -1,4 +1,5 @@
 import argparse
+import concurrent.futures as futures
 import datetime
 import duckdb
 from jinja2 import Environment, PackageLoader
@@ -7,7 +8,7 @@ import pathlib
 import requests
 import shutil
 import subprocess
-from threading import Thread, Lock
+from threading import Lock
 
 
 
@@ -34,7 +35,9 @@ DATASETS = {
 
 def biostatistics():
     """Entry point for PRDoH Biostatistics download code."""
-    logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
+    logging.basicConfig(
+        format='%(asctime)s %(threadName)s %(message)s',
+        level=logging.INFO)
     args = process_arguments()
 
     now = datetime.datetime.utcnow()
@@ -52,13 +55,12 @@ def biostatistics():
         Task(dataset, path, now, http, duck, jinja, mutex, args)
         for (dataset, path) in DATASETS.items()
     ]
-    threads = [Thread(target=task, name=task.dataset) for task in tasks]
+    with futures.ThreadPoolExecutor(
+            max_workers=len(tasks),
+            thread_name_prefix='download_task') as executor:
+        for future in futures.as_completed([executor.submit(task) for task in tasks]):
+            logging.info("Completed %s", future.result())
 
-    for thread in threads:
-        thread.start()
-
-    for thread in threads:
-        thread.join()
 
 def make_duckdb_connection(filename):
     return duckdb.connect(filename, config={})
@@ -91,11 +93,13 @@ class Task():
         self.endpoint_url = args.endpoint_url
         self.s3_sync_dir = pathlib.Path(args.s3_sync_dir)
 
+
     def __call__(self):
         jsonfile = self.download()
         parquetfile = self.convert(jsonfile)
         bzip2file = self.compress(jsonfile)
         self.move_to_sync_dir(bzip2file, parquetfile)
+        return self.dataset
 
     def download(self):
         url = f'{self.endpoint_url}/{self.path}'
@@ -103,9 +107,9 @@ class Task():
             logging.info("Downloading %s from %s...", self.dataset, url)
             jsonfile = f'{self.dataset}_{self.now.strftime(Task.TS_FORMAT)}.json'
 
-            request = self.http.get(url)
+            request = self.http.get(url, stream=True)
             with open(jsonfile, 'wb') as fd:
-                for chunk in request.iter_content(chunk_size=128):
+                for chunk in request.iter_content(chunk_size=1024 * 1024):
                     fd.write(chunk)
 
             logging.info("Downloaded %s", jsonfile)
