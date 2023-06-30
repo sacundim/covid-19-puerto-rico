@@ -96,11 +96,11 @@ class Asset():
         url = f'https://{client.domain}/api/views/{self.id}/rows.csv?accessType=DOWNLOAD'
 
         # CODE SMELL: Is the `session` attribute in the client morally private?
-        r = client.session.get(url)
+        r = client.session.get(url, stream=True)
 
         outpath = f'{self.name}_{updated_at.strftime("%Y%m%d_%H%M")}.csv'
         with open(outpath, 'wb') as fd:
-            for chunk in r.iter_content(chunk_size=128):
+            for chunk in r.iter_content(chunk_size=1024 * 1024):
                 fd.write(chunk)
         return outpath
 
