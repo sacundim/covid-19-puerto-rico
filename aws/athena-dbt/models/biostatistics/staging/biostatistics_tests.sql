@@ -10,11 +10,10 @@ WITH first_clean AS (
         CAST(downloadedAt AT TIME ZONE 'America/Puerto_Rico' AS DATE)
             - INTERVAL '1' DAY
             AS bulletin_date,
-	    from_hex(replace(nullif(orderTestId, ''), '-')) AS order_test_id,
 	    from_hex(replace(nullif(patientId, ''), '-')) AS patient_id,
-        {{ clean_age_range('patientAgeRange') }} AS age_range,
-        {{ clean_region('patientRegion') }} AS region,
-        {{ clean_municipality('patientCity') }} AS municipality,
+      {{ clean_age_range('patientAgeRange') }} AS age_range,
+      {{ clean_region('patientRegion') }} AS region,
+      {{ clean_municipality('patientCity') }} AS municipality,
 	    nullif(orderTestType, '') AS raw_test_type,
 	    {{ clean_test_type('orderTestType') }} AS test_type,
 	    sampleCollectedDate AS raw_collected_utc,
@@ -56,7 +55,6 @@ SELECT
     downloaded_date,
     downloaded_at,
     bulletin_date,
-    order_test_id,
     patient_id,
     age_range,
     region,
