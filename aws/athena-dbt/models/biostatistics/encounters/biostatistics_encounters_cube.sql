@@ -133,10 +133,4 @@ FROM grouped
 WINDOW collected AS (
     PARTITION BY bulletin_date, municipality, age_gte
     ORDER BY collected_date
-)
-ORDER BY
-    downloaded_at,
-	bulletin_date,
-	collected_date,
-	municipality,
-	age_gte;
+);
