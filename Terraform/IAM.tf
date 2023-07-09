@@ -131,7 +131,9 @@ resource "aws_iam_policy" "athena_bucket_rw" {
         ],
         Resource = [
           aws_s3_bucket.athena_bucket.arn,
-          "${aws_s3_bucket.athena_bucket.arn}/*"
+          "${aws_s3_bucket.athena_bucket.arn}/*",
+          aws_s3_bucket.iceberg_bucket.arn,
+          "${aws_s3_bucket.iceberg_bucket.arn}/*"
         ]
       }
     ]
