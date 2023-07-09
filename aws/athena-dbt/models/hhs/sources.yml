@@ -66,7 +66,7 @@ sources:
       - name: excess_deaths_associated_with_covid_19_v3
         freshness:
           warn_after: { count: 7, period: day }
-          error_after: { count: 9, period: day }
+          error_after: { count: 14, period: day }
       - name: provisional_covid_19_deaths_by_sex_and_age_parquet_v3
         freshness:
           warn_after: { count: 7, period: day }
