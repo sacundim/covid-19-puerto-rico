@@ -11,7 +11,7 @@ WITH first_clean AS (
 	    CAST(downloadedAt AT TIME ZONE 'America/Puerto_Rico' AS DATE)
 	        - INTERVAL '1' DAY
 	        AS bulletin_date,
-        deathId AS death_id,
+	    from_hex(replace(nullif(deathId, ''), '-')) AS death_id,
         deathDate AS raw_death_date,
         deathReportDate AS raw_death_report_date,
 	    nullif(sex, '') sex,

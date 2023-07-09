@@ -2,120 +2,84 @@
 -- Aggregated to the age ranges from the {{ ref('acs_2019_1y_age_ranges') }}
 -- table, which are less detailed than Biostatistics cases.
 --
+WITH grid AS (
+    -- The underlying {{ ref('biostatistics_encounters_cube') }}
+    -- table is sparse--for example, dates where no children died
+    -- don't have rows in the table.  The charts where I use this
+    -- data really want to have it as a dense grid where every
+    -- combination of bulletin_date, collected_date and age band
+    -- is represented. So first we use sequence generation and
+    -- CROSS JOINs to build a grid.
+    WITH minmax AS (
+        SELECT
+            min(collected_date) min_collected_date,
+            max(collected_date) max_collected_date,
+            min(bulletin_date) AS min_bulletin_date,
+            max(bulletin_date) AS max_bulletin_date
+        FROM {{ ref('biostatistics_encounters_cube') }}
+    )
+    SELECT
+        date(bulletin.bulletin_ts) bulletin_date,
+        date(collected.collected_ts) collected_date,
+        age_gte AS acs_age_gte,
+        age_lt AS acs_age_lt,
+        population AS acs_population
+    FROM minmax
+    CROSS JOIN LATERAL (
+        VALUES (sequence(min_bulletin_date, max_bulletin_date, INTERVAL '1' DAY))
+    ) AS bulletin_array (bulletin_ts_array)
+    CROSS JOIN UNNEST(bulletin_ts_array) AS bulletin (bulletin_ts)
+    CROSS JOIN LATERAL (
+        VALUES (sequence(min_collected_date, max_collected_date, INTERVAL '1' DAY))
+    ) AS collected_date_array (collected_ts_array)
+    CROSS JOIN UNNEST(collected_ts_array) AS collected (collected_ts)
+    CROSS JOIN {{ ref('acs_2019_1y_age_ranges') }}
+    WHERE date(collected.collected_ts) <= date(bulletin.bulletin_ts)
+)
 SELECT
-    downloaded_at,
-    bulletin_date,
-	collected_date,
-	acs.age_gte AS acs_age_gte,
-	acs.age_lt AS acs_age_lt,
-	acs.population AS acs_population,
-	sum(encounters) encounters,
-	sum(cases) cases,
-	sum(cases_strict) cases_strict,
-	sum(first_infections) first_infections,
-	sum(possible_reinfections) possible_reinfections,
-	sum(rejections) rejections,
-	sum(antigens) antigens,
-	sum(molecular) molecular,
-	sum(positive_antigens) positive_antigens,
-	sum(positive_molecular) positive_molecular,
-	sum(antigens_cases) antigens_cases,
-	sum(molecular_cases) molecular_cases,
-	sum(initial_molecular) initial_molecular,
-	sum(initial_positive_molecular) initial_positive_molecular,
-
-	sum(sum(encounters)) OVER cumulative
-	    AS cumulative_encounters,
-	sum(sum(cases)) OVER cumulative
-	    AS cumulative_cases,
-	sum(sum(cases_strict)) OVER cumulative
-	    AS cumulative_cases_strict,
-	sum(sum(first_infections)) OVER cumulative
-	    AS cumulative_first_infections,
-	sum(sum(possible_reinfections)) OVER cumulative
-	    AS cumulative_possible_reinfections,
-	sum(sum(rejections)) OVER cumulative
-	    AS cumulative_rejections,
-	sum(sum(antigens)) OVER cumulative
-	    AS cumulative_antigens,
-	sum(sum(molecular)) OVER cumulative
-	    AS cumulative_molecular,
-	sum(sum(positive_antigens)) OVER cumulative
-	    AS cumulative_positive_antigens,
-	sum(sum(positive_molecular)) OVER cumulative
-	    AS cumulative_positive_molecular,
-	sum(sum(antigens_cases)) OVER cumulative
-	    AS cumulative_antigens_cases,
-	sum(sum(molecular_cases)) OVER cumulative
-	    AS cumulative_molecular_cases,
-	sum(sum(initial_molecular)) OVER cumulative
-	    AS cumulative_initial_molecular,
-	sum(sum(initial_positive_molecular)) OVER cumulative
-	    AS cumulative_initial_positive_molecular,
-
-	sum(encounters)
-	    - lag(sum(encounters), 1, 0) OVER delta
-	    AS delta_encounters,
-	sum(cases)
-	    - lag(sum(cases), 1, 0) OVER delta
-	    AS delta_cases,
-	sum(cases_strict)
-	    - lag(sum(cases_strict), 1, 0) OVER delta
-	    AS delta_cases_strict,
-	sum(first_infections)
-	    - lag(sum(first_infections), 1, 0) OVER delta
-	    AS delta_first_infections,
-	sum(possible_reinfections)
-	    - lag(sum(possible_reinfections), 1, 0) OVER delta
-	        AS delta_possible_reinfections,
-	sum(rejections)
-	    - lag(sum(rejections), 1, 0) OVER delta
-        AS delta_rejections,
-	sum(antigens)
-	    - lag(sum(antigens), 1, 0) OVER delta
-	    AS delta_antigens,
-	sum(molecular)
-	    - lag(sum(molecular), 1, 0) OVER delta
-	    AS delta_molecular,
-	sum(positive_antigens)
-	    - lag(sum(positive_antigens), 1, 0) OVER delta
-	    AS delta_positive_antigens,
-	sum(positive_molecular)
-	    - lag(sum(positive_molecular), 1, 0) OVER delta
-	    AS delta_positive_molecular,
-	sum(antigens_cases)
-	    - lag(sum(antigens_cases), 1, 0) OVER delta
-	    AS delta_antigens_cases,
-	sum(molecular_cases)
-	    - lag(sum(molecular_cases), 1, 0) OVER delta
-	    AS delta_molecular_cases,
-	sum(initial_molecular)
-	    - lag(sum(initial_molecular), 1, 0) OVER delta
-	    AS delta_initial_molecular,
-	sum(initial_positive_molecular)
-	    - lag(sum(initial_positive_molecular), 1, 0) OVER delta
-	    AS delta_initial_positive_molecular
+    grid.bulletin_date,
+	grid.collected_date,
+	grid.acs_age_gte,
+	grid.acs_age_lt,
+	grid.acs_population,
+	coalesce(sum(encounters), 0) encounters,
+	coalesce(sum(cases), 0) cases,
+	coalesce(sum(cases_strict), 0) cases_strict,
+	coalesce(sum(first_infections), 0) first_infections,
+	coalesce(sum(possible_reinfections), 0) possible_reinfections,
+	coalesce(sum(rejections), 0) rejections,
+	coalesce(sum(antigens), 0) antigens,
+	coalesce(sum(molecular), 0) molecular,
+	coalesce(sum(positive_antigens), 0) positive_antigens,
+	coalesce(sum(positive_molecular), 0) positive_molecular,
+	coalesce(sum(antigens_cases), 0) antigens_cases,
+	coalesce(sum(molecular_cases), 0) molecular_cases,
+	coalesce(sum(initial_molecular), 0) initial_molecular,
+	coalesce(sum(initial_positive_molecular), 0) initial_positive_molecular
 FROM {{ ref('biostatistics_encounters_cube') }} encounters
 INNER JOIN {{ ref('acs_2019_1y_age_ranges') }} acs
     ON acs.age_gte <= encounters.age_gte
     AND encounters.age_gte < COALESCE(acs.age_lt, 9999)
+RIGHT OUTER JOIN grid
+    ON grid.bulletin_date = encounters.bulletin_date
+    AND grid.collected_date = encounters.collected_date
+    AND grid.acs_age_gte <= encounters.age_gte
+    AND encounters.age_gte < COALESCE(grid.acs_age_lt, 9999)
 GROUP BY
-    downloaded_at,
-	bulletin_date,
-	acs.age_gte,
-	acs.age_lt,
-	acs.population,
-	collected_date
+	grid.bulletin_date,
+	grid.acs_age_gte,
+	grid.acs_age_lt,
+	grid.acs_population,
+	grid.collected_date
 WINDOW cumulative AS (
-    PARTITION BY bulletin_date, acs.age_gte
-    ORDER BY collected_date
+    PARTITION BY grid.bulletin_date, grid.acs_age_gte
+    ORDER BY grid.collected_date
 ), delta AS (
-    PARTITION BY collected_date, acs.age_gte
-    ORDER BY bulletin_date
+    PARTITION BY grid.collected_date, grid.acs_age_gte
+    ORDER BY grid.bulletin_date
 )
 ORDER BY
-    downloaded_at,
-	bulletin_date,
-	acs.age_gte,
-	collected_date
+	grid.bulletin_date,
+	grid.acs_age_gte,
+	grid.collected_date
 ;

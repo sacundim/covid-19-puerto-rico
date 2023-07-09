@@ -443,7 +443,7 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
 
         text = base.transform_filter(
             '(datum.value !== 0) & (datum.value !== null)'
-        ).mark_text(fontSize=6.5).encode(
+        ).mark_text(fontSize=6).encode(
             text=alt.Text('value:Q'),
             color=alt.condition(
                 '(datum.lo_mid_value < datum.value) & (datum.value < datum.hi_mid_value)',
@@ -511,7 +511,7 @@ class MolecularDailyDeltas(AbstractMolecularChart):
                                             domain=alt.DomainUnionWith(unionWith=[0])))
         )
 
-        text = base.mark_text(fontSize=2.75, angle=270).encode(
+        text = base.mark_text(fontSize=3, angle=270).encode(
             text=alt.Text('value:Q'),
             color=alt.condition(
                 '(datum.lo_mid_value < datum.value) & (datum.value < datum.hi_mid_value)',

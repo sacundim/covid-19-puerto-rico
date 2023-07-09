@@ -40,9 +40,8 @@
         <li><a href="#NaivePositiveRate_section">Tasa de especímenes positivos</a></li>
         <li><a href="#ConfirmationsVsRejections_section">Casos confirmados vs. descartados</a></li>
         <li><a href="#CaseFatalityRate_section">Tasa de letalidad (CFR) rezagada</a></li>
-        <li><a href="#MolecularCurrentDeltas_section">Pruebas añadidas a Bioportal</a></li>
-        <li><a href="#MolecularDailyDeltas_section">Historial de pruebas en Bioportal</a></li>
-        <li><a href="#MolecularLatenessTiers_section">Rezagos de resultados de pruebas moleculares</a></li>
+        <li><a href="#MolecularCurrentDeltas_section">Pruebas añadidas a Bioestadísticas</a></li>
+        <li><a href="#MolecularDailyDeltas_section">Historial de pruebas en Bioestadísticas</a></li>
 
         <li><a href="#CurrentDeltas_section">Cambio entre boletín actual y anterior</a></li>
         <li><a href="#DailyDeltas_section">Cambios entre boletines recientes</a></li>
@@ -72,25 +71,33 @@
 
     <p>Una guía rápida de cuántas pruebas, casos, pacientes internados y muertes diarias se
         han dado las últimas 6 semanas mostrando tanto valores diarios crudos (barras) como
-        promedio móvil de 7 días (línea).  Pruebas y casos son datos del Bioportal del
-        Departamento de Salud de Puerto Rico; muertes y hospitalizaciones son por descargas
-        del <a href="https://covid19datos.salud.gov.pr/">tablero de datos del Departamento
-            de Salud de Puerto Rico</a>.</p>
+        promedio móvil de 7 días (línea).
+
+    <p>Pruebas son según datos del
+        ; casos son según nuestro propio análisis de dichos
+        datos de pruebas.; muertes y hospitalizaciones son por descargas
+        d.</p>
 
     <dl>
         <dt>Pruebas</dt>
-        <dd>Usamos el número de personas únicas que se tomó muestra para molecular o antígeno
-            por cada fecha de muestra. (Tenemos <a href="#NewTestSpecimens_section">otra
-                gráfica con desglose por molecular vs. antígeno</a>.)</dd>
+        <dd>Número de personas únicas que se tomó muestra para molecular o antígeno por cada
+            fecha de muestra.  Fuente de datos: <a href="https://biostatistics.salud.pr.gov/swagger/index.html">API
+            de Bioestadísticas del Departamento de Salud de Puerto Rico</a>, al cual
+            aplicamos nuestra propia depuración, limpieza y desduplicación de personas.
 
         <dt>Casos</dt>
-        <dd>Por prueba molecular o de antígenos, usando la fecha de la muestra más temprana.</dd>
+        <dd>Por prueba molecular o de antígenos, usando la fecha de la muestra más temprana.
+            Lo calculamos a partir de nuestro propio análisis de los datos de pruebas, y por
+            esto suele diferir un poco del conteo oficial del Departamento de Salud.</dd>
 
         <dt>Ocupación hospitalaria</dt>
-        <dd>Número de pacientes que ocupan camas en hospital por COVID-19 sospechado o confirmado.</dd>
+        <dd>Número de pacientes que ocupan camas en hospital por COVID-19 sospechado o confirmado.
+            Fuente de datos: el <a href="https://covid19datos.salud.gov.pr/">tablero de estadísticas
+                de COVID-19 del Departamento de Salud de Puerto Rico</a>.</dd>
 
         <dt>Muertes</dt>
-        <dd>Por fecha de deceso.</dd>
+        <dd>Por fecha de deceso.  Fuente de datos: el <a href="https://covid19datos.salud.gov.pr/">tablero
+            de estadísticas de COVID-19 del Departamento de Salud de Puerto Rico</a></dd>
     </dl>
 
 
@@ -106,15 +113,15 @@
 
     <p>El conteo de pruebas en esta gráfica es, para cada fecha, el número de personas únicas
         que se le tomó una muestra de antígeno o molecular.  Este número es menos que el número
-        de "pruebas" que arroja inocentemente Bioportal porque existen muchas ocasiones en
+        de "pruebas" que arroja inocentemente Bioestadísticas porque existen muchas ocasiones en
         que a una misma persona le toman más de una muestra el mismo día y se reportan
         como pruebas aparte.  Y en adición a esto, si a la misma persona le hacen tanto
         prueba de antígeno como molecular el mismo día, lo contamos como una sola prueba.</p>
 
     <p>Este método es una variante de lo que <a href="https://covidtracking.com/analysis-updates/test-positivity-in-the-us-is-a-mess">lo
             que recomienda el COVID Tracking Project</a> bajo la rúbrica de "encuentros de prueba"
-        ("test encounters"), contrario a lo que reporta Bioportal que son "especímenes de prueba"
-        ("test specimens") en la nomenclatura de COVID Tracking.</p>
+        ("test encounters"), contrario a lo que reporta Bioestadísticas que son "especímenes de
+        prueba" ("test specimens") en la nomenclatura de COVID Tracking.</p>
 
     <p>Y generalmente tiene más sentido, porque la mayor parte del tiempo lo que nos interesa
         es saber cuántas personas hemos evaluado si tienen COVID-19, no cuántos especímenes
@@ -137,13 +144,14 @@
         como caso nuevo para propósitos de vigilancia.
     </blockquote>
 
-    <p>Vale apuntar que los informes diarios de Salud publican dos gráficas y tablas de datos
-        aparte para casos confirmados por prueba molecular y casos probables por prueba de antígeno.
-        Estas tablas, sin embargo, sufren de un desperfecto, que es que los casos confirmados que
-        cuentan también con una prueba de antígeno se adjudican a la fecha de la prueba molecular,
-        a pesar de que esta suele ser más tardía.  En esta gráfica usamos datos del Bioportal para
-        corregir esto y adjudicar esos casos a la fecha más temprana, que mejor refleja cuándo se
-        contagió el paciente.</p>
+    <p>Vale apuntar que históricamente informes diarios de Salud han publicado dos gráficas y tablas
+        de datos aparte para casos confirmados por prueba molecular y casos probables por prueba de
+        antígeno. Estas tablas, sin embargo, en muchas ocasiones han sufrido de un desperfecto, que es
+        que los casos confirmados que cuentan también con una prueba de antígeno se adjudican a la fecha
+        de la prueba molecular, a pesar de que esta suele ser más tardía.  En esta gráfica usamos datos
+        del API de Bioestadísticas para corregir esto y adjudicar esos casos a la fecha más temprana, que
+        mejor refleja cuándo se contagió el paciente.  También cuidamos en el proceso de desduplicación
+        de contar aparte obvious casos de recontagio del mismo paciente.</p>
 
 
     <h3>Población de Puerto Rico</h3>
@@ -232,11 +240,11 @@
     <h3>¿Qué es esto?</h3>
 
     <p>Para las últimas seis semanas, cuán retrasados llegaron los resultados de pruebas y de casos
-        al Bioportal del Departamento de Salud de Puerto Rico.  Los días de rezago son la diferencia
-        entre la fecha de toma de muestra (campo  <code>collectedDate</code> en Bioportal) y la fecha
-        de recepción de resultado (campo <code>resultCreatedAt</code>), y se agrupan por fecha de
-        recepción.  Esto último es importante, porque quiere decir que esta gráfica contesta esta
-        pregunta:</p>
+        al <a href="https://biostatistics.salud.pr.gov/swagger/index.html">API de Bioestadísticas del
+            Departamento de Salud de Puerto Rico</a>.  Los días de rezago son la diferencia entre la
+        fecha de toma de muestra (campo  <code>sampleCollectedDate</code> en Bíoestadísticas) y la fecha
+        de recepción de resultado (campo <code>orderTestCreatedAt</code>).  Los agrupamos por fecha de
+        recepción, detalle importante porque quiere decir que esta gráfica contesta esta pregunta:</p>
 
     <ol start="1">
         <li>¿Cuán viejos fueron los resultados que se recibieron en tales fechas?</li>
@@ -301,12 +309,12 @@
         recibidos hace una semana, de hecho tienden a ilustrar esto.</p>
 
 
-    <h3>Informe oficial vs. Bioportal</h3>
+    <h3>Informe oficial vs. Bioestadísticas</h3>
 
     <p>En esta gráfica hemos optado por ilustrar los casos a partir de datos públicos del
-        API del Bioportal del Departamento de Salud de Puerto Rico, en vez del informe
-        oficial diario. Esta decisión requiere sopesar una serie de motivos a favor y en
-        contra:</p>
+        <a href="https://biostatistics.salud.pr.gov/swagger/index.html">API del Bioestadísticas
+            del Departamento de Salud de Puerto Rico</a>, en vez del informe oficial diario.
+        Esta decisión requiere sopesar una serie de motivos a favor y en contra:</p>
 
     <ol>
         <li>En esta gráfica optamos por dar igual peso a pruebas positivas moleculares y
@@ -319,31 +327,12 @@
             tardía.  Esto infla los casos recientes a costa de las fechas más tempranas.</li>
 
         <li>El reporte oficial suele dar números de casos un poco más pequeños que los que
-            arroja Bioportal.  En el pasado hemos entendido se debe a que para el informe
+            arroja Bioestadísticas.  En el pasado hemos entendido se debe a que para el informe
             oficial se debe a una depuración más cuidadosa para eliminar casos duplicados, y aún
             así suponemos, pero ya ha llegado el punto que las diferencias atribuíbles a este
             factor quedan opacadas por la inflación de fechas recientes por los casos probables
             que posteriormente se confirman (#1).</li>
-
-        <li>Existe una discrepancia bien grande en el número de casos confirmados (= molecular)
-            entre 7/ago/2020 y 6/sep/2020, en que Bioportal arroja más de mil casos por encima
-            que los informes oficiales, que nunca se ha explicado.</li>
-
-        <li>Bioportal siempre tiene datos más recientes, como por 2-3 días.</li>
     </ol>
-
-    <p>Esta página anteriormente optaba por trazar ambas curvas y recomendar la oficial como
-        la más autoritativa y la de Bioportal como suplemental para dar aviso temprano de
-        cuántos casos estaban por anunciarse, pero:</p>
-
-    <ul>
-        <li>A febrero del 2021 el peso de los factores se ha virado y juzgamos que la curva
-            de Bioportal es más correcta;</li>
-        <li>Mostrar las dos curvas en la misma gráfica la hace más difícil de leer.</li>
-    </ul>
-
-    <p>Así que ahora solo trazamos la curva por moleculares y antígenos en Bioportal.</p>
-
 
     <h3>Población de Puerto Rico</h3>
 
@@ -369,7 +358,7 @@
     <p>Pruebas, casos, muertes y positividad por edad, promedios de 7 días por fecha de
         muestra o deceso, ajustado al estimado poblacional en cada grupo de edades. Los
         casos son tanto por molecuares y antígenos, a partir de la curva que calculamos
-        con datos de Bioportal.  Las pruebas se cuentan como encuentros de prueba. i.e.,
+        con datos de Bioestadísticas.  Las pruebas se cuentan como encuentros de prueba. i.e.,
         cuando los datos dicen dos especímenes de prueba a la misma persona en la misma
         fecha, lo contamos como una sola prueba.</p>
 
@@ -440,7 +429,7 @@
             reales</b>. La línea entrecortada, que excluye los datos recibidos los 7 días más
         recientes, tiende a ilustrar este efecto.</p>
 
-    <p>Los números son más o menos los crudos de Bioportal, y no corrigen por ejemplo
+    <p>Los números son más o menos los crudos de Bioestadísticas, y no corrigen por ejemplo
         múltiples pruebas reportadas para la misma persona el mismo día. En
         <a href="https://covidtracking.com/analysis-updates/test-positivity-in-the-us-is-a-mess">la
             clasificación que propone el COVID Tracking Project</a>, estos son "especímenes de
@@ -484,7 +473,7 @@
     <h3>¿Qué es esto?</h3>
 
     <p>Porcentaje de especímenes de prueba positivos entre todos los especímenes de pruebas,
-        promedios de 7 días por fecha de toma de muestra, según datos del API de Bioportal
+        promedios de 7 días por fecha de toma de muestra, según datos del API de Bioestadísticas
         del Departamento de Salud de Puerto Rico, con depuración mínima.  Entendemos que no
         es la mejor forma de calcular positividad, pero la calculamos de todos modos como
         servicio al público ya que es un cálculo que por ejemplo usan los CDC de los Estados
@@ -586,7 +575,7 @@
     <h3>Criterio para prueba inicial vs. seguimiento</h3>
 
     <p>Catalogamos una prueba (negativa o positiva) como seguimiento si el mismo paciente
-        (según el campo <code>patientId</code> en Bioportal) ha tenido una prueba molecular
+        (según el campo <code>patientId</code> en Bioestadísticas) ha tenido una prueba molecular
         o de antígenos positiva en los 90 días anteriores.  Este criterio lo adoptamos a
         partir de
         <a href="https://wwwn.cdc.gov/nndss/conditions/coronavirus-disease-2019-covid-19/case-definition/2020/08/05/">la
@@ -600,7 +589,7 @@
     </blockquote>
 
     <p><strong>ADVERTENCIA:</strong> Este estimado usa el campo <code>patientId</code> de
-        Bioportal para adjudicar si un par de pruebas se le hicieron al mismo paciente, y
+        Bioestadísticas para adjudicar si un par de pruebas se le hicieron al mismo paciente, y
         hay motivo para creer que este campo frecuentemente falla en lograr ese cometido
         y muestre IDs distintos en muchos casos que en verdad es la misma persona.  El efecto
         de esto sería subestimar qué cantidad de pruebas son de seguimiento.</p>
@@ -686,7 +675,7 @@
 
 
 <div class="section" id="MolecularCurrentDeltas_section">
-    <h1>Pruebas añadidas a Bioportal</h1>
+    <h1>Pruebas añadidas a Bioestadísticas</h1>
 
     <div id="MolecularCurrentDeltas"></div>
     <script type="text/javascript">
@@ -695,36 +684,31 @@
 
     <h3>¿Qué es esto?</h3>
 
-    <p>Cuántos resultados nuevos de pruebas moleculares se añadieron en el API de Bioportal
+    <p>Cuántos resultados nuevos de pruebas moleculares se añadieron en el API de Bioestadísticas
         (el sistema en línea de recibo de resultados de pruebas del Departamento de Salud de
-        Puerto Rico), por combinación de fecha de toma de muestra y fecha que Bioportal reporta
+        Puerto Rico), por combinación de fecha de toma de muestra y fecha que Bioestadísticas reporta
         recepción del resultado de la prueba.</p>
 
-    <p>El API de Bioportal de Salud que usa esta página presenta tres campos de fecha/tiempo
+    <p>El API de Bioestadísticas de Salud que usa esta página presenta tres campos de fecha/tiempo
         para cada récord de prueba individual:</p>
 
     <dl>
-        <dt><code>collectedDate</code></dt>
+        <dt><code>sampleCollectedDate</code></dt>
         <dd>Fecha de colección de muestra de prueba.</dd>
 
-        <dt><code>reportedDate</code></dt>
+        <dt><code>resultReportDate</code></dt>
         <dd>Se entiende a partir de conversaciones con fuentes que es la fecha en que el
             laboratorio advino en conocimiento del resultado de la prueba.</dd>
 
-        <dt><code>resultCreatedAt</code></dt>
+        <dt><code>orderTestCreatedAt</code></dt>
         <dd>Tiempo que el sistema computarizado graba como la fecha y hora que se
             recibió el resultado de la prueba.</dd>
     </dl>
-
-    <p>Aún con todo esto, muchos récords de pruebas moleculares sin embargo muestran un
-        <code>collectedDate</code> más tardío que su <code>reportedDate</code>, y en este
-        caso se ha optado en imputarles que se recogieron 3 días antes que el <code>reportedDate</code>,
-        a partir de un análisis de la tardanza promedio en toda la base de datos.</p>
 </div>
 
 
 <div class="section" id="MolecularDailyDeltas_section">
-    <h1>Historial de pruebas en Bioportal</h1>
+    <h1>Historial de pruebas en Bioestadísticas</h1>
 
     <div id="MolecularDailyDeltas"></div>
     <script type="text/javascript">
@@ -736,23 +720,6 @@
     <p>El mismo análisis que la gráfica anterior, pero en forma de historial para muchas fechas
         recientes.  Se puede apuntar a cada celda de la gráfica para que aparezca un indicador
         con los valores de esta en tamaño legible.</p>
-</div>
-
-
-<div class="section" id="MolecularLatenessTiers_section">
-    <h1>Rezagos de resultados de pruebas moleculares</h1>
-
-    <div id="MolecularLatenessTiers"></div>
-    <script type="text/javascript">
-        embedChart('MolecularLatenessTiers', bulletin_date);
-    </script>
-
-    <h3>¿Qué es esto?</h3>
-
-    <p>Promedios de siete días de rezagos estimados entre toma de muestra y aparición de récord
-        del resultado en Bioportal, agrupando los resultados por la fecha en que se recibieron.
-        El panel superior muestra los volúmenes absolutos; el panel inferior es los mismos datos,
-        pero en porcentajes.</p>
 </div>
 
 
@@ -906,13 +873,7 @@
 
     <h3>Advertencias</h3>
 
-    <p>Estos mapas usan datos del portal Covid19Datos del Departamento de Salud de Puerto Rico,
-        que siempre están 1-3 días atrás comparado con Bioportal que es la fuente de otras
-        visualizaciones en esta página.  También por eso heredan otros defectos de Covid19Datos,
-        más notablemente, las fallas en la adjudicación de fechas a casos que cuentan tanto con
-        prueba de antígeno como molecular positiva.</p>
-
-    <p>También se observa en muchas ocasiones que las cifras en este mapa excedan las que obtienen
+    <p>Se observa en muchas ocasiones que las cifras en este mapa excedan las que obtienen
         otras fuentes que hace uso de un manejo de fechas más sencillo que no incluye los cambios
         reportados recientemente a destiempo como se explica arriba. El motivo es que muchas veces
         los "casos viejos" que excluye el método de este mapa resultan ser casos <b>restados</b>,
@@ -1467,7 +1428,14 @@
 <div class="section" id="Revisions_section">
     <h1>Revisiones</h1>
 
-    <h3 id="Revisions_2021-07-25">17 de agosto del 2022</h3>
+    <h3 id="Revisions_2023-07-09">9 de julio del 2023</h3>
+
+    <p>Remplazamos los usos del viejo API del Bioportal del Departmento de Salud está por
+        su sucesor, <a href="https://biostatistics.salud.pr.gov/swagger/index.html">el API
+            de Bioestadísticas</a>.</p>
+
+
+    <h3 id="Revisions_2022-09-17">17 de agosto del 2022</h3>
 
     <p>El mapa de vacunaciones lleva algunos días produciendo resultados claramente erróneos,
         así que lo hemos desactivado.  No nos urge restaurarlo por el momento, ya que nunca ha

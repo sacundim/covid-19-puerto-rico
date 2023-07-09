@@ -3,7 +3,7 @@
 # Override this to use e.g. podman instead of docker:
 DOCKER="${DOCKER:=docker}"
 
-export DOCKER_IMAGE="${DOCKER_IMAGE:=covid-19-puerto-rico-website}"
+export DOCKER_IMAGE="${DOCKER_IMAGE:=sacundim/covid-19-puerto-rico-website}"
 
 set -e
 cd "$(dirname $0)"/..

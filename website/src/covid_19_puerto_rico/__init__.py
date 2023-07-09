@@ -76,7 +76,6 @@ def main():
         molecular.CaseFatalityRate(athena, args.output_dir, output_formats),
         molecular.NewTestSpecimens(athena, args.output_dir, output_formats),
         molecular.ConfirmationsVsRejections(athena, args.output_dir, output_formats),
-        molecular.MolecularLatenessTiers(athena, args.output_dir, output_formats),
         molecular.MolecularCurrentDeltas(athena, args.output_dir, output_formats),
         molecular.MolecularDailyDeltas(athena, args.output_dir, output_formats),
     ]
@@ -104,7 +103,6 @@ def global_configuration():
 
     alt.themes.register("custom_theme", lambda: util.get_json_resource('theme.json'))
     alt.themes.enable("custom_theme")
-    alt.renderers.enable('altair_saver', fmts=['svg', 'png'])
     alt.renderers.set_embed_options(
         timeFormatLocale=util.get_json_resource('es-PR.json')
     )

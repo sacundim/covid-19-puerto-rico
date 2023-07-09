@@ -20,7 +20,7 @@ WITH tests AS (
         sum(positives) FILTER (
             WHERE test_type = 'Molecular'
         ) AS cumulative_positive_molecular
-    FROM {{ ref('municipal_tests_collected_agg') }}
+    FROM {{ ref('biostatistics_specimens_municipal_agg') }}
     INNER JOIN {{ ref('municipal_abbreviations') }}
         USING (municipality)
     WHERE test_type IN ('Antígeno', 'Molecular')

@@ -12,20 +12,20 @@ migrate-off-gh-pages = 'covid_19_puerto_rico.migrations:migrate_off_gh_pages'
 [tool.poetry.dependencies]
 python = "^3.9"
 numpy = "^1.21.0"
-pandas = "^1.0.3"
-sqlalchemy = "^1.3.16"
-altair = "^4.1.0"
+pandas = "^1.5.3"
+sqlalchemy = "^1.4.48"
+altair = "^5.0"
 toml = "^0.10.0"
-altair-saver = "^0.5.0"
 wand = "^0.5.9"
 jinja2 = "^3.1.1"
 geojson = "^2.5.0"
 PyAthena = "^1.11.2"
+vl-convert-python = "^0.11.0"
 
 [tool.poetry.dev-dependencies]
 ghp-import = "^0.5.5"
 GitPython = "^3.1.30"
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

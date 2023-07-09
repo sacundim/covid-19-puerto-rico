@@ -5,18 +5,18 @@
 --
 
 SELECT
-	bioportal.test_type,
-	bioportal.bulletin_date,
+	biostatistics.test_type,
+	biostatistics.bulletin_date,
 	collected_date,
-	bioportal.tests,
-	bioportal.positive_tests AS positives
-FROM {{ ref('bioportal_collected_agg') }} bioportal
-WHERE bioportal.test_type IN ('Molecular', 'Antígeno')
-AND bioportal.bulletin_date > DATE '2020-04-24'
+	biostatistics.specimens AS tests,
+	biostatistics.positive_specimens AS positives
+FROM {{ ref('biostatistics_specimens_collected_agg') }} biostatistics
+WHERE biostatistics.test_type IN ('Molecular', 'Antígeno')
+AND biostatistics.bulletin_date > DATE '2020-04-24'
 AND (
     -- Don't report on antigens earlier than Oct. 24 when
     -- it started in earnest.
-	bioportal.test_type != 'Antígeno'
-		OR bioportal.collected_date >= DATE '2020-10-24'
+	biostatistics.test_type != 'Antígeno'
+		OR biostatistics.collected_date >= DATE '2020-10-24'
 )
-ORDER BY test_type, bulletin_date DESC, collected_date DESC;
+ORDER BY test_type, bulletin_date, collected_date;

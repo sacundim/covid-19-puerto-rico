@@ -38,8 +38,8 @@ SELECT
 			ORDER BY deaths.datum_date
 			ROWS 13 PRECEDING
 		) AS lagged_cfr
-FROM {{ ref('bioportal_curve') }} cases
+FROM {{ ref('biostatistics_curve') }} cases
 INNER JOIN deaths
 	ON cases.bulletin_date = deaths.bulletin_date
 	AND deaths.datum_date = date_add('day', 14, cases.collected_date)
-ORDER BY cases.bulletin_date DESC, cases.collected_date DESC;
+ORDER BY cases.bulletin_date, cases.collected_date;

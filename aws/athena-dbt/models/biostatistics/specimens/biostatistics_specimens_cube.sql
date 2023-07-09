@@ -1,7 +1,7 @@
 WITH bulletins AS (
     SELECT max(downloaded_at) downloaded_at
     FROM {{ ref('biostatistics_tests') }}
-    WHERE downloaded_date >= CURRENT_DATE - INTERVAL '17' DAY
+    WHERE downloaded_date >= CURRENT_DATE - INTERVAL '51' DAY
     GROUP BY date(downloaded_at AT TIME ZONE 'America/Puerto_Rico')
 )
 SELECT
@@ -24,7 +24,7 @@ INNER JOIN bulletins
     USING (downloaded_at)
 INNER JOIN {{ ref('bioportal_age_ranges') }}
     USING (age_range)
-WHERE downloaded_date >= CURRENT_DATE - INTERVAL '17' DAY
+WHERE downloaded_date >= CURRENT_DATE - INTERVAL '51' DAY
 AND test_type IN ('Molecular', 'Antígeno')
 AND DATE '2020-03-01' <= collected_date
 AND collected_date <= received_date
@@ -43,14 +43,4 @@ GROUP BY
     age_range,
     age_gte,
     age_lt
-ORDER BY
-    downloaded_at,
-    downloaded_date,
-    bulletin_date,
-    collected_date,
-    reported_date,
-    received_date,
-    test_type,
-    municipality,
-    age_gte
 ;
