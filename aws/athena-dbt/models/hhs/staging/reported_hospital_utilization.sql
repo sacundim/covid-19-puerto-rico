@@ -93,5 +93,3 @@ SELECT
 		AS total_staffed_adult_icu_beds_coverage
 FROM {{ source('hhs', 'reported_hospital_utilization_v2') }}
 WHERE state = 'PR'
-
-ORDER BY date;

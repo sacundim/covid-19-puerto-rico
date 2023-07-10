@@ -8,4 +8,3 @@ SELECT
 		AS total_positive_tests_last_7_days
 FROM {{ source('hhs', 'community_profile_report_county_v2') }}
 WHERE state = 'PR'
-ORDER BY date DESC, county;

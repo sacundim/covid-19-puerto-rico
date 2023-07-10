@@ -113,4 +113,3 @@ WINDOW bulletin AS (
 	PARTITION BY date
 	ORDER BY bulletin_date
 )
-ORDER BY bulletin_date, date;

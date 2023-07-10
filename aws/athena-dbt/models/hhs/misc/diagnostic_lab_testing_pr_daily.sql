@@ -36,4 +36,3 @@ FROM {{ ref('diagnostic_lab_testing_pr_downloads') }}
 INNER JOIN downloads
 	ON max_file_timestamp = file_timestamp
 GROUP BY file_timestamp, local_date, date
-ORDER BY file_timestamp, local_date, date;

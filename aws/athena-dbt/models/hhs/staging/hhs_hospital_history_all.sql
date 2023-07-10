@@ -45,4 +45,3 @@ SELECT
 FROM {{ source('hhs', 'hospital_facilities_v3') }}
 INNER JOIN max_path
     ON max_path = "$path"
-ORDER BY file_timestamp, state, collection_week;

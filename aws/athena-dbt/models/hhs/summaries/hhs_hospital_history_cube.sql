@@ -90,4 +90,3 @@ SELECT
 FROM {{ ref('hhs_hospital_history') }} hhh
 INNER JOIN {{ ref('municipal_population') }} cmn
 	ON cmn.fips = hhh.fips_code
-ORDER BY collection_week DESC, region, cmn."name", hospital_name;

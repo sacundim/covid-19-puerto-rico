@@ -23,4 +23,3 @@ SELECT
     consent_cases,
     consent_deaths
 FROM {{ source('hhs', 'united_states_covid_19_cases_and_deaths_by_state_v3') }}
-ORDER BY file_timestamp, state, submission_date;
