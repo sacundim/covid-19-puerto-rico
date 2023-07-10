@@ -1,4 +1,4 @@
-{% docs bioportal_encounters %}
+{% docs biostatistics_encounters %}
 
 # Encounters and followup analysis
 
