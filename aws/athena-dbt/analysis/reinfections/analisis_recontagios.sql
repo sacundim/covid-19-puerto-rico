@@ -4,7 +4,7 @@
 --
 WITH bulletins AS (
 	SELECT max(bulletin_date) AS bulletin_date
-	FROM covid19_puerto_rico_model.bioportal_curve
+	FROM {{ ref('biostatistics_encounters_agg') }}
 )
 SELECT
 	bulletins.bulletin_date "Datos",
@@ -15,7 +15,7 @@ SELECT
 		- lag(bul.cumulative_confirmed_cases + COALESCE(bul.cumulative_probable_cases , 0), 7) OVER (
 		ORDER BY bio.collected_date
 	)) / 7.0 AS "Promedio",
-	bio.cases "Bioportal",
+	bio.cases "Bioestadísticas",
 	(bio.cumulative_cases - lag(bio.cumulative_cases, 7) OVER (
 		ORDER BY bio.collected_date
 	)) / 7.0 AS "Promedio",
@@ -27,7 +27,7 @@ SELECT
 	(cumulative_possible_reinfections - lag(cumulative_possible_reinfections, 7) OVER (
 		ORDER BY collected_date
 	)) / 7.0 AS "Promedio"
-FROM {{ ref('bioportal_encounters_agg') }} bio
+FROM {{ ref('biostatistics_encounters_agg') }} bio
 INNER JOIN bulletins
 	ON bulletins.bulletin_date = bio.bulletin_date
 LEFT OUTER JOIN {{ ref('bulletin_cases') }} bul

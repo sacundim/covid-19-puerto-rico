@@ -14,7 +14,7 @@ SELECT
 		AS late_tests,
 	sum(delta_positive_tests) FILTER (WHERE collected_age > threshold.value)
 		AS late_positive_tests
-FROM {{ ref('bioportal_collected_agg') }}
+FROM {{ ref('biostatistics_specimens_collected_agg') }}
 CROSS JOIN (VALUES (5)) AS threshold (value)
 WHERE test_type IN ('Molecular', 'Antígeno')
 GROUP BY test_type, bulletin_date, threshold.value

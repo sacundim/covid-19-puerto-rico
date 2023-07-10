@@ -39,19 +39,6 @@ query-comment: null
 models:
   covid_19_puerto_rico_etl:
     +table_type: 'iceberg'
-
-    bioportal:
-      +enabled: false
-      encounters:
-        +materialized: table
-      specimens:
-        +materialized: table
-      staging:
-        +materialized: table
-      summaries:
-        +materialized: table
-        +bucketed_by: ["bulletin_date"]
-        +bucket_count: 1
     biostatistics:
       cases:
         +materialized: table

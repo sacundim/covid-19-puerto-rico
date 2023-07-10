@@ -2,11 +2,11 @@
 -- Casos detectados inicialmente por prueba de antígeno
 --
 WITH bulletins AS (
-	SELECT max(bulletin_date) AS max_bulletin_date
-	FROM {{ ref('bioportal_encounters_agg') }} bioportal_curve
+	SELECT max(bulletin_date) AS bulletin_date
+	FROM {{ ref('biostatistics_encounters_agg') }}
 )
 SELECT
-	max_bulletin_date "Datos",
+	bulletin_date "Datos",
 	bio.collected_date AS "Muestras",
     sum(cases) OVER (
 	    PARTITION BY bio.bulletin_date
@@ -27,7 +27,7 @@ SELECT
 	    ORDER BY bio.collected_date
 	    ROWS 6 PRECEDING
 	) "Porcentaje"
-FROM {{ ref('bioportal_encounters_agg') }} bio
+FROM {{ ref('biostatistics_encounters_agg') }} bio
 INNER JOIN bulletins
-	ON bulletins.max_bulletin_date = bio.bulletin_date
+    USING (bulletin_date)
 ORDER BY bio.collected_date DESC;

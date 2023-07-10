@@ -1,6 +1,6 @@
 WITH bulletins AS (
 	SELECT max(bulletin_date) AS bulletin_date
-	FROM {{ ref('bioportal_encounters_agg') }}
+	FROM {{ ref('biostatistics_encounters_agg') }}
 ), rates AS (
 	SELECT
 		bulletin_date,
@@ -26,7 +26,7 @@ WITH bulletins AS (
 		bio.cumulative_antigens_cases - lag(bio.cumulative_antigens_cases) OVER (
 			ORDER BY bio.collected_date
 		) AS antigens_cases
-	FROM {{ ref('bioportal_encounters_agg') }} bio
+	FROM {{ ref('biostatistics_encounters_agg') }} bio
 	INNER JOIN bulletins
 		USING (bulletin_date)
 	-- Athena/Presto modulo function is broken with negative numbers; mod(-1, 7) = -1.
