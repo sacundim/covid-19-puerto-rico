@@ -28,3 +28,8 @@ resource "aws_athena_workgroup" "dbt" {
     }
   }
 }
+
+resource "aws_athena_database" "example" {
+  name   = "covid_19_puerto_rico_iceberg"
+  bucket = aws_s3_bucket.iceberg_bucket.id
+}

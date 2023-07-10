@@ -1,43 +1,65 @@
 {{
-    config(pre_hook=[
+    config(
+      pre_hook=[
         "MSCK REPAIR TABLE {{ source('biostatistics', 'tests_v2').render_hive() }}"
-    ])
+      ],
+      table_type='iceberg',
+      partitioned_by=['bulletin_date'],
+      materialized='incremental',
+      unique_key=['downloaded_at', 'order_test_id'],
+      incremental_strategy='append'
+    )
 }}
 WITH first_clean AS (
+    {% if is_incremental() %}
+    WITH incremental AS (
+        SELECT
+            max(downloaded_at) max_downloaded_at,
+            CAST(max(downloaded_date) AS VARCHAR) max_downloaded_date
+        FROM {{ this }}
+    )
+    {% endif %}
     SELECT
         date(downloaded_date) AS downloaded_date,
-        downloadedAt AS downloaded_at,
+        CAST(downloadedAt AS TIMESTAMP(6))
+            AS downloaded_at,
         CAST(downloadedAt AT TIME ZONE 'America/Puerto_Rico' AS DATE)
             - INTERVAL '1' DAY
             AS bulletin_date,
-	    from_hex(replace(nullif(patientId, ''), '-')) AS patient_id,
-      {{ clean_age_range('patientAgeRange') }} AS age_range,
-      {{ clean_region('patientRegion') }} AS region,
-      {{ clean_municipality('patientCity') }} AS municipality,
-	    nullif(orderTestType, '') AS raw_test_type,
-	    {{ clean_test_type('orderTestType') }} AS test_type,
-	    sampleCollectedDate AS raw_collected_utc,
+        from_hex(replace(nullif(orderTestId, ''), '-')) AS order_test_id,
+        from_hex(replace(nullif(patientId, ''), '-')) AS patient_id,
+        {{ clean_age_range('patientAgeRange') }} AS age_range,
+        {{ clean_region('patientRegion') }} AS region,
+        {{ clean_municipality('patientCity') }} AS municipality,
+        nullif(orderTestType, '') AS raw_test_type,
+        {{ clean_test_type('orderTestType') }} AS test_type,
+        CAST(sampleCollectedDate AS TIMESTAMP(6))
+            AS raw_collected_utc,
         date(sampleCollectedDate AT TIME ZONE 'America/Puerto_Rico')
             AS raw_collected_date,
-        date(resultReportDate AT TIME ZONE 'America/Puerto_Rico')
+        CAST(resultReportDate AS TIMESTAMP(6))
             AS raw_result_report_utc,
         date(resultReportDate AT TIME ZONE 'America/Puerto_Rico')
             AS raw_reported_date,
-	    nullif(orderTestResult, '') AS result,
+	      nullif(orderTestResult, '') AS result,
         {{ parse_bioportal_result('orderTestResult', 'results.positive') }}
             AS positive,
         -- Elvis has told me and I have validated that the `orderTestCreatedAt` in
         -- Biostatistics, unlike the similar named field in old Bioportal, is a very
         -- timestamp of when PRDoH actually received the result from the lab.
-	    orderTestCreatedAt AS received_utc,
+	      CAST(orderTestCreatedAt AS TIMESTAMP(6))
+	          AS received_utc,
         date(orderTestCreatedAt AT TIME ZONE 'America/Puerto_Rico')
             AS received_date
     FROM {{ source('biostatistics', 'tests_v2') }} tests
+    {% if is_incremental() %}
+    INNER JOIN incremental
+      ON downloadedAt > max_downloaded_at
+      AND downloaded_date >= max_downloaded_date
+    {% endif %}
     LEFT OUTER JOIN {{ ref('expected_test_results') }} results
         ON tests.orderTestResult = results.result
     WHERE orderTestCategory IN ('Covid-19')
-    -- IMPORTANT: This prunes partitions
-    AND downloaded_date >= cast(date_add('day', -51, current_date) AS VARCHAR)
 ), date_aux_calculations AS (
     SELECT
         *,

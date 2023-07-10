@@ -1,4 +1,10 @@
 WITH grouped AS (
+    WITH bulletins AS (
+        SELECT max(downloaded_at) downloaded_at
+        FROM {{ ref('biostatistics_tests') }}
+        WHERE downloaded_date >= CURRENT_DATE - INTERVAL '51' DAY
+        GROUP BY date(downloaded_at AT TIME ZONE 'America/Puerto_Rico')
+    )
     SELECT
         downloaded_at,
         bulletin_date,
@@ -88,6 +94,8 @@ WITH grouped AS (
             AND has_positive_molecular
         ) AS initial_positive_molecular
     FROM {{ ref('biostatistics_encounters') }}
+    INNER JOIN bulletins
+        USING (downloaded_at)
     INNER JOIN {{ ref('bioportal_age_ranges') }}
         USING (age_range)
     GROUP BY

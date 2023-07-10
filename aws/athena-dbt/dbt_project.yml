@@ -36,6 +36,8 @@ query-comment: null
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 models:
   covid_19_puerto_rico_etl:
+    +table_type: 'iceberg'
+
     bioportal:
       encounters:
         +materialized: table
@@ -48,6 +50,8 @@ models:
         +bucketed_by: ["bulletin_date"]
         +bucket_count: 1
     biostatistics:
+      cases:
+        +materialized: table
       deaths:
         +materialized: table
       encounters:
