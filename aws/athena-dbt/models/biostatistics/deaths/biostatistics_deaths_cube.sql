@@ -1,7 +1,6 @@
 WITH bulletins AS (
 	SELECT max(downloaded_at) downloaded_at
 	FROM {{ ref('biostatistics_deaths') }}
-	WHERE downloaded_date >= CURRENT_DATE - INTERVAL '17' DAY
 	GROUP BY date(downloaded_at AT TIME ZONE 'America/Puerto_Rico')
 )
 SELECT
