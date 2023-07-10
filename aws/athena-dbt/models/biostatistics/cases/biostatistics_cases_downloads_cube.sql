@@ -5,10 +5,13 @@
 --
 {{
     config(
-      table_type='iceberg',
-      partitioned_by=['month(downloaded_at)'],
-      materialized='incremental',
-      incremental_strategy='append'
+        table_type='iceberg',
+        partitioned_by=['month(downloaded_at)'],
+        materialized='incremental',
+        incremental_strategy='append',
+        post_hook = [
+            'VACUUM {{ this.render_pure() }};'
+        ]
     )
 }}
 SELECT

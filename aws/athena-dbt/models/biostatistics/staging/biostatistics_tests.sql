@@ -1,13 +1,16 @@
 {{
     config(
-      pre_hook=[
-        "MSCK REPAIR TABLE {{ source('biostatistics', 'tests_v2').render_hive() }}"
-      ],
-      table_type='iceberg',
-      partitioned_by=['month(bulletin_date)'],
-      materialized='incremental',
-      unique_key=['downloaded_at', 'order_test_id'],
-      incremental_strategy='append'
+        pre_hook=[
+            "MSCK REPAIR TABLE {{ source('biostatistics', 'tests_v2').render_hive() }}"
+        ],
+        table_type='iceberg',
+        partitioned_by=['month(bulletin_date)'],
+        materialized='incremental',
+        unique_key=['downloaded_at', 'order_test_id'],
+        incremental_strategy='append',
+        post_hook = [
+            'VACUUM {{ this.render_pure() }};'
+        ]
     )
 }}
 WITH first_clean AS (

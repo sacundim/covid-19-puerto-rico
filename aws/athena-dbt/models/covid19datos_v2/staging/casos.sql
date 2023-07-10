@@ -5,14 +5,16 @@
 --
 {{
     config(
-      pre_hook=[
-        "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'casos_v3').render_hive() }}"
-      ],
-      table_type='iceberg',
-      partitioned_by=['month(downloaded_date)'],
-      materialized='incremental',
-      unique_key=['downloaded_at', 'id_number'],
-      incremental_strategy='append'
+        pre_hook=[
+            "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'casos_v3').render_hive() }}"
+        ],
+        table_type='iceberg',
+        partitioned_by=['month(downloaded_date)'],
+        materialized='incremental',
+        incremental_strategy='append',
+        post_hook = [
+            'VACUUM {{ this.render_pure() }};'
+        ]
     )
 }}
 {% if is_incremental() %}
