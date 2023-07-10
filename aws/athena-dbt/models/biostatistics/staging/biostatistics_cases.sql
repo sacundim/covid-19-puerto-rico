@@ -4,7 +4,7 @@
         "MSCK REPAIR TABLE {{ source('biostatistics', 'cases_v2').render_hive() }}"
       ],
       table_type='iceberg',
-      partitioned_by=['bulletin_date'],
+      partitioned_by=['month(bulletin_date)'],
       materialized='incremental',
       unique_key=['downloaded_at', 'case_id'],
       incremental_strategy='append'
