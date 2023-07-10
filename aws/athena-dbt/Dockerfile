@@ -1,8 +1,8 @@
 FROM python:3.9-slim AS dbt-athena
 RUN python3 -m pip install pipx
-ARG DBT_CORE_VERSION="1.4.4"
+ARG DBT_CORE_VERSION="1.5.2"
 RUN pipx install dbt-core=="$DBT_CORE_VERSION"
-ARG DBT_ATHENA_VERSION="1.4.1"
+ARG DBT_ATHENA_VERSION="1.5.1"
 RUN pipx inject dbt-core dbt-athena-community=="$DBT_ATHENA_VERSION"
 ENV PATH=/root/.local/bin:$PATH
 
