@@ -298,8 +298,7 @@ class CurrentDeltas(AbstractChart):
         )
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('bulletin_cases', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('bulletin_cases', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.datum_date,
                         table.c.delta_confirmed_cases,
@@ -357,8 +356,7 @@ class DailyDeltas(AbstractChart):
         )
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('bulletin_cases', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('bulletin_cases', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.datum_date,
                         table.c.delta_confirmed_cases,
@@ -474,8 +472,7 @@ class WeekdayBias(AbstractChart):
         )
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('weekday_bias', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('weekday_bias', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.datum_date,
                         table.c.delta_confirmed_cases.label('Confirmados'),
@@ -557,8 +554,7 @@ class Municipal(AbstractChart):
         )
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('cases_municipal_agg', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('cases_municipal_agg', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.sample_date,
                         table.c.region,
@@ -646,8 +642,7 @@ class MunicipalMap(AbstractChart):
                               format=alt.TopoDataFormat(type='topojson', feature='municipalities'))
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_map', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('municipal_map', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.municipality,
@@ -664,8 +659,7 @@ class MunicipalMap(AbstractChart):
 
 class LatenessTiers(AbstractChart):
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('lateness_tiers', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('lateness_tiers', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.tier,
