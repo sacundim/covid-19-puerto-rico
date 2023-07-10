@@ -102,8 +102,7 @@ LEFT OUTER JOIN {{ ref('biostatistics_tests') }} prev
     -- IMPORTANT: This may look redundant but it prunes partitions on the source
     AND prev.bulletin_date >= (SELECT max(bulletin_date) FROM {{ this }})
     {% endif %}
-WHERE cur.downloaded_date >= CURRENT_DATE - INTERVAL '51' DAY
-AND cur.test_type IN ('Molecular', 'Antígeno')
+WHERE cur.test_type IN ('Molecular', 'Antígeno')
 AND DATE '2020-03-01' <= cur.collected_date
 AND cur.collected_date <= cur.received_date
 AND DATE '2020-03-01' <= cur.reported_date

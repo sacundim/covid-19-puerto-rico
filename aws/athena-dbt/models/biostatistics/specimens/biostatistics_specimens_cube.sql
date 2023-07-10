@@ -23,8 +23,7 @@ INNER JOIN bulletins
     USING (downloaded_at)
 INNER JOIN {{ ref('bioportal_age_ranges') }}
     USING (age_range)
-WHERE downloaded_date >= CURRENT_DATE - INTERVAL '51' DAY
-AND test_type IN ('Molecular', 'Antígeno')
+WHERE test_type IN ('Molecular', 'Antígeno')
 AND DATE '2020-03-01' <= collected_date
 AND collected_date <= received_date
 AND DATE '2020-03-01' <= reported_date
