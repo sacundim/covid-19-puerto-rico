@@ -34,7 +34,7 @@ resource "aws_batch_job_definition" "dbt_run_models" {
       },
       {
         name = "ATHENA_S3_SCHEMA",
-        value = "covid19_puerto_rico_model"
+        value = "covid19_puerto_rico_iceberg"
       },
       {
         name = "ATHENA_DATABASE",

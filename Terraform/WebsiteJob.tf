@@ -32,7 +32,7 @@ resource "aws_batch_job_definition" "website_generator" {
       },
       {
         name = "ATHENA_SCHEMA_NAME",
-        value = "covid19_puerto_rico_model"
+        value = "covid19_puerto_rico_iceberg"
       },
       {
         name = "ATHENA_WORK_GROUP",
