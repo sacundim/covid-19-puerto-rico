@@ -4,4 +4,3 @@
 SELECT *
 FROM {{ ref('cdc_community_level_all') }}
 WHERE state = 'Puerto Rico'
-ORDER BY file_timestamp, date_updated, county_fips;

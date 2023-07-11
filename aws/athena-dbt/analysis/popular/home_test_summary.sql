@@ -7,8 +7,8 @@ WITH encounters AS (
 		bool_or(casera.positive) positive,
 		count(*) FILTER (WHERE lab.patient_id IS NOT NULL) AS labs,
 		bool_or(lab.positive) AS lab_result
-	FROM {{ ref('bioportal_orders_basic') }} casera
-	LEFT OUTER JOIN {{ ref('bioportal_orders_basic') }} lab
+	FROM {{ ref('biostatistics_tests') }} casera
+	LEFT OUTER JOIN {{ ref('biostatistics_tests') }} lab
 		ON lab.patient_id = casera.patient_id
 		AND lab.test_type IN ('Molecular', 'Antígeno')
 		AND casera.collected_date <= lab.collected_date

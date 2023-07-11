@@ -7,13 +7,16 @@
 WITH first_clean AS (
 	SELECT
 		date(downloaded_date) AS downloaded_date,
-        downloadedAt AS downloaded_at,
+        CAST(downloadedAt AS TIMESTAMP(6))
+            AS downloaded_at,
 	    CAST(downloadedAt AT TIME ZONE 'America/Puerto_Rico' AS DATE)
 	        - INTERVAL '1' DAY
 	        AS bulletin_date,
 	    from_hex(replace(nullif(deathId, ''), '-')) AS death_id,
-        deathDate AS raw_death_date,
-        deathReportDate AS raw_death_report_date,
+        CAST(deathDate AS TIMESTAMP(6))
+            AS raw_death_date,
+        CAST(deathReportDate AS TIMESTAMP(6))
+            AS raw_death_report_date,
 	    nullif(sex, '') sex,
         {{ clean_age_range('ageRange') }} AS age_range,
         {{ clean_region('physicalRegion') }} AS region,
@@ -31,5 +34,4 @@ SELECT
 		ELSE raw_death_date
 	END AS death_date,
 	raw_death_report_date AS report_date
-FROM first_clean
-ORDER BY bulletin_date, death_date;
+FROM first_clean;

@@ -1,6 +1,6 @@
 --
 -- Aproximación del informe de transmisión comunitaria. Requiere datos
--- municipales de pruebas de Bioportal.
+-- municipales de pruebas de Bioestadísticas.
 --
 WITH bulletins AS (
 	SELECT max(bulletin_date) AS bulletin_date

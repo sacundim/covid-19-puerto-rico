@@ -112,4 +112,3 @@ GROUP BY
 	primary.outcome,
 	primary.vaccine_product,
 	age_dim.boosted_age_group
-ORDER BY mmwr_week_start;

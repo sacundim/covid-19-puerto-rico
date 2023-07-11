@@ -29,8 +29,7 @@ class RecentCases(AbstractMolecularChart):
     SORT_ORDER=['Pruebas', 'Casos', 'Hospitalizados', 'Muertes']
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('recent_daily_cases', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('recent_daily_cases', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.datum_date,
                         table.c.tests.label('Pruebas'),
@@ -124,8 +123,7 @@ class RecentCases(AbstractMolecularChart):
 
 class NewCases(AbstractMolecularChart):
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('new_daily_cases', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('new_daily_cases', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.datum_date,
                         table.c.bioportal.label('Casos'),
@@ -211,7 +209,7 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
     Bioportal's `patientId` field to estimate how many tests are followups for
     persons who are already known to have tested positive."""
 
-    SORT_ORDER = ['Oficial', 'Bioportal']
+    SORT_ORDER = ['Oficial', 'Bioestadísticas']
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('confirmed_vs_rejected', self.metadata, autoload=True)
@@ -316,8 +314,7 @@ class NaivePositiveRate(AbstractMolecularChart):
                       | ((df['bulletin_date'] == week_ago))]
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('naive_positive_rates', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('naive_positive_rates', self.metadata, autoload=True)
         query = select([
             table.c.test_type,
             table.c.bulletin_date,
@@ -400,13 +397,12 @@ class NewTestSpecimens(AbstractMolecularChart):
 
 class MolecularCurrentDeltas(AbstractMolecularChart):
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('bioportal_collected_agg', self.metadata, autoload=True)
+        table = sqlalchemy.Table('molecular_deltas', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.collected_date,
                         table.c.delta_tests.label('Pruebas'),
                         table.c.delta_positive_tests.label('Positivas')]
-        ).where(and_(table.c.test_type == 'Molecular',
-                     min(bulletin_dates) <= table.c.bulletin_date,
+        ).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
                      table.c.bulletin_date <= max(bulletin_dates)))
         df = pd.read_sql_query(query, connection,
                                parse_dates=['bulletin_date', 'collected_date'])
@@ -462,13 +458,12 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
 
 class MolecularDailyDeltas(AbstractMolecularChart):
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('bioportal_collected_agg', self.metadata, autoload=True)
+        table = sqlalchemy.Table('molecular_deltas', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
                         table.c.collected_date,
                         table.c.delta_tests.label('Pruebas'),
                         table.c.delta_positive_tests.label('Positivas')]
-        ).where(and_(table.c.test_type == 'Molecular',
-                     min(bulletin_dates) - datetime.timedelta(days=14) <= table.c.bulletin_date,
+        ).where(and_(min(bulletin_dates) - datetime.timedelta(days=14) <= table.c.bulletin_date,
                      table.c.bulletin_date <= max(bulletin_dates)))
         df = pd.read_sql_query(query, connection,
                                parse_dates=['bulletin_date', 'collected_date'])
@@ -702,8 +697,7 @@ class MolecularLatenessTiers(AbstractMolecularChart):
 
 class CaseFatalityRate(AbstractMolecularChart):
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('lagged_cfr', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('lagged_cfr', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.collected_date,
@@ -752,8 +746,7 @@ class Hospitalizations(AbstractMolecularChart):
     SORT_ORDER = ['Hospitalizados', 'Cuidado intensivo']
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('hospitalizations', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('hospitalizations', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.date,
@@ -800,8 +793,7 @@ class RecentHospitalizations(AbstractMolecularChart):
     COLORS = ['#d4322c', '#f58518', '#a4d86e']
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('prdoh_hospitalizations', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('prdoh_hospitalizations', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.date.label('Fecha'),
@@ -864,8 +856,7 @@ class RecentHospitalizations(AbstractMolecularChart):
 
 class AgeGroups(AbstractMolecularChart):
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('cases_by_age_5y', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('cases_by_age_5y', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.collected_date,
@@ -928,8 +919,7 @@ class RecentAgeGroups(AbstractMolecularChart):
     DAYS=168
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('recent_age_groups', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('recent_age_groups', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.collected_date,
@@ -1167,8 +1157,7 @@ class VaccinationMap(AbstractMolecularChart):
                               format=alt.TopoDataFormat(type='topojson', feature='municipalities'))
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_vaccinations', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('municipal_vaccinations', self.metadata, autoload=True)
         query = select([
             table.c.local_date,
             table.c.municipio,
@@ -1331,8 +1320,7 @@ class VaccinationMap(AbstractMolecularChart):
 
 class MunicipalVaccination(AbstractMolecularChart):
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_vaccinations', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('municipal_vaccinations', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.municipio,
@@ -1373,8 +1361,7 @@ class MunicipalSPLOM(AbstractMolecularChart):
     ]
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_splom', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('municipal_splom', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.municipio,
@@ -1435,8 +1422,7 @@ class EncounterLag(AbstractMolecularChart):
     ]
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('encounter_lag', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('encounter_lag', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.age_gte,
@@ -1488,7 +1474,7 @@ class EncounterLag(AbstractMolecularChart):
             y=alt.Y('mean_delta_value_7d:Q', stack='normalize', title=None,
                     axis=alt.Axis(labelFontSize=11, orient='right', format='%')),
             order=alt.Order('age_gte:O'),
-            color=alt.Color('age_gte:Q', title='Rezago entre muestra y Bioportal (días)',
+            color=alt.Color('age_gte:Q', title='Rezago entre muestra y Bioestadísticas (días)',
                             scale=alt.Scale(scheme='redyellowgreen', reverse=True,
                                             domain=[0, 14], domainMid=2, clamp=True),
                             legend=alt.Legend(orient='top', gradientLength=self.WIDTH,
@@ -1520,8 +1506,7 @@ class MunicipalTestingScatter(AbstractMolecularChart):
     WIDTH = 575
 
     def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_testing_scatterplot', self.metadata,
-                                 schema='covid19_puerto_rico_model', autoload=True)
+        table = sqlalchemy.Table('municipal_testing_scatterplot', self.metadata, autoload=True)
         query = select([
             table.c.bulletin_date,
             table.c.municipality,

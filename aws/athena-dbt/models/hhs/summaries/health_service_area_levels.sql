@@ -23,7 +23,3 @@ GROUP BY
     state,
     health_service_area_number,
     health_service_area
-ORDER BY
-    file_timestamp,
-    date_updated,
-    state;

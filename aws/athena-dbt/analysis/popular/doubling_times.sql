@@ -1,6 +1,6 @@
 WITH bulletins AS (
 	SELECT max(bulletin_date) AS max_bulletin_date
-	FROM {{ ref('bioportal_encounters_agg') }}
+	FROM {{ ref('biostatistics_encounters_agg') }}
 )
 SELECT
 	bulletin_date,
@@ -37,7 +37,7 @@ SELECT
 			ORDER BY collected_date
 		))
 	) doubling_days_14
-FROM {{ ref('bioportal_encounters_agg') }} bio
+FROM {{ ref('biostatistics_encounters_agg') }} bio
 INNER JOIN bulletins
 	ON bulletins.max_bulletin_date = bio.bulletin_date
 ORDER BY bulletin_date, collected_date DESC;

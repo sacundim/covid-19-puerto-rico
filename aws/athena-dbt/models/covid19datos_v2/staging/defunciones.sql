@@ -1,11 +1,8 @@
 {{
     config(pre_hook=[
-        "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'defunciones_v1').render_hive() }}",
-        "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'defunciones_v2').render_hive() }}",
         "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'defunciones_v3').render_hive() }}"
     ])
 }}
-
 SELECT
     {{ parse_filename_timestamp('"$path"') }}
 		AS downloaded_at,
@@ -51,5 +48,3 @@ SELECT
 		AS fe_muerte,
 	NULLIF(tx_grupo_edad, '') tx_grupo_edad
 FROM {{ source('covid19datos_v2', 'defunciones_v3') }}
-
-ORDER BY downloaded_at, fe_muerte;

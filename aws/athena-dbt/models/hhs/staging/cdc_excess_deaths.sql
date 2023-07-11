@@ -19,4 +19,3 @@ SELECT
     "Suppress",
     "Note"
 FROM {{ source('hhs', 'excess_deaths_associated_with_covid_19_v3') }}
-ORDER BY file_timestamp, "State", "Week Ending Date";

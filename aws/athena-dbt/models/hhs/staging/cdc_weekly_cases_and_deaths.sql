@@ -37,5 +37,3 @@ SELECT
 	new_historic_cases,
 	new_historic_deaths
 FROM {{ source('hhs', 'weekly_united_states_covid_19_cases_and_deaths_by_state_v3') }}
-
-ORDER BY file_timestamp, date_updated, state, start_date;

@@ -32,4 +32,3 @@ SELECT
 FROM {{ source('hhs', 'rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_booster_dose_v3') }}
 INNER JOIN max_path
     ON max_path = "$path"
-ORDER BY file_timestamp, mmwr_week_start;

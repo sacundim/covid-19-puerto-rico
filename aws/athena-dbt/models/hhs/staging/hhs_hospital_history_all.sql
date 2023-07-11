@@ -1,13 +1,9 @@
-WITH max_path AS (
-    SELECT max("$path") max_path
-    FROM {{ source('hhs', 'hospital_facilities_v3') }}
-)
 SELECT
     {{ hhs_parse_filename_date('"$path"') }}
 		AS file_timestamp,
 	date(date_parse(collection_week, '%Y/%m/%d'))
 		AS collection_week,
-    state,
+    CAST(state AS VARCHAR) AS state,
     {{ int_to_digits('fips_code', 5) }}
         AS fips_code,
     hospital_name,
@@ -43,6 +39,3 @@ SELECT
     previous_day_admission_adult_covid_suspected_7_day_coverage,
     previous_day_admission_pediatric_covid_suspected_7_day_coverage
 FROM {{ source('hhs', 'hospital_facilities_v3') }}
-INNER JOIN max_path
-    ON max_path = "$path"
-ORDER BY file_timestamp, state, collection_week;

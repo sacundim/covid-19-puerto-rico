@@ -1,46 +1,15 @@
+--
+-- The "hub" cube table for the model.  This has only one
+-- download per bulletin_date (the most recent download),
+-- which means that e.g. windowed LAGs tell you changes
+-- between days, not file downloads.
+--
 WITH bulletins AS (
     SELECT max(downloaded_at) downloaded_at
-    FROM {{ ref('biostatistics_tests') }}
-    WHERE downloaded_date >= CURRENT_DATE - INTERVAL '51' DAY
-    GROUP BY date(downloaded_at AT TIME ZONE 'America/Puerto_Rico')
+    FROM {{ ref('biostatistics_specimens_downloads_cube') }}
+    GROUP BY bulletin_date
 )
-SELECT
-    downloaded_at,
-    downloaded_date,
-    bulletin_date,
-    collected_date,
-    reported_date,
-    received_date,
-    test_type,
-    municipality,
-    age_range,
-    age_gte,
-    age_lt,
-    count(*) specimens,
-    count(*) FILTER (WHERE positive)
-        AS positive_specimens
-FROM {{ ref('biostatistics_tests') }} specimens
+SELECT *
+FROM {{ ref('biostatistics_specimens_downloads_cube') }} specimens
 INNER JOIN bulletins
     USING (downloaded_at)
-INNER JOIN {{ ref('bioportal_age_ranges') }}
-    USING (age_range)
-WHERE downloaded_date >= CURRENT_DATE - INTERVAL '51' DAY
-AND test_type IN ('Molecular', 'Antígeno')
-AND DATE '2020-03-01' <= collected_date
-AND collected_date <= received_date
-AND DATE '2020-03-01' <= reported_date
-AND reported_date <= received_date
-AND received_date <= bulletin_date
-GROUP BY
-    downloaded_at,
-    downloaded_date,
-    bulletin_date,
-    collected_date,
-    reported_date,
-    received_date,
-    test_type,
-    municipality,
-    age_range,
-    age_gte,
-    age_lt
-;

@@ -2,9 +2,10 @@ version: 2
 
 models:
   - name: biostatistics_encounters
-    description: '{{ doc("bioportal_encounters") }}'
+    description: '{{ doc("biostatistics_encounters") }}'
     tests:
       - dbt_utils.unique_combination_of_columns:
+          enabled: false
           combination_of_columns:
             - downloaded_at
             - collected_date

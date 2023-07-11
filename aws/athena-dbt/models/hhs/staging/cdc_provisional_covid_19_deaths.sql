@@ -21,4 +21,3 @@ SELECT
     "Pneumonia, Influenza, or COVID-19 Deaths" AS pneumonia_influenza_or_covid_deaths,
     "Footnote" AS footnote
 FROM {{ source('hhs', 'provisional_covid_19_deaths_by_sex_and_age_parquet_v3') }}
-ORDER BY data_as_of, end_date, state;

@@ -1,7 +1,7 @@
 --
 -- Case curve by report date, instead of test sample date as I usually prefer.
 -- This compares the case curve from official Puerto Rico Department of Health
--- data to the one I compute using Bioportal.
+-- data to the one I compute using Biostatistics.
 --
 WITH population AS (
 	SELECT
@@ -50,7 +50,7 @@ WITH population AS (
 			ORDER BY bulletin_date
 			ROWS 6 PRECEDING
 		) AS mean_delta_possible_reinfections
-	FROM {{ ref('bioportal_encounters_agg') }}
+	FROM {{ ref('biostatistics_encounters_agg') }}
 	GROUP BY bulletin_date
 )
 SELECT

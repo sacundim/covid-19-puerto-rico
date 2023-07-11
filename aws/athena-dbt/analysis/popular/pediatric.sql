@@ -3,7 +3,7 @@
 --
 WITH bulletins AS (
 	SELECT max(bulletin_date) AS bulletin_date
-	FROM {{ ref('bioportal_encounters_cube') }}
+	FROM {{ ref('biostatistics_encounters_acs_age_agg') }}
 )
 SELECT
 	bulletin_date datos_hasta,
@@ -45,7 +45,7 @@ SELECT
 		THEN max(hospitalizations.admission_pediatric_covid)
 		ELSE max(hospitalizations.admission_adult_covid)
 	END AS admisiones_covid_hhs
-FROM {{ ref('bioportal_acs_age_curve') }} encounters
+FROM {{ ref('biostatistics_encounters_acs_age_agg') }} encounters
 INNER JOIN bulletins
 	USING (bulletin_date)
 INNER JOIN {{ ref('hospitalizations') }} hospitalizations

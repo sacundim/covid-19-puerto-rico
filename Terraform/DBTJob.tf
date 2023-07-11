@@ -29,6 +29,10 @@ resource "aws_batch_job_definition" "dbt_run_models" {
         value = "s3://${var.athena_bucket_name}/"
       },
       {
+        name = "ATHENA_S3_DATA_DIR",
+        value = "s3://${var.iceberg_bucket_name}/"
+      },
+      {
         name = "ATHENA_S3_SCHEMA",
         value = "covid19_puerto_rico_model"
       },

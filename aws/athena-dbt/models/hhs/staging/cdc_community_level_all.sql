@@ -49,5 +49,3 @@ SELECT
     	AS covid_cases_per_100k,
     covid_19_community_level
 FROM {{ source('hhs', 'community_levels_by_county_v2') }}
-
-ORDER BY file_timestamp, date_updated, state, county_fips;

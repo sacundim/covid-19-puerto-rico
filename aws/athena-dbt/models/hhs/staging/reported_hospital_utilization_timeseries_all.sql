@@ -138,5 +138,3 @@ SELECT
     {{ cast_string_column('total_pediatric_patients_hospitalized_confirmed_covid', 'BIGINT') }},
     {{ cast_string_column('total_pediatric_patients_hospitalized_confirmed_covid_coverage', 'BIGINT') }}
 FROM {{ source('hhs', 'reported_hospital_utilization_timeseries_v2') }}
-
-ORDER BY file_timestamp, date, state;

@@ -11,4 +11,3 @@ FROM {{ ref('vaccination_county_condensed_data_downloads') }} vax
 INNER JOIN downloads
 	USING (date, runid, downloaded_at)
 WHERE StateAbbr LIKE 'PR%'
-ORDER BY date, County;

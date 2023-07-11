@@ -20,7 +20,7 @@ LEFT OUTER JOIN {{ ref('bulletin_cases') }} d
 	ON c.bulletin_date = d.bulletin_date
 	-- Contamos muertes en periodos 14 días después de los casos
 	AND d.datum_date = date_add('day', 14, c.datum_date)
-INNER JOIN {{ ref('bioportal_encounters_agg') }} b
+INNER JOIN {{ ref('biostatistics_encounters_agg') }} b
 	ON b.bulletin_date = c.bulletin_date
 INNER JOIN (VALUES
     -- Esto es puro a ojo, especialmente en el 2020 que no
@@ -38,7 +38,7 @@ INNER JOIN (VALUES
 WHERE c.datum_date = b.collected_date
 AND b.bulletin_date = (
 	SELECT max(bulletin_date)
-	FROM {{ ref('bioportal_encounters_agg') }}
+	FROM {{ ref('biostatistics_encounters_agg') }}
 )
 GROUP BY c.bulletin_date, variant, since, until
 ORDER BY since DESC;

@@ -24,20 +24,18 @@
 --
 -- See: https://wwwn.cdc.gov/nndss/conditions/coronavirus-disease-2019-covid-19/case-definition/2020/08/05/
 --
-WITH bulletins AS (
-    SELECT
-        date(downloaded_at AT TIME ZONE 'America/Puerto_Rico')
-            - INTERVAL '1' DAY
-        AS bulletin_date,
-        max(downloaded_at) downloaded_at
-    FROM {{ ref('biostatistics_tests') }}
-    WHERE downloaded_date >= CURRENT_DATE - INTERVAL '51' DAY
-    GROUP BY date(downloaded_at AT TIME ZONE 'America/Puerto_Rico')
-)
+{{
+    config(
+      partitioned_by=['month(bulletin_date)'],
+      materialized='incremental',
+      unique_key=['downloaded_at', 'collected_date', 'patient_id'],
+      incremental_strategy='append'
+    )
+}}
 SELECT
 	cur.downloaded_at,
 	cur.downloaded_date,
-	bulletins.bulletin_date,
+	cur.bulletin_date,
 	cur.collected_date,
 	cur.patient_id,
 	max_by(cur.age_range, cur.received_date) AS age_range,
@@ -87,11 +85,9 @@ SELECT
                 END)), FALSE)
 		AS followup
 FROM {{ ref('biostatistics_tests') }} cur
-INNER JOIN bulletins
-    ON bulletins.downloaded_at = cur.downloaded_at
 LEFT OUTER JOIN {{ ref('biostatistics_tests') }} prev
 	ON prev.test_type IN ('Molecular', 'Antígeno')
-	AND prev.downloaded_at = bulletins.downloaded_at
+	AND prev.downloaded_at = cur.downloaded_at
 	AND prev.downloaded_at = cur.downloaded_at
 	AND prev.downloaded_date = cur.downloaded_date
 	AND prev.patient_id = cur.patient_id
@@ -100,17 +96,26 @@ LEFT OUTER JOIN {{ ref('biostatistics_tests') }} prev
 	AND prev.collected_date <= prev.received_date
 	AND DATE '2020-03-01' <= prev.reported_date
 	AND prev.reported_date <= prev.received_date
-    AND prev.received_date <= bulletins.bulletin_date
-WHERE cur.downloaded_date >= CURRENT_DATE - INTERVAL '51' DAY
-AND cur.test_type IN ('Molecular', 'Antígeno')
+    AND prev.received_date <= prev.bulletin_date
+    {% if is_incremental() %}
+    AND prev.downloaded_at > (SELECT max(downloaded_at) FROM {{ this }})
+    -- IMPORTANT: This may look redundant but it prunes partitions on the source
+    AND prev.bulletin_date >= (SELECT max(bulletin_date) FROM {{ this }})
+    {% endif %}
+WHERE cur.test_type IN ('Molecular', 'Antígeno')
 AND DATE '2020-03-01' <= cur.collected_date
 AND cur.collected_date <= cur.received_date
 AND DATE '2020-03-01' <= cur.reported_date
 AND cur.reported_date <= cur.received_date
-AND cur.received_date <= bulletins.bulletin_date
+AND cur.received_date <= cur.bulletin_date
+{% if is_incremental() %}
+AND cur.downloaded_at > (SELECT max(downloaded_at) FROM {{ this }})
+-- IMPORTANT: This may look redundant but it prunes partitions on the source
+AND cur.bulletin_date >= (SELECT max(bulletin_date) FROM {{ this }})
+{% endif %}
 GROUP BY
 	cur.downloaded_at,
 	cur.downloaded_date,
-	bulletins.bulletin_date,
+	cur.bulletin_date,
 	cur.collected_date,
 	cur.patient_id;

@@ -1,6 +1,6 @@
 WITH bulletins AS (
 	SELECT max(bulletin_date) AS bulletin_date
-	FROM {{ ref("bioportal_collected_agg") }}
+	FROM {{ ref("biostatistics_specimens_collected_agg") }}
 ), bitemporal AS (
 	SELECT
 		bulletin_date,
@@ -14,7 +14,7 @@ WITH bulletins AS (
 		    ORDER BY collected_date
 		    ROWS 6 PRECEDING
 		) AS positive_rate
-	FROM {{ ref("bioportal_collected_agg") }}
+	FROM {{ ref("biostatistics_specimens_collected_agg") }}
 	WHERE test_type = 'Molecular'
 )
 SELECT

@@ -5,11 +5,13 @@
 }}
 SELECT
     date(downloaded_date) AS downloaded_date,
-    downloadedAt AS downloaded_at,
+    CAST(downloadedAt AS TIMESTAMP(6))
+        AS downloaded_at,
     CAST(downloadedAt AT TIME ZONE 'America/Puerto_Rico' AS DATE)
         - INTERVAL '1' DAY
         AS bulletin_date,
-    sampleCollectedDate AS collected_date,
+    CAST(sampleCollectedDate AS TIMESTAMP(6))
+        AS collected_date,
     entity,
     {{ clean_municipality('entityCity') }} AS entity_city,
     totalTestsProcessed AS total_tests_processed,
@@ -19,5 +21,4 @@ SELECT
     totalAntigensTestsProcessed AS total_antigens_tests_processed,
     totalAntigensTestsPositive AS total_antigens_tests_positive,
     totalAntigensTestsNegative AS total_antigens_tests_negative
-FROM {{ source('biostatistics', 'tests_grouped_v2') }}
-ORDER BY downloaded_at, collected_date;
+FROM {{ source('biostatistics', 'tests_grouped_v2') }};

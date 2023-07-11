@@ -22,6 +22,12 @@ variable "athena_bucket_name" {
   default = "covid-19-puerto-rico-athena"
 }
 
+variable "iceberg_bucket_name" {
+  type = string
+  description = "The name of the bucket to create/use for Iceberg tables."
+  default = "covid-19-puerto-rico-iceberg"
+}
+
 variable "logs_bucket_name" {
   type = string
   description = "The name of the bucket to create/use for logs."

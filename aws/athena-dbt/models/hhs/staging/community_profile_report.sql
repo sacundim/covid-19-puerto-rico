@@ -121,5 +121,3 @@ SELECT
     {{ cast_string_column('pct_icu_beds_used_covid_avg_last_7_days', 'DOUBLE') }},
     {{ cast_string_column('pct_icu_beds_used_covid_abs_change_from_prev_week', 'DOUBLE') }}
 FROM {{ source('hhs', 'community_profile_report_county_v2') }}
-
-ORDER BY file_timestamp, state, county, date;

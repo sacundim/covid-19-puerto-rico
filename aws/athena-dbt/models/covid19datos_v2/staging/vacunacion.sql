@@ -1,8 +1,26 @@
 {{
-    config(pre_hook=[
-        "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'vacunacion_v3').render_hive() }}"
-    ])
+    config(
+        pre_hook=[
+            "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'vacunacion_v3').render_hive() }}"
+        ],
+        table_type='iceberg',
+        partitioned_by=['month(downloaded_date)'],
+        materialized='incremental',
+        incremental_strategy='append',
+        post_hook = [
+            'VACUUM {{ this.render_pure() }};'
+        ]
+    )
 }}
+{% if is_incremental() %}
+WITH incremental AS (
+    SELECT
+        max(downloaded_at) max_downloaded_at,
+        CAST(max(downloaded_date) AS VARCHAR) max_downloaded_date
+    FROM {{ this }}
+)
+{% endif %}
+
 SELECT
 	from_iso8601_date(downloaded_date)
 		AS downloaded_date,
@@ -14,6 +32,12 @@ SELECT
     nullif(nu_dosis, '') nu_dosis,
     nullif(co_manufacturero, '') co_manufacturero
 FROM {{ source('covid19datos_v2', 'vacunacion_v1') }}
+{% if is_incremental() %}
+INNER JOIN incremental
+  ON {{ parse_filename_timestamp('"$path"') }} > max_downloaded_at
+  -- IMPORTANT: prunes partitions
+  AND downloaded_date >= max_downloaded_date
+{% endif %}
 
 UNION ALL
 
@@ -28,6 +52,12 @@ SELECT
     CAST(nu_dosis AS VARCHAR) nu_dosis,
     nullif(co_manufacturero, '') co_manufacturero
 FROM {{ source('covid19datos_v2', 'vacunacion_v2') }}
+{% if is_incremental() %}
+INNER JOIN incremental
+  ON {{ parse_filename_timestamp('"$path"') }} > max_downloaded_at
+  -- IMPORTANT: prunes partitions
+  AND downloaded_date >= max_downloaded_date
+{% endif %}
 
 UNION ALL
 
@@ -41,4 +71,10 @@ SELECT
 		AS fe_vacuna,
     nullif(nu_dosis, '') nu_dosis,
     nullif(co_manufacturero, '') co_manufacturero
-FROM {{ source('covid19datos_v2', 'vacunacion_v3') }};
+FROM {{ source('covid19datos_v2', 'vacunacion_v3') }}
+{% if is_incremental() %}
+INNER JOIN incremental
+  ON {{ parse_filename_timestamp('"$path"') }} > max_downloaded_at
+  -- IMPORTANT: prunes partitions
+  AND downloaded_date >= max_downloaded_date
+{% endif %}

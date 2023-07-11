@@ -1,6 +1,6 @@
 WITH bulletins AS (
 	SELECT max(bulletin_date) AS bulletin_date
-	FROM {{ ref('bioportal_encounters_agg') }}
+	FROM {{ ref('biostatistics_encounters_agg') }}
 ), rates AS (
 	SELECT
 		bulletin_date,
@@ -30,7 +30,7 @@ WITH bulletins AS (
 			ORDER BY collected_date
 			ROWS 6 PRECEDING
 		) AS molecular
-	FROM {{ ref('bioportal_encounters_agg') }}
+	FROM {{ ref('biostatistics_encounters_agg') }}
 	INNER JOIN bulletins USING (bulletin_date)
 )
 SELECT

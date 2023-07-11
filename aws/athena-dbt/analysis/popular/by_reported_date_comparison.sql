@@ -43,7 +43,7 @@ WITH official AS (
 			ORDER BY bulletin_date
 			ROWS 6 PRECEDING
 		) AS mean_delta_possible_reinfections
-	FROM {{ ref('bioportal_encounters_agg') }}
+	FROM {{ ref('biostatistics_encounters_agg') }}
 	GROUP BY bulletin_date
 )
 SELECT
