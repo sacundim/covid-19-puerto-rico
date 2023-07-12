@@ -6,9 +6,10 @@ authors = ["sacundim <anybody@sacundim.org>"]
 packages = [{ include = "covid_19_puerto_rico_downloader", from = "src"}]
 
 [tool.poetry.scripts]
-hhs-socrata-download = 'covid_19_puerto_rico_downloader:hhs_download'
-covid19datos-download = 'covid_19_puerto_rico_downloader:covid19datos_v2'
 biostatistics-download = 'covid_19_puerto_rico_downloader:biostatistics'
+covid19datos-download = 'covid_19_puerto_rico_downloader:covid19datos_v2'
+hhs-socrata-download = 'covid_19_puerto_rico_downloader:hhs_download'
+walgreens-download = 'covid_19_puerto_rico_downloader:walgreens'
 
 [tool.poetry.dependencies]
 python = "^3.9"

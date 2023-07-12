@@ -1,0 +1,21 @@
+COPY (
+    SELECT
+        * REPLACE (
+          epoch_ms(Date) AS Date,
+          epoch_ms(lineage_end_date) AS lineage_end_date,
+        ),
+        TIMESTAMP '{{ downloaded_at }}' AS downloaded_at
+    FROM read_csv_auto(
+            '{{ input_file }}',
+            header=true,
+            union_by_name=true,
+            types={
+                update_dt: 'DATE',
+                Latitude: 'DOUBLE',
+                Longitude: 'DOUBLE'
+            }
+    )
+)
+TO '{{ output_parquet }}' (
+    FORMAT 'parquet', COMPRESSION 'GZIP'
+);
