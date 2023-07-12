@@ -40,8 +40,8 @@ def walgreens():
         endpoint_url=args.endpoint_url,
         s3_sync_dir=args.s3_sync_dir,
         endpoint_dir_name='Walgreens',
-        input_dir_name='csv_v1',
-        parquet_dir_name='parquet_v2',
+        input_dir_name='csv_v2',
+        parquet_dir_name='parquet_v3',
         ts_format='%Y-%m-%dT%H:%M:%SZ'
     )
 
