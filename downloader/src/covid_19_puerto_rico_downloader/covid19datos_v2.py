@@ -9,29 +9,32 @@ from . import util
 
 
 def process_arguments():
-    parser = argparse.ArgumentParser(description='Download PRDoH Biostatistics COVID-19 data sets')
+    parser = argparse.ArgumentParser(description='Download PRDoH Covid19Datos V2 data sets')
     parser.add_argument('--s3-sync-dir', type=str, required=True,
                         help='Override for directory to which to deposit the output files for sync')
-    parser.add_argument('--endpoint-url', type=str, default='https://biostatistics.salud.pr.gov',
-                        help='Override for the URL of the Biostatistics API endpoint root.')
+    parser.add_argument('--endpoint-url', type=str, default=ENDPOINT,
+                        help='Override for the URL of the Covid19Datos V2 API endpoint root.')
     parser.add_argument('--bzip2-command', type=str, default='lbzip2',
                         help='Override the command used to do bzip2 compression. Default: `lbzip2`.')
-    parser.add_argument('--duckdb-file', type=str, default='Biostatistics.duckdb',
+    parser.add_argument('--duckdb-file', type=str, default='Covid19Datos-V2.duckdb',
                         help='Override name of the DuckDB database file. Default: `Biostatistics.duckdb`.')
     return parser.parse_args()
 
-DATASETS = {
-    # Put larger ones first
-    "tests": "orders/tests/covid-19/minimal",
-    "cases": "cases/covid-19/minimal",
-    "persons-with-vaccination-status": "vaccines/covid-19/persons-with-vaccination-status",
-    "tests-grouped": "orders/tests/covid-19/grouped-by-sample-collected-date-and-entity",
-    "deaths": "deaths/covid-19/minimal",
-    "data-sources": "data-sources",
-}
+ENDPOINT='https://covid19datos.salud.pr.gov/estadisticas_v2/download/data'
 
-def biostatistics():
-    """Entry point for PRDoH Biostatistics download code."""
+DATASETS = [
+    # Put larger ones first
+    'pruebas',
+    'casos',
+    'vacunacion',
+    'defunciones',
+    'sistemas_salud',
+    'vigilancia',
+]
+
+
+def covid19datos_v2():
+    """Entry point for PRDoH Covid19Datos V2 download code."""
     logging.basicConfig(
         format='%(asctime)s %(threadName)s %(message)s',
         level=logging.INFO)
@@ -39,25 +42,25 @@ def biostatistics():
 
     config = task.TaskConfig(
         now=pick_and_log_now(),
-        extension='json',
-        http=util.make_requests_session('application/json'),
+        extension='csv',
+        http=util.make_requests_session('application/csv'),
         duck=util.make_duckdb_connection(args.duckdb_file),
-        jinja=util.make_jinja('biostatistics'),
-        # We don't want to cause a big spike on the Biostatistics servers
+        jinja=util.make_jinja('covid19datos-v2'),
+        # We don't want to cause a big spike on the Covid19Datos servers
         # by going off and downloading all their datasets in parallel.  So
         # we use this mutex to make sure only one download goes at a time.
         mutex=Lock(),
         endpoint_url=args.endpoint_url,
         s3_sync_dir=args.s3_sync_dir,
-        endpoint_dir_name='biostatistics.salud.pr.gov',
-        input_dir_name='json_v1',
-        parquet_dir_name='parquet_v2',
+        endpoint_dir_name='covid19datos-v2',
+        input_dir_name='csv_v3',
+        parquet_dir_name='parquet_v4',
         ts_format='%Y-%m-%dT%H:%M:%SZ'
     )
 
     tasks = [
-        task.Task(dataset, path, config)
-        for (dataset, path) in DATASETS.items()
+        task.Task(dataset, f'{dataset}/completo', config)
+        for dataset in DATASETS
     ]
     with futures.ThreadPoolExecutor(
             max_workers=len(tasks),

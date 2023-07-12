@@ -7,7 +7,7 @@ packages = [{ include = "covid_19_puerto_rico_downloader", from = "src"}]
 
 [tool.poetry.scripts]
 hhs-socrata-download = 'covid_19_puerto_rico_downloader:hhs_download'
-covid19datos-download = 'covid_19_puerto_rico_downloader:covid19datos'
+covid19datos-download = 'covid_19_puerto_rico_downloader:covid19datos_v2'
 biostatistics-download = 'covid_19_puerto_rico_downloader:biostatistics'
 
 [tool.poetry.dependencies]

@@ -3,7 +3,7 @@ COPY (
         *,
         TIMESTAMP '{{ downloaded_at }}' AS downloadedAt
     FROM read_json(
-            '{{ input_json }}',
+            '{{ input_file }}',
             format='array',
             union_by_name=true,
             columns={

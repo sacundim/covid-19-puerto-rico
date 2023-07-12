@@ -1,0 +1,16 @@
+COPY (
+    SELECT
+        *,
+        TIMESTAMP '{{ downloaded_at }}' AS downloaded_at
+    FROM read_csv_auto(
+            '{{ input_file }}',
+            header=true,
+            union_by_name=true,
+            types={
+                FE_REPORTE: 'TIMESTAMP'
+            }
+    )
+)
+TO '{{ output_parquet }}' (
+    FORMAT 'parquet', COMPRESSION 'GZIP'
+);
