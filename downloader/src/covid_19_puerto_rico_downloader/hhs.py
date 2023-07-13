@@ -4,6 +4,7 @@ import datetime
 import logging
 import os
 import os.path
+import shutil
 from sodapy import Socrata
 from threading import Lock
 
@@ -123,7 +124,7 @@ class HHSTask(task.Task):
 
     def convert(self, inputfile, file_timestamp):
         logging.info("Converting %s to Parquet...", self.dataset)
-        parquetfile = f'{self.dataset}_{self.now.strftime(self.ts_format)}.parquet'
+        parquetfile = f'{self.dataset}_{file_timestamp.strftime(self.ts_format)}.parquet'
 
         template = self.jinja.get_template(f'{self.dataset}.sql.j2')
         sql = template.render(
@@ -138,6 +139,13 @@ class HHSTask(task.Task):
 
         logging.info("Converted %s to Parquet.", self.dataset)
         return parquetfile
+
+    def move_to_parquet_dir(self, parquetfile, dataset_dir):
+        parquet_dir = dataset_dir / self.parquet_dir_name
+        parquet_dir.mkdir(parents=True, exist_ok=True)
+        shutil.move(parquetfile, parquet_dir)
+        logging.info("Moved %s to %s...", parquetfile, parquet_dir)
+
 
 
 

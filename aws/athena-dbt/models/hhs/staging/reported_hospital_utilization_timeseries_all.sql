@@ -3,15 +3,6 @@
 --
 -- Minimal cleanup and type handling
 --
-
-
-{{
-    config(
-        pre_hook=[
-            "MSCK REPAIR TABLE {{ source('hhs', 'reported_patient_impact_hospital_capacity_timeseries_v4').render_hive() }}",
-            "MSCK REPAIR TABLE {{ source('hhs', 'reported_hospital_utilization_timeseries_v4').render_hive() }}"
-        ]
-}}
 SELECT
     -- Edge case: cutover between two versions of the storage can
     -- lead (and has led) to two copies of the same file

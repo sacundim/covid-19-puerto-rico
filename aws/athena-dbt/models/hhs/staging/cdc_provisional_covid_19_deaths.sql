@@ -1,9 +1,3 @@
-{{
-    config(
-        pre_hook=[
-            "MSCK REPAIR TABLE {{ source('hhs', 'provisional_covid_19_deaths_by_sex_and_age_parquet_v4').render_hive() }}"
-        ]
-}}
 SELECT
     {{ hhs_parse_filename_date('"$path"') }}
 		AS file_timestamp,

@@ -263,8 +263,7 @@ CREATE EXTERNAL TABLE covid_hhs_sources.reported_hospital_utilization_timeseries
     -- There's a bunch more columns that I haven't incorporated yet
     file_timestamp TIMESTAMP,
     downloaded_at TIMESTAMP
-) PARTITIONED BY (downloaded_date STRING)
-STORED AS PARQUET
+) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/reported_hospital_utilization_timeseries/v4/parquet/';
 
 
@@ -468,8 +467,7 @@ CREATE EXTERNAL TABLE covid_hhs_sources.reported_hospital_utilization_v4 (
     `previous_day_admission_adult_covid_confirmed_18-19_coverage` BIGINT,
     file_timestamp TIMESTAMP,
     downloaded_at TIMESTAMP
-) PARTITIONED BY (downloaded_date STRING)
-STORED AS PARQUET
+) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/reported_hospital_utilization/v4/parquet/';
 
 
@@ -606,8 +604,7 @@ CREATE EXTERNAL TABLE covid_hhs_sources.reported_patient_impact_hospital_capacit
     -- There's a bunch more columns that I haven't incorporated yet
     file_timestamp TIMESTAMP,
     downloaded_at TIMESTAMP
-) PARTITIONED BY (downloaded_date STRING)
-STORED AS PARQUET
+) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/reported_patient_impact_hospital_capacity_timeseries/v4/parquet/';
 
 
@@ -955,8 +952,7 @@ CREATE EXTERNAL TABLE covid_hhs_sources.reported_hospital_capacity_admissions_fa
     all_pediatric_inpatient_beds_7_day_avg DOUBLE,
     file_timestamp TIMESTAMP,
     downloaded_at TIMESTAMP
-) PARTITIONED BY (downloaded_date STRING)
-STORED AS PARQUET
+) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries/v4/parquet/'
 ;
 
@@ -1103,8 +1099,7 @@ CREATE EXTERNAL TABLE covid_hhs_sources.diagnostic_lab_testing_v4 (
 	geocoded_state STRING,
 	file_timestamp TIMESTAMP,
 	downloaded_at TIMESTAMP
-) PARTITIONED BY (downloaded_date STRING)
-STORED AS PARQUET
+) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/covid-19_diagnostic_lab_testing/v4/parquet/';
 
 
@@ -1131,8 +1126,7 @@ CREATE EXTERNAL TABLE covid_hhs_sources.vaccination_county_condensed_data_json (
     Series_Complete_Yes INT,
     Series_Complete_Pop_Pct DOUBLE,
     Completeness_pct DOUBLE
-) PARTITIONED BY (downloaded_date STRING)
-ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
+) ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
 LOCATION 's3://covid-19-puerto-rico-data/cdc-covid-data-tracker/vaccination_county_condensed_data/jsonl_v1/';
 
 
@@ -1461,8 +1455,7 @@ CREATE EXTERNAL TABLE covid_hhs_sources.excess_deaths_associated_with_covid_19_v
   `Note` STRING,
   file_timestamp TIMESTAMP,
   downloaded_at TIMESTAMP
-) PARTITIONED BY (downloaded_date STRING)
-STORED AS PARQUET
+) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/excess_deaths_associated_with_covid_19/v4/parquet/';
 
 
@@ -1510,6 +1503,5 @@ CREATE EXTERNAL TABLE covid_hhs_sources.provisional_covid_19_deaths_by_sex_and_a
   `Footnote` STRING,
   file_timestamp TIMESTAMP,
   downloaded_at TIMESTAMP
-) PARTITIONED BY (downloaded_date STRING)
-STORED AS PARQUET
+) STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/HHS/provisional_covid_19_deaths_by_sex_and_age/v4/parquet/';
