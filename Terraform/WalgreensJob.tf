@@ -15,7 +15,7 @@ resource "aws_batch_job_definition" "walgreens_download_and_sync" {
 
   container_properties = jsonencode({
     image = "sacundim/covid-19-puerto-rico-downloader:latest"
-    command = ["andy-bloch-dashboard.sh"],
+    command = ["walgreens-download"],
     environment = [
       {
         name = "S3_DATA_URL",

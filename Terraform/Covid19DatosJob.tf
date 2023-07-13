@@ -15,7 +15,7 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
 
   container_properties = jsonencode({
     image = "sacundim/covid-19-puerto-rico-downloader:latest"
-    command = ["covid19datos-v2.sh"],
+    command = ["covid19datos-v2"],
     environment = [
       {
         name = "S3_DATA_URL",

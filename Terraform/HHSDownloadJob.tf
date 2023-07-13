@@ -15,7 +15,10 @@ resource "aws_batch_job_definition" "hhs_download_and_sync" {
 
   container_properties = jsonencode({
     image = "sacundim/covid-19-puerto-rico-downloader:latest"
-    command = ["hhs-download.sh"]
+    command = [
+      "hhs-socrata-download",
+      "--socrata-app-token-env-var", "SOCRATA_APP_TOKEN"
+    ]
     environment = [
       {
         name = "S3_DATA_URL",
