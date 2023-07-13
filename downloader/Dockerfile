@@ -1,4 +1,4 @@
-FROM python:3.9 AS base
+FROM python:3.9-slim AS base
 
 #####################################################################
 #####################################################################
@@ -32,16 +32,10 @@ RUN poetry build
 FROM base as app
 # Install various prerequistes for our scripts
 RUN apt-get update
-RUN apt-get install -y ca-certificates wget lbzip2 time jq parallel unzip
+RUN apt-get install -y ca-certificates lbzip2
 RUN python3 -m pip install pipx
 RUN pipx install awscli
-COPY --link --from=sacundim/csv2parquet:0.6.0 \
-    /usr/local/bin/csv2parquet \
-    /usr/local/bin/json2parquet \
-    /usr/local/bin/
-COPY --link --from=sacundim/json2jsonl \
-    /usr/local/bin/json2jsonl \
-    /usr/local/bin/
+
 
 # Install our stuff proper
 WORKDIR /covid-19-puerto-rico
@@ -69,5 +63,5 @@ RUN mkdir -p \
 COPY scripts/*.sh ./scripts/
 RUN chmod +x ./scripts/*.sh
 
-ENV PATH=/root/.local/bin:/covid-19-puerto-rico/scripts:$PATH
+ENV PATH=/covid-19-puerto-rico/scripts:$PATH
 ENTRYPOINT ["run-and-sync.sh"]
