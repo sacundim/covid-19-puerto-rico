@@ -1,0 +1,17 @@
+COPY (
+    SELECT
+        *,
+        TIMESTAMP '{{ file_timestamp }}' AS file_timestamp,
+        TIMESTAMP '{{ downloaded_at }}' AS downloaded_at
+    FROM read_csv_auto(
+            '{{ input_file }}',
+            header=true,
+            union_by_name=true,
+            types={
+                'Week Ending Date': 'DATE'
+            }
+    )
+)
+TO '{{ output_parquet }}' (
+    FORMAT 'parquet', COMPRESSION 'GZIP'
+);

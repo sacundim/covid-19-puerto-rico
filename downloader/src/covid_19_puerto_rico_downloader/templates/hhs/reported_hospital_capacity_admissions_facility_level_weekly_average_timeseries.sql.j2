@@ -1,0 +1,20 @@
+COPY (
+    SELECT
+        *,
+        TIMESTAMP '{{ file_timestamp }}' AS file_timestamp,
+        TIMESTAMP '{{ downloaded_at }}' AS downloaded_at
+    FROM read_csv_auto(
+            '{{ input_file }}',
+            header=true,
+            union_by_name=true,
+            types={
+                hospital_pk: 'VARCHAR',
+                collection_week: 'DATE',
+                fips_code: 'VARCHAR'
+            },
+            timestampformat='%m/%d/%Y %I:%M:%S %p'
+    )
+)
+TO '{{ output_parquet }}' (
+    FORMAT 'parquet', COMPRESSION 'GZIP'
+);

@@ -83,12 +83,12 @@ class Task():
         dataset_dir.mkdir(exist_ok=True)
 
         input_dir = dataset_dir / self.input_dir_name
-        input_dir.mkdir(exist_ok=True)
+        input_dir.mkdir(parents=True, exist_ok=True)
         shutil.move(inputfile, input_dir)
         logging.info("Moved %s to %s...", inputfile, input_dir)
 
         parquet_dir = dataset_dir / self.parquet_dir_name
-        parquet_dir.mkdir(exist_ok=True)
+        parquet_dir.mkdir(parents=True, exist_ok=True)
         partition_dir = parquet_dir / f'downloaded_date={self.now.strftime("%Y-%m-%d")}'
         partition_dir.mkdir(exist_ok=True)
         shutil.move(parquetfile, partition_dir)
