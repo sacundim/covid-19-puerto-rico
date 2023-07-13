@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 
-set -e -x
+set -eux -o pipefail
 
-# Override this to use e.g. podman instead of docker:
-DOCKER="${DOCKER:=docker}"
-DOCKER_IMAGE="${DOCKER_IMAGE:=covid-19-puerto-rico-dbt}"
+PLATFORMS="linux/amd64,linux/arm64"
+IMAGE_NAME="${IMAGE_NAME-docker.io/sacundim/covid-19-puerto-rico-dbt}"
 
 cd "$(dirname $0)"
-exec "${DOCKER}" build -t "${DOCKER_IMAGE}" .
+exec docker buildx build \
+  -t "${IMAGE_NAME}" \
+  --platform "${PLATFORMS}" \
+  . \
+  "$@"
