@@ -63,5 +63,5 @@ RUN mkdir -p \
 COPY scripts/*.sh ./scripts/
 RUN chmod +x ./scripts/*.sh
 
-ENV PATH=/covid-19-puerto-rico/scripts:$PATH
+ENV PATH=/root/.local/bin:/covid-19-puerto-rico/scripts:$PATH
 ENTRYPOINT ["run-and-sync.sh"]
