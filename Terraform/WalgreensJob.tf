@@ -18,8 +18,8 @@ resource "aws_batch_job_definition" "walgreens_download_and_sync" {
     command = ["walgreens-download"],
     environment = [
       {
-        name = "S3_DATA_URL",
-        value = "s3://${var.datalake_bucket_name}"
+        name = "TARGET_BUCKET",
+        value = var.datalake_bucket_name
       }
     ],
     executionRoleArn = aws_iam_role.ecs_task_role.arn

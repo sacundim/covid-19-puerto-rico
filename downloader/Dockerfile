@@ -33,9 +33,13 @@ FROM base as app
 # Install various prerequistes for our scripts
 RUN apt-get update
 RUN apt-get install -y ca-certificates lbzip2
-RUN python3 -m pip install pipx
-RUN pipx install awscli
 
+# The rclone packaged with the OS distribution is always hopelessly out
+# of date, better to get it from the official rclone Docker images.
+# See: https://github.com/rclone/rclone/issues/6060
+COPY --from=rclone/rclone:1.61.1 \
+    /usr/local/bin/rclone \
+    /usr/local/bin/rclone
 
 # Install our stuff proper
 WORKDIR /covid-19-puerto-rico
