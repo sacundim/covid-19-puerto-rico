@@ -52,3 +52,14 @@ sources:
         identifier: sistemas_salud_parquet_v3
       - name: vacunacion_v3
         identifier: vacunacion_parquet_v3
+
+      - name: casos_v4
+        identifier: casos_parquet_v4
+      - name: defunciones_v4
+        identifier: defunciones_parquet_v4
+      - name: pruebas_v4
+        identifier: pruebas_parquet_v4
+      - name: sistemas_salud_v4
+        identifier: sistemas_salud_parquet_v4
+      - name: vacunacion_v4
+        identifier: vacunacion_parquet_v4

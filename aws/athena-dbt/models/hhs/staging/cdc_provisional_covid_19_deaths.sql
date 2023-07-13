@@ -1,3 +1,9 @@
+{{
+    config(
+        pre_hook=[
+            "MSCK REPAIR TABLE {{ source('hhs', 'provisional_covid_19_deaths_by_sex_and_age_parquet_v4').render_hive() }}"
+        ]
+}}
 SELECT
     {{ hhs_parse_filename_date('"$path"') }}
 		AS file_timestamp,
@@ -21,3 +27,25 @@ SELECT
     "Pneumonia, Influenza, or COVID-19 Deaths" AS pneumonia_influenza_or_covid_deaths,
     "Footnote" AS footnote
 FROM {{ source('hhs', 'provisional_covid_19_deaths_by_sex_and_age_parquet_v3') }}
+
+UNION ALL
+
+SELECT
+    file_timestamp,
+	"Data As Of" AS data_as_of,
+	"Start Date" AS start_date,
+	"End Date" AS end_date,
+	"Group" as aggregation,
+    year,
+    month,
+    state,
+    sex,
+    "Age Group" AS age_group,
+    "COVID-19 Deaths" AS covid_deaths,
+    "Total Deaths" AS total_deaths,
+    "Pneumonia Deaths" AS pneumonia_deaths,
+    "Pneumonia and COVID-19 Deaths" AS pneumonia_and_covid_deaths,
+    "Influenza Deaths" AS influenza_deaths,
+    "Pneumonia, Influenza, or COVID-19 Deaths" AS pneumonia_influenza_or_covid_deaths,
+    "Footnote" AS footnote
+FROM {{ source('hhs', 'provisional_covid_19_deaths_by_sex_and_age_parquet_v4') }}

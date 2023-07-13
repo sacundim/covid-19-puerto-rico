@@ -48,3 +48,17 @@ SELECT
 		AS fe_muerte,
 	NULLIF(tx_grupo_edad, '') tx_grupo_edad
 FROM {{ source('covid19datos_v2', 'defunciones_v3') }}
+
+UNION ALL
+
+SELECT
+    downloaded_at,
+	from_iso8601_date(downloaded_date)
+		AS downloaded_date,
+	NULLIF(id_muerte, '') id_muerte,
+	NULLIF(co_sexo, '') co_sexo,
+	NULLIF(co_region, '') co_region,
+	NULL co_clasificacion,
+ 	date(fe_muerte) AS fe_muerte,
+	NULLIF(tx_grupo_edad, '') tx_grupo_edad
+FROM {{ source('covid19datos_v2', 'defunciones_v4') }}

@@ -78,3 +78,21 @@ INNER JOIN incremental
   -- IMPORTANT: prunes partitions
   AND downloaded_date >= max_downloaded_date
 {% endif %}
+
+UNION ALL
+
+SELECT
+	from_iso8601_date(downloaded_date)
+		AS downloaded_date,
+    downloaded_at,
+    nullif(co_municipio, '') co_municipio,
+ 	date(fe_vacuna) AS fe_vacuna,
+    nullif(nu_dosis, '') nu_dosis,
+    nullif(co_manufacturero, '') co_manufacturero
+FROM {{ source('covid19datos_v2', 'vacunacion_v4') }}
+{% if is_incremental() %}
+INNER JOIN incremental
+  ON downloaded_at > max_downloaded_at
+  -- IMPORTANT: prunes partitions
+  AND downloaded_date >= max_downloaded_date
+{% endif %}

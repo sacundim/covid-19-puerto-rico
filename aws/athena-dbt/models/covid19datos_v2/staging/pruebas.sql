@@ -89,3 +89,24 @@ INNER JOIN incremental
   -- IMPORTANT: prunes partitions
   AND downloaded_date >= max_downloaded_date
 {% endif %}
+
+UNION ALL
+
+SELECT
+	from_iso8601_date(downloaded_date)
+		AS downloaded_date,
+    downloaded_at,
+    nullif(id_orden, '') id_orden,
+    nullif(co_tipo, '') co_tipo,
+    nullif(tx_grupo_edad, '') tx_grupo_edad,
+    nullif(co_resultado, '') co_resultado,
+    nullif(co_sexo, '') co_sexo,
+    nullif(co_region, '') co_region,
+ 	date(fe_prueba) AS fe_prueba
+FROM {{ source('covid19datos_v2', 'pruebas_v4') }}
+{% if is_incremental() %}
+INNER JOIN incremental
+  ON downloaded_at > max_downloaded_at
+  -- IMPORTANT: prunes partitions
+  AND downloaded_date >= max_downloaded_date
+{% endif %}

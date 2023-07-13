@@ -15,19 +15,24 @@ sources:
     tables:
       - name: reported_hospital_utilization_timeseries_v2
       - name: reported_hospital_utilization_timeseries_v3
+      - name: reported_hospital_utilization_timeseries_v4
         freshness:
           error_after: { count: 7, period: day }
       - name: reported_hospital_utilization_v2
       - name: reported_hospital_utilization_v3
+      - name: reported_hospital_utilization_v4
         freshness:
           error_after: { count: 7, period: day }
       - name: reported_patient_impact_hospital_capacity_timeseries_v3
+      - name: reported_patient_impact_hospital_capacity_timeseries_v4
         freshness:
           error_after: { count: 7, period: day }
       - name: hospital_facilities_v2
         identifier: reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries_v2
       - name: hospital_facilities_v3
         identifier: reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries_v3
+      - name: hospital_facilities_v4
+        identifier: reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries_v4
         freshness:
           warn_after: { count: 7, period: day }
           error_after: { count: 9, period: day }
@@ -35,6 +40,7 @@ sources:
       - name: community_profile_report_county_v3
       - name: diagnostic_lab_testing_v2
       - name: diagnostic_lab_testing_v3
+      - name: diagnostic_lab_testing_v4
         freshness:
           warn_after: { count: 1, period: day }
           error_after: { count: 36, period: hour }
@@ -63,11 +69,14 @@ sources:
       - name: united_states_covid_19_cases_and_deaths_by_state_v3
       - name: weekly_united_states_covid_19_cases_and_deaths_by_state_v2
       - name: weekly_united_states_covid_19_cases_and_deaths_by_state_v3
+
       - name: excess_deaths_associated_with_covid_19_v3
+      - name: excess_deaths_associated_with_covid_19_v4
         freshness:
           warn_after: { count: 7, period: day }
           error_after: { count: 14, period: day }
       - name: provisional_covid_19_deaths_by_sex_and_age_parquet_v3
+      - name: provisional_covid_19_deaths_by_sex_and_age_parquet_v4
         freshness:
           warn_after: { count: 7, period: day }
           error_after: { count: 8, period: day }

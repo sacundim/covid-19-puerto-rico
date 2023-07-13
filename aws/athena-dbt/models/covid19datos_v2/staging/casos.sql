@@ -52,7 +52,7 @@ UNION ALL
 SELECT
     {{ parse_filename_timestamp('"$path"') }}
 		AS downloaded_at,
-	CAST(id_number AS VARCHAR) id_number,
+	CAST("ID number" AS VARCHAR) id_number,
 	CAST(age AS VARCHAR) age,
 	NULLIF(sex, '') sex,
 	NULLIF(city, '') city,
@@ -75,7 +75,7 @@ UNION ALL
 SELECT
     {{ parse_filename_timestamp('"$path"') }}
 		AS downloaded_at,
-	NULLIF(id_number, '') id_number,
+	NULLIF("ID number", '') id_number,
 	NULLIF(age, '') age,
 	NULLIF(sex, '') sex,
 	NULLIF(city, '') city,
@@ -89,6 +89,27 @@ FROM {{ source('covid19datos_v2', 'casos_v3') }}
 {% if is_incremental() %}
 INNER JOIN incremental
   ON {{ parse_filename_timestamp('"$path"') }} > max_downloaded_at
+  -- IMPORTANT: prunes partitions
+  AND downloaded_date >= max_downloaded_date
+{% endif %}
+
+UNION ALL
+
+SELECT
+    downloaded_at,
+	NULLIF("ID number", '') id_number,
+	NULLIF(age, '') age,
+	NULLIF(sex, '') sex,
+	NULLIF(city, '') city,
+	NULLIF(region, '') region,
+	NULLIF(class, '') class,
+ 	"Sample Date" AS sample_date,
+	from_iso8601_date(downloaded_date)
+		AS downloaded_date
+FROM {{ source('covid19datos_v2', 'casos_v4') }}
+{% if is_incremental() %}
+INNER JOIN incremental
+  ON downloaded_at > max_downloaded_at
   -- IMPORTANT: prunes partitions
   AND downloaded_date >= max_downloaded_date
 {% endif %}
