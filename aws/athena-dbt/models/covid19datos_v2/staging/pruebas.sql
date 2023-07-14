@@ -1,7 +1,10 @@
 {{
     config(
         pre_hook=[
-            "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'pruebas_v3').render_hive() }}"
+            "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'pruebas_v1').render_hive() }}",
+            "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'pruebas_v2').render_hive() }}",
+            "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'pruebas_v3').render_hive() }}",
+            "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'pruebas_v4').render_hive() }}"
         ],
         table_type='iceberg',
         partitioned_by=['month(downloaded_date)'],

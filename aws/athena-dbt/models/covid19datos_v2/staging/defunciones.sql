@@ -1,6 +1,9 @@
 {{
     config(pre_hook=[
-        "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'defunciones_v3').render_hive() }}"
+            "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'defunciones_v1').render_hive() }}",
+            "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'defunciones_v2').render_hive() }}",
+            "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'defunciones_v3').render_hive() }}",
+            "MSCK REPAIR TABLE {{ source('covid19datos_v2', 'defunciones_v4').render_hive() }}"
     ])
 }}
 SELECT
