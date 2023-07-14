@@ -57,7 +57,7 @@ resource "aws_batch_job_definition" "biostatistics_download_and_sync" {
 resource "aws_cloudwatch_event_rule" "biostatistics_daily_download" {
   name        = "biostatistics-daily-download"
   description = "Run the daily Biostatistics download."
-  schedule_expression = "cron(25 10 * * ? *)"
+  schedule_expression = "cron(55 9 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "biostatistics_daily_download" {
