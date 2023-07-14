@@ -9,7 +9,7 @@ SELECT
     "$path" s3_path,
 
     file_timestamp,
-	date,
+	date(date) AS date,
 	state,
     hospital_onset_covid,
     hospital_onset_covid_coverage,
