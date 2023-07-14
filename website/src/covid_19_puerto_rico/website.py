@@ -3,8 +3,8 @@ import logging
 from jinja2 import Environment, PackageLoader, select_autoescape
 import os
 import pathlib
+from PIL import Image
 import shutil
-from wand.image import Image
 
 
 class Website:
@@ -80,6 +80,7 @@ class Website:
 
 
 def copy_to_jpg(origin, destination):
-    with Image(filename=origin) as original:
-        with original.convert('jpg') as converted:
-            converted.save(filename=destination)
+    with Image.open(origin) as image:
+        if image.mode in ('RGBA', 'P'):
+            image = image.convert('RGB')
+        image.save(destination)

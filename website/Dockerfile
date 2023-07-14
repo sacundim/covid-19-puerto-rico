@@ -22,7 +22,6 @@ RUN poetry build
 
 FROM base AS app
 RUN apt-get update
-RUN apt-get install -y libmagickwand-dev
 # The rclone packaged with the OS distribution is always hopelessly out
 # of date, better to get it from the official rclone Docker images.
 # See: https://github.com/rclone/rclone/issues/6060
