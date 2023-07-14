@@ -14,3 +14,5 @@ sources:
         freshness: null
       - name: walgreens_tracker_parquet_v2
         freshness: null
+      - name: walgreens_tracker_parquet_v3
+        freshness: null
