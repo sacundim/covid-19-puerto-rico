@@ -99,14 +99,15 @@ INNER JOIN incremental
 UNION ALL
 
 SELECT
-    downloaded_at,
+    CAST(downloaded_at AS TIMESTAMP(6))
+        AS downloaded_at,
 	NULLIF("ID number", '') id_number,
 	NULLIF(age, '') age,
 	NULLIF(sex, '') sex,
 	NULLIF(city, '') city,
 	NULLIF(region, '') region,
 	NULLIF(class, '') class,
- 	"Sample Date" AS sample_date,
+ 	date("Sample Date") AS sample_date,
 	from_iso8601_date(downloaded_date)
 		AS downloaded_date
 FROM {{ source('covid19datos_v2', 'casos_v4') }}
