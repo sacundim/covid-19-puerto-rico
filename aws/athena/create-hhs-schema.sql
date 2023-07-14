@@ -1160,9 +1160,7 @@ LOCATION 's3://covid-19-puerto-rico-data/HHS/rates_of_covid_19_cases_or_deaths_b
 CREATE EXTERNAL TABLE covid_hhs_sources.rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_v3 (
     outcome STRING,
     month STRING,
-    -- Needs to be cleansed to a string?
     `MMWR week` BIGINT,
-    -- Names with spaces will need to be renamed to underscores
     `Age group` STRING,
     `Vaccine product` STRING,
     `Vaccinated with outcome` BIGINT,
