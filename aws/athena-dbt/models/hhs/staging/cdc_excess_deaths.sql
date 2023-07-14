@@ -24,7 +24,7 @@ UNION ALL
 
 SELECT
     file_timestamp,
-	date_add('day', -1, date(file_timestamp)
+	date_add('day', -1, date(file_timestamp))
 		AS bulletin_date,
     -- If I don't do these renames, Athena's CREATE TABLE AS breaks.
     "Week Ending Date" AS week_ending_date,
