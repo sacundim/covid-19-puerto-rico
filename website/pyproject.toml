@@ -7,7 +7,6 @@ packages = [{ include = "covid_19_puerto_rico", from = "src"}]
 
 [tool.poetry.scripts]
 covid19pr = 'covid_19_puerto_rico:main'
-migrate-off-gh-pages = 'covid_19_puerto_rico.migrations:migrate_off_gh_pages'
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -21,10 +20,6 @@ geojson = "^2.5.0"
 PyAthena = "^1.11.2"
 vl-convert-python = "^0.11.0"
 pillow = "^10.0.0"
-
-[tool.poetry.dev-dependencies]
-ghp-import = "^0.5.5"
-GitPython = "^3.1.30"
 
 [build-system]
 requires = ["poetry-core"]
