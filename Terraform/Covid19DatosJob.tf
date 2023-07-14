@@ -15,11 +15,11 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
 
   container_properties = jsonencode({
     image = "sacundim/covid-19-puerto-rico-downloader:latest"
-    command = ["covid19datos-v2.sh"],
+    command = ["covid19datos-download"],
     environment = [
       {
-        name = "S3_DATA_URL",
-        value = "s3://${var.datalake_bucket_name}"
+        name = "TARGET_BUCKET",
+        value = var.datalake_bucket_name
       }
     ],
     executionRoleArn = aws_iam_role.ecs_task_role.arn
@@ -29,7 +29,7 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
     },
     resourceRequirements = [
       {"type": "VCPU", "value": "2"},
-      {"type": "MEMORY", "value": "6144"}
+      {"type": "MEMORY", "value": "14336"}
     ]
     networkConfiguration = {
       "assignPublicIp": "ENABLED"

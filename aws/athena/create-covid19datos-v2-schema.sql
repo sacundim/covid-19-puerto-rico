@@ -24,7 +24,7 @@ STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/casos/parquet_v1/';
 
 CREATE EXTERNAL TABLE covid19datos_v2_sources.casos_parquet_v2 (
-	id_number BIGINT,
+	`ID number` BIGINT,
 	age BIGINT,
 	sex STRING,
 	city STRING,
@@ -36,9 +36,8 @@ CREATE EXTERNAL TABLE covid19datos_v2_sources.casos_parquet_v2 (
 STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/casos/parquet_v2/';
 
-
 CREATE EXTERNAL TABLE covid19datos_v2_sources.casos_parquet_v3 (
-	id_number STRING,
+	`ID number` STRING,
 	age STRING,
 	sex STRING,
 	city STRING,
@@ -50,6 +49,21 @@ CREATE EXTERNAL TABLE covid19datos_v2_sources.casos_parquet_v3 (
 ) PARTITIONED BY (downloaded_date STRING)
 STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/casos/parquet_v3/';
+
+CREATE EXTERNAL TABLE covid19datos_v2_sources.casos_parquet_v4 (
+	`ID number` STRING,
+	age STRING,
+	sex STRING,
+	city STRING,
+	region STRING,
+	class STRING,
+	type STRING,
+	`Sample Date` TIMESTAMP,
+	fe_reporte TIMESTAMP,
+	downloaded_at TIMESTAMP
+) PARTITIONED BY (downloaded_date STRING)
+STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/casos/parquet_v4/';
 
 
 ---------------------------------------------------------------------------
@@ -95,6 +109,19 @@ CREATE EXTERNAL TABLE covid19datos_v2_sources.defunciones_parquet_v3 (
 ) PARTITIONED BY (downloaded_date STRING)
 STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/defunciones/parquet_v3/';
+
+CREATE EXTERNAL TABLE covid19datos_v2_sources.defunciones_parquet_v4 (
+	id_muerte STRING,
+	co_sexo STRING,
+	co_region STRING,
+	fe_muerte TIMESTAMP,
+	tx_grupo_edad STRING,
+	tx_vacunas_aldia STRING,
+	fe_reporte TIMESTAMP,
+	downloaded_at TIMESTAMP
+) PARTITIONED BY (downloaded_date STRING)
+STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/defunciones/parquet_v4/';
 
 
 ---------------------------------------------------------------------------
@@ -235,6 +262,51 @@ CREATE EXTERNAL TABLE covid19datos_v2_sources.sistemas_salud_parquet_v3 (
 STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/sistemas_salud/parquet_v3/';
 
+CREATE EXTERNAL TABLE covid19datos_v2_sources.sistemas_salud_parquet_v4 (
+    fe_reporte TIMESTAMP,
+    camas_adultos_covid BIGINT,
+    camas_adultos_nocovid BIGINT,
+    camas_adultos_occ BIGINT,
+    camas_adultos_disp BIGINT,
+    camas_adultos_total BIGINT,
+    camas_icu_covid BIGINT,
+    camas_icu_nocovid BIGINT,
+    camas_icu_occ BIGINT,
+    camas_icu_disp BIGINT,
+    camas_icu_total BIGINT,
+    camas_ped_covid BIGINT,
+    camas_ped_nocovid BIGINT,
+    camas_ped_occ BIGINT,
+    camas_ped_disp BIGINT,
+    camas_ped_total BIGINT,
+    camas_picu_covid BIGINT,
+    camas_picu_nocovid BIGINT,
+    camas_picu_occ BIGINT,
+    camas_picu_disp BIGINT,
+    camas_picu_total BIGINT,
+    vent_adultos_covid BIGINT,
+    vent_adultos_nocovid BIGINT,
+    vent_adultos_occ BIGINT,
+    vent_adultos_disp BIGINT,
+    vent_adultos_total BIGINT,
+    vent_ped_covid BIGINT,
+    vent_ped_nocovid BIGINT,
+    vent_ped_occ BIGINT,
+    vent_ped_disp BIGINT,
+    vent_ped_total BIGINT,
+    cuartos_presneg_occ BIGINT,
+    cuartos_presneg_disp BIGINT,
+    cuartos_presneg_total BIGINT,
+    vent_ord BIGINT,
+    vent_rec BIGINT,
+    vent_entr BIGINT,
+    convalecientes BIGINT,
+    -- TODO: There's regional fields lately
+    downloaded_at TIMESTAMP
+) PARTITIONED BY (downloaded_date STRING)
+STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/sistemas_salud/parquet_v4/';
+
 
 ---------------------------------------------------------------------------
 ---------------------------------------------------------------------------
@@ -278,6 +350,20 @@ CREATE EXTERNAL TABLE covid19datos_v2_sources.vacunacion_parquet_v3 (
 ) PARTITIONED BY (downloaded_date STRING)
 STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/vacunacion/parquet_v3/';
+
+CREATE EXTERNAL TABLE covid19datos_v2_sources.vacunacion_parquet_v4 (
+    co_sexo STRING,
+	co_municipio STRING,
+	co_region STRING,
+	fe_vacuna TIMESTAMP,
+	nu_dosis STRING,
+	in_vacunado_aldia STRING,
+	co_manufacturero STRING,
+	tx_grupo_edad STRING,
+	downloaded_at TIMESTAMP
+) PARTITIONED BY (downloaded_date STRING)
+STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/vacunacion/parquet_v4/';
 
 
 ---------------------------------------------------------------------------
@@ -324,3 +410,17 @@ CREATE EXTERNAL TABLE covid19datos_v2_sources.pruebas_parquet_v3 (
 ) PARTITIONED BY (downloaded_date STRING)
 STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/pruebas/parquet_v3/';
+
+CREATE EXTERNAL TABLE covid19datos_v2_sources.pruebas_parquet_v4 (
+	id_orden STRING,
+	co_tipo STRING,
+	tx_grupo_edad STRING,
+	co_resultado STRING,
+	co_sexo STRING,
+	co_region STRING,
+	fe_prueba TIMESTAMP,
+	fe_reporte TIMESTAMP,
+	downloaded_at TIMESTAMP
+) PARTITIONED BY (downloaded_date STRING)
+STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/pruebas/parquet_v4/';

@@ -1,4 +1,4 @@
-FROM python:3.9 AS base
+FROM python:3.9-slim AS base
 
 #####################################################################
 #####################################################################
@@ -32,16 +32,14 @@ RUN poetry build
 FROM base as app
 # Install various prerequistes for our scripts
 RUN apt-get update
-RUN apt-get install -y ca-certificates wget lbzip2 time jq parallel unzip
-RUN python3 -m pip install pipx
-RUN pipx install awscli
-COPY --link --from=sacundim/csv2parquet:0.6.0 \
-    /usr/local/bin/csv2parquet \
-    /usr/local/bin/json2parquet \
-    /usr/local/bin/
-COPY --link --from=sacundim/json2jsonl \
-    /usr/local/bin/json2jsonl \
-    /usr/local/bin/
+RUN apt-get install -y ca-certificates lbzip2
+
+# The rclone packaged with the OS distribution is always hopelessly out
+# of date, better to get it from the official rclone Docker images.
+# See: https://github.com/rclone/rclone/issues/6060
+COPY --from=rclone/rclone:1.61.1 \
+    /usr/local/bin/rclone \
+    /usr/local/bin/rclone
 
 # Install our stuff proper
 WORKDIR /covid-19-puerto-rico

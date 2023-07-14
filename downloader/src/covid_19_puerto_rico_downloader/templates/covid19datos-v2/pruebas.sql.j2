@@ -1,0 +1,21 @@
+COPY (
+    SELECT
+        *,
+        TIMESTAMP '{{ downloaded_at }}' AS downloaded_at
+    FROM read_csv_auto(
+            '{{ input_file }}',
+            header=true,
+            union_by_name=true,
+            types={
+                FE_PRUEBA: 'TIMESTAMP',
+                FE_REPORTE: 'TIMESTAMP',
+                -- If we don't override this we may get UUID and
+                -- DuckDB may output Parquet files with fixed-length
+                -- binary columns that many tools won't recognize
+                ID_ORDEN: 'VARCHAR'
+            }
+    )
+)
+TO '{{ output_parquet }}' (
+    FORMAT 'parquet', COMPRESSION 'GZIP'
+);
