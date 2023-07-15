@@ -2,7 +2,7 @@
 set -euxo pipefail
 
 # Override to use a different image name or tag
-IMAGE_NAME="${IMAGE_NAME-docker.io/sacundim/covid-19-puerto-rico-downloader}"
+IMAGE_NAME="${IMAGE_NAME-docker.io/sacundim/covid-19-puerto-rico-website}"
 
 # Override to just build one platform.  Tip: `PLATFORM="linux"` builds for
 # the current host's processor architecture

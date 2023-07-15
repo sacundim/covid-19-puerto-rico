@@ -14,15 +14,15 @@
 #
 #     run-in-docker.sh --bulletin-date 2020-05-04
 
-set -e -x
+set -euxo pipefail
 
 # Override this to use e.g. podman instead of docker:
 DOCKER="${DOCKER:=docker}"
 
-export DOCKER_IMAGE="${DOCKER_IMAGE:=sacundim/covid-19-puerto-rico-website}"
+export IMAGE_NAME="${IMAGE_NAME:=docker.io/sacundim/covid-19-puerto-rico-website}"
 
-cd "$(dirname $0)"/..
-./scripts/build-docker-image.sh
+cd "$(dirname $0)"
+PLATFORM="linux" ./build-docker-image.sh
 
 rm -rf output/*
 
@@ -33,7 +33,7 @@ time "${DOCKER}" run --rm \
   -v "$(pwd)"/output:/output:rw \
   --env AWS_CONFIG_FILE=/awsconfig/config \
   --env AWS_SHARED_CREDENTIALS_FILE=/awsconfig/credentials \
-  "${DOCKER_IMAGE}" \
+  "${IMAGE_NAME}" \
     covid19pr \
       --config-file /config/docker.toml \
       --assets-dir /assets \
