@@ -25,15 +25,15 @@ FROM base AS app
 # The rclone packaged with the OS distribution is always hopelessly out
 # of date, better to get it from the official rclone Docker images.
 # See: https://github.com/rclone/rclone/issues/6060
-COPY --from=rclone/rclone:1.61.1 \
+COPY --link --from=rclone/rclone:1.61.1 \
     /usr/local/bin/rclone \
     /usr/local/bin/rclone
 WORKDIR /covid-19-puerto-rico
-COPY --from=requirements /covid-19-puerto-rico/requirements.txt ./
+COPY --link --from=requirements /covid-19-puerto-rico/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache \
     pip install -r requirements.txt && rm requirements.txt
-COPY --from=build /covid-19-puerto-rico/dist/covid_19_puerto_rico-*.whl .
+COPY --link --from=build /covid-19-puerto-rico/dist/covid_19_puerto_rico-*.whl .
 RUN --mount=type=cache,target=/root/.cache \
     pip install covid_19_puerto_rico-*.whl && rm covid_19_puerto_rico-*.whl
-COPY docker/run-and-sync.sh .
+COPY --link docker/run-and-sync.sh .
 ENV PATH=/covid-19-puerto-rico:$PATH

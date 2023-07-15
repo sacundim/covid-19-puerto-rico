@@ -60,7 +60,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # The rclone packaged with the OS distribution is always hopelessly out
 # of date, better to get it from the official rclone Docker images.
 # See: https://github.com/rclone/rclone/issues/6060
-COPY --from=rclone/rclone:1.61.1 \
+COPY --link --from=rclone/rclone:1.61.1 \
     /usr/local/bin/rclone \
     /usr/local/bin/rclone
 
@@ -70,7 +70,7 @@ COPY --from=rclone/rclone:1.61.1 \
 # Note that since we generated a `requirements.txt` above, we don't need
 # Poetry here, `pip install -r` is enough.
 WORKDIR /covid-19-puerto-rico
-COPY --from=requirements \
+COPY --link --from=requirements \
     /covid-19-puerto-rico/requirements.txt \
     ./
 RUN --mount=type=cache,target=/root/.cache \
@@ -81,7 +81,7 @@ RUN --mount=type=cache,target=/root/.cache \
 # `covid19datos.salud.gov.pr`'s SSL certificate is missing its
 # intermediate cert, so we check in a copy of that into our repo
 # and install it by hand.
-COPY certs/*.crt /usr/local/share/ca-certificates/
+COPY --link certs/*.crt /usr/local/share/ca-certificates/
 RUN update-ca-certificates
 ENV REQUESTS_CA_BUNDLE="/etc/ssl/certs/ca-certificates.crt"
 
@@ -91,10 +91,10 @@ ENV REQUESTS_CA_BUNDLE="/etc/ssl/certs/ca-certificates.crt"
 # And again since we packaged our code above as a Python wheel
 # (`.whl` file), we don't need Poetry here, `pip install` will do.
 RUN mkdir -p scripts s3-bucket-sync/covid-19-puerto-rico-data
-COPY scripts/run-and-sync.sh ./scripts/
+COPY --link scripts/run-and-sync.sh ./scripts/
 RUN chmod +x ./scripts/*.sh
 ENV PATH=/covid-19-puerto-rico/scripts:$PATH
-COPY --from=build \
+COPY --link --from=build \
     /covid-19-puerto-rico/dist/covid_19_puerto_rico_downloader-*.whl \
     .
 RUN --mount=type=cache,target=/root/.cache \
