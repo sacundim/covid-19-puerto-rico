@@ -62,11 +62,7 @@ def covid19datos_v2():
         task.Task(dataset, f'{dataset}/completo', config)
         for dataset in DATASETS
     ]
-    with futures.ThreadPoolExecutor(
-            max_workers=len(tasks),
-            thread_name_prefix='download_task') as executor:
-        for future in futures.as_completed([executor.submit(task) for task in tasks]):
-            logging.info("Completed %s", future.result())
+    task.run_tasks(tasks)
 
 def pick_and_log_now():
     now = datetime.datetime.utcnow()

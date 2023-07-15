@@ -1,4 +1,5 @@
 import collections
+import concurrent.futures as futures
 import logging
 import pathlib
 import shutil
@@ -100,3 +101,12 @@ class Task():
         partition_dir.mkdir(exist_ok=True)
         shutil.move(parquetfile, partition_dir)
         logging.info("Moved %s to %s...", parquetfile, partition_dir)
+
+
+def run_tasks(tasks, thread_name_prefix='download_task'):
+    """Run a collection of Tasks in parallel.  Carefully crafted to not swallow exceptions"""
+    with futures.ThreadPoolExecutor(
+            max_workers=len(tasks),
+            thread_name_prefix=thread_name_prefix) as executor:
+        for future in futures.as_completed([executor.submit(task) for task in tasks]):
+            logging.info("Completed %s", future.result())

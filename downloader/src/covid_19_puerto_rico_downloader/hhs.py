@@ -57,12 +57,7 @@ def hhs_download():
     socrata_token = get_socrata_app_token(args)
     with (Socrata('healthdata.gov', socrata_token, timeout=60) as hhs,
           Socrata('data.cdc.gov', socrata_token, timeout=60) as cdc):
-        tasks = healthdata_tasks(hhs, config) + cdc_tasks(cdc, config)
-        with futures.ThreadPoolExecutor(
-                max_workers=len(tasks),
-                thread_name_prefix='download_task') as executor:
-            for future in futures.as_completed([executor.submit(task) for task in tasks]):
-                logging.info("Completed %s", future.result())
+        task.run_tasks(healthdata_tasks(hhs, config) + cdc_tasks(cdc, config))
 
 
 def healthdata_tasks(client, config):
