@@ -1,8 +1,10 @@
 FROM python:3.9-slim AS base
 
 FROM base AS poetry
+ARG POETRY_VERSION="1.5.1"
+ENV POETRY_VIRTUALENVS_CREATE=false
 RUN --mount=type=cache,target=/root/.cache \
-    pip install poetry==1.5.0
+    pip install poetry=="${POETRY_VERSION}"
 
 
 #####################################################################
