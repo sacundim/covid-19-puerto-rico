@@ -80,9 +80,6 @@ def main():
         molecular.MolecularCurrentDeltas(athena, args.output_dir, output_formats),
         molecular.MolecularDailyDeltas(athena, args.output_dir, output_formats),
     ]
-    if args.build_website:
-        site = website.Website(args)
-        targets.append(site)
 
     start_date = max([args.earliest_date,
                       bulletin_date - datetime.timedelta(days=args.days_back)])
@@ -91,6 +88,9 @@ def main():
     )
 
     with futures.ThreadPoolExecutor(thread_name_prefix='worker_thread') as executor:
+        if args.build_website:
+            site = website.Website(args)
+            targets = [site] + targets
         for future in futures.as_completed([executor.submit(target, date_range) for target in targets]):
             logging.info("Completed %s", future.result())
 
