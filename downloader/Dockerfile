@@ -45,8 +45,8 @@ RUN poetry build
 ##
 FROM base as app
 # Install various prerequistes from the OS distribution
-RUN apt-get update
-RUN apt-get install -y ca-certificates lbzip2
+RUN --mount=type=cache,target=/var/cache/apt \
+    apt-get update && apt-get install -y ca-certificates lbzip2
 
 
 # The rclone packaged with the OS distribution is always hopelessly out
