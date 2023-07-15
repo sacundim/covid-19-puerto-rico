@@ -44,9 +44,17 @@ RUN poetry build
 ## The actual app image.
 ##
 FROM base as app
-# Install various prerequistes from the OS distribution
-RUN --mount=type=cache,target=/var/cache/apt \
-    apt-get update && apt-get install -y ca-certificates lbzip2
+# Install various prerequistes from the OS distribution.
+# Magic APT caching incantations from Docker docs:
+#
+# * https://docs.docker.com/engine/reference/builder/#run---mounttypecache
+#
+RUN rm -f /etc/apt/apt.conf.d/docker-clean \
+    && echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' \
+          > /etc/apt/apt.conf.d/keep-cache
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt update && apt-get --no-install-recommends install -y ca-certificates lbzip2
 
 
 # The rclone packaged with the OS distribution is always hopelessly out
