@@ -17,6 +17,10 @@ class Website:
             autoescape=select_autoescape(['html', 'xml'])
         )
 
+    def __call__(self, bulletin_dates):
+        self.render(bulletin_dates)
+        return self.__class__.__name__
+
     def render(self, date_range):
         for bulletin_date in date_range:
             self.render_bulletin_date(bulletin_date, date_range)

@@ -21,10 +21,14 @@ def create_athena_engine(args):
     conn_str = "awsathena+rest://:@athena.{region_name}.amazonaws.com:443/{schema_name}?work_group={work_group}"
     toml_dict = toml.load(args.config_file)
     config = (toml_dict['athena'])
-    return sqlalchemy.create_engine(conn_str.format(
-        region_name=config['region_name'],
-        schema_name=config['schema_name'],
-        work_group=config['work_group']))
+    return sqlalchemy.create_engine(
+        conn_str.format(region_name=config['region_name'],
+                        schema_name=config['schema_name'],
+                        work_group=config['work_group']),
+        pool_size=5,
+        max_overflow=15,
+        pool_timeout=900
+    )
 
 def save_chart(chart, basename, formats):
     for format in formats:
