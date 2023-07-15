@@ -17,6 +17,10 @@ class Website:
             autoescape=select_autoescape(['html', 'xml'])
         )
 
+    def __call__(self, bulletin_dates):
+        self.render(bulletin_dates)
+        return self.__class__.__name__
+
     def render(self, date_range):
         for bulletin_date in date_range:
             self.render_bulletin_date(bulletin_date, date_range)
@@ -46,7 +50,9 @@ class Website:
                                     f'{output_directory}/{filename}')
 
     def render_bulletin_date(self, bulletin_date, date_range):
-        output_index_html = f'{self.output_dir}/{bulletin_date}/index.html'
+        bulletin_date_dir = pathlib.Path(self.output_dir) / str(bulletin_date)
+        bulletin_date_dir.mkdir(exist_ok=True)
+        output_index_html = bulletin_date_dir / 'index.html'
         logging.info("Rendering %s", output_index_html)
         previous_date = bulletin_date - datetime.timedelta(days=1)
         next_date = bulletin_date + datetime.timedelta(days=1)
@@ -58,7 +64,7 @@ class Website:
             bulletin_month=bulletin_date.strftime('%Y-%m'),
             previous_date_month=previous_date.strftime('%Y-%m'),
             next_date=next_date)\
-            .dump(output_index_html)
+            .dump(str(output_index_html))
 
     def render_molecular_tests_page(self, date_range):
         molecular_dir = pathlib.Path(f'{self.output_dir}/molecular_tests')

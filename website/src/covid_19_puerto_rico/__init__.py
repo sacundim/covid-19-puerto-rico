@@ -1,5 +1,6 @@
 import altair as alt
 import argparse
+import concurrent.futures as futures
 import datetime
 import logging
 import sqlalchemy
@@ -79,9 +80,6 @@ def main():
         molecular.MolecularCurrentDeltas(athena, args.output_dir, output_formats),
         molecular.MolecularDailyDeltas(athena, args.output_dir, output_formats),
     ]
-    if args.build_website:
-        site = website.Website(args)
-        targets.append(site)
 
     start_date = max([args.earliest_date,
                       bulletin_date - datetime.timedelta(days=args.days_back)])
@@ -89,8 +87,12 @@ def main():
         util.make_date_range(start_date, bulletin_date)
     )
 
-    for target in targets:
-        target.render(date_range)
+    with futures.ThreadPoolExecutor(thread_name_prefix='worker_thread') as executor:
+        if args.build_website:
+            site = website.Website(args)
+            targets = [site] + targets
+        for future in futures.as_completed([executor.submit(target, date_range) for target in targets]):
+            logging.info("Completed %s", future.result())
 
     if args.build_website:
         site.render_top(bulletin_date)
@@ -98,7 +100,7 @@ def main():
 
 
 def global_configuration():
-    logging.basicConfig(format='%(asctime)s %(message)s',
+    logging.basicConfig(format='%(asctime)s %(threadName)s %(message)s',
                         level=logging.INFO)
 
     alt.themes.register("custom_theme", lambda: util.get_json_resource('theme.json'))

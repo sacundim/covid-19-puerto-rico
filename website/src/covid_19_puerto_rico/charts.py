@@ -20,6 +20,10 @@ class AbstractChart(ABC):
         self.output_formats = output_formats
         self.name = type(self).__name__
 
+    def __call__(self, bulletin_dates):
+        self.render(bulletin_dates)
+        return self.__class__.__name__
+
     def render(self, bulletin_dates):
         with self.engine.connect() as connection:
             df = self.fetch_data(connection, bulletin_dates)
