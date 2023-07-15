@@ -22,7 +22,7 @@ DOCKER="${DOCKER:=docker}"
 export IMAGE_NAME="${IMAGE_NAME:=docker.io/sacundim/covid-19-puerto-rico-website}"
 
 cd "$(dirname $0)"
-PLATFORM="linux" ./build-docker-image.sh
+PLATFORM="linux" ./build-docker-image.sh --load
 
 rm -rf output/*
 
