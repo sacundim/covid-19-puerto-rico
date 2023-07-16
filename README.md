@@ -6,111 +6,75 @@ computadora, y contiene algunos análisis de estos.
 
 Visita el dashboard en:
 
-* https://sacundim.github.io/covid-19-puerto-rico/
+* https://covid-19-puerto-rico.org/
 
 
 ## Datos de fuente y archivos CSV
 
-Los datos provienen principalmente de:
+Los datos corrientes provienen principalmente de:
  
-1. Los [informes de Casos Positivos COVID-19](http://www.salud.gov.pr/Estadisticas-Registros-y-Publicaciones/Pages/COVID-19.aspx)
-   del Departamento de Salud de Puerto Rico;
-2. Descargas diarias del [API del Bioportal del Departamento de Salud de Puerto Rico](Bioportal.md).
-3. Publicaciones de datos (principalmente hospitalarios) de [la página HealthData.gov del
-   Departamento de Salud y Servicios Humanos de los Estados Unidos](https://healthdata.gov/).
 4. El [COVID Tracking Project](https://covidtracking.com/) (hospitalizaciones),
-   que a su vez los obtuvo del Departamento de Salud de Puerto Rico y del Departamento de 
+   que a su vez los obtuvo del Departamento de Salud de Puerto Rico y del Departamento de
    Salud y Servicios Humanos de los Estados Unidos.
 5. Fuentes misceláneas como reportes de prensa o informes y gráficas del Departamento de 
    Salud de Puerto Rico que no aparecen en esos enlaces pero que se han compartido con 
    periodistas.
 
-En el directorio [`assets/source_material/`](assets/source_material/)
-se recopilan imágenes de boletines y gráficas, según este esquema:
 
-* Archivos PDF originales de los informes en 
-  [`assets/source_material/pdf/`](assets/source_material/pdf/);
-* Archivos de imágenes extraídos de estos en directorios
-  fechados dentro de [`assets/source_material/`](assets/source_material/).
+## Captura de datos
 
-Una selección de datos de estos se ha copiado a mano a los archivos CSV 
-en el subdirectorio [`assets/data/`](assets/data/), que incluyen:
+El subdirectorio [`downloader/`](downloader/) contiene la aplicación de captura
+e ingesta de datos, que diariamente captura una selección de datos de estas fuentes
+principales:
 
-* [`PuertoRico-bulletin.csv`](assets/data/cases/PuertoRico-bulletin.csv), que
-  consiste de números de "anuncio" que se hacen todos los días.
-  Estas son las cifras que más publicidad reciben.
-* [`PuertoRico-bitemporal.csv`](assets/data/cases/PuertoRico-bitemporal.csv),
-  que consiste de datos de gráficas que acompañan estos boletines
-  y que atribuyen las muertes a la fecha en que en verdad sucedieron
-  y los casos positivos a la fecha que se tomó la muestra.
+1. Descargas diarias del [tablero de estadísticas de COVID-19 del Departamento de Salud de Puerto Rico](https://www.salud.pr.gov/estadisticas_v2);
+2. Descargas diarias del [API de Bioestadísticas del Departamento de Salud de Puerto Rico](https://biostatistics.salud.pr.gov).
+3. Publicaciones de datos (principalmente hospitalarios) de [la página HealthData.gov del
+   Departamento de Salud y Servicios Humanos de los Estados Unidos](https://healthdata.gov/)
+   y de [la semejante página del CDC estadounidense](https://data.cdc.gov/);
 
-Los datos de pruebas vienen de un conjunto de descargas diarias que realizo
-del Bioportal del Departamento de Salud de Puerto Rico.  Todas estas descargas
-no se comparten aquí pero las guardo en la nube de Amazon (AWS S3) y podrían 
-compartirse con quien tenga un interés serio.  También todo el código chapucero
-que uso para descargar esos datos y analizarlos está en este repositorio, así 
-que quien tenga el conocimiento técnico y se pueda tapar un poco la nariz podría
-servirse.
+Adicionalmente existe una colección de datos más viejos (muchos capturados a mano) de
+estas fuentes:
+
+* Los [informes PDF de Casos Positivos COVID-19](http://www.salud.pr.gov/Estadisticas-Registros-y-Publicaciones/Pages/COVID-19.aspx)
+  del Departamento de Salud de Puerto Rico, publicados 2020 al 2021.  Aquí recogemos estos 
+  informes en su formato PDF original bajo
+  [`website/assets/source_material/pdf/`(website/assets/source_material/pdf/), 
+  y archivos CSV de datos extraídos a mano de estos bajo [`website/assets/data/`](website/assets/data/).
+* El API del Bioportal del Departamento de Salud de Puerto Rico, el predecesor del corriente
+  de Bioestadísticas que tiene la misma información.
+* Datos de hospitalizaciones del [COVID Tracking Project](https://covidtracking.com/),
+  que a su vez los recopiló del Departamento de Salud de Puerto Rico y del Departamento de 
+  Salud y Servicios Humanos de los Estados Unidos.
+* Fuentes misceláneas como reportes de prensa o informes y gráficas del Departamento de 
+  Salud de Puerto Rico que no aparecen en esos enlaces pero que se han compartido con 
+  periodistas.
 
 
-## Análisis de datos de Bioportal
+## Limpieza y análisis de datos
 
-El ordenamiento y análisis de datos del Bioportal de Salud está construido 
-usando [Amazon Athena](https://aws.amazon.com/athena/), un servicio de SQL 
-en la nube. El "script" principal de limpieza y análisis de datos está
-aquí:
+La limpieza y análisis de datos está construida en SQL como un proyecto de
+[la herramienta DBT](https://www.getdbt.com/), y corre bajo 
+[Amazon Athena](https://aws.amazon.com/athena/), un servicio de SQL 
+en la nube. El código está en este directorio:
 
-* [`aws/athena/run-bioportal-etl.sql`](aws/athena/run-bioportal-etl.sql)
+* [`athena-dbt/`](athena-dbt/)
 
 Las visualizaciones finales generalmente hacen otros cálculos adicionales 
 a los que hace el código aquí enlazado; especialmente, los cálculos de 
 promedios móviles generalmente están en las visualizaciones en vez del SQL.
 
 
-## Esquema bitemporal
+## Generador de páginas estáticas
 
-La colección aquí presente de informes diarios de COVID-19 del Departamento 
-de Salud de Puerto Rico se ha enfocado en capturar los datos en un llamado 
-**esquema bitemporal**, donde se clasifica cada punto por **dos** fechas:
+Las páginas web son 100% estático (no hay ningún código que ejecute en servidores 
+HTTP, solo HTML y Javascript en el cliente), y la aplicación que las generara se 
+halla en este directorio:
 
-* La fecha de publicación de la cifra (columna `bulletin_date`);
-* La fecha del evento que la cifra pretende describir (columna
-  `datum_date`).
+* [`website/](website/)
 
-La intención de esto es posibilitar análisis de, por ejemplo:
- 
-* Cuándo es que de verdad se realizaron las pruebas o se murieron
-  las personas vs. cuándo lo anunció Salud;
-* Velar si hay problemas de calidad de datos, por ejemplo si 
-  casos que aparecen en boletines más tempranos desaparecen
-  de boletines más tardíos (¡que sí ocurre!).
-
-Por ejemplo, esta gráfica de casos positivos probables hasta el 
-2 de mayo del 2020 da 9 casos probables para el 1ero de abril:
-
-![Casos probables hasta 2 de mayo](assets/source_material/2020-05/2020-05-02/2020-05-02_probable.png)
-
-Pero la gráfica del boletín del próximo día (datos hasta 3 de mayo 
-del 2020) da 8 casos probablespara la misma fecha de 1ero de abril:
-
-![Casos probables hasta 3 de mayo](assets/source_material/2020-05/2020-05-03/2020-05-03_probable.jpeg)
-
-Así que el archivo bitemporal reporta:
-
-    bulletin_date,datum_date,confirmed_and_probable_cases,confirmed_cases,probable_cases,deaths
-    2020-05-02,2020-04-01,80,71,9,3
-    2020-05-03,2020-04-01,79,71,8,3
-
-De nuevo, esta recopilación de datos intenta facilitar tales
-observaciones.
-
-
-## Descargador de datos de Salud federal
-
-El código que realiza las descargas periódicas de datos de Salud federal
-está en este otro repositorio:
-
-* https://github.com/sacundim/covid-19-puerto-rico-downloader
+Las gráficas son hechas con el excelente sistema [Vega-Lite](https://vega.github.io/vega-lite/)
+y su interfac en Python [Vega-Altair](https://altair-viz.github.io/).
 
 
 ## Agradecimientos
