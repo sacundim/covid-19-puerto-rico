@@ -1,31 +1,16 @@
 # Datos y análisis del COVID-19 en Puerto Rico
 
-Este proyecto recopila datos sobre COVID-19 publicados por el 
-Departamento de Salud de Puerto Rico en un formato legible por
-computadora, y contiene algunos análisis de estos.
-
-Visita el dashboard en:
+Este projecto datos sobre el COVID-19 en Puerto Rico y produce los análisis y 
+visualizaciones que se presentan en la siguiente web:
 
 * https://covid-19-puerto-rico.org/
-
-
-## Datos de fuente y archivos CSV
-
-Los datos corrientes provienen principalmente de:
- 
-4. El [COVID Tracking Project](https://covidtracking.com/) (hospitalizaciones),
-   que a su vez los obtuvo del Departamento de Salud de Puerto Rico y del Departamento de
-   Salud y Servicios Humanos de los Estados Unidos.
-5. Fuentes misceláneas como reportes de prensa o informes y gráficas del Departamento de 
-   Salud de Puerto Rico que no aparecen en esos enlaces pero que se han compartido con 
-   periodistas.
 
 
 ## Captura de datos
 
 El subdirectorio [`downloader/`](downloader/) contiene la aplicación de captura
 e ingesta de datos, que diariamente captura una selección de datos de estas fuentes
-principales:
+principales y los ingesta a un "lago de datos" en Amazon S3:
 
 1. Descargas diarias del [tablero de estadísticas de COVID-19 del Departamento de Salud de Puerto Rico](https://www.salud.pr.gov/estadisticas_v2);
 2. Descargas diarias del [API de Bioestadísticas del Departamento de Salud de Puerto Rico](https://biostatistics.salud.pr.gov).
