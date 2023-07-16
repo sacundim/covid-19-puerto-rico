@@ -72,6 +72,16 @@ Las gráficas son hechas con el excelente sistema
 [Vega-Altair](https://altair-viz.github.io/).
 
 
+## Análisis Nextstrain (vigilancia genómica viral)
+
+Aparte del proyecto en este repositorio, también mantengo
+[otro repositorio](https://github.com/sacundim/covid-19-puerto-rico-nextstrain)
+en que adapto y especializo a Puerto Rico el proyecto de filogenia
+genómica viral de COVID-19 que elabora
+[el proyecto Nextstrain](https://nextstrain.org/).  Mi visualización
+[se puede ver en este enlace](https://nextstrain.org/fetch/covid-19-puerto-rico.org/auspice/ncov_puerto-rico.json?f_division=Puerto%20Rico).
+
+
 ## Agradecimientos
 
 A Robby Cortés (@RobbyCortes en Twitter) y Angélica Serrano-Román

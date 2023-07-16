@@ -68,6 +68,15 @@ The charts are made with the excellent
 Python interface [Vega-Altair](https://altair-viz.github.io/).
 
 
+## Nextstrain analysis
+
+Apart from the project in this repository, I also maintain
+[another repo](https://github.com/sacundim/covid-19-puerto-rico-nextstrain)
+where I adapt and specialize to Puerto Rico the
+[Nextstrain project](https://nextstrain.org/)'s COVID-19 viral genomic
+philogeny.  My visualization [can be seen at this link](https://nextstrain.org/fetch/covid-19-puerto-rico.org/auspice/ncov_puerto-rico.json?f_division=Puerto%20Rico).
+
+
 ## Acknowledgements
 
 Robby Cortés (@RobbyCortes on Twitter) y Angélica Serrano-Román
