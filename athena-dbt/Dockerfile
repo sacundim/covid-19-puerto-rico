@@ -13,7 +13,7 @@ ENV PATH=/root/.local/bin:$PATH
 FROM dbt-athena
 # Install DBT packages first so as to exploit Docker
 # build cache
-WORKDIR /covid-19-puerto-rico/aws/athena-dbt/
+WORKDIR /covid-19-puerto-rico-dbt/
 # Ideally we'd just copy the packages.yml
 COPY --link packages.yml dbt_project.yml ./
 RUN dbt deps
