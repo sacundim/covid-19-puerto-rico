@@ -8,7 +8,6 @@ import logging
 from math import log10, floor
 import sqlalchemy
 import toml
-from urllib.parse import quote_plus
 
 from . import resources
 
@@ -29,12 +28,6 @@ def create_athena_engine(args):
         max_overflow=15,
         pool_timeout=900
     )
-
-def save_chart(chart, basename, formats):
-    for format in formats:
-        filename = f"{basename}.{format}"
-        logging.debug("Writing chart to %s", filename)
-        chart.save(filename)
 
 def heatmap_text_color(df, field, extreme_color='white', mid_color='black'):
     """Compute the color of the text so that it'll contrast with

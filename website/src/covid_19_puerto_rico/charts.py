@@ -7,6 +7,7 @@ import pandas as pd
 from pathlib import Path
 import sqlalchemy
 from sqlalchemy.sql import select, text, and_
+import vegafusion as vf
 
 from . import util
 
@@ -37,9 +38,37 @@ class AbstractChart(ABC):
         bulletin_dir = Path(f'{self.output_dir}/{bulletin_date}')
         bulletin_dir.mkdir(exist_ok=True)
         filtered = self.filter_data(df, bulletin_date)
-        util.save_chart(self.make_chart(filtered, bulletin_date),
-                        f"{bulletin_dir}/{bulletin_date}_{self.name}",
-                        self.output_formats)
+        self.save_chart(self.make_chart(filtered, bulletin_date),
+                        f"{bulletin_dir}/{bulletin_date}_{self.name}")
+
+    def save_chart(self, chart, basename):
+        """Override this to `save_chart_altair` for charts that Vegafusion can't render."""
+        self.save_chart_vegafusion(chart, basename)
+
+    def save_chart_vegafusion(self, chart, basename):
+        """Save an Altair chart object with Vegafusion."""
+        for format in self.output_formats:
+            filename = f"{basename}.{format}"
+            logging.debug("Writing chart to %s", filename)
+            match format:
+                case 'svg':
+                    vf.save_svg(chart, filename)
+                case 'png':
+                    vf.save_png(chart, filename)
+                case 'json':
+                    vf.save_vega(chart, filename)
+                case _:
+                    raise ValueError(f'unsupported format "{format}"')
+
+    def save_chart_altair(self, chart, basename):
+        """Save an Altair chart object with Altair."""
+        logging.info(
+            "WORKAROUND: Saving %s with Altair because Vegafusion panics.",
+            self.name)
+        for format in self.output_formats:
+            filename = f"{basename}.{format}"
+            logging.debug("Writing chart to %s", filename)
+            chart.save(filename)
 
     def save_csv(self, df):
         """Utility method to save a CSV file to a standardized location."""
@@ -289,7 +318,7 @@ class CurrentDeltas(AbstractChart):
         text = base.mark_text(fontSize=7).encode(
             text=alt.Text('value:Q'),
             color=util.heatmap_text_color(df, 'value')
-        ).transform_filter("(datum.value !== 0) & (datum.value !== null)")
+        ).transform_filter("(datum.value !== 0) && (datum.value !== null)")
 
         return (heatmap + text).properties(
             width=580, height=200

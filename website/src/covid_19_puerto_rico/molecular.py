@@ -396,6 +396,10 @@ class NewTestSpecimens(AbstractMolecularChart):
 
 
 class MolecularCurrentDeltas(AbstractMolecularChart):
+    def save_chart(self, chart, basename):
+        """Vegafusion 1.3.0 throws a Rust panic on this chart"""
+        self.save_chart_altair(chart, basename)
+
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('molecular_deltas', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
@@ -438,11 +442,11 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
         )
 
         text = base.transform_filter(
-            '(datum.value !== 0) & (datum.value !== null)'
+            '(datum.value !== 0) && (datum.value !== null)'
         ).mark_text(fontSize=6).encode(
             text=alt.Text('value:Q'),
             color=alt.condition(
-                '(datum.lo_mid_value < datum.value) & (datum.value < datum.hi_mid_value)',
+                '(datum.lo_mid_value < datum.value) && (datum.value < datum.hi_mid_value)',
                 alt.value('black'),
                 alt.value('white'))
         )
@@ -457,6 +461,10 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
 
 
 class MolecularDailyDeltas(AbstractMolecularChart):
+    def save_chart(self, chart, basename):
+        """Vegafusion 1.3.0 throws a Rust panic on this chart"""
+        self.save_chart_altair(chart, basename)
+
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('molecular_deltas', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
@@ -509,7 +517,7 @@ class MolecularDailyDeltas(AbstractMolecularChart):
         text = base.mark_text(fontSize=3, angle=270).encode(
             text=alt.Text('value:Q'),
             color=alt.condition(
-                '(datum.lo_mid_value < datum.value) & (datum.value < datum.hi_mid_value)',
+                '(datum.lo_mid_value < datum.value) && (datum.value < datum.hi_mid_value)',
                 alt.value('black'),
                 alt.value('white'))
         )
@@ -917,6 +925,10 @@ class RecentAgeGroups(AbstractMolecularChart):
     WIDTH = 260
     HEIGHT = 175
     DAYS=168
+
+    def save_chart(self, chart, basename):
+        """Vegafusion 1.3.0 throws a Rust panic on this chart"""
+        self.save_chart_altair(chart, basename)
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('recent_age_groups', self.metadata, autoload=True)

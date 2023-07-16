@@ -6,6 +6,7 @@ import logging
 import sqlalchemy
 import sqlalchemy.sql as sql
 import sqlalchemy.sql.functions as sqlfn
+import vegafusion as vf
 
 from . import charts
 from . import molecular
@@ -108,6 +109,8 @@ def global_configuration():
     alt.renderers.set_embed_options(
         timeFormatLocale=util.get_json_resource('es-PR.json')
     )
+
+    vf.enable()
 
 
 

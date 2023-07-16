@@ -1,4 +1,4 @@
-FROM python:3.9-slim AS dbt-athena
+FROM python:3.10-slim AS dbt-athena
 RUN --mount=type=cache,target=/root/.cache \
     python3 -m pip install pipx
 ARG DBT_CORE_VERSION="1.5.2"
