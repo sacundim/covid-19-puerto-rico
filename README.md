@@ -8,6 +8,29 @@ se presentan en la siguiente web:
 
 * https://covid-19-puerto-rico.org/
 
+Entre los análisis que realiza este proyecto, resalto aquí los
+siguientes:
+
+* La curva de casos que se presenta en la página no es simplemente
+  copiada de las cifras oficiales de casos del Departamento de Salud
+  de Puerto Rico, sino que la recalculamos a partir de los datos
+  crudos de resultados de pruebas en el sistema de Bioestadísticas.
+  Históricamente (antes de mayo del 2023) este recálculo ha producido
+  resultados más sensatos que los oficiales respecto por ejemplo a
+  recontagios.  A principios de mayo del 2023 el Departamento de Salud
+  revisó retroactivamente su curva de casos de tal forma que hoy en
+  día cuadra con la metodología que uso desde el 2021.
+* Análisis del rezago de los datos de pruebas y casos—quiérese decir,
+  cuánto tiempo transcurre entre las fechas en que los datos recogen
+  que se le tomó muestras a los pacientes, y cuándo aparece el récord
+  de resultado de prueba o de conteo de caso en los sistemas de datos.
+* Análisis de volumen, positividad y rezagos por prueba molecular
+  vs. antígenos, que muestra interesantísimos patrones tales como:
+  gradual crecida en la propoción de antígenos; tasa de positividad
+  sistemáticamente menor para pruebas de antígenos; rezago mucho menor
+  entre toma de muestra y recepción de datos de resultado para las
+  pruebas de antígenos.
+
 
 ## Captura de datos
 

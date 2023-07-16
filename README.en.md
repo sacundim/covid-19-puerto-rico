@@ -6,6 +6,29 @@ in the following website (in Spanish only):
 
 * https://covid-19-puerto-rico.org/
 
+Among the analyses done in this project, I highlight here the
+following:
+
+* The case curve that the page presents is not simply a copy of the
+  Puerto Rico Department of Health's official figures, but rather we
+  recalculate it from scratch using the raw test result data from
+  their Biostatistics API.  Historically (= before May 2023) this
+  recalculation has produced more sensible results than the official
+  data with regard to, for example, reinfections.  It was not until
+  early May 2023 that the Department of Health did a big retroactive
+  revision of their official case curve in a fashion that now
+  evidently produces similar results to the methodology I've employed
+  since 2021.
+* Analysis of the testing and case data lag—that's to say, how much
+  time passes between the dates in which the data record that
+  patients' test samples were taken, and when the test result or
+  positive case record appeared in the data systems.
+* Analysis of the volume, positive rate and data lags by NAAT
+  vs. antigen tests, which shows very interesting patterns such as: a
+  gradual growth in the proportion of antigen tests; systematically
+  lower positive rates for antigen tests; much smaller lag between
+  test sample collection and result data reception for antigen tests.
+
 
 ## Data capture
 
