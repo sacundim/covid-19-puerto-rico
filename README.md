@@ -65,7 +65,7 @@ Las páginas web son 100% estático (no hay ningún código que ejecute en
 servidores HTTP, solo HTML y Javascript en el cliente).  La aplicación
 que las genera se halla en este directorio:
 
-* [`website/](website/)
+* [`website/`](website/)
 
 Las gráficas son hechas con el excelente sistema
 [Vega-Lite](https://vega.github.io/vega-lite/) y su interfaz en Python

@@ -61,7 +61,7 @@ The website is 100% static pages (there is no code running in any
 HTTP servers, just HTML and client-side Javascript).  The application
 that generates the pages is under this directory:
 
-* [`website/](website/)
+* [`website/`](website/)
 
 The charts are made with the excellent
 [Vega-Lite](https://vega.github.io/vega-lite/) framework and its
