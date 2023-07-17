@@ -102,6 +102,7 @@ def main():
 def global_configuration():
     logging.basicConfig(format='%(asctime)s %(threadName)s %(message)s',
                         level=logging.INFO)
+    util.log_platform()
 
     alt.themes.register("custom_theme", lambda: util.get_json_resource('theme.json'))
     alt.themes.enable("custom_theme")

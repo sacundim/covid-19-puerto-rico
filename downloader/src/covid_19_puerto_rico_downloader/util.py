@@ -22,6 +22,7 @@ def make_jinja(package):
     )
 
 def log_platform(level=logging.INFO):
+    """Log `platform.uname()` results, to confirm what CPU arch we're using."""
     uname = platform.uname()
     logging.log(level, "Platform: system=%s, machine=%s, version=%s",
                 uname.system, uname.machine, uname.version)

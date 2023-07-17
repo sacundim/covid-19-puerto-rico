@@ -15,6 +15,14 @@ resource "aws_batch_job_definition" "dbt_run_models" {
 
   container_properties = jsonencode({
     image = "sacundim/covid-19-puerto-rico-dbt:latest"
+
+    fargatePlatformConfiguration = {
+      "platformVersion": "LATEST"
+    },
+    runtimePlatform = {
+      operatingSystemFamily: "LINUX",
+      cpuArchitecture: "ARM64"
+    }
     resourceRequirements = [
       {"type": "VCPU", "value": "0.25"},
       {"type": "MEMORY", "value": "1024"}
@@ -49,11 +57,9 @@ resource "aws_batch_job_definition" "dbt_run_models" {
         value = "20"
       }
     ],
+
     executionRoleArn = aws_iam_role.ecs_task_role.arn
     jobRoleArn = aws_iam_role.ecs_job_role.arn
-    fargatePlatformConfiguration = {
-      "platformVersion": "LATEST"
-    },
     networkConfiguration = {
       "assignPublicIp": "ENABLED"
     }

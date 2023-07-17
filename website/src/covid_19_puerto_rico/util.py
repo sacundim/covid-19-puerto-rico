@@ -6,6 +6,7 @@ import io
 import json
 import logging
 from math import log10, floor
+import platform
 import sqlalchemy
 import toml
 from urllib.parse import quote_plus
@@ -91,3 +92,10 @@ def round_down_sig(x, sig=2):
         return rounded - 10 ** (magnitude - (sig - 1))
     else:
         return rounded
+
+
+def log_platform(level=logging.INFO):
+    """Log `platform.uname()` results, to confirm what CPU arch we're using."""
+    uname = platform.uname()
+    logging.log(level, "Platform: system=%s, machine=%s, version=%s",
+                uname.system, uname.machine, uname.version)
