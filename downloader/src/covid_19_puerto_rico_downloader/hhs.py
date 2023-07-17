@@ -34,6 +34,7 @@ def process_arguments():
 def hhs_download():
     """Entry point for HHS download code."""
     logging.basicConfig(format='%(asctime)s %(threadName)s %(message)s', level=logging.INFO)
+    util.log_platform()
     args = process_arguments()
 
     config = task.TaskConfig(

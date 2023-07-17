@@ -23,5 +23,5 @@ def make_jinja(package):
 
 def log_platform(level=logging.INFO):
     uname = platform.uname()
-    logging.log(level, "Platform: system=%s, machine=%s, version=%s",
-                uname.system, uname.machine, uname.version)
+    logging.log(level, "Platform: system=%s, node=%s, machine=%s, version=%s",
+                uname.system, uname.node, uname.machine, uname.version)
