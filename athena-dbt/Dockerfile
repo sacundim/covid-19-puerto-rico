@@ -1,19 +1,14 @@
-FROM python:3.10-slim AS dbt-athena
+FROM python:3.9-slim AS dbt-athena
+COPY --link requirements.txt .
 RUN --mount=type=cache,target=/root/.cache \
-    python3 -m pip install pipx
-ARG DBT_CORE_VERSION="1.5.2"
-RUN --mount=type=cache,target=/root/.cache \
-    pipx install dbt-core=="$DBT_CORE_VERSION"
-ARG DBT_ATHENA_VERSION="1.5.1"
-RUN --mount=type=cache,target=/root/.cache \
-    pipx inject dbt-core dbt-athena-community=="$DBT_ATHENA_VERSION"
-ENV PATH=/root/.local/bin:$PATH
+    python3 -m pip install -r requirements.txt \
+ && rm requirements.txt
 
 
 FROM dbt-athena
 # Install DBT packages first so as to exploit Docker
 # build cache
-WORKDIR /covid-19-puerto-rico/aws/athena-dbt/
+WORKDIR /covid-19-puerto-rico-dbt/
 # Ideally we'd just copy the packages.yml
 COPY --link packages.yml dbt_project.yml ./
 RUN dbt deps

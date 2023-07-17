@@ -7,7 +7,7 @@ on:
     branches: [ master ]
     paths:
       - '.github/workflows/BUILD_DBT_IMAGE.yml'
-      - 'aws/athena-dbt/**'
+      - 'athena-dbt/**'
 
 jobs:
   deploy:
@@ -33,7 +33,7 @@ jobs:
     - name: Build and push
       uses: docker/build-push-action@v4
       with:
-        context: aws/athena-dbt
+        context: athena-dbt
         platforms: linux/amd64,linux/arm64
         push: true
         cache-from: type=gha
