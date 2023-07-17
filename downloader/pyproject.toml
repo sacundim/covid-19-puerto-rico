@@ -12,7 +12,7 @@ hhs-socrata-download = 'covid_19_puerto_rico_downloader:hhs_download'
 walgreens-download = 'covid_19_puerto_rico_downloader:walgreens'
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.11"
 requests = "^2.25.1"
 sodapy = "^2.1.0"
 duckdb = "^0.8.1"

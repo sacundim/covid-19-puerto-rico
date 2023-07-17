@@ -1,4 +1,4 @@
-FROM python:3.9-slim AS dbt-athena
+FROM python:3.11-slim AS dbt-athena
 COPY --link requirements.txt .
 RUN --mount=type=cache,target=/root/.cache \
     python3 -m pip install -r requirements.txt \

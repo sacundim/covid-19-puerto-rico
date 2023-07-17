@@ -9,7 +9,7 @@ packages = [{ include = "covid_19_puerto_rico", from = "src"}]
 covid19pr = 'covid_19_puerto_rico:main'
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.11"
 numpy = "^1.21.0"
 pandas = "^1.5.3"
 sqlalchemy = "^1.4.48"
