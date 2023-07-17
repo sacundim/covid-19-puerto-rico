@@ -398,7 +398,7 @@ class NewTestSpecimens(AbstractMolecularChart):
 class MolecularCurrentDeltas(AbstractMolecularChart):
     def save_chart(self, chart, basename):
         """Vegafusion 1.3.0 throws a Rust panic on this chart"""
-        self.save_chart_altair(chart, basename)
+        self.save_chart_vegafusion(chart, basename)
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('molecular_deltas', self.metadata, autoload=True)
@@ -461,10 +461,6 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
 
 
 class MolecularDailyDeltas(AbstractMolecularChart):
-    def save_chart(self, chart, basename):
-        """Vegafusion 1.3.0 throws a Rust panic on this chart"""
-        self.save_chart_altair(chart, basename)
-
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('molecular_deltas', self.metadata, autoload=True)
         query = select([table.c.bulletin_date,
@@ -928,7 +924,7 @@ class RecentAgeGroups(AbstractMolecularChart):
 
     def save_chart(self, chart, basename):
         """Vegafusion 1.3.0 throws a Rust panic on this chart"""
-        self.save_chart_altair(chart, basename)
+        self.save_chart_vegafusion(chart, basename)
 
     def fetch_data(self, connection, bulletin_dates):
         table = sqlalchemy.Table('recent_age_groups', self.metadata, autoload=True)
