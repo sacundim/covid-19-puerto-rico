@@ -24,6 +24,7 @@ resource "aws_batch_job_definition" "walgreens_download_and_sync" {
     ],
     executionRoleArn = aws_iam_role.ecs_task_role.arn
     jobRoleArn = aws_iam_role.ecs_job_role.arn
+
     fargatePlatformConfiguration = {
       "platformVersion": "LATEST"
     },
@@ -31,6 +32,11 @@ resource "aws_batch_job_definition" "walgreens_download_and_sync" {
       {"type": "VCPU", "value": "0.25"},
       {"type": "MEMORY", "value": "512"}
     ]
+    runtimePlatform = {
+      operatingSystemFamily: "LINUX",
+      cpuArchitecture: "ARM64"
+    }
+
     networkConfiguration = {
       "assignPublicIp": "ENABLED"
     }

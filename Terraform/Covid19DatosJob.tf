@@ -24,6 +24,7 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
     ],
     executionRoleArn = aws_iam_role.ecs_task_role.arn
     jobRoleArn = aws_iam_role.ecs_job_role.arn
+
     fargatePlatformConfiguration = {
       "platformVersion": "LATEST"
     },
@@ -31,6 +32,11 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
       {"type": "VCPU", "value": "2"},
       {"type": "MEMORY", "value": "14336"}
     ]
+    runtimePlatform = {
+      operatingSystemFamily: "LINUX",
+      cpuArchitecture: "ARM64"
+    }
+
     networkConfiguration = {
       "assignPublicIp": "ENABLED"
     }

@@ -35,6 +35,7 @@ def biostatistics():
     logging.basicConfig(
         format='%(asctime)s %(threadName)s %(message)s',
         level=logging.INFO)
+    util.log_platform()
     args = process_arguments()
 
     config = task.TaskConfig(

@@ -16,11 +16,16 @@ resource "aws_batch_job_definition" "website_generator" {
   container_properties = jsonencode({
     image = "sacundim/covid-19-puerto-rico-website:latest"
     command = ["run-and-sync.sh"]
+
     resourceRequirements = [
       # If these are not strings we get errors
       {"type": "VCPU", "value": "1"},
       {"type": "MEMORY", "value": "4096"}
     ]
+    runtimePlatform = {
+      operatingSystemFamily: "LINUX",
+      cpuArchitecture: "ARM64"
+    }
     environment = [
       {
         name = "MAIN_BUCKET",
