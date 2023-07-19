@@ -1,5 +1,6 @@
 import altair as alt
 import datetime
+from envyaml import EnvYAML
 import geojson
 import importlib.resources
 import io
@@ -8,7 +9,6 @@ import logging
 from math import log10, floor
 import platform
 import sqlalchemy
-import toml
 from urllib.parse import quote_plus
 
 from . import resources
@@ -20,8 +20,8 @@ def make_date_range(start, end):
 
 def create_athena_engine(args):
     conn_str = "awsathena+rest://:@athena.{region_name}.amazonaws.com:443/{schema_name}?work_group={work_group}"
-    toml_dict = toml.load(args.config_file)
-    config = (toml_dict['athena'])
+    yaml_dict = EnvYAML(args.config_file)
+    config = (yaml_dict['athena'])
     return sqlalchemy.create_engine(
         conn_str.format(region_name=config['region_name'],
                         schema_name=config['schema_name'],

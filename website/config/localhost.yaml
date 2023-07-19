@@ -1,0 +1,4 @@
+athena:
+  region_name: "us-west-2"
+  schema_name: "covid19_puerto_rico_iceberg"
+  work_group: "covid-19-puerto-rico"

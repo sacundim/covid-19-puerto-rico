@@ -32,6 +32,10 @@
             projectDir = ./website;
             python = pkgs.python311;
             preferWheels = true;
+            propagatedBuildInputs = with pkgs; [
+              rclone
+            ];
+
           };
 
           default = pkgs.symlinkJoin {

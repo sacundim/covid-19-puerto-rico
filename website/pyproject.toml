@@ -14,12 +14,12 @@ numpy = "^1.21.0"
 pandas = "^1.5.3"
 sqlalchemy = "^1.4.48"
 altair = "^5.0"
-toml = "^0.10.0"
 jinja2 = "^3.1.1"
 geojson = "^2.5.0"
 PyAthena = "^1.11.2"
 vl-convert-python = "^0.11.0"
 pillow = "^10.0.0"
+envyaml = "^1.10.211231"
 
 [build-system]
 requires = ["poetry-core"]
