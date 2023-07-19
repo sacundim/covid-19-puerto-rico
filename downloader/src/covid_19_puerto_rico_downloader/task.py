@@ -9,7 +9,7 @@ import subprocess
 TaskConfig = collections.namedtuple('TaskConfig', [
     'now', 'extension', 'http', 'duck', 'jinja', 'mutex',
     'endpoint_url', 's3_sync_dir', 'endpoint_dir_name', 'input_dir_name', 'parquet_dir_name',
-    'ts_format'
+    'ts_format', 'bzip2_command'
 ])
 
 
@@ -29,6 +29,7 @@ class Task():
         self.endpoint_dir_name = config.endpoint_dir_name
         self.parquet_dir_name = config.parquet_dir_name
         self.ts_format = config.ts_format
+        self.bzip2_command = config.bzip2_command
 
 
     def __call__(self):
@@ -71,7 +72,7 @@ class Task():
 
     def compress(self, inputfile):
         logging.info("Compressing %s to bzip2 format...", inputfile)
-        subprocess.run(['lbzip2', '-f', '-9', inputfile])
+        subprocess.run([self.bzip2_command, '-f', '-9', inputfile])
         logging.info("Compressed %s to bzip2 format.", inputfile)
         return f'{inputfile}.bz2'
 

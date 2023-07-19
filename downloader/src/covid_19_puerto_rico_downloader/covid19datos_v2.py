@@ -56,7 +56,8 @@ def covid19datos_v2():
         endpoint_dir_name='covid19datos-v2',
         input_dir_name='csv_v3',
         parquet_dir_name='parquet_v4',
-        ts_format='%Y-%m-%dT%H:%M:%SZ'
+        ts_format='%Y-%m-%dT%H:%M:%SZ',
+        bzip2_command=args.bzip2_command,
     )
 
     tasks = [

@@ -53,7 +53,8 @@ def biostatistics():
         endpoint_dir_name='biostatistics.salud.pr.gov',
         input_dir_name='json_v1',
         parquet_dir_name='parquet_v2',
-        ts_format='%Y-%m-%dT%H:%M:%SZ'
+        ts_format='%Y-%m-%dT%H:%M:%SZ',
+        bzip2_command=args.bzip2_command,
     )
 
     tasks = [
