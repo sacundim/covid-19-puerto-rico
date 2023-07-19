@@ -23,7 +23,7 @@
             python = pkgs.python311;
             preferWheels = true;
             propagatedBuildInputs = with pkgs; [
-              lbzip2
+              lbzip2 rclone
             ];
           };
 

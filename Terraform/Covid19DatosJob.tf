@@ -15,13 +15,15 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
 
   container_properties = jsonencode({
     image = "sacundim/covid-19-puerto-rico-downloader:latest"
-    command = ["covid19datos-download"],
-    environment = [
-      {
-        name = "TARGET_BUCKET",
-        value = var.datalake_bucket_name
-      }
+    command = [
+      "covid19datos-download",
+        "--s3-sync-dir", "s3_sync_dir",
+        "--rclone-destination", "Ref::rclone_destination"
     ],
+    parameters = {
+      "rclone_destination": ":s3,provider=AWS,env_auth:${var.datalake_bucket_name}"
+    }
+
     executionRoleArn = aws_iam_role.ecs_task_role.arn
     jobRoleArn = aws_iam_role.ecs_job_role.arn
 

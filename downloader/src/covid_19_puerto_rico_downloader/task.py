@@ -24,7 +24,7 @@ class Task():
         self.jinja = config.jinja
         self.mutex = config.mutex
         self.endpoint_url = config.endpoint_url
-        self.s3_sync_dir = pathlib.Path(config.s3_sync_dir)
+        self.s3_sync_dir = config.s3_sync_dir
         self.input_dir_name = config.input_dir_name
         self.endpoint_dir_name = config.endpoint_dir_name
         self.parquet_dir_name = config.parquet_dir_name
@@ -36,7 +36,8 @@ class Task():
         inputfile = self.download()
         parquetfile = self.convert(inputfile)
         bzip2file = self.compress(inputfile)
-        self.move_to_sync_dir(bzip2file, parquetfile)
+        if self.s3_sync_dir:
+            self.move_to_sync_dir(bzip2file, parquetfile)
         return self.dataset
 
     def download(self):
@@ -78,8 +79,9 @@ class Task():
 
     def move_to_sync_dir(self, inputfile, parquetfile):
         logging.info("Moving files to sync dir %s...", self.s3_sync_dir)
-        self.s3_sync_dir.mkdir(exist_ok=True)
-        endpoint_dir = self.s3_sync_dir / self.endpoint_dir_name
+        s3_sync_dir = pathlib.Path(self.s3_sync_dir)
+        s3_sync_dir.mkdir(exist_ok=True)
+        endpoint_dir = s3_sync_dir / self.endpoint_dir_name
         endpoint_dir.mkdir(exist_ok=True)
         dataset_dir = endpoint_dir / self.dataset
         dataset_dir.mkdir(exist_ok=True)
@@ -111,3 +113,16 @@ def run_tasks(tasks, thread_name_prefix='download_task'):
             thread_name_prefix=thread_name_prefix) as executor:
         for future in futures.as_completed([executor.submit(task) for task in tasks]):
             logging.info("Completed %s", future.result())
+
+def rclone(s3_sync_dir, rclone_destination, rclone_command):
+    logging.info("rclone from: %s to: %s...", s3_sync_dir, rclone_destination)
+    subprocess.run([
+        rclone_command, 'copy',
+        '--fast-list',
+        '--verbose',
+        '--checksum',
+        '--exclude', '*.DS_Store',
+        s3_sync_dir,
+        rclone_destination
+    ])
+    logging.info("rclone from: %s to: %s... DONE", s3_sync_dir, rclone_destination)
