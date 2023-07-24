@@ -85,18 +85,11 @@
           };
         }
       );
-    in {
-      packages = baseOutputs.packages
-              // dockerImages.packages
-              # TODO: a Linux VM that can run in Darwin from within which I can build
-              # TODO: the Docker images
-              #
-              # NIXWTF: why do I have to do this?  Because the nixpkgs#darwin.builder
-              # NIXWTF: doesn't have enough RAM (I get exit 126 errors), and if I'm
-              # NIXWTF: going to have to go to hell and back to get that to work I'm
-              # NIXWTF: going to frickin' have it committed here, where it doesn't belong.
-#              // darwinBuilder.packages
-              ;
-    };
+
+      merge2Outputs = nixpkgs.lib.attrsets.recursiveUpdateUntil (path: l: r: builtins.length path > 2);
+    in builtins.foldl' merge2Outputs {} [
+        baseOutputs
+        dockerImages
+    ];
 
 }
