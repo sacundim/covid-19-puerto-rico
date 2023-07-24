@@ -34,6 +34,7 @@ def process_arguments():
 def hhs_download():
     """Entry point for HHS download code."""
     logging.basicConfig(format='%(asctime)s %(threadName)s %(message)s', level=logging.INFO)
+    util.log_platform()
     args = process_arguments()
 
     config = task.TaskConfig(
@@ -51,7 +52,8 @@ def hhs_download():
         endpoint_dir_name='HHS',
         input_dir_name='v4/csv',
         parquet_dir_name='v4/parquet',
-        ts_format='%Y%m%d_%H%M'
+        ts_format='%Y%m%d_%H%M',
+        bzip2_command=args.bzip2_command,
     )
 
     socrata_token = get_socrata_app_token(args)

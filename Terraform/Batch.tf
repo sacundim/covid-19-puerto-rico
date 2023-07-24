@@ -1,7 +1,9 @@
 ##############################################################################
 ##############################################################################
 ##
-## Fargate compute environment
+## Fargate compute environment.  Despite saying "amd64" in the name, this is
+## the same for both processor architectures--what determines the processor
+## architecture for Fargate is the job definitions.
 ##
 
 resource "aws_batch_compute_environment" "fargate_amd64" {
@@ -43,7 +45,8 @@ resource "aws_batch_job_queue" "fargate_amd64" {
 ##############################################################################
 ##############################################################################
 ##
-## EC2 AMD64 compute environment
+## EC2 AMD64 compute environment.  With EC2, unlike with Fargate, the compute
+## environment picks the job architecture.
 ##
 
 resource "aws_batch_compute_environment" "ec2_amd64" {
@@ -144,7 +147,8 @@ resource "aws_launch_template" "ecs_ec2_launch" {
 ##############################################################################
 ##############################################################################
 ##
-## EC2 ARM64 compute environment
+## EC2 ARM64 compute environment. With EC2, unlike with Fargate, the compute
+## environment picks the job architecture.
 ##
 
 resource "aws_batch_compute_environment" "ec2_arm64" {
