@@ -13,6 +13,10 @@ resource "aws_batch_job_definition" "website_generator" {
   type = "container"
   platform_capabilities = ["FARGATE"]
 
+  parameters = {
+    "rclone_destination": ":s3,provider=AWS,env_auth:${var.main_bucket_name}"
+  }
+
   container_properties = jsonencode({
     image = "sacundim/covid-19-puerto-rico-website:latest"
     command = [
@@ -21,9 +25,6 @@ resource "aws_batch_job_definition" "website_generator" {
         "--output-dir", "output",
         "--rclone-destination", "Ref::rclone_destination"
     ]
-    parameters = {
-      "rclone_destination": ":s3,provider=AWS,env_auth:${var.main_bucket_name}"
-    }
     environment = [
       {
         name = "AWS_REGION",

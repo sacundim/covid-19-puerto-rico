@@ -13,6 +13,10 @@ resource "aws_batch_job_definition" "biostatistics_download_and_sync" {
   type = "container"
   platform_capabilities = ["EC2"]
 
+  parameters = {
+    "rclone_destination": ":s3,provider=AWS,env_auth:${var.datalake_bucket_name}"
+  }
+
   container_properties = jsonencode({
     image = "sacundim/covid-19-puerto-rico-downloader:latest"
     command = [
@@ -20,9 +24,6 @@ resource "aws_batch_job_definition" "biostatistics_download_and_sync" {
         "--s3-sync-dir", "s3_sync_dir",
         "--rclone-destination", "Ref::rclone_destination"
     ],
-    parameters = {
-      "rclone_destination": ":s3,provider=AWS,env_auth:${var.datalake_bucket_name}"
-    }
     environment = [
       {
         name = "ENDPOINT",
