@@ -446,6 +446,28 @@ docs = ["furo", "olefile", "sphinx (>=2.4)", "sphinx-copybutton", "sphinx-inline
 tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "packaging", "pyroma", "pytest", "pytest-cov", "pytest-timeout"]
 
 [[package]]
+name = "protobuf"
+version = "4.23.4"
+description = ""
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "protobuf-4.23.4-cp310-abi3-win32.whl", hash = "sha256:5fea3c64d41ea5ecf5697b83e41d09b9589e6f20b677ab3c48e5f242d9b7897b"},
+    {file = "protobuf-4.23.4-cp310-abi3-win_amd64.whl", hash = "sha256:7b19b6266d92ca6a2a87effa88ecc4af73ebc5cfde194dc737cf8ef23a9a3b12"},
+    {file = "protobuf-4.23.4-cp37-abi3-macosx_10_9_universal2.whl", hash = "sha256:8547bf44fe8cec3c69e3042f5c4fb3e36eb2a7a013bb0a44c018fc1e427aafbd"},
+    {file = "protobuf-4.23.4-cp37-abi3-manylinux2014_aarch64.whl", hash = "sha256:fee88269a090ada09ca63551bf2f573eb2424035bcf2cb1b121895b01a46594a"},
+    {file = "protobuf-4.23.4-cp37-abi3-manylinux2014_x86_64.whl", hash = "sha256:effeac51ab79332d44fba74660d40ae79985901ac21bca408f8dc335a81aa597"},
+    {file = "protobuf-4.23.4-cp37-cp37m-win32.whl", hash = "sha256:c3e0939433c40796ca4cfc0fac08af50b00eb66a40bbbc5dee711998fb0bbc1e"},
+    {file = "protobuf-4.23.4-cp37-cp37m-win_amd64.whl", hash = "sha256:9053df6df8e5a76c84339ee4a9f5a2661ceee4a0dab019e8663c50ba324208b0"},
+    {file = "protobuf-4.23.4-cp38-cp38-win32.whl", hash = "sha256:e1c915778d8ced71e26fcf43c0866d7499891bca14c4368448a82edc61fdbc70"},
+    {file = "protobuf-4.23.4-cp38-cp38-win_amd64.whl", hash = "sha256:351cc90f7d10839c480aeb9b870a211e322bf05f6ab3f55fcb2f51331f80a7d2"},
+    {file = "protobuf-4.23.4-cp39-cp39-win32.whl", hash = "sha256:6dd9b9940e3f17077e820b75851126615ee38643c2c5332aa7a359988820c720"},
+    {file = "protobuf-4.23.4-cp39-cp39-win_amd64.whl", hash = "sha256:0a5759f5696895de8cc913f084e27fd4125e8fb0914bb729a17816a33819f474"},
+    {file = "protobuf-4.23.4-py3-none-any.whl", hash = "sha256:e9d0be5bf34b275b9f87ba7407796556abeeba635455d036c7351f7c183ef8ff"},
+    {file = "protobuf-4.23.4.tar.gz", hash = "sha256:ccd9430c0719dce806b93f89c91de7977304729e55377f872a92465d548329a9"},
+]
+
+[[package]]
 name = "psutil"
 version = "5.9.5"
 description = "Cross-platform lib for process and system monitoring in Python."
@@ -839,37 +861,39 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
 name = "vegafusion"
-version = "1.4.0rc2"
+version = "1.4.0rc3"
 description = "Core tools for using VegaFusion from Python"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "vegafusion-1.4.0rc2-py3-none-any.whl", hash = "sha256:015d488e28bd7ad188a40a6e42c5f78d5a12e830290751a826a2a7025ad5f945"},
-    {file = "vegafusion-1.4.0rc2.tar.gz", hash = "sha256:cdd477afcf08794e00050897d08d3e04f690ca682058249c8184ab91f5f22a1c"},
+    {file = "vegafusion-1.4.0rc3-py3-none-any.whl", hash = "sha256:2d144b313c7cbac6dae53be61133bf8df4fd1b0f3eac321c278d5e967b5d2ec9"},
+    {file = "vegafusion-1.4.0rc3.tar.gz", hash = "sha256:ff4bcb1b6f844fa9c6715794c55f6111bf3e89085bfa8e0f08c9b18b7087b19a"},
 ]
 
 [package.dependencies]
 altair = ">=4.2.0"
 pandas = "*"
+protobuf = "*"
 psutil = "*"
 pyarrow = ">=5"
-vegafusion-python-embed = {version = "1.4.0-rc2", optional = true, markers = "extra == \"embed\""}
+vegafusion-python-embed = {version = "1.4.0-rc3", optional = true, markers = "extra == \"embed\""}
 vl-convert-python = {version = ">=0.7.0", optional = true, markers = "extra == \"embed\""}
 
 [package.extras]
-embed = ["vegafusion-python-embed (==1.4.0-rc2)", "vl-convert-python (>=0.7.0)"]
+embed = ["vegafusion-python-embed (==1.4.0-rc3)", "vl-convert-python (>=0.7.0)"]
 
 [[package]]
 name = "vegafusion-python-embed"
-version = "1.4.0rc2"
+version = "1.4.0rc3"
 description = "vegafusion-python-embed PyO3 Python Package"
 optional = false
 python-versions = "*"
 files = [
-    {file = "vegafusion_python_embed-1.4.0rc2-cp38-abi3-macosx_10_7_x86_64.whl", hash = "sha256:024d73d6f266e66d9294c2ab6774c5044c4e55cebabb68a1ce80af29b0b00fde"},
-    {file = "vegafusion_python_embed-1.4.0rc2-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:2951b67122c4e62964697c5bf3c52ef09c370a3a6a043472340d5c16e4b4d7f6"},
-    {file = "vegafusion_python_embed-1.4.0rc2-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c54a38d48786d894c4a67449f1c7e19daedecd218d7ce75983fa167f74cbedce"},
-    {file = "vegafusion_python_embed-1.4.0rc2-cp38-abi3-win_amd64.whl", hash = "sha256:ad42ed29f9972493e31d4a2f82b42a4c1b3381b3058f4f68548da021b83ec813"},
+    {file = "vegafusion_python_embed-1.4.0rc3-cp38-abi3-macosx_10_7_x86_64.whl", hash = "sha256:545810fdaf8d5bd3b220c2d17eefe4ae8ad33f8d8f0be3cba1556fe876479b10"},
+    {file = "vegafusion_python_embed-1.4.0rc3-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:926a22505ca2c3d4b80caa29ff846c13da0e317280e2675fbae7c35cdbb8b6ac"},
+    {file = "vegafusion_python_embed-1.4.0rc3-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:faab033fe0535488b03f60eb81967b765193f42418036ebcc9885ad673d3625d"},
+    {file = "vegafusion_python_embed-1.4.0rc3-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:52020fa2ada0e219242569131bc4dac47c08cf9b21daf0e3888bac61e1e0c719"},
+    {file = "vegafusion_python_embed-1.4.0rc3-cp38-abi3-win_amd64.whl", hash = "sha256:c472372bb35bd7bce95ac9d408286ea9c2182f2fd394581c597ab1b5ee66908e"},
 ]
 
 [[package]]
@@ -890,4 +914,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "a49130d2ca531bde78e6adcaa550ae88b95af0dda83ebe100b56ee479ab2315f"
+content-hash = "2dcf74bf57cfba0047b5e83d8c5436b3423e125b1bcdeab6ff710630412610b4"
