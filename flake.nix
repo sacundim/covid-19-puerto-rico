@@ -13,6 +13,16 @@
 
   outputs = { self, nixpkgs, flake-utils, poetry2nix }:
     let
+      filterSystems = pred:
+        let
+          inherit (builtins) elemAt filter isList match;
+          candidates = flake-utils.lib.defaultSystems;
+          analyze = system:
+            let matches = match "([[:alnum:]_]+)-([[:alnum:]_]+)" system;
+            in { arch = elemAt matches 0; os = elemAt matches 1; };
+        in
+          filter (system: pred (analyze system)) candidates;
+
       baseOutputs = flake-utils.lib.eachDefaultSystem (system:
         let
           inherit (poetry2nix.legacyPackages.${system}) mkPoetryApplication;
@@ -51,7 +61,9 @@
         }
       );
 
-      dockerImages = flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (system:
+
+      linuxSystems = filterSystems (sys: sys.os == "linux");
+      dockerImages = flake-utils.lib.eachSystem linuxSystems (system:
         let
           pkgs = nixpkgs.legacyPackages.${system}.pkgs;
         in {
@@ -76,7 +88,6 @@
     in {
       packages = baseOutputs.packages
               // dockerImages.packages
-
               # TODO: a Linux VM that can run in Darwin from within which I can build
               # TODO: the Docker images
               #
