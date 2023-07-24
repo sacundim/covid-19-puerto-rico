@@ -1,20 +1,24 @@
+#################################################################################
+#################################################################################
+##
+## "Main" bucket (website static content)
+##
 resource "aws_s3_bucket" "main_bucket" {
   bucket = var.main_bucket_name
-
   tags = {
     Project = "covid-19-puerto-rico"
   }
+}
 
-  versioning {
-    enabled = true
-  }
+resource "aws_s3_bucket_lifecycle_configuration" "main_bucket" {
+  bucket = aws_s3_bucket.main_bucket.id
 
-  lifecycle_rule {
-    id      = "Transition to Intelligent Tiering"
-    enabled = true
+  rule {
+    id = "Transition to Intelligent Tiering"
+    status = "Enabled"
 
     transition {
-      days          = 0
+      days = 0
       storage_class = "INTELLIGENT_TIERING"
     }
 
@@ -23,10 +27,12 @@ resource "aws_s3_bucket" "main_bucket" {
     }
 
     noncurrent_version_expiration {
-      days = 7
+      noncurrent_days = 7
     }
 
-    abort_incomplete_multipart_upload_days = 7
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 2
+    }
   }
 }
 
@@ -37,26 +43,36 @@ resource "aws_s3_bucket_public_access_block" "block_main_bucket" {
 }
 
 
+#################################################################################
+#################################################################################
+##
+## "Athena" bucket (query set results)
+##
 resource "aws_s3_bucket" "athena_bucket" {
   bucket = var.athena_bucket_name
-
   tags = {
     Project = "covid-19-puerto-rico"
   }
+}
 
-  lifecycle_rule {
-    id      = "Expire stale data"
-    enabled = true
+resource "aws_s3_bucket_lifecycle_configuration" "athena_bucket" {
+  bucket = aws_s3_bucket.athena_bucket.id
+
+  rule {
+    id = "Expire stale data"
+    status = "Enabled"
 
     expiration {
       days = 2
     }
 
     noncurrent_version_expiration {
-      days = 2
+      noncurrent_days = 7
     }
 
-    abort_incomplete_multipart_upload_days = 2
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 2
+    }
   }
 }
 
@@ -69,23 +85,27 @@ resource "aws_s3_bucket_public_access_block" "block_athena_bucket" {
 }
 
 
+#################################################################################
+#################################################################################
+##
+## "Data" bucket (data source captures)
+##
 resource "aws_s3_bucket" "data_bucket" {
   bucket = var.datalake_bucket_name
-
   tags = {
     Project = "covid-19-puerto-rico"
   }
+}
 
-  versioning {
-    enabled = true
-  }
+resource "aws_s3_bucket_lifecycle_configuration" "data_bucket" {
+  bucket = aws_s3_bucket.data_bucket.id
 
-  lifecycle_rule {
-    id      = "Transition to Intelligent Tiering"
-    enabled = true
+  rule {
+    id = "Transition to Intelligent Tiering"
+    status = "Enabled"
 
     transition {
-      days          = 0
+      days = 0
       storage_class = "INTELLIGENT_TIERING"
     }
 
@@ -94,10 +114,12 @@ resource "aws_s3_bucket" "data_bucket" {
     }
 
     noncurrent_version_expiration {
-      days = 31
+      noncurrent_days = 31
     }
 
-    abort_incomplete_multipart_upload_days = 7
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 2
+    }
   }
 }
 
@@ -109,6 +131,12 @@ resource "aws_s3_bucket_public_access_block" "block_data_bucket" {
   restrict_public_buckets = true
 }
 
+
+#################################################################################
+#################################################################################
+##
+## Iceberg bucket (incremental datamart)
+##
 resource "aws_s3_bucket" "iceberg_bucket" {
   bucket = var.iceberg_bucket_name
   tags = {
@@ -151,18 +179,27 @@ resource "aws_s3_bucket_public_access_block" "block_iceberg_bucket" {
 }
 
 
+#################################################################################
+#################################################################################
+##
+## Logs bucket
+##
 resource "aws_s3_bucket" "logs_bucket" {
   bucket = var.logs_bucket_name
   tags = {
     Project = "covid-19-puerto-rico"
   }
+}
 
-  lifecycle_rule {
-    id      = "Transition to Intelligent Tiering"
-    enabled = true
+resource "aws_s3_bucket_lifecycle_configuration" "logs_bucket" {
+  bucket = aws_s3_bucket.logs_bucket.id
+
+  rule {
+    id = "Transition to Intelligent Tiering"
+    status = "Enabled"
 
     transition {
-      days          = 0
+      days = 0
       storage_class = "INTELLIGENT_TIERING"
     }
 
@@ -171,28 +208,49 @@ resource "aws_s3_bucket" "logs_bucket" {
     }
 
     noncurrent_version_expiration {
-      days = 31
+      noncurrent_days = 7
     }
 
-    abort_incomplete_multipart_upload_days = 7
-  }
-
-  grant {
-    id          = data.aws_canonical_user_id.current_user.id
-    type        = "CanonicalUser"
-    permissions = ["FULL_CONTROL"]
-  }
-
-  grant {
-    id          = data.aws_cloudfront_log_delivery_canonical_user_id.current_user.id
-    type        = "CanonicalUser"
-    permissions = ["FULL_CONTROL"]
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 2
+    }
   }
 }
 
+resource "aws_s3_bucket_ownership_controls" "logs_bucket" {
+  bucket = aws_s3_bucket.logs_bucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_acl" "logs_bucket" {
+  depends_on = [aws_s3_bucket_ownership_controls.logs_bucket]
+  bucket = aws_s3_bucket.logs_bucket.id
+  access_control_policy {
+    owner {
+      id = data.aws_canonical_user_id.current_user.id
+    }
+
+    grant {
+      permission = "FULL_CONTROL"
+      grantee {
+        id          = data.aws_canonical_user_id.current_user.id
+        type        = "CanonicalUser"
+      }
+    }
+
+    grant {
+      permission = "FULL_CONTROL"
+      grantee {
+        id          = data.aws_cloudfront_log_delivery_canonical_user_id.current_user.id
+        type        = "CanonicalUser"
+      }
+    }
+  }
+}
 data "aws_canonical_user_id" "current_user" {}
 data "aws_cloudfront_log_delivery_canonical_user_id" "current_user" {}
-
 
 resource "aws_s3_bucket_public_access_block" "block_logs_bucket" {
   bucket = aws_s3_bucket.logs_bucket.id
@@ -203,25 +261,36 @@ resource "aws_s3_bucket_public_access_block" "block_logs_bucket" {
 }
 
 
+#################################################################################
+#################################################################################
+##
+## Testing bucket
+##
 resource "aws_s3_bucket" "testing_bucket" {
   bucket = var.testing_bucket_name
   tags = {
     Project = "covid-19-puerto-rico"
   }
+}
 
-  lifecycle_rule {
-    id      = "Expire stale data"
-    enabled = true
+resource "aws_s3_bucket_lifecycle_configuration" "testing_bucket" {
+  bucket = aws_s3_bucket.testing_bucket.id
+
+  rule {
+    id = "Expire stale data"
+    status = "Enabled"
 
     expiration {
       days = 3
     }
 
     noncurrent_version_expiration {
-      days = 3
+      noncurrent_days = 3
     }
 
-    abort_incomplete_multipart_upload_days = 3
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 3
+    }
   }
 }
 
@@ -234,23 +303,27 @@ resource "aws_s3_bucket_public_access_block" "block_testing_bucket" {
 }
 
 
+#################################################################################
+#################################################################################
+##
+## Backups bucket
+##
 resource "aws_s3_bucket" "backups_bucket" {
   bucket = var.backups_bucket_name
-
   tags = {
     Project = "covid-19-puerto-rico"
   }
+}
 
-  versioning {
-    enabled = true
-  }
+resource "aws_s3_bucket_lifecycle_configuration" "backups_bucket" {
+  bucket = aws_s3_bucket.backups_bucket.id
 
-  lifecycle_rule {
-    id      = "Transition to Intelligent Tiering"
-    enabled = true
+  rule {
+    id = "Transition to Intelligent Tiering"
+    status = "Enabled"
 
     transition {
-      days          = 0
+      days = 0
       storage_class = "INTELLIGENT_TIERING"
     }
 
@@ -259,10 +332,12 @@ resource "aws_s3_bucket" "backups_bucket" {
     }
 
     noncurrent_version_expiration {
-      days = 7
+      noncurrent_days = 7
     }
 
-    abort_incomplete_multipart_upload_days = 7
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 2
+    }
   }
 }
 
