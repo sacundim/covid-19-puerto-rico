@@ -86,8 +86,14 @@
         }
       );
 
-      merge2Outputs = nixpkgs.lib.attrsets.recursiveUpdateUntil (path: l: r: builtins.length path > 2);
-    in builtins.foldl' merge2Outputs {} [
+      mergeOutputs =
+        let
+          inherit (builtins) length;
+          inherit (nixpkgs.lib.attrsets) recursiveUpdateUntil;
+          mergeDepth = depth:
+            recursiveUpdateUntil (path: l: r: length path > depth);
+        in builtins.foldl' (mergeDepth 2) {};
+    in mergeOutputs [
         baseOutputs
         dockerImages
     ];
