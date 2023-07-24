@@ -36,5 +36,7 @@ RUN --mount=type=cache,target=/root/.cache \
 COPY --link --from=build /covid-19-puerto-rico/dist/covid_19_puerto_rico-*.whl .
 RUN --mount=type=cache,target=/root/.cache \
     pip install covid_19_puerto_rico-*.whl && rm covid_19_puerto_rico-*.whl
-COPY --link docker/run-and-sync.sh .
+
+COPY --link config/environment.yaml environment.yaml
 ENV PATH=/covid-19-puerto-rico:$PATH
+CMD ["covid19pr"]

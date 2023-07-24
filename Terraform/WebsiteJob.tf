@@ -13,24 +13,19 @@ resource "aws_batch_job_definition" "website_generator" {
   type = "container"
   platform_capabilities = ["FARGATE"]
 
+  parameters = {
+    "rclone_destination": ":s3,provider=AWS,env_auth:${var.main_bucket_name}"
+  }
+
   container_properties = jsonencode({
     image = "sacundim/covid-19-puerto-rico-website:latest"
-    command = ["run-and-sync.sh"]
-
-    resourceRequirements = [
-      # If these are not strings we get errors
-      {"type": "VCPU", "value": "1"},
-      {"type": "MEMORY", "value": "4096"}
+    command = [
+      "covid19pr",
+        "--config-file", "environment.yaml",
+        "--output-dir", "output",
+        "--rclone-destination", "Ref::rclone_destination"
     ]
-    runtimePlatform = {
-      operatingSystemFamily: "LINUX",
-      cpuArchitecture: "ARM64"
-    }
     environment = [
-      {
-        name = "MAIN_BUCKET",
-        value = var.main_bucket_name
-      },
       {
         name = "AWS_REGION",
         value = data.aws_region.current.name
@@ -44,6 +39,17 @@ resource "aws_batch_job_definition" "website_generator" {
         value = aws_athena_workgroup.main.name
       }
     ],
+
+    resourceRequirements = [
+      # If these are not strings we get errors
+      {"type": "VCPU", "value": "1"},
+      {"type": "MEMORY", "value": "4096"}
+    ]
+    runtimePlatform = {
+      operatingSystemFamily: "LINUX",
+      cpuArchitecture: "ARM64"
+    }
+
     executionRoleArn = aws_iam_role.ecs_task_role.arn
     jobRoleArn = aws_iam_role.ecs_job_role.arn
     fargatePlatformConfiguration = {

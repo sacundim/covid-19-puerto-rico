@@ -1,5 +1,6 @@
 .idea/
 .venv/
+*.duckdb
 *.egg-info
 *.pyc
 *.tfstate
@@ -7,7 +8,9 @@
 *.tfvars
 dist/
 output/
+result
 s3-bucket-sync/
+s3_sync_dir/
 tmp/
 .DS_Store
 geckodriver.log

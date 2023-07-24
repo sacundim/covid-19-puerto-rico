@@ -1,0 +1,4 @@
+athena:
+  region_name: "${AWS_REGION}"
+  schema_name: "${ATHENA_SCHEMA_NAME}"
+  work_group: "${ATHENA_WORK_GROUP}"

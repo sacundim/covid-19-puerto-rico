@@ -92,16 +92,9 @@ ENV REQUESTS_CA_BUNDLE="/etc/ssl/certs/ca-certificates.crt"
 # already been installed above, these steps can be blazing fast.
 # And again since we packaged our code above as a Python wheel
 # (`.whl` file), we don't need Poetry here, `pip install` will do.
-RUN mkdir -p scripts s3-bucket-sync/covid-19-puerto-rico-data
-COPY --link scripts/run-and-sync.sh ./scripts/
-RUN chmod +x ./scripts/*.sh
-ENV PATH=/covid-19-puerto-rico/scripts:$PATH
 COPY --link --from=build \
     /covid-19-puerto-rico/dist/covid_19_puerto_rico_downloader-*.whl \
     .
 RUN --mount=type=cache,target=/root/.cache \
     pip install covid_19_puerto_rico_downloader-*.whl \
  && rm covid_19_puerto_rico_downloader-*.whl
-
-
-ENTRYPOINT ["run-and-sync.sh"]

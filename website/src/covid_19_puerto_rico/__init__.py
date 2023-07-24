@@ -3,9 +3,11 @@ import argparse
 import concurrent.futures as futures
 import datetime
 import logging
+import pathlib
 import sqlalchemy
 import sqlalchemy.sql as sql
 import sqlalchemy.sql.functions as sqlfn
+import subprocess
 
 from . import charts
 from . import molecular
@@ -20,6 +22,9 @@ def process_arguments():
                         help='Static website assets directory')
     parser.add_argument('--output-dir', type=str, required=True,
                         help='Directory into which to place output')
+    parser.add_argument('--rclone-destination', type=str, default=None,
+                        help='If given, the `--output-dir` will be copied over to that destination with `rclone`.')
+
     parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat,
                         help='Bulletin date to generate charts for. Default: most recent in DB.')
     parser.add_argument('--earliest-date', type=datetime.date.fromisoformat,
@@ -33,12 +38,17 @@ def process_arguments():
                         help="Switch to turn off website generation (which is a bit slow)")
     parser.add_argument('--no-assets', action='store_false', dest='build_assets',
                         help="Switch to turn off website static assets generation (which is slow)")
+
+    parser.add_argument('--rclone-command', type=str, default='rclone',
+                        help='Override the path to the rclone command. Default: `rclone`.')
+
     return parser.parse_args()
 
 def main():
     global_configuration()
     args = process_arguments()
     logging.info("output-dir is %s", args.output_dir)
+    pathlib.Path(args.output_dir).mkdir(exist_ok=True)
 
     athena = util.create_athena_engine(args)
     bulletin_date = compute_bulletin_date(args, athena)
@@ -97,6 +107,11 @@ def main():
     if args.build_website:
         site.render_top(bulletin_date)
 
+    if args.output_dir and args.rclone_destination:
+        rclone(
+            args.output_dir,
+            args.rclone_destination,
+            args.rclone_command)
 
 
 def global_configuration():
@@ -125,3 +140,17 @@ def query_for_bulletin_date(engine):
         query = sql.select([sqlfn.max(table.c.bulletin_date)])
         result = connection.execute(query)
         return result.fetchone()[0]
+
+
+def rclone(output_dir, rclone_destination, rclone_command):
+    logging.info("rclone from: %s to: %s...", output_dir, rclone_destination)
+    subprocess.run([
+        rclone_command, 'copy',
+        '--fast-list',
+        '--verbose',
+        '--checksum',
+        '--exclude', '*.DS_Store',
+        output_dir,
+        rclone_destination
+    ])
+    logging.info("rclone from: %s to: %s... DONE", output_dir, rclone_destination)

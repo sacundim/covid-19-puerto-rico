@@ -10,14 +10,21 @@ from . import util
 
 def process_arguments():
     parser = argparse.ArgumentParser(description='Download PRDoH Biostatistics COVID-19 data sets')
+
     parser.add_argument('--s3-sync-dir', type=str, required=True,
                         help='Override for directory to which to deposit the output files for sync')
+    parser.add_argument('--rclone-destination', type=str, default=None,
+                        help='If given, the `--s3-sync-dir` will be copied over to that destination with `rclone`.')
+
     parser.add_argument('--endpoint-url', type=str, default='https://biostatistics.salud.pr.gov',
                         help='Override for the URL of the Biostatistics API endpoint root.')
-    parser.add_argument('--bzip2-command', type=str, default='lbzip2',
-                        help='Override the command used to do bzip2 compression. Default: `lbzip2`.')
     parser.add_argument('--duckdb-file', type=str, default='Biostatistics.duckdb',
                         help='Override name of the DuckDB database file. Default: `Biostatistics.duckdb`.')
+    parser.add_argument('--bzip2-command', type=str, default='lbzip2',
+                        help='Override the command used to do bzip2 compression. Default: `lbzip2`.')
+    parser.add_argument('--rclone-command', type=str, default='rclone',
+                        help='Override the path to the rclone command. Default: `rclone`.')
+
     return parser.parse_args()
 
 DATASETS = {
@@ -62,6 +69,13 @@ def biostatistics():
         for (dataset, path) in DATASETS.items()
     ]
     task.run_tasks(tasks)
+
+    if args.s3_sync_dir and args.rclone_destination:
+        task.rclone(
+            args.s3_sync_dir,
+            args.rclone_destination,
+            args.rclone_command)
+
 
 def pick_and_log_now():
     now = datetime.datetime.utcnow()
