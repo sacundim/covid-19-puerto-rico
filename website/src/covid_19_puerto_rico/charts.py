@@ -103,52 +103,6 @@ class AbstractMismatchChart(AbstractChart):
         )
 
 
-class ConsecutiveBulletinMismatch(AbstractMismatchChart):
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('mismatched_announcement_aggregates', self.metadata,
-                                 schema='quality', autoload=True)
-        query = select([table.c.bulletin_date,
-                        (table.c.cumulative_confirmed_cases
-                           - table.c.computed_cumulative_confirmed_cases)\
-                           .label('confirmed_cases_mismatch'),
-                        (table.c.cumulative_probable_cases
-                           - table.c.computed_cumulative_probable_cases)\
-                           .label('probable_cases_mismatch'),
-                        (table.c.cumulative_deaths
-                           - table.c.computed_cumulative_deaths)\
-                           .label('deaths_mismatch'),
-                        ]).where(table.c.bulletin_date <= max(bulletin_dates))
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
-        df = df.rename(columns={
-            'confirmed_cases_mismatch': 'Confirmados',
-            'probable_cases_mismatch': 'Probables',
-            'deaths_mismatch': 'Muertes'
-        })
-        return pd.melt(df, ['bulletin_date']).dropna()
-
-
-
-class BulletinChartMismatch(AbstractMismatchChart):
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('mismatched_announcement_and_chart', self.metadata,
-                                 schema='quality', autoload=True)
-        query = select([table.c.bulletin_date,
-                        (table.c.cumulative_confirmed_cases - table.c.sum_confirmed_cases)\
-                           .label('confirmed_cases_mismatch'),
-                        (table.c.cumulative_probable_cases - table.c.sum_probable_cases)\
-                           .label('probable_cases_mismatch'),
-                        (table.c.cumulative_deaths - table.c.sum_deaths)\
-                           .label('deaths_mismatch'),
-                        ]).where(table.c.bulletin_date <= max(bulletin_dates))
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
-        df = df.rename(columns={
-            'confirmed_cases_mismatch': 'Confirmados',
-            'probable_cases_mismatch': 'Probables',
-            'deaths_mismatch': 'Muertes'
-        })
-        return pd.melt(df, ['bulletin_date']).dropna()
-
-
 class AbstractLateness(AbstractChart):
     def fetch_data_for_table(self, connection, table, min_bulletin_date, max_bulletin_date):
         query = select([table.c.bulletin_date,
