@@ -537,7 +537,7 @@ class Municipal(AbstractChart):
                             scale=alt.Scale(scheme='spectral', reverse=True, type='symlog', constant=25),
                             legend=alt.Legend(orient='top', gradientLength=WIDTH,
                                               labelOverlap='greedy', labelSeparation=5,
-                                              values=[10, 25, 50, 100, 250, 500, 1000, 2500, 5000])),
+                                              values=[10, 25, 50, 100, 250, 500, 1000])),
             tooltip=[alt.Tooltip('bulletin_date:T', title='Datos hasta'),
                      alt.Tooltip('sample_date:T', title='Fecha de muestra'),
                      alt.Tooltip('municipality:N', title='Municipio'),

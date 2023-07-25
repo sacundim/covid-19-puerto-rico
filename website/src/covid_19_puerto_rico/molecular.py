@@ -1071,7 +1071,7 @@ class RecentAgeGroups(AbstractMolecularChart):
                             scale=alt.Scale(scheme='spectral', reverse=True, type='symlog', constant=25),
                             legend=alt.Legend(orient='top', gradientLength=self.WIDTH * 2 + 70, labelOverlap=True,
                                               labelSeparation=5, titleLimit=self.WIDTH * 2 + 70,
-                                              values=[10, 25, 50, 100, 250, 500, 1000, 2500])),
+                                              values=[10, 25, 50, 100, 250, 500])),
             tooltip=[
                 alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                 alt.Tooltip('collected_date:T', title='Fecha de muestra'),
