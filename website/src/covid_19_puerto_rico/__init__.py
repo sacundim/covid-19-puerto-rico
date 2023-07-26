@@ -47,7 +47,10 @@ def main():
     logging.info("output-dir is %s", args.output_dir)
     pathlib.Path(args.output_dir).mkdir(exist_ok=True)
 
-    athena = util.create_pyathena_connection(args)
+    with util.create_pyathena_connection(args) as athena:
+        run(args, athena)
+
+def run(args, athena):
     bulletin_date = compute_bulletin_date(args, athena)
     logging.info('Using bulletin date of %s', bulletin_date)
 
@@ -117,19 +120,19 @@ def global_configuration():
 
 
 
-def compute_bulletin_date(args, engine):
+def compute_bulletin_date(args, athena):
     if args.bulletin_date != None:
         return args.bulletin_date
     else:
-        return query_for_bulletin_date(engine)
+        return query_for_bulletin_date(athena)
 
 def query_for_bulletin_date(connection):
-    cursor = connection.cursor()
     query = """
-SELECT max(bulletin_date)
-FROM bulletin_cases"""
-    result = cursor.execute(query)
-    return result.fetchone()[0].to_pydatetime().date()
+    SELECT max(bulletin_date)
+    FROM bulletin_cases"""
+    with connection.cursor() as cursor:
+        result = cursor.execute(query)
+        return result.fetchone()[0].to_pydatetime().date()
 
 
 def rclone(output_dir, rclone_destination, rclone_command):
