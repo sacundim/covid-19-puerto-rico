@@ -42,4 +42,5 @@ FROM {{ ref('biostatistics_curve') }} cases
 INNER JOIN deaths
 	ON cases.bulletin_date = deaths.bulletin_date
 	AND deaths.datum_date = date_add('day', 14, cases.collected_date)
+WHERE cases.collected_date >= DATE '2020-03-13'
 ORDER BY cases.bulletin_date, cases.collected_date;

@@ -4,9 +4,6 @@ import concurrent.futures as futures
 import datetime
 import logging
 import pathlib
-import sqlalchemy
-import sqlalchemy.sql as sql
-import sqlalchemy.sql.functions as sqlfn
 import subprocess
 
 from . import charts
@@ -50,7 +47,10 @@ def main():
     logging.info("output-dir is %s", args.output_dir)
     pathlib.Path(args.output_dir).mkdir(exist_ok=True)
 
-    athena = util.create_athena_engine(args)
+    with util.create_pyathena_connection(args) as athena:
+        run(args, athena)
+
+def run(args, athena):
     bulletin_date = compute_bulletin_date(args, athena)
     logging.info('Using bulletin date of %s', bulletin_date)
 
@@ -60,19 +60,11 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
-        # Occasional:
-        #        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
-
-        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
-        molecular.NewCases(athena, args.output_dir, output_formats),
-
         # We always generate png for this because they're our Twitter cards
         molecular.RecentCases(athena, args.output_dir, frozenset(['json', 'svg', 'png'])),
 
-        # Disabled because it's broken, the Athena staging times out, and others
-        # do it better than I do:
-        #molecular.VaccinationMap(athena, args.output_dir, output_formats),
-
+        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
+        molecular.NewCases(athena, args.output_dir, output_formats),
         charts.MunicipalMap(athena, args.output_dir, output_formats),
         molecular.RecentAgeGroups(athena, args.output_dir, output_formats),
         molecular.AgeGroups(athena, args.output_dir, output_formats),
@@ -118,6 +110,7 @@ def global_configuration():
     logging.basicConfig(format='%(asctime)s %(threadName)s %(message)s',
                         level=logging.INFO)
     util.log_platform()
+#    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
     alt.themes.register("custom_theme", lambda: util.get_json_resource('theme.json'))
     alt.themes.enable("custom_theme")
@@ -127,19 +120,19 @@ def global_configuration():
 
 
 
-def compute_bulletin_date(args, engine):
+def compute_bulletin_date(args, athena):
     if args.bulletin_date != None:
         return args.bulletin_date
     else:
-        return query_for_bulletin_date(engine)
+        return query_for_bulletin_date(athena)
 
-def query_for_bulletin_date(engine):
-    metadata = sqlalchemy.MetaData(engine)
-    with engine.connect() as connection:
-        table = sqlalchemy.Table('bulletin_cases', metadata, autoload=True)
-        query = sql.select([sqlfn.max(table.c.bulletin_date)])
-        result = connection.execute(query)
-        return result.fetchone()[0]
+def query_for_bulletin_date(connection):
+    query = """
+    SELECT max(bulletin_date)
+    FROM bulletin_cases"""
+    with connection.cursor() as cursor:
+        result = cursor.execute(query)
+        return result.fetchone()[0].to_pydatetime().date()
 
 
 def rclone(output_dir, rclone_destination, rclone_command):

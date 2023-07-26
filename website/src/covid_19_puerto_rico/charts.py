@@ -4,18 +4,15 @@ import datetime
 import logging
 import numpy as np
 import pandas as pd
+from pyathena.pandas.cursor import PandasCursor
 from pathlib import Path
-import sqlalchemy
-from sqlalchemy.sql import select, text, and_
 
 from . import util
 
 
 class AbstractChart(ABC):
-    def __init__(self, engine, output_dir,
-                 output_formats=frozenset(['json'])):
-        self.engine = engine
-        self.metadata = sqlalchemy.MetaData(engine)
+    def __init__(self, athena, output_dir, output_formats=frozenset(['json'])):
+        self.athena = athena
         self.output_dir = output_dir
         self.output_formats = output_formats
         self.name = type(self).__name__
@@ -25,8 +22,7 @@ class AbstractChart(ABC):
         return self.__class__.__name__
 
     def render(self, bulletin_dates):
-        with self.engine.connect() as connection:
-            df = self.fetch_data(connection, bulletin_dates)
+        df = self.fetch_data(self.athena, bulletin_dates)
         logging.info("%s dataframe: %s", self.name, util.describe_frame(df))
 
         logging.info(f'Writing {self.name} charts to {self.output_dir}...')
@@ -54,213 +50,12 @@ class AbstractChart(ABC):
         pass
 
     @abstractmethod
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, athena, bulletin_dates):
         pass
 
     def filter_data(self, df, bulletin_date):
         """Filter dataframe according to given bulletin_date.  May want to override."""
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
-
-
-class AbstractMismatchChart(AbstractChart):
-    def filter_data(self, df, bulletin_date):
-        until = pd.to_datetime(bulletin_date)
-        return df.loc[df['bulletin_date'] <= until]
-
-    def make_chart(self, df, bulletin_date):
-        base = alt.Chart(df).encode(
-            x=alt.X('date(bulletin_date):O',
-                    title="Día del mes", sort="descending",
-                    axis=alt.Axis(format='%d')),
-            y=alt.Y('yearmonth(bulletin_date):O',
-                    title=None, sort="descending",
-                    axis=alt.Axis(format='%B')),
-            tooltip=['bulletin_date:T', 'value']
-        )
-
-        heatmap = base.mark_rect().encode(
-            color=alt.Color('value:Q', title=None, legend=None,
-                            scale=alt.Scale(scheme="redgrey", domainMid=0,
-                                            # WORKAROUND: Set the domain manually to forcibly
-                                            # include zero or else we run into
-                                            # https://github.com/vega/vega-lite/issues/6544
-                                            domain=alt.DomainUnionWith(unionWith=[0])))
-        )
-
-        text = base.mark_text(fontSize=9).encode(
-            text=alt.Text('value:Q'),
-            color=util.heatmap_text_color(df, 'value')
-        )
-
-        return (heatmap + text).properties(
-            width=575, height=120
-        ).facet(
-            columns=1,
-            facet=alt.Facet('variable', title=None,
-                            sort=['Confirmados',
-                                  'Probables',
-                                  'Muertes'])
-        )
-
-
-class ConsecutiveBulletinMismatch(AbstractMismatchChart):
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('mismatched_announcement_aggregates', self.metadata,
-                                 schema='quality', autoload=True)
-        query = select([table.c.bulletin_date,
-                        (table.c.cumulative_confirmed_cases
-                           - table.c.computed_cumulative_confirmed_cases)\
-                           .label('confirmed_cases_mismatch'),
-                        (table.c.cumulative_probable_cases
-                           - table.c.computed_cumulative_probable_cases)\
-                           .label('probable_cases_mismatch'),
-                        (table.c.cumulative_deaths
-                           - table.c.computed_cumulative_deaths)\
-                           .label('deaths_mismatch'),
-                        ]).where(table.c.bulletin_date <= max(bulletin_dates))
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
-        df = df.rename(columns={
-            'confirmed_cases_mismatch': 'Confirmados',
-            'probable_cases_mismatch': 'Probables',
-            'deaths_mismatch': 'Muertes'
-        })
-        return pd.melt(df, ['bulletin_date']).dropna()
-
-
-
-class BulletinChartMismatch(AbstractMismatchChart):
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('mismatched_announcement_and_chart', self.metadata,
-                                 schema='quality', autoload=True)
-        query = select([table.c.bulletin_date,
-                        (table.c.cumulative_confirmed_cases - table.c.sum_confirmed_cases)\
-                           .label('confirmed_cases_mismatch'),
-                        (table.c.cumulative_probable_cases - table.c.sum_probable_cases)\
-                           .label('probable_cases_mismatch'),
-                        (table.c.cumulative_deaths - table.c.sum_deaths)\
-                           .label('deaths_mismatch'),
-                        ]).where(table.c.bulletin_date <= max(bulletin_dates))
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
-        df = df.rename(columns={
-            'confirmed_cases_mismatch': 'Confirmados',
-            'probable_cases_mismatch': 'Probables',
-            'deaths_mismatch': 'Muertes'
-        })
-        return pd.melt(df, ['bulletin_date']).dropna()
-
-
-class AbstractLateness(AbstractChart):
-    def fetch_data_for_table(self, connection, table, min_bulletin_date, max_bulletin_date):
-        query = select([table.c.bulletin_date,
-                        table.c.confirmed_cases_additions,
-                        table.c.probable_cases_additions,
-                        table.c.deaths_additions]
-        ).where(and_(min_bulletin_date <= table.c.bulletin_date,
-                     table.c.bulletin_date <= max_bulletin_date))
-        df = pd.read_sql_query(query, connection,
-                               parse_dates=["bulletin_date"])
-        df = df.rename(columns={
-            'confirmed_cases_additions': 'Confirmados',
-            'probable_cases_additions': 'Probables',
-            'deaths_additions': 'Muertes'
-        })
-        return pd.melt(df, "bulletin_date")
-
-
-class LatenessDaily(AbstractLateness):
-    def make_chart(self, df, bulletin_date):
-        sort_order = ['Confirmados',
-                      'Probables',
-                      'Muertes']
-        bars = alt.Chart(df).mark_bar().encode(
-            x=alt.X('value', title="Rezago estimado (días)"),
-            y=alt.Y('variable', title=None, sort=sort_order, axis=None),
-            color=alt.Color('variable', sort=sort_order,
-                            legend=alt.Legend(orient='bottom', title=None)),
-            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
-                     alt.Tooltip('variable:N', title='Variable'),
-                     alt.Tooltip('value:Q', format=".1f", title='Rezago promedio')]
-        )
-
-        text = bars.mark_text(
-            align='right',
-            baseline='middle',
-            size=12,
-            dx=-5
-        ).encode(
-            text=alt.Text('value:Q', format='.1f'),
-            color = alt.value('white')
-        )
-
-        return (bars + text).properties(
-            width=300,
-        ).facet(
-            columns=2,
-            facet=alt.Facet("bulletin_date", sort="descending", title="Fecha del boletín")
-        )
-
-
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('lateness_daily', self.metadata,
-                                 schema='products', autoload=True)
-        min_bulletin_date = min(bulletin_dates) - datetime.timedelta(days=8)
-        max_bulletin_date = max(bulletin_dates)
-        return self.fetch_data_for_table(connection, table, min_bulletin_date, max_bulletin_date)
-
-    def filter_data(self, df, bulletin_date):
-        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=8))
-        until_date = pd.to_datetime(bulletin_date)
-        return df.loc[(since_date < df['bulletin_date'])
-                      & (df['bulletin_date'] <= until_date)]
-
-
-class Lateness7Day(AbstractLateness):
-    def make_chart(self, df, bulletin_date):
-        sort_order = ['Confirmados',
-                      'Probables',
-                      'Muertes']
-        lines = alt.Chart(df).mark_line(
-            strokeWidth=3,
-            point=alt.OverlayMarkDef(size=50)
-        ).encode(
-            x=alt.X('yearmonthdate(bulletin_date):O',
-                    title="Fecha boletín",
-                    axis=alt.Axis(format='%d/%m', titlePadding=10)),
-            y=alt.Y('value:Q', title=None),
-            color = alt.Color('variable', sort=sort_order, legend=None),
-            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
-                     alt.Tooltip('variable:N', title='Variable'),
-                     alt.Tooltip('value:Q', format=".1f", title='Rezago promedio')]
-        )
-
-        text = lines.mark_text(
-            align='center',
-            baseline='line-top',
-            size=15,
-            dy=10
-        ).encode(
-            text=alt.Text('value:Q', format='.1f')
-        )
-
-        return (lines + text).properties(
-            width=600, height=33
-        ).facet(
-            columns=1,
-            facet=alt.Facet('variable', title=None, sort=sort_order)
-        )
-
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('lateness_7day', self.metadata,
-                                 schema='products', autoload=True)
-        min_bulletin_date = min(bulletin_dates) - datetime.timedelta(days=8)
-        max_bulletin_date = max(bulletin_dates)
-        return self.fetch_data_for_table(connection, table, min_bulletin_date, max_bulletin_date)
-
-    def filter_data(self, df, bulletin_date):
-        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=15))
-        until_date = pd.to_datetime(bulletin_date)
-        return df.loc[(since_date < df['bulletin_date'])
-                      & (df['bulletin_date'] <= until_date)]
 
 
 class CurrentDeltas(AbstractChart):
@@ -301,22 +96,22 @@ class CurrentDeltas(AbstractChart):
                                   'Muertes'])
         )
 
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('bulletin_cases', self.metadata, autoload=True)
-        query = select([table.c.bulletin_date,
-                        table.c.datum_date,
-                        table.c.delta_confirmed_cases,
-                        table.c.delta_probable_cases,
-                        table.c.delta_deaths]
-        ).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
-                     table.c.bulletin_date <= max(bulletin_dates)))
-        df = pd.read_sql_query(query, connection,
-                               parse_dates=["bulletin_date", "datum_date"])
-        df = df.rename(columns={
-            'delta_confirmed_cases': 'Confirmados',
-            'delta_probable_cases': 'Probables',
-            'delta_deaths': 'Muertes'
-        })
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    datum_date,
+    delta_confirmed_cases AS "Confirmados",
+    delta_probable_cases AS "Probables",
+    delta_deaths AS "Muertes"
+FROM bulletin_cases
+WHERE %(min_bulletin_date)s <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            df = cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
         return pd.melt(df, ["bulletin_date", "datum_date"]) \
             .replace(0, np.nan)
 
@@ -359,22 +154,22 @@ class DailyDeltas(AbstractChart):
                                   'Muertes'])
         )
 
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('bulletin_cases', self.metadata, autoload=True)
-        query = select([table.c.bulletin_date,
-                        table.c.datum_date,
-                        table.c.delta_confirmed_cases,
-                        table.c.delta_probable_cases,
-                        table.c.delta_deaths]
-        ).where(and_(min(bulletin_dates) - datetime.timedelta(days=14) <= table.c.bulletin_date,
-                     table.c.bulletin_date <= max(bulletin_dates)))
-        df = pd.read_sql_query(query, connection,
-                               parse_dates=["bulletin_date", "datum_date"])
-        df = df.rename(columns={
-            'delta_confirmed_cases': 'Confirmados',
-            'delta_probable_cases': 'Probables',
-            'delta_deaths': 'Muertes'
-        })
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    datum_date,
+    delta_confirmed_cases AS "Confirmados",
+    delta_probable_cases AS "Probables",
+    delta_deaths AS "Muertes"
+FROM bulletin_cases
+WHERE %(min_bulletin_date)s - INTERVAL '14' DAY <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            df = cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
         return pd.melt(df, ["bulletin_date", "datum_date"])
 
     def filter_data(self, df, bulletin_date):
@@ -475,16 +270,22 @@ class WeekdayBias(AbstractChart):
             spacing=3
         )
 
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('weekday_bias', self.metadata, autoload=True)
-        query = select([table.c.bulletin_date,
-                        table.c.datum_date,
-                        table.c.delta_confirmed_cases.label('Confirmados'),
-                        table.c.delta_probable_cases.label('Probables'),
-                        table.c.delta_deaths.label('Muertes')])\
-            .where(and_(min(bulletin_dates) - datetime.timedelta(days=22) <= table.c.bulletin_date,
-                        table.c.bulletin_date <= max(bulletin_dates)))
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'datum_date'])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    datum_date,
+    delta_confirmed_cases AS "Confirmados",
+    delta_probable_cases AS "Probables",
+    delta_deaths AS "Muertes"
+FROM weekday_bias
+WHERE %(min_bulletin_date)s - INTERVAL '22' DAY <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            df = cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
         return pd.melt(df, ['bulletin_date', 'datum_date']).dropna()
 
     def filter_data(self, df, bulletin_date):
@@ -557,17 +358,23 @@ class Municipal(AbstractChart):
             x='independent', y='independent'
         )
 
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('cases_municipal_agg', self.metadata, autoload=True)
-        query = select([table.c.bulletin_date,
-                        table.c.sample_date,
-                        table.c.region,
-                        table.c.municipality,
-                        table.c.pop2020,
-                        table.c.new_cases])\
-            .where(and_(min(bulletin_dates) - datetime.timedelta(days=97) <= table.c.sample_date,
-                        table.c.sample_date <= max(bulletin_dates)))
-        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'sample_date'])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    sample_date,
+    region,
+    municipality,
+    pop2020,
+    new_cases
+FROM cases_municipal_agg
+WHERE %(min_bulletin_date)s - INTERVAL '97' DAY <= sample_date
+AND sample_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            return cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
 
 
 class MunicipalMap(AbstractChart):
@@ -645,32 +452,41 @@ class MunicipalMap(AbstractChart):
         return alt.InlineData(values=util.get_geojson_resource('municipalities.topojson'),
                               format=alt.TopoDataFormat(type='topojson', feature='municipalities'))
 
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_map', self.metadata, autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.municipality,
-            table.c.pop2020,
-            table.c.new_7day_cases,
-            table.c.previous_7day_cases
-        ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
-                      table.c.bulletin_date <= max(bulletin_dates)))
-        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    municipality,
+    pop2020,
+    new_7day_cases,
+    previous_7day_cases
+FROM municipal_map
+WHERE %(min_bulletin_date)s <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            return cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
 
 class LatenessTiers(AbstractChart):
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('lateness_tiers', self.metadata, autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.tier,
-            table.c.tier_order,
-            table.c.count
-        ]).where(table.c.bulletin_date <= max(bulletin_dates))
-        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    tier,
+    tier_order,
+    count
+FROM lateness_tiers
+WHERE bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            return cursor.execute(query, {
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]

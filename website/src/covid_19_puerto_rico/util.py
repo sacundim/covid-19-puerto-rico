@@ -8,7 +8,8 @@ import json
 import logging
 from math import log10, floor
 import platform
-import sqlalchemy
+import pyathena
+from pyathena.pandas.cursor import PandasCursor
 from urllib.parse import quote_plus
 
 from . import resources
@@ -18,17 +19,14 @@ def make_date_range(start, end):
     return [start + datetime.timedelta(n)
             for n in range(int((end - start).days) + 1)]
 
-def create_athena_engine(args):
-    conn_str = "awsathena+rest://:@athena.{region_name}.amazonaws.com:443/{schema_name}?work_group={work_group}"
+def create_pyathena_connection(args):
     yaml_dict = EnvYAML(args.config_file)
     config = (yaml_dict['athena'])
-    return sqlalchemy.create_engine(
-        conn_str.format(region_name=config['region_name'],
-                        schema_name=config['schema_name'],
-                        work_group=config['work_group']),
-        pool_size=5,
-        max_overflow=15,
-        pool_timeout=900
+    return pyathena.connect(
+        region_name=config['region_name'],
+        schema_name=config['schema_name'],
+        work_group=config['work_group'],
+        cursor_class=PandasCursor
     )
 
 def save_chart(chart, basename, formats):

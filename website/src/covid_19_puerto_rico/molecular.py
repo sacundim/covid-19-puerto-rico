@@ -8,11 +8,9 @@ import datetime
 import logging
 import numpy as np
 import pandas as pd
-import sqlalchemy
+from pyathena.pandas.cursor import PandasCursor
+
 from covid_19_puerto_rico import util
-from sqlalchemy import func
-from sqlalchemy import text
-from sqlalchemy.sql import select, and_
 from . import charts
 
 # 2020 Census:
@@ -28,17 +26,23 @@ class AbstractMolecularChart(charts.AbstractChart):
 class RecentCases(AbstractMolecularChart):
     SORT_ORDER=['Pruebas', 'Casos', 'Hospitalizados', 'Muertes']
 
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('recent_daily_cases', self.metadata, autoload=True)
-        query = select([table.c.bulletin_date,
-                        table.c.datum_date,
-                        table.c.tests.label('Pruebas'),
-                        table.c.cases.label('Casos'),
-                        table.c.hospitalized_currently.label('Hospitalizados'),
-                        table.c.deaths.label('Muertes')])\
-            .where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
-                        table.c.bulletin_date <= max(bulletin_dates)))
-        df = pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "datum_date"])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    datum_date,
+    tests AS "Pruebas",
+    cases AS "Casos",
+    hospitalized_currently AS "Hospitalizados",
+    deaths AS "Muertes"
+FROM recent_daily_cases
+WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            df = cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
         return pd.melt(df, ["bulletin_date", "datum_date"])
 
     def filter_data(self, df, bulletin_date):
@@ -122,22 +126,27 @@ class RecentCases(AbstractMolecularChart):
 
 
 class NewCases(AbstractMolecularChart):
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('new_daily_cases', self.metadata, autoload=True)
-        query = select([table.c.bulletin_date,
-                        table.c.datum_date,
-                        table.c.bioportal.label('Casos'),
-                        # I don't trust the data for this one.
-                        # Note for when/if I reenable: the color is
-                        # '#f58518' (tableau10 orange)
-                        table.c.hospital_admissions.label('Ingresos a hospital'),
-                        table.c.hospitalized_currently.label('Ocupación hospital'),
-                        table.c.in_icu_currently.label('Ocupación UCI'),
-                        table.c.deaths.label('Muertes')])\
-            .where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
-                        table.c.bulletin_date <= max(bulletin_dates)))
-        df = pd.read_sql_query(query, connection,
-                               parse_dates=["bulletin_date", "datum_date"])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    datum_date,
+    bioportal AS "Casos",
+    -- I don't trust the data for this one.
+    -- Note for when/if I reenable: the color
+    -- is '#f58518' (tableau10 orange)
+    hospital_admissions AS "Ingresos a hospital",
+    hospitalized_currently AS "Ocupación hospital",
+    in_icu_currently AS "Ocupación UCI",
+    deaths AS "Muertes"
+FROM new_daily_cases
+WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            df = cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
         return pd.melt(df, ["bulletin_date", "datum_date"])
 
     def filter_data(self, df, bulletin_date):
@@ -211,16 +220,21 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
 
     SORT_ORDER = ['Oficial', 'Bioestadísticas']
 
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('confirmed_vs_rejected', self.metadata, autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.collected_date,
-            table.c.rejections,
-            table.c.novels
-        ]).where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
-                      table.c.bulletin_date <= max(bulletin_dates)))
-        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    collected_date,
+    rejections,
+    novels
+FROM confirmed_vs_rejected
+WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            return cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
 
     def filter_data(self, df, bulletin_date):
         effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
@@ -313,17 +327,22 @@ class NaivePositiveRate(AbstractMolecularChart):
         return df.loc[(df['bulletin_date'] == effective_bulletin_date)
                       | ((df['bulletin_date'] == week_ago))]
 
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('naive_positive_rates', self.metadata, autoload=True)
-        query = select([
-            table.c.test_type,
-            table.c.bulletin_date,
-            table.c.collected_date,
-            table.c.tests,
-            table.c.positives
-        ]).where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
-                      table.c.bulletin_date <= max(bulletin_dates)))
-        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    test_type,
+    bulletin_date,
+    collected_date,
+    tests,
+    positives
+FROM naive_positive_rates
+WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            return cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
 
 
 class NewTestSpecimens(AbstractMolecularChart):
@@ -382,30 +401,40 @@ class NewTestSpecimens(AbstractMolecularChart):
         return df.loc[(df['bulletin_date'] == effective_bulletin_date)
                       | ((df['bulletin_date'] == week_ago))]
 
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('new_daily_tests', self.metadata, autoload=True)
-        query = select([
-            table.c.date_type,
-            table.c.test_type,
-            table.c.bulletin_date,
-            table.c.date,
-            table.c.tests
-        ]).where(and_(min(bulletin_dates) - datetime.timedelta(days=7) <= table.c.bulletin_date,
-                      table.c.bulletin_date <= max(bulletin_dates)))
-        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date", "date"])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    date_type,
+    test_type,
+    bulletin_date,
+    date,
+    tests
+FROM new_daily_tests
+WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            return cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
 
 
 class MolecularCurrentDeltas(AbstractMolecularChart):
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('molecular_deltas', self.metadata, autoload=True)
-        query = select([table.c.bulletin_date,
-                        table.c.collected_date,
-                        table.c.delta_tests.label('Pruebas'),
-                        table.c.delta_positive_tests.label('Positivas')]
-        ).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
-                     table.c.bulletin_date <= max(bulletin_dates)))
-        df = pd.read_sql_query(query, connection,
-                               parse_dates=['bulletin_date', 'collected_date'])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    collected_date,
+    delta_tests AS "Pruebas",
+    delta_positive_tests AS "Positivas"
+FROM molecular_deltas
+WHERE %(min_bulletin_date)s <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            df = cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
         return pd.melt(df, ['bulletin_date', 'collected_date']).replace(0, np.NaN)
 
     def make_chart(self, df, bulletin_date):
@@ -457,16 +486,21 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
 
 
 class MolecularDailyDeltas(AbstractMolecularChart):
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('molecular_deltas', self.metadata, autoload=True)
-        query = select([table.c.bulletin_date,
-                        table.c.collected_date,
-                        table.c.delta_tests.label('Pruebas'),
-                        table.c.delta_positive_tests.label('Positivas')]
-        ).where(and_(min(bulletin_dates) - datetime.timedelta(days=14) <= table.c.bulletin_date,
-                     table.c.bulletin_date <= max(bulletin_dates)))
-        df = pd.read_sql_query(query, connection,
-                               parse_dates=['bulletin_date', 'collected_date'])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    collected_date,
+    delta_tests AS "Pruebas",
+    delta_positive_tests AS "Positivas"
+FROM molecular_deltas
+WHERE %(min_bulletin_date)s - INTERVAL '14' DAY <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            df = cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
         return pd.melt(df, ['bulletin_date', 'collected_date'])
 
     def filter_data(self, df, bulletin_date):
@@ -523,119 +557,20 @@ class MolecularDailyDeltas(AbstractMolecularChart):
         ).resolve_scale(color='independent')
 
 
-class MolecularLatenessDaily(AbstractMolecularChart):
-    SORT_ORDER = ['Pruebas', 'Positivas']
-
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('molecular_lateness', self.metadata,
-                                 schema='products', autoload=True)
-        query = select([table.c.bulletin_date,
-                        table.c.lateness_tests.label('Pruebas'),
-                        table.c.lateness_positive_tests.label('Positivas')]
-        ).where(and_(table.c.test_type == 'Molecular',
-                     min(bulletin_dates) - datetime.timedelta(days=8) <= table.c.bulletin_date,
-                     table.c.bulletin_date <= max(bulletin_dates)))
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
-        return pd.melt(df, ['bulletin_date'])
-
-    def filter_data(self, df, bulletin_date):
-        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=8))
-        until_date = pd.to_datetime(bulletin_date)
-        return df.loc[(since_date < df['bulletin_date'])
-                      & (df['bulletin_date'] <= until_date)]
-
-    def make_chart(self, df, bulletin_date):
-        bars = alt.Chart(df).mark_bar().encode(
-            x=alt.X('value:Q', title='Rezago estimado (días)'),
-            y=alt.Y('variable:N', title=None, sort=self.SORT_ORDER, axis=None),
-            color=alt.Color('variable:N', sort=self.SORT_ORDER,
-                            legend=alt.Legend(orient='bottom', title=None)),
-            tooltip = [alt.Tooltip('bulletin_date:T', title='Fecha de récord'),
-                       alt.Tooltip('variable:N', title='Variable'),
-                       alt.Tooltip('value:Q', format=".1f", title='Rezago promedio')]
-        )
-
-        text = bars.mark_text(
-            align='right',
-            baseline='middle',
-            size=12,
-            dx=-5
-        ).encode(
-            text=alt.Text('value:Q', format='.1f'),
-            color = alt.value('white')
-        )
-
-        return (bars + text).properties(
-            width=300
-        ).facet(
-            columns=2,
-            facet=alt.Facet('bulletin_date:T', sort='descending',
-                            title='Fecha de récord')
-        )
-
-class MolecularLateness7Day(AbstractMolecularChart):
-    SORT_ORDER = ['Pruebas', 'Positivas']
-
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('molecular_lateness', self.metadata,
-                                 schema='products', autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.smoothed_lateness_tests.label('Pruebas'),
-            table.c.smoothed_lateness_positive_tests.label('Positivas')]
-        ).where(and_(table.c.test_type == 'Molecular',
-                     min(bulletin_dates) - datetime.timedelta(days=15) <= table.c.bulletin_date,
-                     table.c.bulletin_date <= max(bulletin_dates)))
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
-        return pd.melt(df, ['bulletin_date'])
-
-    def filter_data(self, df, bulletin_date):
-        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=15))
-        until_date = pd.to_datetime(bulletin_date)
-        return df.loc[(since_date < df['bulletin_date'])
-                      & (df['bulletin_date'] <= until_date)]
-
-    def make_chart(self, df, bulletin_date):
-        lines = alt.Chart(df).mark_line(
-            strokeWidth=3,
-            point=alt.OverlayMarkDef(size=50)
-        ).encode(
-            x=alt.X('yearmonthdate(bulletin_date):O',
-                    title="Fecha de récord",
-                    axis=alt.Axis(format='%d/%m', titlePadding=10)),
-            y=alt.Y('value:Q', title=None),
-            color = alt.Color('variable', sort=self.SORT_ORDER, legend=None),
-            tooltip=[alt.Tooltip('bulletin_date:T', title='Fecha de récord'),
-                     alt.Tooltip('variable:N', title='Variable'),
-                     alt.Tooltip('value:Q', format=".1f", title='Rezago promedio')]
-        )
-
-        text = lines.mark_text(
-            align='center',
-            baseline='line-top',
-            size=15,
-            dy=10
-        ).encode(
-            text=alt.Text('value:Q', format='.1f')
-        )
-
-        return (lines + text).properties(
-            width=575, height=37
-        ).facet(
-            row=alt.Row('variable', title=None, sort=self.SORT_ORDER)
-        )
-
-
 class MolecularLatenessTiers(AbstractMolecularChart):
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('molecular_lateness_tiers', self.metadata, autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.tier,
-            table.c.tier_order,
-            table.c.count
-        ]).where(table.c.bulletin_date <= max(bulletin_dates))
-        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    tier,
+    tier_order,
+    count
+FROM molecular_lateness_tiers
+WHERE bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            return cursor.execute(query, {
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
@@ -696,18 +631,23 @@ class MolecularLatenessTiers(AbstractMolecularChart):
 
 
 class CaseFatalityRate(AbstractMolecularChart):
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('lagged_cfr', self.metadata, autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.collected_date,
-            table.c.smoothed_cases,
-            table.c.death_date,
-            table.c.smoothed_deaths,
-            table.c.lagged_cfr
-        ]).where(table.c.bulletin_date <= max(bulletin_dates))
-        return pd.read_sql_query(query, connection,
-                                 parse_dates=['bulletin_date', 'collected_date', 'death_date'])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    collected_date,
+    smoothed_cases,
+    death_date,
+    smoothed_deaths,
+    lagged_cfr
+FROM lagged_cfr
+WHERE bulletin_date <= %(max_bulletin_date)s
+AND collected_date >= DATE '2020-03-13'"""
+        with athena.cursor(PandasCursor) as cursor:
+            return cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
 
     def filter_data(self, df, bulletin_date):
         week_ago = bulletin_date - datetime.timedelta(days=7)
@@ -740,71 +680,26 @@ class CaseFatalityRate(AbstractMolecularChart):
         )
 
 
-class Hospitalizations(AbstractMolecularChart):
-    """Hospitalizations, based on HHS data we download."""
-
-    SORT_ORDER = ['Hospitalizados', 'Cuidado intensivo']
-
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('hospitalizations', self.metadata, autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.date,
-            table.c.hospitalized_currently.label('Hospitalizados'),
-            table.c.in_icu_currently.label('Cuidado intensivo'),
-        ]).where(table.c.date <= max(bulletin_dates) + datetime.timedelta(days=1))
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'date'])
-        return pd.melt(df, ['bulletin_date', 'date']).dropna()
-
-    def make_chart(self, df, bulletin_date):
-        return alt.Chart(df).transform_window(
-            sort=[{'field': 'date'}],
-            frame=[-6, 0],
-            mean_value='mean(value)',
-            groupby=['variable']
-        ).mark_line(point='transparent').encode(
-            x=alt.X('date:T', timeUnit='yearmonthdate', title='Fecha',
-                    axis=alt.Axis(
-                        labelExpr="[timeFormat(datum.value, '%b'),"
-                                  " timeFormat(datum.value, '%m') == '01'"
-                                    " ? timeFormat(datum.value, '%Y')"
-                                    " : '']")),
-            y=alt.Y('mean_value:Q', title='Promedio 7 días',
-                    scale=alt.Scale(type='log', domain=[3, 1000]),
-                    axis=alt.Axis(format='s')),
-            color=alt.Color('variable:N', title=None,
-                            sort=self.SORT_ORDER,
-                            legend=alt.Legend(orient='top')),
-            tooltip=[
-                alt.Tooltip('bulletin_date:T', title='Datos hasta'),
-                alt.Tooltip('date:T', title='Fecha'),
-                alt.Tooltip('variable:N', title='Variable'),
-                alt.Tooltip('value:Q', title='Valor'),
-                alt.Tooltip('mean_value:Q', title='Promedio 7 días', format=',.1f')
-            ]
-        ).properties(
-            width=575, height=350
-        )
-
 class RecentHospitalizations(AbstractMolecularChart):
     """Hospitalizations, based on PRDoH data we scrape."""
 
     SORT_ORDER = ['COVID', 'No COVID', 'Disponibles']
     COLORS = ['#d4322c', '#f58518', '#a4d86e']
 
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('prdoh_hospitalizations', self.metadata, autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.date.label('Fecha'),
-            table.c.age.label('Edad'),
-            table.c.resource.label('Tipo'),
-            table.c.total.label('Total'),
-            table.c.covid.label('COVID'),
-            table.c.nocovid.label('No COVID'),
-            table.c.disp.label('Disponibles')
-        ])
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'Fecha'])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    date AS "Fecha",
+    age AS "Edad",
+    resource AS "Tipo",
+    total AS "Total",
+    covid AS "COVID",
+    nocovid AS "No COVID",
+    disp AS "Disponibles"
+FROM prdoh_hospitalizations"""
+        with athena.cursor(PandasCursor) as cursor:
+            df = cursor.execute(query).as_pandas()
         return pd.melt(df, ['bulletin_date', 'Fecha', 'Edad', 'Tipo', 'Total'])
 
     def make_chart(self, df, bulletin_date):
@@ -855,18 +750,23 @@ class RecentHospitalizations(AbstractMolecularChart):
 
 
 class AgeGroups(AbstractMolecularChart):
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('cases_by_age_5y', self.metadata, autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.collected_date,
-            table.c.youngest,
-            table.c.cases,
-            table.c.cases_1m
-        ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
-                      table.c.bulletin_date <= max(bulletin_dates)))
-        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
-
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    collected_date,
+    youngest,
+    cases,
+    cases_1m
+FROM cases_by_age_5y
+WHERE %(min_bulletin_date)s <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            return cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
+        
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
@@ -918,24 +818,29 @@ class RecentAgeGroups(AbstractMolecularChart):
     HEIGHT = 175
     DAYS=168
 
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('recent_age_groups', self.metadata, autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.collected_date,
-            table.c.youngest,
-            table.c.population,
-            table.c.antigens.label('Antígenos'),
-            table.c.molecular.label('Moleculares'),
-            table.c.positive_antigens,
-            table.c.positive_molecular,
-            table.c.cases.label('Casos'),
-            table.c.deaths.label('Muertes'),
-            table.c.antigens_cases.label('Casos por antígeno'),
-            table.c.molecular_cases.label('Casos por molecular'),
-        ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
-                      table.c.bulletin_date <= max(bulletin_dates)))
-        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'collected_date'])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    collected_date,
+    youngest,
+    population,
+    antigens AS "Antígenos",
+    molecular AS "Moleculares",
+    positive_antigens,
+    positive_molecular,
+    cases AS "Casos",
+    deaths AS "Muertes",
+    antigens_cases AS "Casos por antígeno",
+    molecular_cases AS "Casos por molecular"
+FROM recent_age_groups
+WHERE %(min_bulletin_date)s <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            return cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
@@ -1146,274 +1051,6 @@ class RecentAgeGroups(AbstractMolecularChart):
         )
 
 
-class VaccinationMap(AbstractMolecularChart):
-    FULL_WIDTH = 600
-    FULL_HEIGHT = 250
-    HALF_WIDTH = 280
-    HALF_HEIGHT = 150
-
-    def geography(self):
-        return alt.InlineData(values=util.get_geojson_resource('municipalities.topojson'),
-                              format=alt.TopoDataFormat(type='topojson', feature='municipalities'))
-
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_vaccinations', self.metadata, autoload=True)
-        query = select([
-            table.c.local_date,
-            table.c.municipio,
-            table.c.fips_code,
-            table.c.pop2020,
-            table.c.salud_total_dosis1,
-            table.c.salud_total_dosis1_pct,
-            table.c.salud_dosis1,
-            table.c.salud_total_dosis2,
-            table.c.salud_total_dosis2_pct,
-            table.c.salud_dosis2,
-            table.c.salud_total_dosis3,
-            table.c.salud_total_dosis3_pct,
-            table.c.salud_dosis3,
-            table.c.salud_total_dosis,
-            table.c.salud_total_dosis_per_100,
-            table.c.salud_dosis,
-        ])
-        df = pd.read_sql_query(query, connection, parse_dates=["local_date"])
-
-        # We really just do this to undo Pandas' null int to float conversion. See:
-        #
-        #     https://pandas.pydata.org/pandas-docs/stable/user_guide/integer_na.html
-        for col in ['salud_total_dosis1', 'salud_dosis1',
-                    'salud_total_dosis2', 'salud_dosis2',
-                    'salud_total_dosis3', 'salud_dosis3',
-                    'salud_total_dosis', 'salud_dosis']:
-            df[col] = df[col].astype('Int64')
-
-        self.save_csv(df)
-        return df
-
-    def filter_data(self, df, bulletin_date):
-        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=7))
-        until_date = pd.to_datetime(bulletin_date)
-        return df.loc[(since_date < df['local_date'])
-                      & (df['local_date'] <= until_date)]
-
-    def make_chart(self, df, bulletin_date):
-        cumulative = self.make_cumulative_chart(df, bulletin_date)
-        rate = self.make_daily_rate_chart(df)
-        return alt.vconcat(cumulative, rate).configure_view(
-            strokeWidth=0
-        ).configure_concat(
-            spacing=40
-        ).resolve_scale(
-            color='independent'
-        )
-
-    def make_cumulative_chart(self, df, bulletin_date):
-        complete = self.make_cumulative_subchart(
-            df, bulletin_date, 'salud_total_dosis2', 'Personas con régimen completo'
-        )
-        boosted = self.make_cumulative_subchart(
-            df, bulletin_date, 'salud_total_dosis3', 'Personas con refuerzo'
-        )
-        return alt.hconcat(complete, boosted).resolve_scale(
-            color='shared'
-        )
-
-    def make_cumulative_subchart(self, df, bulletin_date, variable, title):
-        DOMAIN_MID = 0.775
-
-        return alt.Chart(df).transform_filter(
-            alt.datum.local_date == util.altair_date_expr(bulletin_date)
-        ).transform_calculate(
-            pct=alt.datum[variable] / alt.datum.pop2020
-        ).transform_lookup(
-            lookup='municipio',
-            from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
-        ).mark_geoshape(stroke='black', strokeWidth=0.25).project(
-            type='mercator'
-        ).encode(
-            color=alt.Color('pct:Q', type='quantitative',
-                            scale=alt.Scale(type='linear', scheme='blueorange', reverse=True,
-                                            domain=alt.DomainUnionWith(unionWith=[1.0]),
-                                            domainMid=DOMAIN_MID, clamp=True),
-                            legend=alt.Legend(orient='top', titleLimit=400, titleOrient='top',
-                                              title=title, format='.0%',
-                                              gradientLength=self.FULL_WIDTH)),
-            tooltip=[alt.Tooltip(field='local_date', type='temporal', title='Fecha'),
-                     alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
-                     alt.Tooltip(field='pop2020', type='quantitative', format=',d', title='Población'),
-                     alt.Tooltip(field=variable, title=title, type='quantitative', format=',d'),
-                     alt.Tooltip(field='pct', type='quantitative', format='.1%', title='Porciento')]
-        ).properties(
-            width=self.HALF_WIDTH,
-            height=self.HALF_HEIGHT
-        )
-
-    def make_daily_rate_chart(self, df):
-        rate1 = self.make_daily_rate_subchart(
-            df, 'salud_dosis1', 'Velocidad 1ra dosis', 0.007
-        ).properties(
-            width=self.HALF_WIDTH, height=self.HALF_HEIGHT
-        )
-        rate3 = self.make_daily_rate_subchart(
-            df, 'salud_dosis3', 'Velocidad refuerzo', 0.007
-        ).properties(
-            width=self.HALF_WIDTH, height=self.HALF_HEIGHT
-        )
-        rate2 = self.make_daily_rate_subchart(
-            df, 'salud_dosis2', 'Velocidad completos', 0.007
-        ).properties(
-            width=self.HALF_WIDTH, height=self.HALF_HEIGHT
-        )
-        rate_all = self.make_daily_rate_subchart(
-            df, 'salud_dosis', 'Velocidad (todas)', 0.015
-        ).properties(
-            width=self.HALF_WIDTH, height=self.HALF_HEIGHT
-        )
-        return alt.concat(
-            rate2, rate3,
-            rate1, rate_all,
-            columns=2
-        ).resolve_scale(
-            color='independent'
-        )
-
-    def make_daily_rate_subchart(self, df, variable, title, domain_hi):
-        return alt.Chart(df).transform_calculate(
-            dosis_pct=alt.datum[variable] / alt.datum.pop2020
-        ).transform_aggregate(
-            groupby=['municipio'],
-            min_local_date='min(local_date)',
-            max_local_date='max(local_date)',
-            pop2020='mean(pop2020)',
-            mean_dosis=f'mean({variable})',
-            mean_rate_pct='mean(dosis_pct)'
-        ).transform_lookup(
-            lookup='municipio',
-            from_=alt.LookupData(self.geography(), 'properties.NAME', ['type', 'geometry'])
-        ).mark_geoshape(stroke='black', strokeWidth=0.25).project(
-            type='mercator'
-        ).encode(
-            color=alt.Color('mean_rate_pct:Q', type='quantitative',
-                            scale=alt.Scale(type='linear', scheme='blueorange', reverse=True,
-                                            # We pick 0.7% as the domain top value because, looking
-                                            # at Our World in Data, 1.4 doses/day/100 looks like a common
-                                            # top rate that many countries have approached or achieved,
-                                            # and almost none exceeded.  So half that because we have
-                                            # a first doses and a final doses map.
-                                            domain=[0, domain_hi], clamp=True),
-                            legend=alt.Legend(orient='top', titleLimit=self.HALF_WIDTH, titleOrient='top',
-                                              # labelSeparation=10,
-                                              offset=-15, gradientLength=self.HALF_WIDTH,
-                                              title=title, format='%')),
-            tooltip=[alt.Tooltip(field='min_local_date', type='temporal', title='Desde'),
-                     alt.Tooltip(field='max_local_date', type='temporal', title='Hasta'),
-                     alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
-                     alt.Tooltip(field='pop2020', type='quantitative', format=',d', title='Población'),
-                     alt.Tooltip(field='mean_dosis', type='quantitative', format=',.1f',
-                                 title='Dosis diarias (promedio 7 días)'),
-                     alt.Tooltip(field='mean_rate_pct', type='quantitative', format=',.2p',
-                                 title='Dosis diarias como % de habitantes (promedio 7 días)')]
-        )
-
-
-
-
-class MunicipalVaccination(AbstractMolecularChart):
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_vaccinations', self.metadata, autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.municipio,
-            table.c.population,
-            table.c.total_dosis1.label('Primera dosis'),
-            table.c.total_dosis2.label('Segunda dosis')
-        ]).where(table.c.bulletin_date <= max(bulletin_dates))
-        df = pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
-        return pd.melt(df, ['bulletin_date', 'municipio', 'population'])
-
-    def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
-
-    def make_chart(self, df, bulletin_date):
-        return alt.Chart(df).mark_area().transform_calculate(
-            pct=alt.datum.value / alt.datum.population
-        ).encode(
-            x=alt.X('bulletin_date:T', title='Fecha'),
-            y=alt.Y('pct:Q', title='% de población', axis=alt.Axis(format='%')),
-            color=alt.Color('variable:N', title='Dosis')
-        ).properties(
-            width=250, height=175
-        ).facet(
-            column=alt.Column('variable:N', title=None),
-            row=alt.Row('municipio:N', title=None)
-        )
-
-
-class MunicipalSPLOM(AbstractMolecularChart):
-    VARIABLES = [
-        'Población', 'Ingreso',
-        '<$10k', '≥$200k',
-        '% blanco', '% negro',
-        '1 dosis', '2 dosis',
-        'Casos/1k', 'Pruebas/1k',
-        'Antígenos/1k', '% +antígenos',
-        'Moleculares/1k', '% +molecular'
-    ]
-
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_splom', self.metadata, autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.municipio,
-            table.c.population.label('Población'),
-            table.c.households_median.label('Ingreso'),
-            table.c.households_lt_10k_pct.label('<$10k'),
-            table.c.households_gte_200k_pct.label('≥$200k'),
-            table.c.white_alone_pct.label('% blanco'),
-            table.c.black_alone_pct.label('% negro'),
-            table.c.total_dosis1_pct.label('1 dosis'),
-            table.c.total_dosis2_pct.label('2 dosis'),
-            table.c.cumulative_cases_1k.label('Casos/1k'),
-            table.c.cumulative_specimens_1k.label('Pruebas/1k'),
-            table.c.cumulative_antigens_1k.label('Antígenos/1k'),
-            table.c.cumulative_antigen_positivity.label('% +antígenos'),
-            table.c.cumulative_molecular_1k.label('Moleculares/1k'),
-            table.c.cumulative_molecular_positivity.label('% +molecular'),
-        ]).where(and_(min(bulletin_dates) <= table.c.bulletin_date,
-                      table.c.bulletin_date <= max(bulletin_dates)))
-        return pd.read_sql_query(query, connection, parse_dates=["bulletin_date"])
-
-    def make_chart(self, df, bulletin_date):
-        return alt.Chart(df).mark_point().encode(
-            x=alt.X(alt.repeat("column"), type='quantitative', axis=alt.Axis(labels=False)),
-            y=alt.Y(alt.repeat("row"), type='quantitative', axis=alt.Axis(labels=False)),
-            color=alt.Color('municipio:N', title='Municipio', legend=alt.Legend(symbolLimit=78)),
-            tooltip=[
-                alt.Tooltip(field='bulletin_date', type='temporal', title='Fecha'),
-                alt.Tooltip(field='municipio', type='nominal', title='Municipio'),
-                alt.Tooltip(field='Población', type='quantitative', format=',d'),
-                alt.Tooltip(field='Ingreso', type='quantitative', format=',d'),
-                alt.Tooltip(field='<$10k', type='quantitative', format=',.1%'),
-                alt.Tooltip(field='≥$200k', type='quantitative', format=',.1%'),
-                alt.Tooltip(field='% negro', type='quantitative', format=',.1%'),
-                alt.Tooltip(field='% blanco', type='quantitative', format=',.1%'),
-                alt.Tooltip(field='1 dosis', type='quantitative', format=',.1%'),
-                alt.Tooltip(field='2 dosis', type='quantitative', format=',.1%'),
-                alt.Tooltip(field='Casos/1k', type='quantitative', format=',.1f'),
-                alt.Tooltip(field='Pruebas/1k', type='quantitative', format=',.1f'),
-                alt.Tooltip(field='Moleculares/1k', type='quantitative', format=',.1f'),
-                alt.Tooltip(field='% +molecular', type='quantitative', format=',.1%'),
-                alt.Tooltip(field='Antígenos/1k', type='quantitative', format=',.1f'),
-                alt.Tooltip(field='% +antígenos', type='quantitative', format=',.1%'),
-            ]
-        ).properties(
-            width=100, height=100
-        ).repeat(
-            row=self.VARIABLES,
-            column=list(reversed(self.VARIABLES))
-        )
-
-
 class EncounterLag(AbstractMolecularChart):
     WIDTH = 575
     SORT_ORDER = [
@@ -1421,23 +1058,26 @@ class EncounterLag(AbstractMolecularChart):
         'Casos (todos)', 'Casos (antígenos)', 'Casos (moleculares)'
     ]
 
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('encounter_lag', self.metadata, autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.age_gte,
-            table.c.age_lt,
-            table.c.delta_encounters.label('Pruebas_Todas'),
-            table.c.delta_cases.label('Casos_Todas'),
-            table.c.delta_antigens.label('Pruebas_Antígenos'),
-            table.c.delta_antigens_cases.label('Casos_Antígenos'),
-            table.c.delta_molecular.label('Pruebas_Moleculares'),
-            table.c.delta_molecular_cases.label('Casos_Moleculares')
-        ]).where(
-            and_(min(bulletin_dates) - datetime.timedelta(days=49) <= table.c.bulletin_date,
-                 table.c.bulletin_date <= max(bulletin_dates))
-        )
-        df1 = pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    age_gte,
+    age_lt,
+    delta_encounters AS "Pruebas_Todas",
+    delta_cases AS "Casos_Todas",
+    delta_antigens AS "Pruebas_Antígenos",
+    delta_antigens_cases AS "Casos_Antígenos",
+    delta_molecular AS "Pruebas_Moleculares",
+    delta_molecular_cases AS "Casos_Moleculares"
+FROM encounter_lag
+WHERE %(min_bulletin_date)s - INTERVAL '49' DAY <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            df1 = cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
         df2 = pd.wide_to_long(
             df1, ['Casos', 'Pruebas'],
             i=['bulletin_date', 'age_gte', 'age_lt'],
@@ -1505,23 +1145,26 @@ class EncounterLag(AbstractMolecularChart):
 class MunicipalTestingScatter(AbstractMolecularChart):
     WIDTH = 575
 
-    def fetch_data(self, connection, bulletin_dates):
-        table = sqlalchemy.Table('municipal_testing_scatterplot', self.metadata, autoload=True)
-        query = select([
-            table.c.bulletin_date,
-            table.c.municipality,
-            table.c.abbreviation,
-            table.c.population,
-            table.c.daily_specimens,
-            table.c.daily_antigens,
-            table.c.antigens_positivity,
-            table.c.daily_molecular,
-            table.c.molecular_positivity,
-        ]).where(
-            and_(min(bulletin_dates) <= table.c.bulletin_date,
-                 table.c.bulletin_date <= max(bulletin_dates))
-        )
-        return pd.read_sql_query(query, connection, parse_dates=['bulletin_date'])
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+SELECT
+    bulletin_date,
+    municipality,
+    abbreviation,
+    population,
+    daily_specimens,
+    daily_antigens,
+    antigens_positivity,
+    daily_molecular,
+    molecular_positivity
+FROM municipal_testing_scatterplot
+WHERE %(min_bulletin_date)s <= bulletin_date
+AND bulletin_date <= %(max_bulletin_date)s"""
+        with athena.cursor(PandasCursor) as cursor:
+            return cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
 
     def make_chart(self, df, bulletin_date):
         molecular_positivity = \
