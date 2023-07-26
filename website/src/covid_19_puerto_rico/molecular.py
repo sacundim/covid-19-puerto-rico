@@ -421,8 +421,8 @@ class MolecularCurrentDeltas(AbstractMolecularChart):
 SELECT
     bulletin_date,
     collected_date,
-    delta_tests AS "Pruebas",
-    delta_positive_tests AS "Positivas"
+    nullif(delta_tests, 0) AS "Pruebas",
+    nullif(delta_positive_tests, 0) AS "Positivas"
 FROM molecular_deltas
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
@@ -430,8 +430,7 @@ AND bulletin_date <= %(max_bulletin_date)s"""
             'min_bulletin_date': min(bulletin_dates),
             'max_bulletin_date': max(bulletin_dates)
         })
-        return df.melt(["bulletin_date", "collected_date"])\
-            .filter(pl.col('value') != 0)
+        return df.melt(["bulletin_date", "collected_date"])
 
     def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).transform_joinaggregate(
