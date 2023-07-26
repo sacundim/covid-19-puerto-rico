@@ -7,9 +7,7 @@ import altair as alt
 import datetime
 import logging
 import numpy as np
-import pandas as pd
 import polars as pl
-from pyathena.pandas.cursor import PandasCursor
 
 from covid_19_puerto_rico import util
 from . import charts
@@ -1056,33 +1054,53 @@ SELECT
     bulletin_date,
     age_gte,
     age_lt,
-    delta_encounters AS "Pruebas_Todas",
-    delta_cases AS "Casos_Todas",
-    delta_antigens AS "Pruebas_Antígenos",
-    delta_antigens_cases AS "Casos_Antígenos",
-    delta_molecular AS "Pruebas_Moleculares",
-    delta_molecular_cases AS "Casos_Moleculares"
+    delta_encounters,
+    delta_cases,
+    delta_antigens,
+    delta_antigens_cases,
+    delta_molecular,
+    delta_molecular_cases
 FROM encounter_lag
 WHERE %(min_bulletin_date)s - INTERVAL '49' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        # TODO: Polars doesn't have wide_to_long
-        with athena.cursor(PandasCursor) as cursor:
-            df1 = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
-        df2 = pd.wide_to_long(
-            df1, ['Casos', 'Pruebas'],
-            i=['bulletin_date', 'age_gte', 'age_lt'],
-            j='test_type', sep='_', suffix='.*'
-        )
-        return pd.melt(df2.reset_index(), ['bulletin_date', 'test_type', 'age_gte', 'age_lt'])
+
+        wide_df = util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
+        tall_df = pl.concat([
+            wide_df.select(
+                pl.lit('Todas').alias('test_type'),
+                pl.col('bulletin_date'),
+                pl.col('age_gte'),
+                pl.col('age_lt'),
+                pl.col('delta_encounters').alias('Pruebas'),
+                pl.col('delta_cases').alias('Casos'),
+            ),
+            wide_df.select(
+                pl.lit('Antígenos').alias('test_type'),
+                pl.col('bulletin_date'),
+                pl.col('age_gte'),
+                pl.col('age_lt'),
+                pl.col('delta_antigens').alias('Pruebas'),
+                pl.col('delta_antigens_cases').alias('Casos'),
+            ),
+            wide_df.select(
+                pl.lit('Moleculares').alias('test_type'),
+                pl.col('bulletin_date'),
+                pl.col('age_gte'),
+                pl.col('age_lt'),
+                pl.col('delta_molecular').alias('Pruebas'),
+                pl.col('delta_molecular_cases').alias('Casos'),
+            )
+        ])
+        return tall_df.melt(['bulletin_date', 'test_type', 'age_gte', 'age_lt'])
 
     def filter_data(self, df, bulletin_date):
-        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=49))
-        until_date = pd.to_datetime(bulletin_date)
-        return df.loc[(since_date < df['bulletin_date'])
-                      & (df['bulletin_date'] <= until_date)]
+        since_date = bulletin_date - datetime.timedelta(days=49)
+        until_date = bulletin_date
+        return df.filter((since_date < pl.col('bulletin_date'))
+                         & (pl.col('bulletin_date') <= until_date))
 
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df).transform_joinaggregate(

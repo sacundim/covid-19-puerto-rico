@@ -12,7 +12,6 @@ import platform
 import polars as pl
 import pyathena
 from pyathena.arrow.cursor import ArrowCursor
-from pyathena.pandas.cursor import PandasCursor
 from urllib.parse import quote_plus
 
 from . import resources
@@ -48,12 +47,6 @@ def midrange(lo, hi, mid=0, scale=1.0):
     """Compute the range of values in the middle of a diverging scale."""
     return [min(mid, (mid + lo) / (1.0 + scale)),
             max(mid, (mid + hi) / (1.0 + scale))]
-
-def describe_frame(df):
-    """Because df.info() prints instead of returning a string."""
-    buf = io.StringIO()
-    df.info(buf=buf)
-    return buf.getvalue()
 
 def altair_date_expr(date):
     return alt.expr.toDate(f'{date.isoformat()}T00:00:00')
@@ -106,25 +99,13 @@ def create_pyathena_connection(args):
         region_name=config['region_name'],
         schema_name=config['schema_name'],
         work_group=config['work_group'],
-        cursor_class=PandasCursor
+        cursor_class=ArrowCursor
     )
-
-def execute_pandas(athena, sql, params={}):
-    with athena.cursor(PandasCursor) as cursor:
-        return cursor.execute(sql, params).as_pandas()
 
 def execute_polars(athena, sql, params={}):
     with athena.cursor(ArrowCursor) as cursor:
         return pl.from_arrow(cursor.execute(sql, params).as_arrow())
 
 def describe_frame(df):
-    if isinstance(df, pd.DataFrame):
-        return describe_pandas_frame(df)
-    elif isinstance(df, pl.DataFrame):
-        return str(df)
+    return str(df)
 
-def describe_pandas_frame(df):
-    """Because df.info() prints instead of returning a string."""
-    buf = io.StringIO()
-    df.info(buf=buf)
-    return buf.getvalue()
