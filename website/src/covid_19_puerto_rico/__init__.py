@@ -60,19 +60,11 @@ def main():
         output_formats = frozenset(['json'])
 
     targets = [
-        # Occasional:
-        #        molecular.MunicipalSPLOM(athena, args.output_dir, output_formats),
-
-        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
-        molecular.NewCases(athena, args.output_dir, output_formats),
-
         # We always generate png for this because they're our Twitter cards
         molecular.RecentCases(athena, args.output_dir, frozenset(['json', 'svg', 'png'])),
 
-        # Disabled because it's broken, the Athena staging times out, and others
-        # do it better than I do:
-        #molecular.VaccinationMap(athena, args.output_dir, output_formats),
-
+        molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
+        molecular.NewCases(athena, args.output_dir, output_formats),
         charts.MunicipalMap(athena, args.output_dir, output_formats),
         molecular.RecentAgeGroups(athena, args.output_dir, output_formats),
         molecular.AgeGroups(athena, args.output_dir, output_formats),
@@ -118,6 +110,7 @@ def global_configuration():
     logging.basicConfig(format='%(asctime)s %(threadName)s %(message)s',
                         level=logging.INFO)
     util.log_platform()
+#    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
     alt.themes.register("custom_theme", lambda: util.get_json_resource('theme.json'))
     alt.themes.enable("custom_theme")
