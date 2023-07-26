@@ -8,11 +8,7 @@ import datetime
 import logging
 import numpy as np
 import pandas as pd
-import sqlalchemy
 from covid_19_puerto_rico import util
-from sqlalchemy import func
-from sqlalchemy import text
-from sqlalchemy.sql import select, and_
 from . import charts
 
 # 2020 Census:
@@ -28,7 +24,7 @@ class AbstractMolecularChart(charts.AbstractChart):
 class RecentCases(AbstractMolecularChart):
     SORT_ORDER=['Pruebas', 'Casos', 'Hospitalizados', 'Muertes']
 
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, cursor, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -40,13 +36,10 @@ SELECT
 FROM recent_daily_cases
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        df = pd.read_sql_query(
-            query, connection, parse_dates=["bulletin_date", "datum_date"],
-            params={
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }
-        )
+        df = cursor.execute(query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        }).as_pandas()
         return pd.melt(df, ["bulletin_date", "datum_date"])
 
     def filter_data(self, df, bulletin_date):
@@ -130,7 +123,7 @@ AND bulletin_date <= %(max_bulletin_date)s"""
 
 
 class NewCases(AbstractMolecularChart):
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, cursor, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -146,13 +139,10 @@ SELECT
 FROM new_daily_cases
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        df = pd.read_sql_query(
-            query, connection, parse_dates=["bulletin_date", "datum_date"],
-            params={
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }
-        )
+        df = cursor.execute(query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        }).as_pandas()
         return pd.melt(df, ["bulletin_date", "datum_date"])
 
     def filter_data(self, df, bulletin_date):
@@ -226,7 +216,7 @@ class ConfirmationsVsRejections(AbstractMolecularChart):
 
     SORT_ORDER = ['Oficial', 'Bioestadísticas']
 
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, cursor, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -236,13 +226,10 @@ SELECT
 FROM confirmed_vs_rejected
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        return pd.read_sql_query(
-            query, connection, parse_dates=['bulletin_date', 'collected_date'],
-            params={
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }
-        )
+        return cursor.execute(query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        }).as_pandas()
 
     def filter_data(self, df, bulletin_date):
         effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
@@ -335,7 +322,7 @@ class NaivePositiveRate(AbstractMolecularChart):
         return df.loc[(df['bulletin_date'] == effective_bulletin_date)
                       | ((df['bulletin_date'] == week_ago))]
 
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, cursor, bulletin_dates):
         query = """
 SELECT
     test_type,
@@ -346,13 +333,10 @@ SELECT
 FROM naive_positive_rates
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        return pd.read_sql_query(
-            query, connection, parse_dates=['bulletin_date', 'collected_date'],
-            params={
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }
-        )
+        return cursor.execute(query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        }).as_pandas()
 
 
 class NewTestSpecimens(AbstractMolecularChart):
@@ -411,7 +395,7 @@ class NewTestSpecimens(AbstractMolecularChart):
         return df.loc[(df['bulletin_date'] == effective_bulletin_date)
                       | ((df['bulletin_date'] == week_ago))]
 
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, cursor, bulletin_dates):
         query = """
 SELECT
     date_type,
@@ -422,17 +406,14 @@ SELECT
 FROM new_daily_tests
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        return pd.read_sql_query(
-            query, connection, parse_dates=["bulletin_date", "date"],
-            params={
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }
-        )
+        return cursor.execute(query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        }).as_pandas()
 
 
 class MolecularCurrentDeltas(AbstractMolecularChart):
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, cursor, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -442,14 +423,10 @@ SELECT
 FROM molecular_deltas
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        df = pd.read_sql_query(
-            query, connection,
-            parse_dates=['bulletin_date', 'collected_date'],
-            params={
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }
-        )
+        df = cursor.execute(query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        }).as_pandas()
         return pd.melt(df, ['bulletin_date', 'collected_date']).replace(0, np.NaN)
 
     def make_chart(self, df, bulletin_date):
@@ -501,7 +478,7 @@ AND bulletin_date <= %(max_bulletin_date)s"""
 
 
 class MolecularDailyDeltas(AbstractMolecularChart):
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, cursor, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -511,14 +488,10 @@ SELECT
 FROM molecular_deltas
 WHERE %(min_bulletin_date)s - INTERVAL '14' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        df = pd.read_sql_query(
-            query, connection,
-            parse_dates=['bulletin_date', 'collected_date'],
-            params={
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }
-        )
+        df = cursor.execute(query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        }).as_pandas()
         return pd.melt(df, ['bulletin_date', 'collected_date'])
 
     def filter_data(self, df, bulletin_date):
@@ -576,7 +549,7 @@ AND bulletin_date <= %(max_bulletin_date)s"""
 
 
 class MolecularLatenessTiers(AbstractMolecularChart):
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, cursor, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -585,12 +558,9 @@ SELECT
     count
 FROM molecular_lateness_tiers
 WHERE bulletin_date <= %(max_bulletin_date)s"""
-        return pd.read_sql_query(
-            query, connection, parse_dates=['bulletin_date'],
-            params={
-                'max_bulletin_date': max(bulletin_dates)
-            }
-        )
+        return cursor.execute(query, {
+            'max_bulletin_date': max(bulletin_dates)
+        }).as_pandas()
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
@@ -651,7 +621,7 @@ WHERE bulletin_date <= %(max_bulletin_date)s"""
 
 
 class CaseFatalityRate(AbstractMolecularChart):
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, cursor, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -661,14 +631,12 @@ SELECT
     smoothed_deaths,
     lagged_cfr
 FROM lagged_cfr
-WHERE bulletin_date <= %(max_bulletin_date)s"""
-        return pd.read_sql_query(
-            query, connection,
-            parse_dates=['bulletin_date', 'collected_date', 'death_date'],
-            params={
-                'max_bulletin_date': max(bulletin_dates)
-            }
-        )
+WHERE bulletin_date <= %(max_bulletin_date)s
+AND collected_date >= DATE '2020-03-13'"""
+        return cursor.execute(query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        }).as_pandas()
 
     def filter_data(self, df, bulletin_date):
         week_ago = bulletin_date - datetime.timedelta(days=7)
@@ -707,7 +675,7 @@ class RecentHospitalizations(AbstractMolecularChart):
     SORT_ORDER = ['COVID', 'No COVID', 'Disponibles']
     COLORS = ['#d4322c', '#f58518', '#a4d86e']
 
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, cursor, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -719,7 +687,7 @@ SELECT
     nocovid AS "No COVID",
     disp AS "Disponibles"
 FROM prdoh_hospitalizations"""
-        df = pd.read_sql_query(query, connection, parse_dates=['bulletin_date', 'Fecha'])
+        df = cursor.execute(query).as_pandas()
         return pd.melt(df, ['bulletin_date', 'Fecha', 'Edad', 'Tipo', 'Total'])
 
     def make_chart(self, df, bulletin_date):
@@ -770,7 +738,7 @@ FROM prdoh_hospitalizations"""
 
 
 class AgeGroups(AbstractMolecularChart):
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, cursor, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -781,15 +749,11 @@ SELECT
 FROM cases_by_age_5y
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        return pd.read_sql_query(
-            query, connection,
-            parse_dates=['bulletin_date', 'collected_date'],
-            params={
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }
-        )
-
+        return cursor.execute(query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        }).as_pandas()
+        
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
@@ -841,7 +805,7 @@ class RecentAgeGroups(AbstractMolecularChart):
     HEIGHT = 175
     DAYS=168
 
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, cursor, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -859,14 +823,10 @@ SELECT
 FROM recent_age_groups
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        return pd.read_sql_query(
-            query, connection,
-            parse_dates=['bulletin_date', 'collected_date'],
-            params={
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }
-        )
+        return cursor.execute(query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        }).as_pandas()
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
@@ -1084,7 +1044,7 @@ class EncounterLag(AbstractMolecularChart):
         'Casos (todos)', 'Casos (antígenos)', 'Casos (moleculares)'
     ]
 
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, cursor, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -1099,13 +1059,10 @@ SELECT
 FROM encounter_lag
 WHERE %(min_bulletin_date)s - INTERVAL '49' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        df1 = pd.read_sql_query(
-            query, connection, parse_dates=['bulletin_date'],
-            params={
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }
-        )
+        df1 = cursor.execute(query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        }).as_pandas()
         df2 = pd.wide_to_long(
             df1, ['Casos', 'Pruebas'],
             i=['bulletin_date', 'age_gte', 'age_lt'],
@@ -1173,7 +1130,7 @@ AND bulletin_date <= %(max_bulletin_date)s"""
 class MunicipalTestingScatter(AbstractMolecularChart):
     WIDTH = 575
 
-    def fetch_data(self, connection, bulletin_dates):
+    def fetch_data(self, cursor, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -1188,13 +1145,10 @@ SELECT
 FROM municipal_testing_scatterplot
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        return pd.read_sql_query(
-            query, connection, parse_dates=['bulletin_date'],
-            params={
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }
-        )
+        return cursor.execute(query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        }).as_pandas()
 
     def make_chart(self, df, bulletin_date):
         molecular_positivity = \

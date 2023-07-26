@@ -4,9 +4,6 @@ import concurrent.futures as futures
 import datetime
 import logging
 import pathlib
-import sqlalchemy
-import sqlalchemy.sql as sql
-import sqlalchemy.sql.functions as sqlfn
 import subprocess
 
 from . import charts
@@ -50,7 +47,7 @@ def main():
     logging.info("output-dir is %s", args.output_dir)
     pathlib.Path(args.output_dir).mkdir(exist_ok=True)
 
-    athena = util.create_athena_engine(args)
+    athena = util.create_pyathena_connection(args)
     bulletin_date = compute_bulletin_date(args, athena)
     logging.info('Using bulletin date of %s', bulletin_date)
 
@@ -126,13 +123,13 @@ def compute_bulletin_date(args, engine):
     else:
         return query_for_bulletin_date(engine)
 
-def query_for_bulletin_date(engine):
-    metadata = sqlalchemy.MetaData(engine)
-    with engine.connect() as connection:
-        table = sqlalchemy.Table('bulletin_cases', metadata, autoload=True)
-        query = sql.select([sqlfn.max(table.c.bulletin_date)])
-        result = connection.execute(query)
-        return result.fetchone()[0]
+def query_for_bulletin_date(connection):
+    cursor = connection.cursor()
+    query = """
+SELECT max(bulletin_date)
+FROM bulletin_cases"""
+    result = cursor.execute(query)
+    return result.fetchone()[0].to_pydatetime().date()
 
 
 def rclone(output_dir, rclone_destination, rclone_command):
