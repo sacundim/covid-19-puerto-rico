@@ -35,6 +35,8 @@ def process_arguments():
                         help="Switch to turn off website generation (which is a bit slow)")
     parser.add_argument('--no-assets', action='store_false', dest='build_assets',
                         help="Switch to turn off website static assets copy (which is slow)")
+    parser.add_argument('--no-clear-output-dir', action='store_false', dest='clear_output_dir',
+                        help="Do not delete the contents of the `--output-dir` when running")
 
     parser.add_argument('--rclone-command', type=str, default='rclone',
                         help='Override the path to the rclone command. Default: `rclone`.')
@@ -93,6 +95,13 @@ def run(args, athena):
         if args.build_website:
             site = website.Website(args)
             targets = [site] + targets
+
+        if args.clear_output_dir:
+            output_dir = pathlib.Path(args.output_dir)
+            logging.info("Deleting directory: %s", output_dir)
+            util.empty_directory(output_dir)
+            output_dir.mkdir(exist_ok=True)
+
         for future in futures.as_completed([executor.submit(target, date_range) for target in targets]):
             logging.info("Completed %s", future.result())
 
