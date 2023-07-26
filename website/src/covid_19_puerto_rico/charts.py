@@ -4,6 +4,7 @@ import datetime
 import logging
 import numpy as np
 import pandas as pd
+from pyathena.pandas.cursor import PandasCursor
 from pathlib import Path
 
 from . import util
@@ -21,8 +22,7 @@ class AbstractChart(ABC):
         return self.__class__.__name__
 
     def render(self, bulletin_dates):
-        with self.athena.cursor() as cursor:
-            df = self.fetch_data(cursor, bulletin_dates)
+        df = self.fetch_data(self.athena, bulletin_dates)
         logging.info("%s dataframe: %s", self.name, util.describe_frame(df))
 
         logging.info(f'Writing {self.name} charts to {self.output_dir}...')
@@ -50,7 +50,7 @@ class AbstractChart(ABC):
         pass
 
     @abstractmethod
-    def fetch_data(self, cursor, bulletin_dates):
+    def fetch_data(self, athena, bulletin_dates):
         pass
 
     def filter_data(self, df, bulletin_date):
@@ -96,7 +96,7 @@ class CurrentDeltas(AbstractChart):
                                   'Muertes'])
         )
 
-    def fetch_data(self, cursor, bulletin_dates):
+    def fetch_data(self, athena, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -107,10 +107,11 @@ SELECT
 FROM bulletin_cases
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        df = cursor.execute(query, {
-            'min_bulletin_date': min(bulletin_dates),
-            'max_bulletin_date': max(bulletin_dates)
-        }).as_pandas()
+        with athena.cursor(PandasCursor) as cursor:
+            df = cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
         return pd.melt(df, ["bulletin_date", "datum_date"]) \
             .replace(0, np.nan)
 
@@ -153,7 +154,7 @@ class DailyDeltas(AbstractChart):
                                   'Muertes'])
         )
 
-    def fetch_data(self, cursor, bulletin_dates):
+    def fetch_data(self, athena, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -164,10 +165,11 @@ SELECT
 FROM bulletin_cases
 WHERE %(min_bulletin_date)s - INTERVAL '14' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        df = cursor.execute(query, {
-            'min_bulletin_date': min(bulletin_dates),
-            'max_bulletin_date': max(bulletin_dates)
-        }).as_pandas()
+        with athena.cursor(PandasCursor) as cursor:
+            df = cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
         return pd.melt(df, ["bulletin_date", "datum_date"])
 
     def filter_data(self, df, bulletin_date):
@@ -268,7 +270,7 @@ class WeekdayBias(AbstractChart):
             spacing=3
         )
 
-    def fetch_data(self, cursor, bulletin_dates):
+    def fetch_data(self, athena, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -279,10 +281,11 @@ SELECT
 FROM weekday_bias
 WHERE %(min_bulletin_date)s - INTERVAL '22' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        df = cursor.execute(query, {
-            'min_bulletin_date': min(bulletin_dates),
-            'max_bulletin_date': max(bulletin_dates)
-        }).as_pandas()
+        with athena.cursor(PandasCursor) as cursor:
+            df = cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
         return pd.melt(df, ['bulletin_date', 'datum_date']).dropna()
 
     def filter_data(self, df, bulletin_date):
@@ -355,7 +358,7 @@ class Municipal(AbstractChart):
             x='independent', y='independent'
         )
 
-    def fetch_data(self, cursor, bulletin_dates):
+    def fetch_data(self, athena, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -367,10 +370,11 @@ SELECT
 FROM cases_municipal_agg
 WHERE %(min_bulletin_date)s - INTERVAL '97' DAY <= sample_date
 AND sample_date <= %(max_bulletin_date)s"""
-        return cursor.execute(query, {
-            'min_bulletin_date': min(bulletin_dates),
-            'max_bulletin_date': max(bulletin_dates)
-        }).as_pandas()
+        with athena.cursor(PandasCursor) as cursor:
+            return cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
 
 
 class MunicipalMap(AbstractChart):
@@ -448,7 +452,7 @@ class MunicipalMap(AbstractChart):
         return alt.InlineData(values=util.get_geojson_resource('municipalities.topojson'),
                               format=alt.TopoDataFormat(type='topojson', feature='municipalities'))
 
-    def fetch_data(self, cursor, bulletin_dates):
+    def fetch_data(self, athena, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -459,17 +463,18 @@ SELECT
 FROM municipal_map
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        return cursor.execute(query, {
-            'min_bulletin_date': min(bulletin_dates),
-            'max_bulletin_date': max(bulletin_dates)
-        }).as_pandas()
+        with athena.cursor(PandasCursor) as cursor:
+            return cursor.execute(query, {
+                'min_bulletin_date': min(bulletin_dates),
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
 
 class LatenessTiers(AbstractChart):
-    def fetch_data(self, cursor, bulletin_dates):
+    def fetch_data(self, athena, bulletin_dates):
         query = """
 SELECT
     bulletin_date,
@@ -478,9 +483,10 @@ SELECT
     count
 FROM lateness_tiers
 WHERE bulletin_date <= %(max_bulletin_date)s"""
-        return cursor.execute(query, {
-            'max_bulletin_date': max(bulletin_dates)
-        }).as_pandas()
+        with athena.cursor(PandasCursor) as cursor:
+            return cursor.execute(query, {
+                'max_bulletin_date': max(bulletin_dates)
+            }).as_pandas()
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
