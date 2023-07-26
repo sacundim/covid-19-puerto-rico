@@ -34,7 +34,7 @@ def process_arguments():
     parser.add_argument('--no-website', action='store_false', dest='build_website',
                         help="Switch to turn off website generation (which is a bit slow)")
     parser.add_argument('--no-assets', action='store_false', dest='build_assets',
-                        help="Switch to turn off website static assets generation (which is slow)")
+                        help="Switch to turn off website static assets copy (which is slow)")
 
     parser.add_argument('--rclone-command', type=str, default='rclone',
                         help='Override the path to the rclone command. Default: `rclone`.')
