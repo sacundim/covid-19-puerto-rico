@@ -5,6 +5,7 @@ import datetime
 import logging
 import pathlib
 import subprocess
+import vegafusion as vf
 
 from . import charts
 from . import molecular
@@ -117,6 +118,8 @@ def global_configuration():
     alt.renderers.set_embed_options(
         timeFormatLocale=util.get_json_resource('es-PR.json')
     )
+
+    vf.enable()
 
 
 

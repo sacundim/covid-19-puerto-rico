@@ -22,12 +22,6 @@ def make_date_range(start, end):
             for n in range(int((end - start).days) + 1)]
 
 
-def save_chart(chart, basename, formats):
-    for format in formats:
-        filename = f"{basename}.{format}"
-        logging.debug("Writing chart to %s", filename)
-        chart.save(filename)
-
 def heatmap_text_color(df, field, extreme_color='white', mid_color='black'):
     """Compute the color of the text so that it'll contrast with
     the diverging color scale of the heatmap."""

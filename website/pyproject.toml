@@ -19,6 +19,7 @@ vl-convert-python = "^0.11.0"
 pillow = "^10.0.0"
 envyaml = "^1.10.211231"
 polars = "^0.18.8"
+vegafusion = {version = "1.4.0rc5", extras = ["embed"]}
 
 [build-system]
 requires = ["poetry-core"]

@@ -6,6 +6,7 @@ import numpy as np
 import polars as pl
 from pyathena.pandas.cursor import PandasCursor
 from pathlib import Path
+import vegafusion as vf
 
 from . import util
 
@@ -33,9 +34,23 @@ class AbstractChart(ABC):
         bulletin_dir = Path(f'{self.output_dir}/{bulletin_date}')
         bulletin_dir.mkdir(exist_ok=True)
         filtered = self.filter_data(df, bulletin_date)
-        util.save_chart(self.make_chart(filtered, bulletin_date),
-                        f"{bulletin_dir}/{bulletin_date}_{self.name}",
-                        self.output_formats)
+        self.save_chart(self.make_chart(filtered, bulletin_date),
+                        f"{bulletin_dir}/{bulletin_date}_{self.name}")
+
+    def save_chart(self, chart, basename):
+        """Save an Altair chart object with Vegafusion."""
+        for format in self.output_formats:
+            filename = f"{basename}.{format}"
+            logging.debug("Writing chart to %s", filename)
+            match format:
+                case 'svg':
+                    vf.save_svg(chart, filename)
+                case 'png':
+                    vf.save_png(chart, filename)
+                case 'json':
+                    vf.save_vega(chart, filename)
+                case _:
+                    raise ValueError(f'unsupported format "{format}"')
 
     def save_csv(self, df):
         """Utility method to save a CSV file to a standardized location."""
