@@ -8,6 +8,7 @@ import datetime
 import logging
 import numpy as np
 import pandas as pd
+import polars as pl
 from pyathena.pandas.cursor import PandasCursor
 
 from covid_19_puerto_rico import util
@@ -20,7 +21,7 @@ PUERTO_RICO_POPULATION_100K = PUERTO_RICO_POPULATION / 1e5
 
 class AbstractMolecularChart(charts.AbstractChart):
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+        return self.filter_bd(df, bulletin_date)
 
 
 class RecentCases(AbstractMolecularChart):
@@ -38,17 +39,14 @@ SELECT
 FROM recent_daily_cases
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
-        return pd.melt(df, ["bulletin_date", "datum_date"])
+        df = util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
+        return df.melt(["bulletin_date", "datum_date"])
 
     def filter_data(self, df, bulletin_date):
-        week_ago = bulletin_date - datetime.timedelta(days=7)
-        return df.loc[(df['bulletin_date'] == pd.to_datetime(bulletin_date))
-                      | (df['bulletin_date'] == pd.to_datetime(week_ago))]
+        return self.filter_bd_and_week_ago(df, bulletin_date)
 
     def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).transform_window(
@@ -142,21 +140,18 @@ SELECT
 FROM new_daily_cases
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
-        return pd.melt(df, ["bulletin_date", "datum_date"])
+        df = util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
+        return df.melt(["bulletin_date", "datum_date"])
 
     def filter_data(self, df, bulletin_date):
-        week_ago = bulletin_date - datetime.timedelta(days=7)
-        return df.loc[(df['bulletin_date'] == pd.to_datetime(bulletin_date))
-                      | (df['bulletin_date'] == pd.to_datetime(week_ago))]
+        return self.filter_bd_and_week_ago(df, bulletin_date)
 
     def make_chart(self, df, bulletin_date):
-        max_y = util.round_up_sig(df['value'].max())
-        return alt.Chart(df.dropna()).transform_window(
+        max_y = util.round_up_sig(df.select(pl.max('value')).item())
+        return alt.Chart(df).transform_window(
             groupby=['variable', 'bulletin_date'],
             sort=[{'field': 'datum_date'}],
             frame=[-6, 0],
@@ -230,20 +225,21 @@ SELECT
 FROM confirmed_vs_rejected
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
     def filter_data(self, df, bulletin_date):
-        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
-        week_ago = effective_bulletin_date - datetime.timedelta(days=7)
-        return df.loc[(df['bulletin_date'] == effective_bulletin_date)
-                      | ((df['bulletin_date'] == week_ago))]
+        effective_bulletin_date = min(bulletin_date,
+                                      # TODO: Fix PyAthena/Polars date/time type weirdness.
+                                      # The values at the Athena side are DATE, but PyAthena
+                                      # gratuitously turns them into DATETIME
+                                      df.select(pl.max('bulletin_date')).item().date())
+        return self.filter_bd_and_week_ago(df, effective_bulletin_date)
 
     def make_chart(self, df, bulletin_date):
-        return alt.Chart(df.dropna()).transform_window(
+        return alt.Chart(df).transform_window(
             groupby=['bulletin_date'],
             sort=[{'field': 'collected_date'}],
             frame=[-6, 0],
@@ -322,10 +318,12 @@ class NaivePositiveRate(AbstractMolecularChart):
         )
 
     def filter_data(self, df, bulletin_date):
-        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
-        week_ago = effective_bulletin_date - datetime.timedelta(days=7)
-        return df.loc[(df['bulletin_date'] == effective_bulletin_date)
-                      | ((df['bulletin_date'] == week_ago))]
+        effective_bulletin_date = min(bulletin_date,
+                                      # TODO: Fix PyAthena/Polars date/time type weirdness.
+                                      # The values at the Athena side are DATE, but PyAthena
+                                      # gratuitously turns them into DATETIME
+                                      df.select(pl.max('bulletin_date')).item().date())
+        return self.filter_bd_and_week_ago(df, effective_bulletin_date)
 
     def fetch_data(self, athena, bulletin_dates):
         query = """
@@ -338,11 +336,10 @@ SELECT
 FROM naive_positive_rates
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
 
 class NewTestSpecimens(AbstractMolecularChart):
@@ -353,7 +350,7 @@ class NewTestSpecimens(AbstractMolecularChart):
     DATE_TYPE_SORT_ORDER = ['Fecha de muestra', 'Fecha de reporte']
 
     def make_chart(self, df, bulletin_date):
-        return alt.Chart(df.dropna()).transform_window(
+        return alt.Chart(df).transform_window(
             groupby=['test_type', 'bulletin_date', 'date_type', 'test_type'],
             sort=[{'field': 'date'}],
             frame=[-6, 0],
@@ -396,10 +393,12 @@ class NewTestSpecimens(AbstractMolecularChart):
         )
 
     def filter_data(self, df, bulletin_date):
-        effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
-        week_ago = effective_bulletin_date - datetime.timedelta(days=7)
-        return df.loc[(df['bulletin_date'] == effective_bulletin_date)
-                      | ((df['bulletin_date'] == week_ago))]
+        effective_bulletin_date = min(bulletin_date,
+                                      # TODO: Fix PyAthena/Polars date/time type weirdness.
+                                      # The values at the Athena side are DATE, but PyAthena
+                                      # gratuitously turns them into DATETIME
+                                      df.select(pl.max('bulletin_date')).item().date())
+        return self.filter_bd_and_week_ago(df, effective_bulletin_date)
 
     def fetch_data(self, athena, bulletin_dates):
         query = """
@@ -412,11 +411,10 @@ SELECT
 FROM new_daily_tests
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
 
 class MolecularCurrentDeltas(AbstractMolecularChart):
@@ -430,12 +428,12 @@ SELECT
 FROM molecular_deltas
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
-        return pd.melt(df, ['bulletin_date', 'collected_date']).replace(0, np.NaN)
+        df = util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
+        return df.melt(["bulletin_date", "collected_date"])\
+            .filter(pl.col('value') != 0)
 
     def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).transform_joinaggregate(
@@ -495,21 +493,18 @@ SELECT
     delta_positive_tests AS "Positivas"
 FROM molecular_deltas
 WHERE %(min_bulletin_date)s - INTERVAL '14' DAY <= bulletin_date
-AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
-        return pd.melt(df, ['bulletin_date', 'collected_date'])
+AND bulletin_date <= %(max_bulletin_date)s
+AND (delta_tests != 0 OR delta_positive_tests != 0)"""
+        df = util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
+        return df.melt(["bulletin_date", "collected_date"])\
+            .filter(pl.col('value') != 0)
 
     def filter_data(self, df, bulletin_date):
-        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=14))
-        until_date = pd.to_datetime(bulletin_date)
-        filtered = df.loc[(since_date < df['bulletin_date'])
-                      & (df['bulletin_date'] <= until_date)]\
-            .replace(0, np.nan).dropna()
-        return filtered
+        return self.filter_data_bd_range(df, bulletin_date, datetime.timedelta(days=14))
+
 
     def make_chart(self, df, bulletin_date):
         base = alt.Chart(df).transform_joinaggregate(
@@ -567,17 +562,20 @@ SELECT
     count
 FROM molecular_lateness_tiers
 WHERE bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_polars(athena, query, {
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+        return self.filter_before_bd(df, bulletin_date)
 
     def make_chart(self, df, bulletin_date):
-        max_y = df.groupby(['bulletin_date'])['count'].sum()\
-            .rolling(7).mean().max()
+        max_y = df.groupby('bulletin_date')\
+            .agg(pl.sum('count'))\
+            .sort('bulletin_date')\
+            .select(pl.col('count').rolling_mean(window_size=7))\
+            .select(pl.max('count'))\
+            .item()
 
         base = alt.Chart(df).transform_joinaggregate(
             groupby=['bulletin_date'],
@@ -643,16 +641,13 @@ SELECT
 FROM lagged_cfr
 WHERE bulletin_date <= %(max_bulletin_date)s
 AND collected_date >= DATE '2020-03-13'"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
     def filter_data(self, df, bulletin_date):
-        week_ago = bulletin_date - datetime.timedelta(days=7)
-        return df.loc[(df['bulletin_date'] == pd.to_datetime(bulletin_date))
-                      | ((df['bulletin_date'] == pd.to_datetime(week_ago)))]
+        return self.filter_bd_and_week_ago(df, bulletin_date)
 
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df).mark_line(clip=True).transform_filter(
@@ -698,9 +693,8 @@ SELECT
     nocovid AS "No COVID",
     disp AS "Disponibles"
 FROM prdoh_hospitalizations"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query).as_pandas()
-        return pd.melt(df, ['bulletin_date', 'Fecha', 'Edad', 'Tipo', 'Total'])
+        df = util.execute_polars(athena, query)
+        return df.melt(['bulletin_date', 'Fecha', 'Edad', 'Tipo', 'Total'])
 
     def make_chart(self, df, bulletin_date):
         area = alt.Chart(df).transform_calculate(
@@ -761,14 +755,13 @@ SELECT
 FROM cases_by_age_5y
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
         
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+        return self.filter_bd(df, bulletin_date)
 
     def make_chart(self, df, bulletin_date):
         WIDTH = 600
@@ -836,14 +829,13 @@ SELECT
 FROM recent_age_groups
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+        return self.filter_bd(df, bulletin_date)
 
     def make_chart(self, df, bulletin_date):
         return alt.vconcat(
@@ -1073,6 +1065,7 @@ SELECT
 FROM encounter_lag
 WHERE %(min_bulletin_date)s - INTERVAL '49' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
+        # TODO: Polars doesn't have wide_to_long
         with athena.cursor(PandasCursor) as cursor:
             df1 = cursor.execute(query, {
                 'min_bulletin_date': min(bulletin_dates),
@@ -1160,16 +1153,17 @@ SELECT
 FROM municipal_testing_scatterplot
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
     def make_chart(self, df, bulletin_date):
         molecular_positivity = \
-            (df['molecular_positivity'] * df['daily_molecular']).sum() \
-                / df['daily_molecular'].sum()
+            df.select(
+                (pl.col('molecular_positivity') * pl.col('daily_molecular')).alias('molecular_positives')
+            ).select(pl.sum('molecular_positives')).item()\
+                / df.select(pl.sum('daily_molecular')).item()
 
         base = alt.Chart(df).transform_calculate(
             collected_since="timeOffset('day', datum.bulletin_date, -20)",

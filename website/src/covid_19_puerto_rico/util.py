@@ -7,8 +7,11 @@ import io
 import json
 import logging
 from math import log10, floor
+import pandas as pd
 import platform
+import polars as pl
 import pyathena
+from pyathena.arrow.cursor import ArrowCursor
 from pyathena.pandas.cursor import PandasCursor
 from urllib.parse import quote_plus
 
@@ -19,15 +22,6 @@ def make_date_range(start, end):
     return [start + datetime.timedelta(n)
             for n in range(int((end - start).days) + 1)]
 
-def create_pyathena_connection(args):
-    yaml_dict = EnvYAML(args.config_file)
-    config = (yaml_dict['athena'])
-    return pyathena.connect(
-        region_name=config['region_name'],
-        schema_name=config['schema_name'],
-        work_group=config['work_group'],
-        cursor_class=PandasCursor
-    )
 
 def save_chart(chart, basename, formats):
     for format in formats:
@@ -97,3 +91,40 @@ def log_platform(level=logging.INFO):
     uname = platform.uname()
     logging.log(level, "Platform: system=%s, machine=%s, version=%s",
                 uname.system, uname.machine, uname.version)
+
+
+##########################################################
+##########################################################
+##
+## Athena/Arrow/Polars
+##
+
+def create_pyathena_connection(args):
+    yaml_dict = EnvYAML(args.config_file)
+    config = (yaml_dict['athena'])
+    return pyathena.connect(
+        region_name=config['region_name'],
+        schema_name=config['schema_name'],
+        work_group=config['work_group'],
+        cursor_class=PandasCursor
+    )
+
+def execute_pandas(athena, sql, params={}):
+    with athena.cursor(PandasCursor) as cursor:
+        return cursor.execute(sql, params).as_pandas()
+
+def execute_polars(athena, sql, params={}):
+    with athena.cursor(ArrowCursor) as cursor:
+        return pl.from_arrow(cursor.execute(sql, params).as_arrow())
+
+def describe_frame(df):
+    if isinstance(df, pd.DataFrame):
+        return describe_pandas_frame(df)
+    elif isinstance(df, pl.DataFrame):
+        return str(df)
+
+def describe_pandas_frame(df):
+    """Because df.info() prints instead of returning a string."""
+    buf = io.StringIO()
+    df.info(buf=buf)
+    return buf.getvalue()

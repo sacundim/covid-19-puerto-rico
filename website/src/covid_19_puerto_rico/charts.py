@@ -3,7 +3,7 @@ import altair as alt
 import datetime
 import logging
 import numpy as np
-import pandas as pd
+import polars as pl
 from pyathena.pandas.cursor import PandasCursor
 from pathlib import Path
 
@@ -55,7 +55,24 @@ class AbstractChart(ABC):
 
     def filter_data(self, df, bulletin_date):
         """Filter dataframe according to given bulletin_date.  May want to override."""
-        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+        return self.filter_bd(df, bulletin_date)
+
+    def filter_bd(self, df, bulletin_date):
+        return df.filter(pl.col('bulletin_date') == bulletin_date)
+
+    def filter_bd_and_week_ago(self, df, bulletin_date):
+        week_ago = bulletin_date - datetime.timedelta(days=7)
+        return df.filter((pl.col('bulletin_date') == bulletin_date)
+                         | (pl.col('bulletin_date') == week_ago))
+
+    def filter_data_bd_range(self, df, bulletin_date, delta):
+        since_date = bulletin_date - delta
+        until_date = bulletin_date
+        return df.filter((since_date < pl.col('bulletin_date'))
+                         & (pl.col('bulletin_date') <= until_date))
+
+    def filter_before_bd(self, df, bulletin_date):
+        return df.filter(pl.col('bulletin_date') <= bulletin_date)
 
 
 class CurrentDeltas(AbstractChart):
@@ -107,13 +124,12 @@ SELECT
 FROM bulletin_cases
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
-        return pd.melt(df, ["bulletin_date", "datum_date"]) \
-            .replace(0, np.nan)
+        df = util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
+        return df.melt(["bulletin_date", "datum_date"])\
+            .filter(pl.col('value') != 0)
 
 
 class DailyDeltas(AbstractChart):
@@ -165,21 +181,15 @@ SELECT
 FROM bulletin_cases
 WHERE %(min_bulletin_date)s - INTERVAL '14' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
-        return pd.melt(df, ["bulletin_date", "datum_date"])
+        df = util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
+        return df.melt(["bulletin_date", "datum_date"])\
+            .filter(pl.col('value') != 0)
 
     def filter_data(self, df, bulletin_date):
-        since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=14))
-        until_date = pd.to_datetime(bulletin_date)
-        filtered = df.loc[(since_date < df['bulletin_date'])
-                      & (df['bulletin_date'] <= until_date)]\
-            .replace(0, np.nan)\
-            .dropna()
-        return filtered
+        return self.filter_data_bd_range(df, bulletin_date, datetime.timedelta(days=14))
 
 
 class WeekdayBias(AbstractChart):
@@ -281,22 +291,21 @@ SELECT
 FROM weekday_bias
 WHERE %(min_bulletin_date)s - INTERVAL '22' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
-        return pd.melt(df, ['bulletin_date', 'datum_date']).dropna()
+        df = util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
+        return df.melt(['bulletin_date', 'datum_date'])
 
     def filter_data(self, df, bulletin_date):
         # We exclude the current bulletin_date because this chart's
         # main use is to compare the current bulletin's data to trends
         # established **before** it.
         cutoff_date = bulletin_date - datetime.timedelta(days=1)
-        since_date = pd.to_datetime(cutoff_date - datetime.timedelta(days=21))
-        until_date = pd.to_datetime(cutoff_date)
-        return df.loc[(since_date < df['bulletin_date'])
-                          & (df['bulletin_date'] <= until_date)]
+        since_date = cutoff_date - datetime.timedelta(days=21)
+        until_date = cutoff_date
+        return df.filter((since_date < pl.col('bulletin_date'))
+                         & (pl.col('bulletin_date') <= until_date))
 
 
 class Municipal(AbstractChart):
@@ -370,11 +379,10 @@ SELECT
 FROM cases_municipal_agg
 WHERE %(min_bulletin_date)s - INTERVAL '97' DAY <= sample_date
 AND sample_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
 
 class MunicipalMap(AbstractChart):
@@ -463,14 +471,13 @@ SELECT
 FROM municipal_map
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+        return self.filter_bd(df, bulletin_date)
 
 
 class LatenessTiers(AbstractChart):
@@ -483,17 +490,21 @@ SELECT
     count
 FROM lateness_tiers
 WHERE bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_polars(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
     def filter_data(self, df, bulletin_date):
-        return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
+        return self.filter_before_bd(df, bulletin_date)
 
     def make_chart(self, df, bulletin_date):
-        max_y = df.groupby(['bulletin_date'])['count'].sum()\
-            .rolling(7).mean().max()
+        max_y = df.groupby('bulletin_date')\
+            .agg(pl.sum('count'))\
+            .sort('bulletin_date')\
+            .select(pl.col('count').rolling_mean(window_size=7))\
+            .select(pl.max('count'))\
+            .item()
 
         base = alt.Chart(df).transform_joinaggregate(
             groupby=['bulletin_date'],

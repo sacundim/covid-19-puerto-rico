@@ -30,6 +30,7 @@ COPY --link --from=rclone/rclone:1.61.1 \
     /usr/local/bin/rclone \
     /usr/local/bin/rclone
 WORKDIR /covid-19-puerto-rico
+RUN apt-get update && apt-get install -y git
 COPY --link --from=requirements /covid-19-puerto-rico/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache \
     pip install -r requirements.txt && rm requirements.txt
