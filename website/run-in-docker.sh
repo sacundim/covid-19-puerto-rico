@@ -11,8 +11,6 @@ export ATHENA_WORK_GROUP="${ATHENA_WORK_GROUP-covid-19-puerto-rico}"
 cd "$(dirname $0)"
 PLATFORM="linux" ./build-docker-image.sh --load
 
-rm -rf output/*
-
 time "${DOCKER}" run --rm \
   -v ~/.aws:/awsconfig:ro \
   -v "$(pwd)"/assets:/assets:ro \
