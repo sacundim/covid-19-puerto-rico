@@ -21,6 +21,9 @@ def process_arguments():
                         help='Directory into which to place output')
     parser.add_argument('--rclone-destination', type=str, default=None,
                         help='If given, the `--output-dir` will be copied over to that destination with `rclone`.')
+    parser.add_argument('--rclone-command', type=str, default='rclone',
+                        help='Override the path to the rclone command. Default: `rclone`.')
+
 
     parser.add_argument('--bulletin-date', type=datetime.date.fromisoformat,
                         help='Bulletin date to generate charts for. Default: most recent in DB.')
@@ -35,11 +38,10 @@ def process_arguments():
                         help="Switch to turn off website generation (which is a bit slow)")
     parser.add_argument('--no-assets', action='store_false', dest='build_assets',
                         help="Switch to turn off website static assets copy (which is slow)")
-    parser.add_argument('--no-clear-output-dir', action='store_false', dest='clear_output_dir',
+    parser.add_argument('--no-delete', action='store_false', dest='clear_output_dir',
                         help="Do not delete the contents of the `--output-dir` when running")
-
-    parser.add_argument('--rclone-command', type=str, default='rclone',
-                        help='Override the path to the rclone command. Default: `rclone`.')
+    parser.add_argument('--select', action='append', dest='includes', default=[],
+                        help="Include this chart name in those to be generated. Implies --no-delete.")
 
     return parser.parse_args()
 
@@ -84,6 +86,7 @@ def run(args, athena):
         molecular.MolecularCurrentDeltas(athena, args.output_dir, output_formats),
         molecular.MolecularDailyDeltas(athena, args.output_dir, output_formats),
     ]
+    targets = filter_targets(targets, args)
 
     start_date = max([args.earliest_date,
                       bulletin_date - datetime.timedelta(days=args.days_back)])
@@ -96,11 +99,7 @@ def run(args, athena):
             site = website.Website(args)
             targets = [site] + targets
 
-        if args.clear_output_dir:
-            output_dir = pathlib.Path(args.output_dir)
-            logging.info("Deleting directory: %s", output_dir)
-            util.empty_directory(output_dir)
-            output_dir.mkdir(exist_ok=True)
+        clean_output_directory(args)
 
         for future in futures.as_completed([executor.submit(target, date_range) for target in targets]):
             logging.info("Completed %s", future.result())
@@ -114,6 +113,24 @@ def run(args, athena):
             args.rclone_destination,
             args.rclone_command)
 
+def clean_output_directory(args):
+    output_dir = pathlib.Path(args.output_dir)
+    output_dir.mkdir(exist_ok=True)
+    if not args.clear_output_dir or len(args.includes) > 0:
+        logging.info("Skipping delete of directory contents: %s", args.output_dir)
+    else:
+        logging.info("Deleting directory contents: %s", output_dir)
+        util.empty_directory(output_dir)
+
+def filter_targets(targets, args):
+    if len(args.includes) > 0:
+        includes = frozenset(args.includes)
+        filtered = list(filter(lambda target: target.name in includes, targets))
+        logging.info("Filtered the target list to: %s",
+                     list(map(lambda target: target.name, filtered)))
+        return filtered
+    else:
+        return targets
 
 def global_configuration():
     logging.basicConfig(format='%(asctime)s %(threadName)s %(message)s',
