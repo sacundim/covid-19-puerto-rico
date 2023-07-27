@@ -26,9 +26,11 @@ class Website:
             self.render_bulletin_date(bulletin_date, date_range)
         if self.build_assets and self.assets_dir:
             self.copy_assets()
-        else:
+        elif self.assets_dir:
             logging.info("Copying only CSS and JS")
             self.copy_css_and_js()
+        else:
+            logging.info("Skipping assets copy")
 
     def copy_css_and_js(self):
         assets_dir = pathlib.Path(self.assets_dir)
