@@ -27,7 +27,15 @@ class Website:
         if self.build_assets and self.assets_dir:
             self.copy_assets()
         else:
-            logging.info("Skipping assets copy")
+            logging.info("Copying only CSS and JS")
+            self.copy_css_and_js()
+
+    def copy_css_and_js(self):
+        assets_dir = pathlib.Path(self.assets_dir)
+        output_dir = pathlib.Path(self.output_dir)
+        output_dir.mkdir(exist_ok=True)
+        shutil.copytree(assets_dir / 'css', output_dir / 'css', dirs_exist_ok=True)
+        shutil.copytree(assets_dir / 'js', output_dir / 'js', dirs_exist_ok=True)
 
     def copy_assets(self):
         for directory, subdirs, filenames in os.walk(self.assets_dir):

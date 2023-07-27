@@ -7,7 +7,8 @@ import io
 import json
 import logging
 from math import log10, floor
-import pandas as pd
+import os
+import pathlib
 import platform
 import polars as pl
 import pyathena
@@ -48,6 +49,12 @@ def midrange(lo, hi, mid=0, scale=1.0):
     return [min(mid, (mid + lo) / (1.0 + scale)),
             max(mid, (mid + hi) / (1.0 + scale))]
 
+def describe_frame(df):
+    """Because df.info() prints instead of returning a string."""
+    buf = io.StringIO()
+    df.info(buf=buf)
+    return buf.getvalue()
+
 def altair_date_expr(date):
     return alt.expr.toDate(f'{date.isoformat()}T00:00:00')
 
@@ -84,6 +91,17 @@ def log_platform(level=logging.INFO):
     uname = platform.uname()
     logging.log(level, "Platform: system=%s, machine=%s, version=%s",
                 uname.system, uname.machine, uname.version)
+
+
+def empty_directory(target_dir_name):
+    """Clear out all the contents of the given directory, but don't delete the directory itself"""
+    target_dir = pathlib.Path(target_dir_name)
+    if target_dir.exists():
+        for dirpath, dirnames, filenames in os.walk(target_dir, topdown=False):
+            for dirname in dirnames:
+                os.rmdir(os.path.join(dirpath, dirname))
+            for filename in filenames:
+                os.unlink(os.path.join(dirpath, filename))
 
 
 ##########################################################
