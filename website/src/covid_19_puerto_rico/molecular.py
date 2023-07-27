@@ -38,11 +38,10 @@ SELECT
 FROM recent_daily_cases
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        df = util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
         return pd.melt(df, ["bulletin_date", "datum_date"])
 
     def filter_data(self, df, bulletin_date):
@@ -142,11 +141,10 @@ SELECT
 FROM new_daily_cases
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        df = util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
         return pd.melt(df, ["bulletin_date", "datum_date"])
 
     def filter_data(self, df, bulletin_date):
@@ -230,11 +228,10 @@ SELECT
 FROM confirmed_vs_rejected
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
     def filter_data(self, df, bulletin_date):
         effective_bulletin_date = min(df['bulletin_date'].max(), pd.to_datetime(bulletin_date))
@@ -338,11 +335,10 @@ SELECT
 FROM naive_positive_rates
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
 
 class NewTestSpecimens(AbstractMolecularChart):
@@ -412,11 +408,10 @@ SELECT
 FROM new_daily_tests
 WHERE %(min_bulletin_date)s - INTERVAL '7' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
 
 class MolecularCurrentDeltas(AbstractMolecularChart):
@@ -430,11 +425,10 @@ SELECT
 FROM molecular_deltas
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        df = util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
         return pd.melt(df, ['bulletin_date', 'collected_date']).replace(0, np.NaN)
 
     def make_chart(self, df, bulletin_date):
@@ -496,11 +490,10 @@ SELECT
 FROM molecular_deltas
 WHERE %(min_bulletin_date)s - INTERVAL '14' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        df = util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
         return pd.melt(df, ['bulletin_date', 'collected_date'])
 
     def filter_data(self, df, bulletin_date):
@@ -567,10 +560,9 @@ SELECT
     count
 FROM molecular_lateness_tiers
 WHERE bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_pandas(athena, query, {
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
@@ -643,11 +635,10 @@ SELECT
 FROM lagged_cfr
 WHERE bulletin_date <= %(max_bulletin_date)s
 AND collected_date >= DATE '2020-03-13'"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
     def filter_data(self, df, bulletin_date):
         week_ago = bulletin_date - datetime.timedelta(days=7)
@@ -698,8 +689,7 @@ SELECT
     nocovid AS "No COVID",
     disp AS "Disponibles"
 FROM prdoh_hospitalizations"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query).as_pandas()
+        df = util.execute_pandas(athena, query)
         return pd.melt(df, ['bulletin_date', 'Fecha', 'Edad', 'Tipo', 'Total'])
 
     def make_chart(self, df, bulletin_date):
@@ -761,11 +751,10 @@ SELECT
 FROM cases_by_age_5y
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
         
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
@@ -836,11 +825,10 @@ SELECT
 FROM recent_age_groups
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
@@ -1073,17 +1061,16 @@ SELECT
 FROM encounter_lag
 WHERE %(min_bulletin_date)s - INTERVAL '49' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df1 = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
-        df2 = pd.wide_to_long(
-            df1, ['Casos', 'Pruebas'],
+        wide_df = util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
+        taller_df = pd.wide_to_long(
+            wide_df, ['Casos', 'Pruebas'],
             i=['bulletin_date', 'age_gte', 'age_lt'],
             j='test_type', sep='_', suffix='.*'
         )
-        return pd.melt(df2.reset_index(), ['bulletin_date', 'test_type', 'age_gte', 'age_lt'])
+        return pd.melt(taller_df.reset_index(), ['bulletin_date', 'test_type', 'age_gte', 'age_lt'])
 
     def filter_data(self, df, bulletin_date):
         since_date = pd.to_datetime(bulletin_date - datetime.timedelta(days=49))
@@ -1160,11 +1147,10 @@ SELECT
 FROM municipal_testing_scatterplot
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
     def make_chart(self, df, bulletin_date):
         molecular_positivity = \

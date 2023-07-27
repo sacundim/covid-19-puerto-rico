@@ -107,11 +107,10 @@ SELECT
 FROM bulletin_cases
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        df = util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
         return pd.melt(df, ["bulletin_date", "datum_date"]) \
             .replace(0, np.nan)
 
@@ -165,11 +164,10 @@ SELECT
 FROM bulletin_cases
 WHERE %(min_bulletin_date)s - INTERVAL '14' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        df = util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
         return pd.melt(df, ["bulletin_date", "datum_date"])
 
     def filter_data(self, df, bulletin_date):
@@ -281,11 +279,10 @@ SELECT
 FROM weekday_bias
 WHERE %(min_bulletin_date)s - INTERVAL '22' DAY <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            df = cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        df = util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
         return pd.melt(df, ['bulletin_date', 'datum_date']).dropna()
 
     def filter_data(self, df, bulletin_date):
@@ -370,11 +367,10 @@ SELECT
 FROM cases_municipal_agg
 WHERE %(min_bulletin_date)s - INTERVAL '97' DAY <= sample_date
 AND sample_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
 
 class MunicipalMap(AbstractChart):
@@ -463,11 +459,10 @@ SELECT
 FROM municipal_map
 WHERE %(min_bulletin_date)s <= bulletin_date
 AND bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'min_bulletin_date': min(bulletin_dates),
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
@@ -483,10 +478,10 @@ SELECT
     count
 FROM lateness_tiers
 WHERE bulletin_date <= %(max_bulletin_date)s"""
-        with athena.cursor(PandasCursor) as cursor:
-            return cursor.execute(query, {
-                'max_bulletin_date': max(bulletin_dates)
-            }).as_pandas()
+        return util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
 
     def filter_data(self, df, bulletin_date):
         return df.loc[df['bulletin_date'] <= pd.to_datetime(bulletin_date)]
