@@ -11,7 +11,7 @@ covid19pr = 'covid_19_puerto_rico:main'
 [tool.poetry.dependencies]
 python = "^3.11"
 numpy = "^1.21.0"
-altair = { git = "https://github.com/altair-viz/altair.git", rev = "427d5679" }
+altair = { git = "https://github.com/altair-viz/altair.git", rev = "72a361c" }
 jinja2 = "^3.1.1"
 geojson = "^2.5.0"
 PyAthena = {extras = ["arrow"], version = "^3.0.6"}
