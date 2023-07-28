@@ -131,6 +131,34 @@ resource "aws_s3_bucket_public_access_block" "block_data_bucket" {
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_intelligent_tiering_configuration" "archive_bioportal" {
+  bucket = aws_s3_bucket.data_bucket.bucket
+  name   = "ArchiveBioportal"
+
+  filter {
+    prefix = "bioportal/"
+  }
+
+  tiering {
+    access_tier = "DEEP_ARCHIVE_ACCESS"
+    days        = 180
+  }
+}
+
+resource "aws_s3_bucket_intelligent_tiering_configuration" "archive_covid19datos" {
+  bucket = aws_s3_bucket.data_bucket.bucket
+  name   = "ArchiveCovid19Datos"
+
+  filter {
+    prefix = "covid19datos-v2/"
+  }
+
+  tiering {
+    access_tier = "DEEP_ARCHIVE_ACCESS"
+    days        = 180
+  }
+}
+
 
 #################################################################################
 #################################################################################
