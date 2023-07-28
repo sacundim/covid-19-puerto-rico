@@ -158,7 +158,7 @@ def query_for_bulletin_date(connection):
     FROM bulletin_cases"""
     with connection.cursor() as cursor:
         result = cursor.execute(query)
-        return result.fetchone()[0].to_pydatetime().date()
+        return result.fetchone()[0]
 
 
 def rclone(output_dir, rclone_destination, rclone_command):

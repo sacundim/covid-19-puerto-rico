@@ -8,10 +8,11 @@ import json
 import logging
 from math import log10, floor
 import os
+import pandas as pd
 import pathlib
 import platform
 import pyathena
-from pyathena.pandas.cursor import PandasCursor
+from pyathena.arrow.cursor import ArrowCursor
 from urllib.parse import quote_plus
 
 from . import resources
@@ -28,13 +29,14 @@ def create_pyathena_connection(args):
         region_name=config['region_name'],
         schema_name=config['schema_name'],
         work_group=config['work_group'],
-        cursor_class=PandasCursor
+        cursor_class=ArrowCursor
     )
 
 def execute_pandas(athena, query, params={}):
     """Execute a query with PyAthena, return the result set as Pandas"""
-    with athena.cursor(PandasCursor) as cursor:
-        return cursor.execute(query, params).as_pandas()
+    with athena.cursor(ArrowCursor) as cursor:
+        arrow = cursor.execute(query, params).as_arrow()
+        return arrow.to_pandas(types_mapper=pd.ArrowDtype)
 
 
 def save_chart(chart, basename, formats):
