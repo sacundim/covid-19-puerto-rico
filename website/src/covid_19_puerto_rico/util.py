@@ -23,6 +23,12 @@ def make_date_range(start, end):
             for n in range(int((end - start).days) + 1)]
 
 
+def execute_pandas(athena, query, params={}):
+    """Execute a query with PyAthena, return the result set as Pandas"""
+    with athena.cursor(PandasCursor) as cursor:
+        return cursor.execute(query, params).as_pandas()
+
+
 def save_chart(chart, basename, formats):
     for format in formats:
         filename = f"{basename}.{format}"
