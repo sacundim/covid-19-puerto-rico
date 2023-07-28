@@ -23,6 +23,18 @@ def make_date_range(start, end):
             for n in range(int((end - start).days) + 1)]
 
 
+def execute_pandas(athena, query, params={}):
+    """Execute a query with PyAthena, return the result set as Pandas"""
+    with athena.cursor(PandasCursor) as cursor:
+        return cursor.execute(query, params).as_pandas()
+
+
+def save_chart(chart, basename, formats):
+    for format in formats:
+        filename = f"{basename}.{format}"
+        logging.debug("Writing chart to %s", filename)
+        chart.save(filename)
+
 def heatmap_text_color(df, field, extreme_color='white', mid_color='black'):
     """Compute the color of the text so that it'll contrast with
     the diverging color scale of the heatmap."""
