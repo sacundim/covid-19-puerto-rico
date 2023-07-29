@@ -92,26 +92,3 @@ resource "aws_iam_role_policy_attachment" "ecs_job_role_athena_bucket" {
   role       = aws_iam_role.ecs_job_role.name
   policy_arn = aws_iam_policy.athena_bucket_rw.arn
 }
-
-
-resource "aws_scheduler_schedule" "dbt_daily_refresh" {
-  name        = "dbt-daily-refresh"
-  description = "Run the daily DBT refresh."
-
-  schedule_expression_timezone = "America/Puerto_Rico"
-  schedule_expression = "cron(05 14 * * ? *)"
-  flexible_time_window {
-    mode = "OFF"
-  }
-
-  target {
-    arn = "arn:aws:scheduler:::aws-sdk:batch:submitJob"
-    role_arn = aws_iam_role.eventbridge_scheduler_role.arn
-
-    input = jsonencode({
-      "JobDefinition": aws_batch_job_definition.dbt_run_models.arn,
-      "JobName": "dbt-run-models",
-      "JobQueue": aws_batch_job_queue.fargate_amd64.arn
-    })
-  }
-}
