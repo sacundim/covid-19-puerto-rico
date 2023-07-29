@@ -39,6 +39,30 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_rebuild" {
 ##################################################################################
 ##################################################################################
 ##
+## Daily schedule
+##
+
+resource "aws_scheduler_schedule" "daily_rebuild" {
+  name        = "${var.project_name}-daily-rebuild"
+  description = "Run the daily website rebuild."
+
+  schedule_expression_timezone = "America/Puerto_Rico"
+  schedule_expression = "cron(05 14 * * ? *)"
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn = aws_sfn_state_machine.covid_19_puerto_rico_rebuild.arn
+    role_arn = aws_iam_role.eventbridge_scheduler_role.arn
+    input = jsonencode({})
+  }
+}
+
+
+##################################################################################
+##################################################################################
+##
 ## IAM
 ##
 
