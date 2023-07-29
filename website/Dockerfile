@@ -31,6 +31,7 @@ COPY --link --from=rclone/rclone:1.61.1 \
     /usr/local/bin/rclone
 WORKDIR /covid-19-puerto-rico
 COPY --link --from=requirements /covid-19-puerto-rico/requirements.txt ./
+RUN apt update && apt install -y git
 RUN --mount=type=cache,target=/root/.cache \
     pip install -r requirements.txt && rm requirements.txt
 COPY --link --from=build /covid-19-puerto-rico/dist/covid_19_puerto_rico-*.whl .
