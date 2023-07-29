@@ -94,21 +94,24 @@ resource "aws_iam_role_policy_attachment" "ecs_job_role_athena_bucket" {
 }
 
 
-resource "aws_cloudwatch_event_rule" "dbt_daily_refresh" {
+resource "aws_scheduler_schedule" "dbt_daily_refresh" {
   name        = "dbt-daily-refresh"
   description = "Run the daily DBT refresh."
-  # 10:05am Pacific Standard Time
-  schedule_expression = "cron(05 18 * * ? *)"
-}
 
-resource "aws_cloudwatch_event_target" "dbt_daily_refresh" {
-  target_id = "hhs-daily-download"
-  rule = aws_cloudwatch_event_rule.dbt_daily_refresh.name
-  arn = aws_batch_job_queue.fargate_amd64.arn
-  role_arn = aws_iam_role.ecs_events_role.arn
+  schedule_expression_timezone = "America/Puerto_Rico"
+  schedule_expression = "cron(05 14 * * ? *)"
+  flexible_time_window {
+    mode = "OFF"
+  }
 
-  batch_target {
-    job_definition = aws_batch_job_definition.dbt_run_models.arn
-    job_name       = aws_batch_job_definition.dbt_run_models.name
+  target {
+    arn = "arn:aws:scheduler:::aws-sdk:batch:submitJob"
+    role_arn = aws_iam_role.eventbridge_scheduler_role.arn
+
+    input = jsonencode({
+      "JobDefinition": aws_batch_job_definition.dbt_run_models.arn,
+      "JobName": "dbt-run-models",
+      "JobQueue": aws_batch_job_queue.fargate_amd64.arn
+    })
   }
 }
