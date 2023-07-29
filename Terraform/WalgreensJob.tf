@@ -64,36 +64,6 @@ resource "aws_batch_job_definition" "walgreens_download_and_sync" {
 }
 
 
-################################################################################
-################################################################################
-##
-## Cloudwatch Events (old)
-##
-
-resource "aws_cloudwatch_event_rule" "walgreens_daily_download" {
-  name        = "walgreens-daily-download"
-  description = "Run the daily Walgreens download."
-  schedule_expression = "cron(25 16 * * ? *)"
-}
-
-resource "aws_cloudwatch_event_target" "walgreens_daily_download" {
-  target_id = "walgreens-daily-download"
-  rule = aws_cloudwatch_event_rule.walgreens_daily_download.name
-  arn = aws_batch_job_queue.fargate_amd64.arn
-  role_arn = aws_iam_role.ecs_events_role.arn
-
-  batch_target {
-    job_definition = aws_batch_job_definition.walgreens_download_and_sync.arn
-    job_name       = aws_batch_job_definition.walgreens_download_and_sync.name
-  }
-}
-
-################################################################################
-################################################################################
-##
-## EventsBridge Scheduler (new)
-##
-
 resource "aws_scheduler_schedule" "walgreens_daily_download" {
   name        = "walgreens-daily-download"
   description = "Run the daily Walgreens download."
@@ -112,10 +82,7 @@ resource "aws_scheduler_schedule" "walgreens_daily_download" {
     input = jsonencode({
       "JobDefinition": aws_batch_job_definition.walgreens_download_and_sync.arn,
       "JobName": "walgreens-download-and-sync",
-      "JobQueue": aws_batch_job_queue.fargate_amd64.arn,
-      "Parameters": {
-        "rclone_destination": ":s3,provider=AWS,env_auth:${var.testing_bucket_name}/data"
-      }
+      "JobQueue": aws_batch_job_queue.fargate_amd64.arn
     })
   }
 }
