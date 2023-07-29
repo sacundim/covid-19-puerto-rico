@@ -184,6 +184,11 @@ resource "aws_iam_role_policy_attachment" "ecs_job_role_bucket_rw" {
 ##    permission to read that secret in order to wire it in.
 ##
 
+
+##
+## ECS task role
+##
+
 resource "aws_iam_role" "ecs_task_role" {
   name = "${var.project_name}-ecs-task-role"
   description = "Allows ECS tasks to call AWS services on your behalf."
@@ -213,6 +218,11 @@ resource "aws_iam_role_policy_attachment" "ecs_task_role_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+
+##
+## Batch service role
+##
+
 resource "aws_iam_role" "batch_service_role" {
   name = "${var.project_name}-batch-service-role"
   description = "Grants permissions to the Batch service."
@@ -239,6 +249,10 @@ resource "aws_iam_role_policy_attachment" "batch_service_role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
 }
 
+
+##
+## ECS events role
+##
 
 resource "aws_iam_role" "ecs_events_role" {
   name = "${var.project_name}-batch-events-role"
@@ -270,6 +284,47 @@ resource "aws_iam_role_policy_attachment" "batch_events_role_attach" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBatchServiceEventTargetRole"
 }
 
+
+##
+## EventBridge Scheduler role
+##
+
+resource "aws_iam_role" "eventbridge_scheduler_role" {
+  name = "${var.project_name}-batch-eventbridge-scheduler-role"
+  description = "Used by EventBridge Scheduler to launch scheduled tasks in Batch."
+  path = "/"
+  tags = {
+    Project = var.project_name
+  }
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "scheduler.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "batch_scheduler_role_attach" {
+  role       = aws_iam_role.eventbridge_scheduler_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBatchServiceEventTargetRole"
+}
+
+
+#######################################################################################
+#######################################################################################
+##
+## ECS instance role
+##
 
 resource "aws_iam_instance_profile" "ecs_instance_role" {
   name = "${var.project_name}-ecs-instance-role"
