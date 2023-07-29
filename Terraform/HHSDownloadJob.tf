@@ -76,27 +76,6 @@ resource "aws_secretsmanager_secret" "socrata" {
 }
 
 
-resource "aws_cloudwatch_event_rule" "hhs_daily_download" {
-  name        = "hhs-daily-download"
-  description = "Run the daily HHS download."
-  # 9:25am and 9:25pm Pacific Standard Time
-  # 12:25am and 12:25pm Eastern Standard Time
-  schedule_expression = "cron(25 5,17 * * ? *)"
-}
-
-resource "aws_cloudwatch_event_target" "hhs_daily_download" {
-  target_id = "hhs-daily-download"
-  rule = aws_cloudwatch_event_rule.hhs_daily_download.name
-  arn = aws_batch_job_queue.fargate_amd64.arn
-  role_arn = aws_iam_role.ecs_events_role.arn
-
-  batch_target {
-    job_definition = aws_batch_job_definition.hhs_download_and_sync.arn
-    job_name       = aws_batch_job_definition.hhs_download_and_sync.name
-  }
-}
-
-
 # We need to grant the Batch service itself (not the task) permission to access
 # our secret, which it needs to set up our task
 resource "aws_iam_role_policy_attachment" "ecs_task_role_socrata_app_token" {
@@ -122,4 +101,27 @@ resource "aws_iam_policy" "socrata_app_token" {
       }
     ]
   })
+}
+
+
+resource "aws_scheduler_schedule" "hhs_daily_download" {
+  name        = "hhs-daily-download"
+  description = "Run the daily HHS download."
+
+  schedule_expression_timezone = "America/New_York"
+  schedule_expression = "cron(25 13 * * ? *)"
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn = "arn:aws:scheduler:::aws-sdk:batch:submitJob"
+    role_arn = aws_iam_role.eventbridge_scheduler_role.arn
+
+    input = jsonencode({
+      "JobDefinition": aws_batch_job_definition.hhs_download_and_sync.arn,
+      "JobName": "hhs-download-and-sync",
+      "JobQueue": aws_batch_job_queue.fargate_amd64.arn
+    })
+  }
 }
