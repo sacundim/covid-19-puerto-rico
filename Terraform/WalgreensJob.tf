@@ -68,7 +68,7 @@ resource "aws_scheduler_schedule" "walgreens_daily_download" {
   name        = "walgreens-daily-download"
   description = "Run the daily Walgreens download."
 
-  schedule_expression_timezone = "America/Puerto Rico"
+  schedule_expression_timezone = "America/Puerto_Rico"
   schedule_expression = "cron(25 12 * * ? *)"
   flexible_time_window {
     mode = "OFF"
