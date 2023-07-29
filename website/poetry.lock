@@ -23,8 +23,8 @@ doc = ["docutils", "geopandas", "jinja2", "myst-parser", "numpydoc", "pillow (>=
 [package.source]
 type = "git"
 url = "https://github.com/altair-viz/altair.git"
-reference = "eebb4f4"
-resolved_reference = "eebb4f480d8606bc7e6260717a91c5d2dbd63135"
+reference = "57a4ad7"
+resolved_reference = "57a4ad7fa9752b256f35512cb4239cc5b45b20a3"
 
 [[package]]
 name = "attrs"
@@ -787,4 +787,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "2f59d9e6fa48784166a34f4da668307f9e1a218d73e9ce9929d484e69f9513bb"
+content-hash = "b5de717c0a17966c67453d7aa7340eb64fd64ddd3eec7904f076ffdb2ecd8eeb"
