@@ -107,14 +107,6 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_ingest" {
               },
               "Handle Biostatistics errors": {
                 "Type": "Pass",
-                "Parameters": {
-                  # The `$.Cause` of an AWS Batch sync task failure is the same
-                  # data type as the output of a successful run, but (a) is a
-                  # string serialization of a JSON object, (b) has `"Status": "FAILED"`
-                  # instead of `"Status": "SUCCEEDED"` as successful ones do.
-                  "Cause.$": "States.StringToJson($.Cause)"
-                },
-                "OutputPath": "$.Cause",
                 "End": true
               }
             }
@@ -147,10 +139,6 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_ingest" {
               },
               "Handle Covid19DatosV2 errors": {
                 "Type": "Pass",
-                "Parameters": {
-                  "Cause.$": "States.StringToJson($.Cause)"
-                },
-                "OutputPath": "$.Cause",
                 "End": true
               }
             }
@@ -183,10 +171,6 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_ingest" {
               },
               "Handle HHS errors": {
                 "Type": "Pass",
-                "Parameters": {
-                  "Cause.$": "States.StringToJson($.Cause)"
-                },
-                "OutputPath": "$.Cause",
                 "End": true
               }
             }
