@@ -260,7 +260,7 @@ resource "aws_scheduler_schedule" "test_daily_ingestion" {
   description = "Run the daily data ingestions."
 
   schedule_expression_timezone = "America/Puerto_Rico"
-  schedule_expression = "cron(55 14 * * ? *)"
+  schedule_expression = "cron(05 17 * * ? *)"
   flexible_time_window {
     mode = "OFF"
   }
@@ -269,6 +269,7 @@ resource "aws_scheduler_schedule" "test_daily_ingestion" {
     arn = aws_sfn_state_machine.covid_19_puerto_rico_ingest.arn
     role_arn = aws_iam_role.eventbridge_scheduler_role.arn
     input = jsonencode({
+      "localTimezone": "America/Puerto_Rico",
       "localSchedule": {
         "biostatistics": {
           "timezone": "America/Puerto_Rico",
@@ -279,13 +280,13 @@ resource "aws_scheduler_schedule" "test_daily_ingestion" {
         "covid19datos_v2": {
           "timezone": "America/Puerto_Rico",
 #          "localTime": "12:25:00"
-          "localTime": "00:25:00"
+          "localTime": "21:25:00"
         },
 
         "hhs": {
           "timezone": "America/New_York",
 #          "localTime": "13:25:00"
-          "localTime": "01:25:00"
+          "localTime": "22:25:00"
         }
       }
     })
