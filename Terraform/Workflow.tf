@@ -255,13 +255,12 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 ## Daily schedule
 ##
 
-/*
 resource "aws_scheduler_schedule" "test_daily_ingestion" {
   name        = "${var.project_name}-test-daily-ingestion"
   description = "Run the daily data ingestions."
 
-  schedule_expression_timezone = "America/Los_Angeles"
-  schedule_expression = "cron(00 00 * * ? *)"
+  schedule_expression_timezone = "America/Puerto_Rico"
+  schedule_expression = "cron(55 14 * * ? *)"
   flexible_time_window {
     mode = "OFF"
   }
@@ -273,23 +272,25 @@ resource "aws_scheduler_schedule" "test_daily_ingestion" {
       "localSchedule": {
         "biostatistics": {
           "timezone": "America/Puerto_Rico",
-          "localTime": "05:55:00"
+#          "localTime": "05:55:00"
+          "localTime": "17:55:00"
         },
 
         "covid19datos_v2": {
           "timezone": "America/Puerto_Rico",
-          "localTime": "12:25:00"
+#          "localTime": "12:25:00"
+          "localTime": "00:25:00"
         },
 
         "hhs": {
           "timezone": "America/New_York",
-          "localTime": "13:25:00"
+#          "localTime": "13:25:00"
+          "localTime": "01:25:00"
         }
       }
     })
   }
 }
-*/
 
 
 resource "aws_scheduler_schedule" "daily_rebuild" {
