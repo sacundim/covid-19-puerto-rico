@@ -57,7 +57,7 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_ingest" {
 
   role_arn   = aws_iam_role.sfn_workflows.arn
   definition = jsonencode({
-    "Comment" : "Orchestrate the daily covid-19-puerto-rico.org website rebuild",
+    "Comment" : "Orchestrate the daily covid-19-puerto-rico.org data ingestion",
     "TimeoutSeconds": 86400,
     "StartAt" : "ComputeSchedule",
     "States": {
@@ -79,14 +79,14 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_ingest" {
         "Type": "Parallel",
         "Branches": [
           {
-            "StartAt": "WaitForBiostatistics",
+            "StartAt": "Schedule Biostatistics",
             "States": {
-              "WaitForBiostatistics": {
+              "Schedule Biostatistics": {
                 "Type": "Wait",
                 "TimestampPath": "$.utcSchedule.biostatistics",
-                "Next": "RunBiostatistics"
+                "Next": "Run Biostatistics"
               },
-              "RunBiostatistics": {
+              "Run Biostatistics": {
                 "Type" : "Task",
                 "Resource" : "arn:aws:states:::batch:submitJob.sync",
                 "Parameters": {
@@ -97,20 +97,38 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_ingest" {
                     "rclone_destination": ":s3,provider=AWS,env_auth:${var.testing_bucket_name}/data"
                   }
                 },
+                "Catch": [{
+                  # We swallow the errors because we don't want the state machine
+                  # execution to cancel our other parallel tasks if one fails.
+                  "ErrorEquals": [ "States.ALL" ],
+                  "Next": "Handle Biostatistics errors"
+                }],
+                "End": true
+              },
+              "Handle Biostatistics errors": {
+                "Type": "Pass",
+                "Parameters": {
+                  # The `$.Cause` of an AWS Batch sync task failure is the same
+                  # data type as the output of a successful run, but (a) is a
+                  # string serialization of a JSON object, (b) has `"Status": "FAILED"`
+                  # instead of `"Status": "SUCCEEDED"` as successful ones do.
+                  "Cause.$": "States.StringToJson($.Cause)"
+                },
+                "OutputPath": "$.Cause",
                 "End": true
               }
             }
           },
 
           {
-            "StartAt": "WaitForCovid19DatosV2",
+            "StartAt": "Schedule Covid19DatosV2",
             "States": {
-              "WaitForCovid19DatosV2": {
+              "Schedule Covid19DatosV2": {
                 "Type": "Wait",
                 "TimestampPath": "$.utcSchedule.covid19datos_v2",
-                "Next": "RunCovid19DatosV2"
+                "Next": "Run Covid19DatosV2"
               },
-              "RunCovid19DatosV2": {
+              "Run Covid19DatosV2": {
                 "Type" : "Task",
                 "Resource" : "arn:aws:states:::batch:submitJob.sync",
                 "Parameters": {
@@ -121,20 +139,32 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_ingest" {
                     "rclone_destination": ":s3,provider=AWS,env_auth:${var.testing_bucket_name}/data"
                   }
                 },
+                "Catch": [{
+                  "ErrorEquals": [ "States.ALL" ],
+                  "Next": "Handle Covid19DatosV2 errors"
+                }],
+                "End": true
+              },
+              "Handle Covid19DatosV2 errors": {
+                "Type": "Pass",
+                "Parameters": {
+                  "Cause.$": "States.StringToJson($.Cause)"
+                },
+                "OutputPath": "$.Cause",
                 "End": true
               }
             }
           },
 
           {
-            "StartAt": "WaitForHHS",
+            "StartAt": "Schedule HHS",
             "States": {
-              "WaitForHHS": {
+              "Schedule HHS": {
                 "Type": "Wait",
                 "TimestampPath": "$.utcSchedule.hhs",
-                "Next": "RunHHS"
+                "Next": "Run HHS"
               },
-              "RunHHS": {
+              "Run HHS": {
                 "Type" : "Task",
                 "Resource" : "arn:aws:states:::batch:submitJob.sync",
                 "Parameters": {
@@ -145,11 +175,33 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_ingest" {
                     "rclone_destination": ":s3,provider=AWS,env_auth:${var.testing_bucket_name}/data"
                   }
                 },
+                "Catch": [{
+                  "ErrorEquals": [ "States.ALL" ],
+                  "Next": "Handle HHS errors"
+                }],
+                "End": true
+              },
+              "Handle HHS errors": {
+                "Type": "Pass",
+                "Parameters": {
+                  "Cause.$": "States.StringToJson($.Cause)"
+                },
+                "OutputPath": "$.Cause",
                 "End": true
               }
             }
           }
         ],
+        "Next": "Verify Ingestions"
+      },
+
+      "Verify Ingestions": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "Parameters": {
+          "FunctionName": aws_lambda_function.verify_ingestion_results.function_name,
+          "Payload.$": "$"
+        },
         "End": true
       }
     }
@@ -172,6 +224,25 @@ data "archive_file" "resolve_ingestion_schedule" {
   type = "zip"
   source_file = "${path.module}/resolve_ingestion_schedule.py"
   output_path = "${path.module}/tmp/resolve_ingestion_schedule.zip"
+}
+
+
+resource "aws_lambda_function" "verify_ingestion_results" {
+  function_name = "${var.project_name}-verify-ingestion-results"
+  tags = {
+    Project = var.project_name
+  }
+  runtime = "python3.9"
+  filename = data.archive_file.verify_ingestion_results.output_path
+  source_code_hash = data.archive_file.verify_ingestion_results.output_base64sha256
+  handler = "verify_ingestion_results.lambda_handler"
+  role = aws_iam_role.iam_for_lambda.arn
+}
+
+data "archive_file" "verify_ingestion_results" {
+  type = "zip"
+  source_file = "${path.module}/verify_ingestion_results.py"
+  output_path = "${path.module}/tmp/verify_ingestion_results.zip"
 }
 
 
@@ -199,6 +270,43 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 ##
 ## Daily schedule
 ##
+
+/*
+resource "aws_scheduler_schedule" "test_daily_ingestion" {
+  name        = "${var.project_name}-test-daily-ingestion"
+  description = "Run the daily data ingestions."
+
+  schedule_expression_timezone = "America/Los_Angeles"
+  schedule_expression = "cron(00 00 * * ? *)"
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn = aws_sfn_state_machine.covid_19_puerto_rico_ingest.arn
+    role_arn = aws_iam_role.eventbridge_scheduler_role.arn
+    input = jsonencode({
+      "localSchedule": {
+        "biostatistics": {
+          "timezone": "America/Puerto_Rico",
+          "localTime": "05:55:00"
+        },
+
+        "covid19datos_v2": {
+          "timezone": "America/Puerto_Rico",
+          "localTime": "12:25:00"
+        },
+
+        "hhs": {
+          "timezone": "America/New_York",
+          "localTime": "13:25:00"
+        }
+      }
+    })
+  }
+}
+*/
+
 
 resource "aws_scheduler_schedule" "daily_rebuild" {
   name        = "${var.project_name}-daily-rebuild"
