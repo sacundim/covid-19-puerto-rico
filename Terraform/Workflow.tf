@@ -1,3 +1,8 @@
+locals {
+  # AWS Lambda Python runtime to use
+  aws_lambda_python_runtime = "python3.9"
+}
+
 ##################################################################################
 ##################################################################################
 ##
@@ -199,19 +204,12 @@ resource "aws_lambda_function" "resolve_ingestion_schedule" {
     Project = var.project_name
   }
   architectures = ["arm64"]
-  runtime = "python3.9"
-  filename = data.archive_file.resolve_ingestion_schedule.output_path
-  source_code_hash = data.archive_file.resolve_ingestion_schedule.output_base64sha256
+  runtime = local.aws_lambda_python_runtime
+  filename = data.archive_file.ingestion_workflow_lambdas.output_path
+  source_code_hash = data.archive_file.ingestion_workflow_lambdas.output_base64sha256
   handler = "resolve_ingestion_schedule.lambda_handler"
   role = aws_iam_role.iam_for_lambda.arn
 }
-
-data "archive_file" "resolve_ingestion_schedule" {
-  type = "zip"
-  source_file = "${path.module}/lambdas/resolve_ingestion_schedule.py"
-  output_path = "${path.module}/lambdas/resolve_ingestion_schedule.zip"
-}
-
 
 resource "aws_lambda_function" "verify_ingestion_results" {
   function_name = "${var.project_name}-verify-ingestion-results"
@@ -220,17 +218,17 @@ resource "aws_lambda_function" "verify_ingestion_results" {
     Project = var.project_name
   }
   architectures = ["arm64"]
-  runtime = "python3.9"
-  filename = data.archive_file.verify_ingestion_results.output_path
-  source_code_hash = data.archive_file.verify_ingestion_results.output_base64sha256
+  runtime = local.aws_lambda_python_runtime
+  filename = data.archive_file.ingestion_workflow_lambdas.output_path
+  source_code_hash = data.archive_file.ingestion_workflow_lambdas.output_base64sha256
   handler = "verify_ingestion_results.lambda_handler"
   role = aws_iam_role.iam_for_lambda.arn
 }
 
-data "archive_file" "verify_ingestion_results" {
+data "archive_file" "ingestion_workflow_lambdas" {
   type = "zip"
-  source_file = "${path.module}/lambdas/verify_ingestion_results.py"
-  output_path = "${path.module}/lambdas/verify_ingestion_results.zip"
+  source_dir = "${path.module}/lambdas/"
+  output_path = "${path.module}/tmp/ingestion-workflow-lambdas.zip"
 }
 
 
