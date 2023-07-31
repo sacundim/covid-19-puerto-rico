@@ -194,9 +194,11 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_ingest" {
 
 resource "aws_lambda_function" "resolve_ingestion_schedule" {
   function_name = "${var.project_name}-resolve-ingestion-schedule"
+  description = "Takes a local time daily schedule and resolves it to UTC timestamps for the next run."
   tags = {
     Project = var.project_name
   }
+  architectures = ["arm64"]
   runtime = "python3.9"
   filename = data.archive_file.resolve_ingestion_schedule.output_path
   source_code_hash = data.archive_file.resolve_ingestion_schedule.output_base64sha256
@@ -206,16 +208,18 @@ resource "aws_lambda_function" "resolve_ingestion_schedule" {
 
 data "archive_file" "resolve_ingestion_schedule" {
   type = "zip"
-  source_file = "${path.module}/resolve_ingestion_schedule.py"
-  output_path = "${path.module}/tmp/resolve_ingestion_schedule.zip"
+  source_file = "${path.module}/lambdas/resolve_ingestion_schedule.py"
+  output_path = "${path.module}/lambdas/resolve_ingestion_schedule.zip"
 }
 
 
 resource "aws_lambda_function" "verify_ingestion_results" {
   function_name = "${var.project_name}-verify-ingestion-results"
+  description = "Checks that the ingestion jobs all succeeded, and fails the workflow otherwise."
   tags = {
     Project = var.project_name
   }
+  architectures = ["arm64"]
   runtime = "python3.9"
   filename = data.archive_file.verify_ingestion_results.output_path
   source_code_hash = data.archive_file.verify_ingestion_results.output_base64sha256
@@ -225,8 +229,8 @@ resource "aws_lambda_function" "verify_ingestion_results" {
 
 data "archive_file" "verify_ingestion_results" {
   type = "zip"
-  source_file = "${path.module}/verify_ingestion_results.py"
-  output_path = "${path.module}/tmp/verify_ingestion_results.zip"
+  source_file = "${path.module}/lambdas/verify_ingestion_results.py"
+  output_path = "${path.module}/lambdas/verify_ingestion_results.zip"
 }
 
 
