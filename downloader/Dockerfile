@@ -1,51 +1,68 @@
-FROM python:3.11-slim AS base
+ARG PYTHON_VERSION="3.11"
 
-FROM base AS poetry
+#####################################################################
+#####################################################################
+##
+## The Python build environment image.  Note this is based on the
+## default "fat" Python Docker images, not the "slim" ones.  Building
+## with the "fat" image is better because you have more tools like
+## git and gcc which are sometimes required or useful.  But later we
+## install our artifacts into a "slim" base image.
+##
+FROM python:${PYTHON_VERSION} AS build
 ARG POETRY_VERSION="1.5.1"
 ENV POETRY_VIRTUALENVS_CREATE=false
 RUN --mount=type=cache,target=/root/.cache \
     pip install poetry=="${POETRY_VERSION}"
 
-
-#####################################################################
-#####################################################################
-##
-## The Python requirements image.  This depends exclusively on our
-## project's pyproject.toml` and `poetry.lock`, so as long as those
-## two files don't change, Docker's cache of these steps remains valid.
-##
-## Note that the `poetry export` command doesn't install the dependencies,
-## it just generates a `requirements.txt` file that `pip install` knows
-## how to consume without Poetry.
-##
-FROM poetry AS requirements
 WORKDIR /covid-19-puerto-rico
+
+##
+## Create a virtualenv and set the environment variables to activate it
+## by hand (`source venv/bin/activate` doesn't work in a Docker build)
+##
+ENV VIRTUAL_ENV="/covid-19-puerto-rico/venv"
+RUN python3 -m venv "${VIRTUAL_ENV}"
+ENV PATH="${VIRTUAL_ENV}/bin":$PATH
+
+
+##
+## Install the project requirements to the virtualenv.  We take care
+## to make this depend exclusively on our project's pyproject.toml`
+## and `poetry.lock`, so as long as those two files don't change,
+## Docker's cache of these steps remains valid.
+##
 COPY pyproject.toml poetry.lock ./
-RUN poetry export \
-    --without-hashes \
-    -f requirements.txt >requirements.txt
+RUN --mount=type=cache,target=/root/.cache \
+    poetry export \
+      --without-hashes \
+      -f requirements.txt >requirements.txt \
+ && pip install -r requirements.txt
 
 
-
-#####################################################################
-#####################################################################
 ##
-## This image packages our project's actual code as a Python wheel.
-## Note that the `poetry build` command doesn't install dependencies;
-## all it does is package our own code.
+## Only now, after we've installed the project's build dependencies,
+## do we loop in our actual code and install to our venv.
 ##
-FROM requirements AS build
-WORKDIR /covid-19-puerto-rico
+## Note that we do `poetry build` to generate a wheel file that we
+## `pip install`; if we do a `poetry install` it doesn't install our
+## code to the venv, but rather puts a link there to the source tree
+## which then means we can't copy it over to the app image.
+##
 COPY src src
-RUN poetry build
+RUN --mount=type=cache,target=/root/.cache \
+    poetry build \
+ && pip install dist/covid_19_puerto_rico_downloader-*.whl
+
 
 
 #####################################################################
 #####################################################################
 ##
-## The actual app image.
+## The actual app image.  Note we use a "slim" Python image.
 ##
-FROM base as app
+FROM python:${PYTHON_VERSION}-slim AS app
+
 # Install various prerequistes from the OS distribution.
 # Magic APT caching incantations from Docker docs:
 #
@@ -67,19 +84,6 @@ COPY --link --from=rclone/rclone:1.61.1 \
     /usr/local/bin/rclone
 
 
-# Install our project's Python dependencies all by their lonesome, so
-# that Docker will cache this step and not redo it unless they change.
-# Note that since we generated a `requirements.txt` above, we don't need
-# Poetry here, `pip install -r` is enough.
-WORKDIR /covid-19-puerto-rico
-COPY --link --from=requirements \
-    /covid-19-puerto-rico/requirements.txt \
-    ./
-RUN --mount=type=cache,target=/root/.cache \
-    pip install -r requirements.txt \
- && rm requirements.txt
-
-
 # `covid19datos.salud.gov.pr`'s SSL certificate is missing its
 # intermediate cert, so we check in a copy of that into our repo
 # and install it by hand.
@@ -88,13 +92,9 @@ RUN update-ca-certificates
 ENV REQUESTS_CA_BUNDLE="/etc/ssl/certs/ca-certificates.crt"
 
 
-# Install our actual stuff.  Since all the dependencies have
-# already been installed above, these steps can be blazing fast.
-# And again since we packaged our code above as a Python wheel
-# (`.whl` file), we don't need Poetry here, `pip install` will do.
-COPY --link --from=build \
-    /covid-19-puerto-rico/dist/covid_19_puerto_rico_downloader-*.whl \
-    .
-RUN --mount=type=cache,target=/root/.cache \
-    pip install covid_19_puerto_rico_downloader-*.whl \
- && rm covid_19_puerto_rico_downloader-*.whl
+# Install our project's Python virtualenv
+WORKDIR /covid-19-puerto-rico
+ENV VIRTUAL_ENV="/covid-19-puerto-rico/venv"
+COPY --link --from=build "${VIRTUAL_ENV}" "${VIRTUAL_ENV}"
+ENV PATH="${VIRTUAL_ENV}/bin":$PATH
+
