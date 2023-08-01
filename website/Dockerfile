@@ -11,13 +11,11 @@ ENV POETRY_VIRTUALENVS_CREATE=false
 RUN --mount=type=cache,target=/root/.cache \
     pip install poetry=="${POETRY_VERSION}"
 
-WORKDIR /covid-19-puerto-rico
 
+WORKDIR /covid-19-puerto-rico
 COPY pyproject.toml poetry.lock ./
 RUN --mount=type=cache,target=/root/.cache \
-    poetry export \
-      --without-hashes \
-      -f requirements.txt >requirements.txt \
+    poetry export -f requirements.txt >requirements.txt \
  && pip wheel --wheel-dir=dist -r requirements.txt
 
 

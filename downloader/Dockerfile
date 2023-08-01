@@ -11,11 +11,12 @@ ARG PYTHON_VERSION="3.11"
 ##
 FROM python:${PYTHON_VERSION} AS build
 ARG POETRY_VERSION="1.5.1"
+# Disable this because Poetry will create a venv we don't use with
+# a random name that messes up caching:
 ENV POETRY_VIRTUALENVS_CREATE=false
 RUN --mount=type=cache,target=/root/.cache \
     pip install poetry=="${POETRY_VERSION}"
 
-WORKDIR /covid-19-puerto-rico
 
 ##
 ## Download or build binary wheels for the project's dependencies into
@@ -27,11 +28,10 @@ WORKDIR /covid-19-puerto-rico
 ## `pyproject.toml` and `poetry.lock`, so as long as those two files
 ## don't change, Docker's cache of these steps remains valid.
 ##
+WORKDIR /covid-19-puerto-rico
 COPY pyproject.toml poetry.lock ./
 RUN --mount=type=cache,target=/root/.cache \
-    poetry export \
-      --without-hashes \
-      -f requirements.txt >requirements.txt \
+    poetry export -f requirements.txt >requirements.txt \
  && pip wheel --wheel-dir=dist -r requirements.txt
 
 
