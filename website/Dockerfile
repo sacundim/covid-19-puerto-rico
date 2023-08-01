@@ -29,7 +29,8 @@ RUN --mount=type=cache,target=/root/.cache \
 COPY src src
 RUN --mount=type=cache,target=/root/.cache \
     poetry build \
- && pip install dist/covid_19_puerto_rico-*.whl
+ && pip install dist/covid_19_puerto_rico-*.whl \
+ && pip uninstall --yes wheel setuptools pip
 
 
 
@@ -39,6 +40,7 @@ RUN --mount=type=cache,target=/root/.cache \
 ## Slim app image
 ##
 FROM python:${PYTHON_VERSION}-slim AS app
+RUN pip uninstall --yes wheel setuptools pip
 
 # The rclone packaged with the OS distribution is always hopelessly out
 # of date, better to get it from the official rclone Docker images.
