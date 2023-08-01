@@ -1,7 +1,95 @@
 locals {
   # AWS Lambda Python runtime to use
   aws_lambda_python_runtime = "python3.9"
+
+  ingestion_schedule = {
+      "localTimezone": "America/Puerto_Rico",
+      "localSchedule": {
+        "biostatistics": {
+          "timezone": "America/Puerto_Rico",
+          "localTime": "02:55:00"
+        },
+
+        "covid19datos_v2": {
+          "timezone": "America/Puerto_Rico",
+          "localTime": "12:25:00"
+        },
+
+        "hhs": {
+          "timezone": "America/New_York",
+          "localTime": "13:25:00"
+        }
+      }
+    }
 }
+
+##################################################################################
+##################################################################################
+##
+## Daily schedule
+##
+
+resource "aws_scheduler_schedule" "daily_flow" {
+  name        = "${var.project_name}-daily"
+  description = "Run the daily website ingestions and rebuild."
+
+  schedule_expression_timezone = "America/Puerto_Rico"
+  schedule_expression = "cron(00 00 * * ? *)"
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn = aws_sfn_state_machine.covid_19_puerto_rico_daily.arn
+    role_arn = aws_iam_role.eventbridge_scheduler_role.arn
+    input = jsonencode({})
+  }
+}
+
+
+##################################################################################
+##################################################################################
+##
+## The daily master state machine, which does the whole ingestion and rebuild
+## process end to end.
+##
+
+resource "aws_sfn_state_machine" "covid_19_puerto_rico_daily" {
+  name     = "${var.project_name}-daily"
+  tags = {
+    Project = var.project_name
+  }
+
+  role_arn = aws_iam_role.sfn_workflows.arn
+
+  definition = jsonencode({
+    "Comment" : "Orchestrate the daily covid-19-puerto-rico.org ingestions and rebuild",
+    "TimeoutSeconds": 86400,
+    "StartAt" : "Ingestions",
+    "States": {
+      "Ingestions": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::states:startExecution",
+        "Parameters": {
+          "StateMachineArn" : aws_sfn_state_machine.covid_19_puerto_rico_ingest.arn,
+          "Input" : local.ingestion_schedule
+        },
+        "Next": "Rebuild"
+      },
+
+      "Rebuild": {
+        "Type" : "Task",
+        "Resource" : "arn:aws:states:::states:startExecution",
+        "Parameters" : {
+          "StateMachineArn" : aws_sfn_state_machine.covid_19_puerto_rico_rebuild.arn,
+          "Input": {}
+        },
+        "End": true
+      }
+    }
+  })
+}
+
 
 ##################################################################################
 ##################################################################################
@@ -97,10 +185,7 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_ingest" {
                 "Parameters": {
                   "JobDefinition" : aws_batch_job_definition.biostatistics_download_and_sync.arn,
                   "JobName" : "biostatistics-download-and-sync",
-                  "JobQueue" : aws_batch_job_queue.ec2_arm64.arn,
-                  "Parameters": {
-                    "rclone_destination": ":s3,provider=AWS,env_auth:${var.testing_bucket_name}/data"
-                  }
+                  "JobQueue" : aws_batch_job_queue.ec2_arm64.arn
                 },
                 "Catch": [{
                   # We swallow the errors because we don't want the state machine
@@ -131,10 +216,7 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_ingest" {
                 "Parameters": {
                   "JobDefinition" : aws_batch_job_definition.covid19datos_v2_download_and_sync.arn,
                   "JobName" : "covid19datos-v2-download-and-sync",
-                  "JobQueue" : aws_batch_job_queue.fargate_amd64.arn,
-                  "Parameters": {
-                    "rclone_destination": ":s3,provider=AWS,env_auth:${var.testing_bucket_name}/data"
-                  }
+                  "JobQueue" : aws_batch_job_queue.fargate_amd64.arn
                 },
                 "Catch": [{
                   "ErrorEquals": [ "States.ALL" ],
@@ -163,10 +245,7 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_ingest" {
                 "Parameters": {
                   "JobDefinition" : aws_batch_job_definition.hhs_download_and_sync.arn,
                   "JobName" : "hhs-download-and-sync",
-                  "JobQueue" : aws_batch_job_queue.fargate_amd64.arn,
-                  "Parameters": {
-                    "rclone_destination": ":s3,provider=AWS,env_auth:${var.testing_bucket_name}/data"
-                  }
+                  "JobQueue" : aws_batch_job_queue.fargate_amd64.arn
                 },
                 "Catch": [{
                   "ErrorEquals": [ "States.ALL" ],
@@ -232,6 +311,13 @@ data "archive_file" "ingestion_workflow_lambdas" {
 }
 
 
+
+##################################################################################
+##################################################################################
+##
+## IAM
+##
+
 resource "aws_iam_role" "iam_for_lambda" {
   name               = "${var.project_name}-lambda"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
@@ -249,76 +335,6 @@ data "aws_iam_policy_document" "lambda_assume_role" {
     actions = ["sts:AssumeRole"]
   }
 }
-
-
-##################################################################################
-##################################################################################
-##
-## Daily schedule
-##
-
-resource "aws_scheduler_schedule" "test_daily_ingestion" {
-  name        = "${var.project_name}-test-daily-ingestion"
-  description = "Run the daily data ingestions."
-
-  schedule_expression_timezone = "America/Puerto_Rico"
-  schedule_expression = "cron(05 17 * * ? *)"
-  flexible_time_window {
-    mode = "OFF"
-  }
-
-  target {
-    arn = aws_sfn_state_machine.covid_19_puerto_rico_ingest.arn
-    role_arn = aws_iam_role.eventbridge_scheduler_role.arn
-    input = jsonencode({
-      "localTimezone": "America/Puerto_Rico",
-      "localSchedule": {
-        "biostatistics": {
-          "timezone": "America/Puerto_Rico",
-#          "localTime": "05:55:00"
-          "localTime": "17:55:00"
-        },
-
-        "covid19datos_v2": {
-          "timezone": "America/Puerto_Rico",
-#          "localTime": "12:25:00"
-          "localTime": "21:25:00"
-        },
-
-        "hhs": {
-          "timezone": "America/New_York",
-#          "localTime": "13:25:00"
-          "localTime": "22:25:00"
-        }
-      }
-    })
-  }
-}
-
-
-resource "aws_scheduler_schedule" "daily_rebuild" {
-  name        = "${var.project_name}-daily-rebuild"
-  description = "Run the daily website rebuild."
-
-  schedule_expression_timezone = "America/Puerto_Rico"
-  schedule_expression = "cron(05 14 * * ? *)"
-  flexible_time_window {
-    mode = "OFF"
-  }
-
-  target {
-    arn = aws_sfn_state_machine.covid_19_puerto_rico_rebuild.arn
-    role_arn = aws_iam_role.eventbridge_scheduler_role.arn
-    input = jsonencode({})
-  }
-}
-
-
-##################################################################################
-##################################################################################
-##
-## IAM
-##
 
 resource "aws_iam_role" "sfn_workflows" {
   name = "${var.project_name}-SFN-for-workflows"
