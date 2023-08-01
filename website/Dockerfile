@@ -13,13 +13,13 @@ RUN --mount=type=cache,target=/root/.cache \
 
 
 WORKDIR /covid-19-puerto-rico
-COPY pyproject.toml poetry.lock ./
+COPY --link pyproject.toml poetry.lock ./
 RUN --mount=type=cache,target=/root/.cache \
     poetry export -f requirements.txt >requirements.txt \
  && pip wheel --wheel-dir=dist -r requirements.txt
 
 
-COPY src src
+COPY --link src src
 RUN --mount=type=cache,target=/root/.cache \
     poetry build --format wheel
 
