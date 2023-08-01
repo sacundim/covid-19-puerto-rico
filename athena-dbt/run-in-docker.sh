@@ -27,4 +27,4 @@ time "${DOCKER}" run --rm \
   --env ATHENA_WORK_GROUP="${ATHENA_WORK_GROUP}" \
   --env ATHENA_S3_STAGING_DIR="${ATHENA_S3_STAGING_DIR}" \
   --env ATHENA_S3_DATA_DIR="${ATHENA_S3_DATA_DIR}" \
-  "${IMAGE_NAME}" ./run-models.sh "$@"
+  "${IMAGE_NAME}" "$@"
