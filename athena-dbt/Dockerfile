@@ -3,7 +3,7 @@ COPY --link requirements.txt .
 RUN --mount=type=cache,target=/root/.cache \
     python3 -m pip install -r requirements.txt \
  && rm requirements.txt \
- && pip uninstall --yes wheel setuptools pip
+ && pip uninstall --yes wheel pip
 
 
 FROM dbt-athena
