@@ -63,20 +63,25 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
   }
 }
 
-resource "aws_cloudwatch_event_rule" "covid19datos_v2_daily_download" {
+
+resource "aws_scheduler_schedule" "covid19datos_daily_download" {
   name        = "covid19datos-v2-daily-download"
-  description = "Run the daily covid19datos-v2 download."
-  schedule_expression = "cron(55 16 * * ? *)"
-}
+  description = "Run the daily Covid19Datos V2 download."
 
-resource "aws_cloudwatch_event_target" "covid19datos_v2_daily_download" {
-  target_id = "covid19datos-v2-daily-download"
-  rule = aws_cloudwatch_event_rule.covid19datos_v2_daily_download.name
-  arn = aws_batch_job_queue.fargate_amd64.arn
-  role_arn = aws_iam_role.ecs_events_role.arn
+  schedule_expression_timezone = "America/Puerto_Rico"
+  schedule_expression = "cron(25 12 * * ? *)"
+  flexible_time_window {
+    mode = "OFF"
+  }
 
-  batch_target {
-    job_definition = aws_batch_job_definition.covid19datos_v2_download_and_sync.arn
-    job_name       = aws_batch_job_definition.covid19datos_v2_download_and_sync.name
+  target {
+    arn = "arn:aws:scheduler:::aws-sdk:batch:submitJob"
+    role_arn = aws_iam_role.eventbridge_scheduler_role.arn
+
+    input = jsonencode({
+      "JobDefinition": aws_batch_job_definition.covid19datos_v2_download_and_sync.arn,
+      "JobName": "covid19datos-v2-download-and-sync",
+      "JobQueue": aws_batch_job_queue.fargate_amd64.arn
+    })
   }
 }
