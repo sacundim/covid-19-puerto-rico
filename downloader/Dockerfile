@@ -49,10 +49,14 @@ RUN --mount=type=cache,target=/root/.cache \
 ## code to the venv, but rather puts a link there to the source tree
 ## which then means we can't copy it over to the app image.
 ##
+## After we've installed our app into the venv, we don't need pip and
+## friends anymore, we can really just delete them; saves about 25 MB
+##
 COPY src src
 RUN --mount=type=cache,target=/root/.cache \
     poetry build \
- && pip install dist/covid_19_puerto_rico_downloader-*.whl
+ && pip install dist/covid_19_puerto_rico_downloader-*.whl \
+ && pip uninstall --yes wheel setuptools pip
 
 
 
@@ -62,6 +66,13 @@ RUN --mount=type=cache,target=/root/.cache \
 ## The actual app image.  Note we use a "slim" Python image.
 ##
 FROM python:${PYTHON_VERSION}-slim AS app
+
+
+##
+## Since we're just copying a venv over to here, we don't need pip
+## and friends; just nuke them to save space
+##
+RUN pip uninstall --yes wheel setuptools pip
 
 # Install various prerequistes from the OS distribution.
 # Magic APT caching incantations from Docker docs:
