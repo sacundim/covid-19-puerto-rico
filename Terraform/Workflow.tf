@@ -34,7 +34,7 @@ resource "aws_scheduler_schedule" "daily_flow" {
   description = "Run the daily website ingestions and rebuild."
 
   schedule_expression_timezone = "America/Puerto_Rico"
-  schedule_expression = "cron(00 00 * * ? *)"
+  schedule_expression = "cron(15 00 * * ? *)"
   flexible_time_window {
     mode = "OFF"
   }
@@ -355,11 +355,57 @@ resource "aws_iam_role" "sfn_workflows" {
 }
 
 
+##
+## SFN executions are allowed to start SFN executions
+##
+resource "aws_iam_role_policy_attachment" "sfn_execute_sfn" {
+  role       = aws_iam_role.sfn_workflows.name
+  policy_arn = aws_iam_policy.execute_step_functions.arn
+}
+
+
+resource "aws_iam_policy" "execute_step_functions" {
+  policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": [
+          "states:StartExecution"
+        ],
+        "Effect": "Allow",
+        "Resource": "*"
+      }
+    ]
+  })
+}
+
+
+##
+## EventBridge scheduler is allowed to start SFN executions
+##
+resource "aws_iam_role_policy_attachment" "sfn_scheduler_role_attach" {
+  role       = aws_iam_role.eventbridge_scheduler_role.name
+  policy_arn = aws_iam_policy.execute_step_functions.arn
+}
+
+
+
+##
+## SFN is allowed to work with Lambdas
+##
 resource "aws_iam_role_policy_attachment" "sfn_execute_lambda" {
   role       = aws_iam_role.sfn_workflows.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaRole"
 }
 
+
+##
+## SFN is allowed to submit and manage Batch jobs
+##
+resource "aws_iam_role_policy_attachment" "sfn_batch_run_batch_job_sync" {
+  role       = aws_iam_role.sfn_workflows.name
+  policy_arn = aws_iam_policy.sfn_run_batch_job_sync.arn
+}
 
 resource "aws_iam_policy" "sfn_run_batch_job_sync" {
   name = "${var.project_name}-sfn-run-batch-job-sync"
@@ -390,7 +436,3 @@ resource "aws_iam_policy" "sfn_run_batch_job_sync" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "sfn_batch_run_batch_job_sync" {
-  role       = aws_iam_role.sfn_workflows.name
-  policy_arn = aws_iam_policy.sfn_run_batch_job_sync.arn
-}
