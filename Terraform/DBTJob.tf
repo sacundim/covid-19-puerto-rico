@@ -92,23 +92,3 @@ resource "aws_iam_role_policy_attachment" "ecs_job_role_athena_bucket" {
   role       = aws_iam_role.ecs_job_role.name
   policy_arn = aws_iam_policy.athena_bucket_rw.arn
 }
-
-
-resource "aws_cloudwatch_event_rule" "dbt_daily_refresh" {
-  name        = "dbt-daily-refresh"
-  description = "Run the daily DBT refresh."
-  # 10:05am Pacific Standard Time
-  schedule_expression = "cron(05 18 * * ? *)"
-}
-
-resource "aws_cloudwatch_event_target" "dbt_daily_refresh" {
-  target_id = "hhs-daily-download"
-  rule = aws_cloudwatch_event_rule.dbt_daily_refresh.name
-  arn = aws_batch_job_queue.fargate_amd64.arn
-  role_arn = aws_iam_role.ecs_events_role.arn
-
-  batch_target {
-    job_definition = aws_batch_job_definition.dbt_run_models.arn
-    job_name       = aws_batch_job_definition.dbt_run_models.name
-  }
-}

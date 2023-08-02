@@ -57,20 +57,25 @@ resource "aws_batch_job_definition" "biostatistics_download_and_sync" {
   }
 }
 
-resource "aws_cloudwatch_event_rule" "biostatistics_daily_download" {
+
+resource "aws_scheduler_schedule" "biostatistics_daily_download" {
   name        = "biostatistics-daily-download"
   description = "Run the daily Biostatistics download."
-  schedule_expression = "cron(55 9 * * ? *)"
-}
 
-resource "aws_cloudwatch_event_target" "biostatistics_daily_download" {
-  target_id = "biostatistics-daily-download"
-  rule = aws_cloudwatch_event_rule.biostatistics_daily_download.name
-  arn = aws_batch_job_queue.ec2_arm64.arn
-  role_arn = aws_iam_role.ecs_events_role.arn
+  schedule_expression_timezone = "America/Puerto_Rico"
+  schedule_expression = "cron(55 5 * * ? *)"
+  flexible_time_window {
+    mode = "OFF"
+  }
 
-  batch_target {
-    job_definition = aws_batch_job_definition.biostatistics_download_and_sync.arn
-    job_name       = aws_batch_job_definition.biostatistics_download_and_sync.name
+  target {
+    arn = "arn:aws:scheduler:::aws-sdk:batch:submitJob"
+    role_arn = aws_iam_role.eventbridge_scheduler_role.arn
+
+    input = jsonencode({
+      "JobDefinition": aws_batch_job_definition.biostatistics_download_and_sync.arn,
+      "JobName": "biostatistics-download-and-sync",
+      "JobQueue": aws_batch_job_queue.ec2_arm64.arn
+    })
   }
 }
