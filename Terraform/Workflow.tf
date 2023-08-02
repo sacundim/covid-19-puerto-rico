@@ -69,7 +69,7 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_daily" {
     "States": {
       "Ingestions": {
         "Type": "Task",
-        "Resource": "arn:aws:states:::states:startExecution",
+        "Resource": "arn:aws:states:::states:startExecution.sync:2",
         "Parameters": {
           "StateMachineArn" : aws_sfn_state_machine.covid_19_puerto_rico_ingest.arn,
           "Input" : local.ingestion_schedule
@@ -79,7 +79,7 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_daily" {
 
       "Rebuild": {
         "Type" : "Task",
-        "Resource" : "arn:aws:states:::states:startExecution",
+        "Resource" : "arn:aws:states:::states:startExecution.sync:2",
         "Parameters" : {
           "StateMachineArn" : aws_sfn_state_machine.covid_19_puerto_rico_rebuild.arn,
           "Input": {}
@@ -363,17 +363,47 @@ resource "aws_iam_role_policy_attachment" "sfn_execute_sfn" {
   policy_arn = aws_iam_policy.execute_step_functions.arn
 }
 
-
 resource "aws_iam_policy" "execute_step_functions" {
   policy = jsonencode({
     "Version": "2012-10-17",
     "Statement": [
       {
+        "Effect": "Allow",
         "Action": [
           "states:StartExecution"
         ],
+        "Resource": [
+          for machine in [
+            aws_sfn_state_machine.covid_19_puerto_rico_daily,
+            aws_sfn_state_machine.covid_19_puerto_rico_ingest,
+            aws_sfn_state_machine.covid_19_puerto_rico_rebuild
+          ] : "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:${machine.name}"
+        ]
+      },
+      {
         "Effect": "Allow",
-        "Resource": "*"
+        "Action": [
+          "states:DescribeExecution",
+          "states:StopExecution"
+        ],
+        "Resource": [
+          for machine in [
+            aws_sfn_state_machine.covid_19_puerto_rico_daily,
+            aws_sfn_state_machine.covid_19_puerto_rico_ingest,
+            aws_sfn_state_machine.covid_19_puerto_rico_rebuild
+          ] : "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:${machine.name}:*"
+        ]
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "events:PutTargets",
+          "events:PutRule",
+          "events:DescribeRule"
+        ],
+        "Resource": [
+          "arn:aws:events:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule"
+        ]
       }
     ]
   })
