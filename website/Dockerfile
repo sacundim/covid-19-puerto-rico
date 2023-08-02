@@ -5,7 +5,7 @@ ARG PYTHON_VERSION="3.11"
 ##
 ## Fat build image
 ##
-FROM python:${PYTHON_VERSION}-slim AS build
+FROM python:${PYTHON_VERSION} AS build
 ARG POETRY_VERSION="1.5.1"
 ENV POETRY_VIRTUALENVS_CREATE=false
 RUN --mount=type=cache,target=/root/.cache \
