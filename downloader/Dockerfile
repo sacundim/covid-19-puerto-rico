@@ -11,40 +11,53 @@ ARG PYTHON_VERSION="3.11"
 ##
 FROM python:${PYTHON_VERSION} AS build
 ARG POETRY_VERSION="1.5.1"
-# Disable this because Poetry will create a venv we don't use with
-# a random name that messes up caching:
 ENV POETRY_VIRTUALENVS_CREATE=false
 RUN --mount=type=cache,target=/root/.cache \
     pip install poetry=="${POETRY_VERSION}"
 
+WORKDIR /covid-19-puerto-rico
 
 ##
-## Download or build binary wheels for the project's dependencies into
-## the `dist/` directory.  This doesn't install the dependencies, just
-## collects or produces artifacts that we will `pip install` in our
-## app image.
+## Create a virtualenv and set the environment variables to activate it
+## by hand (`source venv/bin/activate` doesn't work in a Docker build)
 ##
-## We take care to make this step depend exclusively on our project's
-## `pyproject.toml` and `poetry.lock`, so as long as those two files
-## don't change, Docker's cache of these steps remains valid.
+ENV VIRTUAL_ENV="/covid-19-puerto-rico/venv"
+RUN python3 -m venv "${VIRTUAL_ENV}" \
+ && rm "${VIRTUAL_ENV}"/bin/[Aa]ctivate*
+ENV PATH="${VIRTUAL_ENV}/bin":$PATH
+
+
 ##
-WORKDIR /covid-19-puerto-rico
+## Install the project requirements to the virtualenv.  We take care
+## to make this depend exclusively on our project's pyproject.toml`
+## and `poetry.lock`, so as long as those two files don't change,
+## Docker's cache of these steps remains valid.
+##
 COPY --link pyproject.toml poetry.lock ./
 RUN --mount=type=cache,target=/root/.cache \
-    poetry export -f requirements.txt >requirements.txt \
- && pip wheel --wheel-dir=dist -r requirements.txt
+    poetry export \
+      --without-hashes \
+      -f requirements.txt >requirements.txt \
+ && pip install -r requirements.txt
 
 
 ##
-## Only now, after we've produced the project's build dependencies,
-## do we loop in our actual code.
+## Only now, after we've installed the project's build dependencies,
+## do we loop in our actual code and install to our venv.
 ##
-## Note that we do `poetry build` to generate a wheel file (into `dist/`)
-## that we `pip install` in our app image.
+## Note that we do `poetry build` to generate a wheel file that we
+## `pip install`; if we do a `poetry install` it doesn't install our
+## code to the venv, but rather puts a link there to the source tree
+## which then means we can't copy it over to the app image.
+##
+## After we've installed our app into the venv, we don't need pip and
+## friends anymore, we can really just delete them; saves about 25 MB
 ##
 COPY --link src src
 RUN --mount=type=cache,target=/root/.cache \
-    poetry build --format wheel
+    poetry build \
+ && pip install dist/covid_19_puerto_rico_downloader-*.whl \
+ && pip uninstall --yes wheel setuptools pip
 
 
 
@@ -54,6 +67,13 @@ RUN --mount=type=cache,target=/root/.cache \
 ## The actual app image.  Note we use a "slim" Python image.
 ##
 FROM python:${PYTHON_VERSION}-slim AS app
+
+
+##
+## Since we're just copying a venv over to here, we don't need pip
+## and friends; just nuke them to save space
+##
+RUN pip uninstall --yes wheel setuptools pip
 
 # Install various prerequistes from the OS distribution.
 # Magic APT caching incantations from Docker docs:
@@ -83,13 +103,9 @@ COPY --link certs/*.crt /usr/local/share/ca-certificates/
 RUN update-ca-certificates
 ENV REQUESTS_CA_BUNDLE="/etc/ssl/certs/ca-certificates.crt"
 
-##
-## We pip install from the wheels we prepared in our build stage,
-## without going to PyPi at all. Then we remove pip & friends for
-## further space savings.
-##
-WORKDIR /covid-19-puerto-rico
-RUN --mount=type=cache,from=build,source=/covid-19-puerto-rico/dist,target=/covid-19-puerto-rico/dist \
-    pip install --no-index --find-links=dist covid_19_puerto_rico_downloader \
- && pip uninstall --yes wheel setuptools pip pipx
 
+# Install our project's Python virtualenv
+WORKDIR /covid-19-puerto-rico
+ENV VIRTUAL_ENV="/covid-19-puerto-rico/venv"
+COPY --link --from=build "${VIRTUAL_ENV}" "${VIRTUAL_ENV}"
+ENV PATH="${VIRTUAL_ENV}/bin":$PATH

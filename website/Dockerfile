@@ -13,16 +13,24 @@ RUN --mount=type=cache,target=/root/.cache \
 
 
 WORKDIR /covid-19-puerto-rico
+ENV VIRTUAL_ENV="/covid-19-puerto-rico/venv"
+RUN python3 -m venv "${VIRTUAL_ENV}" \
+ && rm "${VIRTUAL_ENV}"/bin/[Aa]ctivate*
+ENV PATH="${VIRTUAL_ENV}/bin":$PATH
+
 COPY --link pyproject.toml poetry.lock ./
 RUN --mount=type=cache,target=/root/.cache \
-    poetry export -f requirements.txt >requirements.txt \
- && pip wheel --wheel-dir=dist -r requirements.txt
+    poetry export  \
+      --without-hashes \
+      -f requirements.txt >requirements.txt \
+ && pip install -r requirements.txt
 
 
 COPY --link src src
 RUN --mount=type=cache,target=/root/.cache \
-    poetry build --format wheel
-
+    poetry build \
+ && pip install dist/covid_19_puerto_rico-*.whl \
+ && pip uninstall --yes wheel setuptools pip
 
 
 #####################################################################
@@ -31,6 +39,7 @@ RUN --mount=type=cache,target=/root/.cache \
 ## Slim app image
 ##
 FROM python:${PYTHON_VERSION}-slim AS app
+RUN pip uninstall --yes wheel setuptools pip
 
 # The rclone packaged with the OS distribution is always hopelessly out
 # of date, better to get it from the official rclone Docker images.
@@ -40,9 +49,9 @@ COPY --link --from=rclone/rclone:1.61.1 \
     /usr/local/bin/rclone
 
 WORKDIR /covid-19-puerto-rico
-RUN --mount=type=cache,from=build,source=/covid-19-puerto-rico/dist,target=/covid-19-puerto-rico/dist \
-    pip install --no-index --find-links=dist covid_19_puerto_rico \
- && pip uninstall --yes wheel setuptools pip
+ENV VIRTUAL_ENV="/covid-19-puerto-rico/venv"
+COPY --link --from=build "${VIRTUAL_ENV}" "${VIRTUAL_ENV}"
+ENV PATH="${VIRTUAL_ENV}/bin":$PATH
 
 COPY --link config/environment.yaml environment.yaml
 CMD ["covid19pr"]
