@@ -449,7 +449,14 @@ resource "aws_iam_policy" "sfn_run_batch_job_sync" {
           "batch:DescribeJobs",
           "batch:TerminateJob"
         ],
-        "Resource": "*"
+        "Resource": [
+          aws_batch_job_definition.biostatistics_download_and_sync.arn,
+          aws_batch_job_definition.covid19datos_v2_download_and_sync.arn,
+          aws_batch_job_definition.dbt_run_models.arn,
+          aws_batch_job_definition.hhs_download_and_sync.arn,
+          aws_batch_job_definition.walgreens_download_and_sync.arn,
+          aws_batch_job_definition.website_generator.arn
+        ]
       },
       {
         "Effect": "Allow",
