@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 
-from dbt.adapters.duckdb.credentials import DuckDBCredentials
-from dbt.adapters.duckdb.environments.local import LocalEnvironment
+import dbt.adapters.duckdb.credentials as creds
+import duckdb
 
 def main():
-    payload = {
-        "extensions": ['httpfs', 'parquet'],
-        "use_credential_provider": "aws"
-    }
-    credentials = DuckDBCredentials.from_dict(payload)
-    environment = LocalEnvironment(credentials)
-    for i in range(2):
-        print(f"Round {i+1}")
-        run_with_environment(environment)
+    credentials = creds._load_aws_credentials()
+    print(f'credentials keys = {credentials.keys()}')
 
-def run_with_environment(environment):
-    handle = environment.handle()
-    cursor = handle.cursor()
+    # This prints out sensitive information
+    #print(credentials)
+
+    connection = duckdb.connect()
+    cursor = connection.cursor()
+    cursor.execute('INSTALL httpfs')
+    cursor.execute('LOAD httpfs')
+    for key, value in credentials.items():
+        cursor.execute(f"SET {key} = '{value}'")
+
     run_with_cursor(cursor)
 
 def run_with_cursor(cursor):
