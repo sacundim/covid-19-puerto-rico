@@ -319,26 +319,6 @@ resource "aws_iam_role_policy_attachment" "batch_scheduler_role_attach" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBatchServiceEventTargetRole"
 }
 
-resource "aws_iam_role_policy_attachment" "sfn_scheduler_role_attach" {
-  role       = aws_iam_role.eventbridge_scheduler_role.name
-  policy_arn = aws_iam_policy.execute_step_functions.arn
-}
-
-resource "aws_iam_policy" "execute_step_functions" {
-  policy = jsonencode({
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Action": [
-          "states:StartExecution"
-        ],
-        "Effect": "Allow",
-        "Resource": "*"
-      }
-    ]
-  })
-}
-
 
 #######################################################################################
 #######################################################################################
