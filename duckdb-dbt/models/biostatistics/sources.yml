@@ -3,7 +3,7 @@ version: 2
 sources:
   - name: biostatistics
     meta:
-      external_location: "{{ env_var('DATA_LAKE_ROOT')}}/biostatistics.salud.pr.gov/{name}/parquet_v2/**/**.parquet"
+      external_location: "{{ env_var('DATA_LAKE_ROOT')}}/biostatistics.salud.pr.gov/{name}/parquet_v2/*/*.parquet"
     freshness:
       error_after: { count: 1, period: day }
     loaded_at_field: downloadedAt
