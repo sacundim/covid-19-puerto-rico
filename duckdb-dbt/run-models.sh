@@ -5,8 +5,4 @@
 
 set -euxo pipefail
 
-dbt seed
-
-dbt run
-
-dbt test
+exec dbt build "$@"
