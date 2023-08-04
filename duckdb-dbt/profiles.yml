@@ -18,6 +18,5 @@ covid-19-puerto-rico-duckdb:
         - parquet
       threads: 4
       external_root: "{{ env_var('OUTPUT_ROOT') }}"
-      settings:
-        use_credential_provider: aws
+      use_credential_provider: aws
 
