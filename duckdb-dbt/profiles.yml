@@ -17,4 +17,6 @@ covid-19-puerto-rico-duckdb:
       threads: 4
       external_root: "{{ env_var('OUTPUT_ROOT') }}"
       use_credential_provider: aws
+      settings:
+        s3_region: "{{ env_var('S3_REGION') }}"
 
