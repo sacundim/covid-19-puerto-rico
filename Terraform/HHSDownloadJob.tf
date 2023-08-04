@@ -102,26 +102,3 @@ resource "aws_iam_policy" "socrata_app_token" {
     ]
   })
 }
-
-
-resource "aws_scheduler_schedule" "hhs_daily_download" {
-  name        = "hhs-daily-download"
-  description = "Run the daily HHS download."
-
-  schedule_expression_timezone = "America/New_York"
-  schedule_expression = "cron(25 13 * * ? *)"
-  flexible_time_window {
-    mode = "OFF"
-  }
-
-  target {
-    arn = "arn:aws:scheduler:::aws-sdk:batch:submitJob"
-    role_arn = aws_iam_role.eventbridge_scheduler_role.arn
-
-    input = jsonencode({
-      "JobDefinition": aws_batch_job_definition.hhs_download_and_sync.arn,
-      "JobName": "hhs-download-and-sync",
-      "JobQueue": aws_batch_job_queue.fargate_amd64.arn
-    })
-  }
-}

@@ -62,26 +62,3 @@ resource "aws_batch_job_definition" "covid19datos_v2_download_and_sync" {
     attempt_duration_seconds = 1800
   }
 }
-
-
-resource "aws_scheduler_schedule" "covid19datos_daily_download" {
-  name        = "covid19datos-v2-daily-download"
-  description = "Run the daily Covid19Datos V2 download."
-
-  schedule_expression_timezone = "America/Puerto_Rico"
-  schedule_expression = "cron(25 12 * * ? *)"
-  flexible_time_window {
-    mode = "OFF"
-  }
-
-  target {
-    arn = "arn:aws:scheduler:::aws-sdk:batch:submitJob"
-    role_arn = aws_iam_role.eventbridge_scheduler_role.arn
-
-    input = jsonencode({
-      "JobDefinition": aws_batch_job_definition.covid19datos_v2_download_and_sync.arn,
-      "JobName": "covid19datos-v2-download-and-sync",
-      "JobQueue": aws_batch_job_queue.fargate_amd64.arn
-    })
-  }
-}

@@ -56,26 +56,3 @@ resource "aws_batch_job_definition" "biostatistics_download_and_sync" {
     attempt_duration_seconds = 3600
   }
 }
-
-
-resource "aws_scheduler_schedule" "biostatistics_daily_download" {
-  name        = "biostatistics-daily-download"
-  description = "Run the daily Biostatistics download."
-
-  schedule_expression_timezone = "America/Puerto_Rico"
-  schedule_expression = "cron(55 5 * * ? *)"
-  flexible_time_window {
-    mode = "OFF"
-  }
-
-  target {
-    arn = "arn:aws:scheduler:::aws-sdk:batch:submitJob"
-    role_arn = aws_iam_role.eventbridge_scheduler_role.arn
-
-    input = jsonencode({
-      "JobDefinition": aws_batch_job_definition.biostatistics_download_and_sync.arn,
-      "JobName": "biostatistics-download-and-sync",
-      "JobQueue": aws_batch_job_queue.ec2_arm64.arn
-    })
-  }
-}
