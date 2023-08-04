@@ -1,0 +1,22 @@
+covid-19-puerto-rico-duckdb:
+  target: local
+  outputs:
+
+    local:
+      type: duckdb
+      path: "{{ env_var('OUTPUT_ROOT') }}/db.duckdb"
+      extensions:
+        - parquet
+      threads: 4
+      external_root: "{{ env_var('OUTPUT_ROOT') }}"
+
+    aws:
+      type: duckdb
+      extensions:
+        - httpfs
+        - parquet
+      threads: 4
+      external_root: "{{ env_var('OUTPUT_ROOT') }}"
+      settings:
+        use_credential_provider: aws
+

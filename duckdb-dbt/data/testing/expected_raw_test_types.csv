@@ -1,0 +1,10 @@
+raw_test_type,test_type
+Antigens,Antígeno
+AntigensSelfTest,Casera
+ImmunofluorescentTest,Otro (¿inválido?)
+Molecular,Molecular
+MolecularSelfTest,Casera
+SEROLOGICAL,Serológica
+Serological,Serológica
+Serological IgG Only,Serológica
+Total Antibodies,Serológica

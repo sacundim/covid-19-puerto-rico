@@ -1,0 +1,34 @@
+"result","positive"
+COVID-19 Negative,false
+COVID-19 Positive,true
+DETECTED,true
+Detected,true
+Inconclusive,
+Invalid,
+NEGATIVE,false
+Negative,false
+NOT DETECTED,false
+Not Detected,false
+Not Tested,
+Not Valid,
+Not tested,
+Other,
+POSITIVE,true
+Positive,true
+Positive 2019-nCoV,true
+Positive IgG Only,true
+Positive IgM Only,true
+Positive IgM and IgG,true
+Positive for COVID-19,true
+Positive for influenza A,false
+Positive for influenza A and COVID-19,true
+Positive for influenza A and influenza B,false
+Positive for influenza B,false
+Positive for influenza B and COVID-19,true
+Presumptive Negative,false
+Presumptive Positive,true
+Presumptive Positive IgG Only,true
+Presumptive Positive IgM and IgG,true
+SARS-CoV-2 Negative,false
+SARS-CoV-2 Positive,true
+SARS-CoV-2 Presumptive Positive,true

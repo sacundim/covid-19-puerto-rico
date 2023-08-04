@@ -1,0 +1,115 @@
+version: 2
+
+models:
+  - name: biostatistics_tests
+    description: >
+      A minimally processed and cleaned version of Biostatistics' tests/mininal API endpoint.
+      This data set has the `patient_id` column that allows us to deduplicate tests for
+      the same patient (and thus to count cases).
+    columns:
+      - name: downloaded_at
+        description: '{{ doc("downloaded_at") }}'
+      - name: collected_date
+        description: '{{ doc("collected_date") }}'
+        tests:
+          - not_null:
+              severity: warn
+          - dbt_utils.accepted_range:
+              min_value: DATE '2020-01-03'
+              max_value: reported_date
+              inclusive: true
+              severity: warn
+      - name: patient_id
+        description: '{{ doc("patient_id") }}'
+        tests:
+          - not_null
+      - name: age_range
+        description: '{{ doc("age_range") }}'
+        tests:
+          - relationships:
+              to: ref('bioportal_age_ranges')
+              field: age_range
+      - name: region
+        description: '{{ doc("region") }}'
+        tests:
+          - relationships:
+              to: ref('expected_regions')
+              field: region
+      - name: test_type
+        description: '{{ doc("test_type") }}'
+        tests:
+          - relationships:
+              to: ref('expected_test_types')
+              field: test_type
+      - name: positive
+        description: '{{ doc("positive") }}'
+      - name: reported_date
+        description: '{{ doc("reported_date") }}'
+        tests:
+          - not_null:
+              severity: warn
+      - name: result
+        description: >
+          The raw value of the `result` field in Biostatistics, which doesn't have much of a
+          defined format.  Usually you want the cleaned `positive` field instead.
+        tests:
+          - relationships:
+              to: ref('expected_test_results')
+              field: result
+      - name: raw_test_type
+        description: >
+          The raw value of the `testType` field in Biostatistics, which doesn't have much of a
+          defined format.  Usually you want the cleaned `test_type` field instead.
+        tests:
+          - relationships:
+              to: ref('expected_raw_test_types')
+              field: raw_test_type
+
+  - name: biostatistics_deaths
+    description: >
+      A minimally processed and cleaned version of PRDoH's deaths API endpoint.
+      One row per death.
+    columns:
+      - name: downloaded_at
+        description: '{{ doc("downloaded_at") }}'
+      - name: death_date
+        description: The date the patient died.
+        tests:
+          - not_null:
+              severity: warn
+          - dbt_utils.accepted_range:
+              min_value: DATE '2020-01-03'
+              max_value: downloaded_at
+              inclusive: true
+              severity: warn
+          - dbt_utils.accepted_range:
+              min_value: DATE '2020-01-03'
+              max_value: report_date
+              inclusive: true
+              severity: warn
+      - name: report_date
+        tests:
+          - not_null:
+              severity: warn
+          - dbt_utils.accepted_range:
+              min_value: DATE '2020-01-03'
+              max_value: downloaded_at
+              inclusive: true
+              severity: warn
+      - name: age_range
+        description: '{{ doc("age_range") }}'
+        tests:
+          - relationships:
+              to: ref('biostatistics_deaths_age_ranges')
+              field: age_range
+      - name: region
+        description: '{{ doc("region") }}'
+        tests:
+          - relationships:
+              to: ref('expected_regions')
+              field: region
+      - name: sex
+        tests:
+          - relationships:
+              to: ref('expected_sex')
+              field: sex
