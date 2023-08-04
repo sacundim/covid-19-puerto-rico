@@ -26,3 +26,5 @@ SELECT
     CAST(caseCreatedAt AT TIME ZONE 'America/Puerto_Rico' AS DATE)
         AS case_created_date
 FROM {{ source('biostatistics', 'cases') }}
+WHERE '{{ var("earliest_downloaded_date") }}' <= downloaded_date
+AND downloaded_date <= '{{ var("latest_downloaded_date") }}'

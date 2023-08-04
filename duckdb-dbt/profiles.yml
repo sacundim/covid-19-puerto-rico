@@ -4,7 +4,7 @@ covid-19-puerto-rico-duckdb:
 
     local:
       type: duckdb
-      path: "{{ env_var('OUTPUT_ROOT') }}/db.duckdb"
+      path: "{{ env_var('OUTPUT_ROOT') }}/covid-19-puerto-rico.duckdb"
       extensions:
         - parquet
       threads: 4
@@ -12,6 +12,7 @@ covid-19-puerto-rico-duckdb:
 
     aws:
       type: duckdb
+      path: "/tmp/covid-19-puerto-rico.duckdb"
       extensions:
         - httpfs
         - parquet

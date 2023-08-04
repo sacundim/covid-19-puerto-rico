@@ -34,6 +34,8 @@ WITH first_clean AS (
     LEFT OUTER JOIN {{ ref('expected_test_results') }} results
         ON tests.orderTestResult = results.result
     WHERE orderTestCategory IN ('Covid-19')
+    AND '{{ var("earliest_downloaded_date") }}' <= downloaded_date
+    AND downloaded_date <= '{{ var("latest_downloaded_date") }}'
 ), date_aux_calculations AS (
     SELECT
         *,

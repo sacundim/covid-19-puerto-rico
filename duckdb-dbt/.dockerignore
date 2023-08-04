@@ -1,0 +1,11 @@
+dbt_packages/
+logs/
+input_files/
+target/
+output_files/
+.dockerignore
+.gitignore
+.user.yml
+run-in-docker.sh
+build-docker-image.sh
+rclone-inputs.sh

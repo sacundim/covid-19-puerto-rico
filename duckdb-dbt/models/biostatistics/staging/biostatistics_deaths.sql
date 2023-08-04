@@ -14,6 +14,8 @@ WITH first_clean AS (
         nullif(vaccinationStatusAtDeath, '')
             AS vaccination_status_at_death
 	FROM {{ source('biostatistics', 'deaths') }}
+  WHERE '{{ var("earliest_downloaded_date") }}' <= downloaded_date
+  AND downloaded_date <= '{{ var("latest_downloaded_date") }}'
 )
 SELECT
 	*,

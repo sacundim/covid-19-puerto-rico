@@ -5,13 +5,8 @@ config-version: 2
 profile: 'covid-19-puerto-rico-duckdb'
 
 vars:
-  # These dates recur all over:
-  first_sample_date: '2020-03-09'
-  first_bulletin_date: '2020-04-24'
-  first_vax_date: '2020-12-03'
-  end_date: '2023-12-31'
-  beginning_of_time: '0001-01-01'
-  end_of_time: '9999-12-31'
+  earliest_downloaded_date: "{{ env_var('EARLIEST_DOWNLOADED_DATE', '2023-08-01')}}"
+  latest_downloaded_date: "{{ env_var('LATEST_DOWNLOADED_DATE', '2100-12-31')}}"
 
 # These configurations specify where dbt should look for different types of files.
 # The `model-paths` config, for example, states that models in this project can be
