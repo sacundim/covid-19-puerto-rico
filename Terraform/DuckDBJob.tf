@@ -102,7 +102,10 @@ resource "aws_batch_compute_environment" "duckdb_ec2_amd64" {
     instance_role = aws_iam_instance_profile.ecs_instance_role.arn
 
     instance_type = [
-      "c6i", "m6i", "r6i"
+      "c5", "m5", "r5",
+      "c5n", "m5n", "r5n",
+      "c6i", "m6i", "r6i",
+      "c6in", "m6in", "r6in",
     ]
 
     launch_template {
