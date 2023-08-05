@@ -135,7 +135,7 @@ resource "aws_batch_compute_environment" "duckdb_ec2_amd64" {
 
 
 resource "aws_batch_job_queue" "duckdb_ec2_amd64" {
-  name     = "${var.project_name}-duckdb-queue"
+  name     = "${var.project_name}-duckdb-amd64-queue"
   tags = {
     Project = var.project_name
   }
