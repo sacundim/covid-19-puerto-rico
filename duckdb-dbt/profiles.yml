@@ -20,3 +20,5 @@ covid-19-puerto-rico-duckdb:
       settings:
         s3_region: "{{ env_var('S3_REGION') }}"
 
+config:
+  use_colors: False
