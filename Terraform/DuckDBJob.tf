@@ -36,6 +36,11 @@ resource "aws_batch_job_definition" "duckdb_job" {
         value = "2023-07-31"
       },
       {
+        name = "DBT_THREADS",
+        # Has to be a string
+        value = "4"
+      },
+      {
         name = "S3_REGION",
         value = data.aws_region.current.name
       }
