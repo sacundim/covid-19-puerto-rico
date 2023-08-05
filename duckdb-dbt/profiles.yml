@@ -14,8 +14,8 @@ covid-19-puerto-rico-duckdb:
       extensions:
         - httpfs
         - parquet
-      threads: "{{ env_var('DBT_THREADS', 4) }}"
-      external_root: "{{ env_var('OUTPUT_ROOT') | as_number }}"
+      threads: "{{ env_var('DBT_THREADS', 4) | as_number }}"
+      external_root: "{{ env_var('OUTPUT_ROOT') }}"
       use_credential_provider: aws
       settings:
         s3_region: "{{ env_var('S3_REGION') }}"
