@@ -424,3 +424,23 @@ CREATE EXTERNAL TABLE covid19datos_v2_sources.pruebas_parquet_v4 (
 ) PARTITIONED BY (downloaded_date STRING)
 STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/pruebas/parquet_v4/';
+
+
+---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+--
+-- Vigilancia genómica
+--
+
+CREATE EXTERNAL TABLE covid19datos_v2_sources.vigilancia_parquet_v4 (
+  FE_COLECCION TIMESTAMP,
+  FE_REPORTE TIMESTAMP,
+  TX_LINEAJE STRING,
+  CO_CLASIFICACION STRING,
+  TX_CLASIF_WHO STRING,
+  TX_SEXO STRING,
+  NU_EDAD STRING,
+  downloaded_at TIMESTAMP
+) PARTITIONED BY (downloaded_date STRING)
+STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/vigilancia/parquet_v4/';
