@@ -539,3 +539,44 @@ WHERE bulletin_date <= %(max_bulletin_date)s"""
         )
 
         return alt.vconcat(absolute, normalized, spacing=5)
+
+
+class RecentGenomicSurveillance(AbstractChart):
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+    SELECT
+        bulletin_date,
+        week_starting,
+        week_ending,
+        category,
+        count
+    FROM recent_genomic_surveillance
+    WHERE bulletin_date <= %(max_bulletin_date)s"""
+        return util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df, bulletin_date):
+        return alt.Chart(df).transform_calculate(
+            category="if(datum.category == null, 'Otra', datum.category)"
+        ).mark_bar(opacity=0.9).encode(
+            x=alt.X('week_starting:T', timeUnit='week', title='Semana',
+                    axis=alt.Axis(format='%d/%m', labelAngle=90)),
+            y=alt.Y('count:Q', title='Porcentaje', stack='normalize'),
+            color=alt.Color('category:N', title='Variante',
+                            legend=alt.Legend(orient='top', columns=4)),
+            order=alt.Order('count:Q', sort='descending'),
+            tooltip=[
+                alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
+                alt.Tooltip('week_starting:T', title='Semana desde'),
+                alt.Tooltip('week_ending:T', title='Semana hasta'),
+                alt.Tooltip('category:N', title='Categoría de variante'),
+                alt.Tooltip('count:Q', format=",d", title='Secuencias'),
+            ]
+        ).properties(
+            width=575, height=400
+        )

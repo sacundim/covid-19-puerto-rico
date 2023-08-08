@@ -9,12 +9,11 @@ WITH bulletins AS (
 SELECT
 	vigilancia.bulletin_date,
 	collected_date,
-	date(parse_datetime(
+	from_iso8601_date(
 		CAST(year_of_week(collected_date) AS VARCHAR)
-			|| '-'
-			|| CAST(week(collected_date) AS VARCHAR),
-		'xxxx-ww'
-	) + INTERVAL '6' DAY) AS week_ending,
+			|| '-W'
+			|| CAST(week(collected_date) AS VARCHAR)
+	) AS week_starting,
 	lineage,
 	unaliased,
 	count(*) count
