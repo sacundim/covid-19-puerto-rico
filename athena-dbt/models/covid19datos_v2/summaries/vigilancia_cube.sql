@@ -7,8 +7,7 @@ WITH bulletins AS (
   GROUP BY date(downloaded_at AT TIME ZONE 'America/Puerto_Rico')
 )
 SELECT
-	downloaded_at,
-	bulletin_date,
+	vigilancia.bulletin_date,
 	collected_date,
 	date(parse_datetime(
 		CAST(year_of_week(collected_date) AS VARCHAR)
@@ -16,13 +15,16 @@ SELECT
 			|| CAST(week(collected_date) AS VARCHAR),
 		'xxxx-ww'
 	) + INTERVAL '6' DAY) AS week_ending,
-	pango_lineage,
+	lineage,
+	unaliased,
 	count(*) count
-FROM {{ ref('vigilancia') }}
+FROM {{ ref('vigilancia') }} vigilancia
 INNER JOIN bulletins
   USING (downloaded_at)
+INNER JOIN {{ ref('pango_lineages') }}
+  USING (lineage)
 GROUP BY
-  downloaded_at,
-  bulletin_date,
+  vigilancia.bulletin_date,
   collected_date,
-  pango_lineage
+  lineage,
+  unaliased

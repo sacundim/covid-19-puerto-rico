@@ -444,3 +444,23 @@ CREATE EXTERNAL TABLE covid19datos_v2_sources.vigilancia_parquet_v4 (
 ) PARTITIONED BY (downloaded_date STRING)
 STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/covid19datos-v2/vigilancia/parquet_v4/';
+
+
+
+---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+--
+-- PANGO lineage lookup table
+--
+
+CREATE EXTERNAL TABLE covid19datos_v2_sources.pango_lineages (
+  downloaded_at TIMESTAMP,
+  withdrawn BOOLEAN,
+  lineage STRING,
+  unaliased STRING,
+  root STRING,
+  numbers ARRAY<SMALLINT>,
+  description STRING
+) PARTITIONED BY (downloaded_date STRING)
+STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/pango/lineages/parquet_v1/';

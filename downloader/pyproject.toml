@@ -9,6 +9,7 @@ packages = [{ include = "covid_19_puerto_rico_downloader", from = "src"}]
 biostatistics-download = 'covid_19_puerto_rico_downloader:biostatistics'
 covid19datos-download = 'covid_19_puerto_rico_downloader:covid19datos_v2'
 hhs-socrata-download = 'covid_19_puerto_rico_downloader:hhs_download'
+pango-lineages = 'covid_19_puerto_rico_downloader:pango_lineages'
 walgreens-download = 'covid_19_puerto_rico_downloader:walgreens'
 
 [tool.poetry.dependencies]
