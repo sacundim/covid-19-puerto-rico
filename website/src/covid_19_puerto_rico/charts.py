@@ -561,22 +561,38 @@ class RecentGenomicSurveillance(AbstractChart):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
     def make_chart(self, df, bulletin_date):
-        return alt.Chart(df).transform_calculate(
+        percentages = alt.Chart(df).transform_calculate(
             variant="if(datum.variant == null, 'Otra', datum.variant)"
-        ).mark_bar(opacity=0.9).encode(
-            x=alt.X('week_starting:T', timeUnit='week', title='Semana',
-                    axis=alt.Axis(format='%d/%m', labelAngle=90)),
+        ).mark_bar(opacity=0.8).encode(
+            x=alt.X('week_starting:T', timeUnit='week', title='Semana', axis=None),
             y=alt.Y('count:Q', title='Porcentaje', stack='normalize'),
             color=alt.Color('variant:N', title='Variante',
-                            legend=alt.Legend(orient='top', columns=4)),
+                            legend=alt.Legend(orient='top', columns=6)),
             order=alt.Order('count:Q', sort='descending'),
             tooltip=[
-                alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                 alt.Tooltip('week_starting:T', title='Semana desde'),
                 alt.Tooltip('week_ending:T', title='Semana hasta'),
                 alt.Tooltip('variant:N', title='Variante'),
                 alt.Tooltip('count:Q', format=",d", title='Secuencias'),
             ]
         ).properties(
-            width=575, height=400
+            width=575, height=250
         )
+
+        volumes = alt.Chart(df).transform_aggregate(
+            groupby=['bulletin_date', 'week_starting', 'week_ending'],
+            sum_count='sum(count)'
+        ).mark_bar(color='gray', opacity=0.8).encode(
+            x=alt.X('week_starting:T', timeUnit='week', title='Semana',
+                    axis=alt.Axis(format='%d/%m', labelAngle=90)),
+            y=alt.Y('sum_count:Q', title='Volumen'),
+            tooltip = [
+                alt.Tooltip('week_starting:T', title='Semana desde'),
+                alt.Tooltip('week_ending:T', title='Semana hasta'),
+                alt.Tooltip('sum_count:Q', format=",d", title='Volumen'),
+            ]
+        ).properties(
+            width=575, height=100
+        )
+
+        return alt.vconcat(percentages, volumes)
