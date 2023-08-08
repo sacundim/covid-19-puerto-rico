@@ -561,9 +561,18 @@ class RecentGenomicSurveillance(AbstractChart):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
     def make_chart(self, df, bulletin_date):
-        percentages = alt.Chart(df).transform_calculate(
-            variant="if(datum.variant == null, 'Otra', datum.variant)"
-        ).mark_bar(opacity=0.8).encode(
+        base = alt.Chart(df).transform_joinaggregate(
+            max_week_starting='max(week_starting)'
+        ).transform_calculate(
+            opacity="if(datum.week_starting == datum.max_week_starting, 0.4, 0.8)"
+        ).encode(
+            # `scale=None` means that the data encodes the opacity values directly
+            opacity=alt.Opacity('opacity:Q', scale=None, legend=None)
+        )
+
+        percentages = base.transform_calculate(
+            variant="if(datum.variant == null, 'Otra', datum.variant)",
+        ).mark_bar().encode(
             x=alt.X('week_starting:T', timeUnit='week', title='Semana', axis=None),
             y=alt.Y('count:Q', title='Porcentaje', stack='normalize'),
             color=alt.Color('variant:N', title='Variante',
@@ -579,10 +588,11 @@ class RecentGenomicSurveillance(AbstractChart):
             width=575, height=250
         )
 
-        volumes = alt.Chart(df).transform_aggregate(
+        volumes = base.transform_aggregate(
             groupby=['bulletin_date', 'week_starting', 'week_ending'],
-            sum_count='sum(count)'
-        ).mark_bar(color='gray', opacity=0.8).encode(
+            sum_count='sum(count)',
+            opacity='min(opacity)'
+        ).mark_bar(color='gray').encode(
             x=alt.X('week_starting:T', timeUnit='week', title='Semana',
                     axis=alt.Axis(format='%d/%m', labelAngle=90)),
             y=alt.Y('sum_count:Q', title='Volumen'),

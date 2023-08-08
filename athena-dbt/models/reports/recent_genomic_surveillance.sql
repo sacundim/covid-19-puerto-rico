@@ -7,7 +7,7 @@ WITH dim AS (
 	SELECT
 		bulletin_date,
 		max(week_starting) max_week_starting,
-		date(max(week_starting) - INTERVAL '175' DAY)
+		date(max(week_starting) - INTERVAL '168' DAY)
 			AS min_week_starting
 	FROM {{ ref('vigilancia_cube') }}
 	GROUP BY bulletin_date
@@ -25,7 +25,7 @@ LEFT OUTER JOIN dim
 INNER JOIN max_dates md
 	ON md.bulletin_date = c.bulletin_date
 	AND min_week_starting < week_starting
-	AND week_starting < max_week_starting
+	AND week_starting <= max_week_starting
 WHERE NOT EXISTS (
   SELECT *
   FROM dim d2
