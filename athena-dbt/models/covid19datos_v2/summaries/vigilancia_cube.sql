@@ -15,7 +15,6 @@ SELECT
 			|| CAST(week(collected_date) AS VARCHAR)
 	) AS week_starting,
 	lineage,
-	unaliased,
 	count(*) count
 FROM {{ ref('vigilancia') }} vigilancia
 INNER JOIN bulletins
@@ -25,5 +24,4 @@ INNER JOIN {{ ref('pango_lineages') }}
 GROUP BY
   vigilancia.bulletin_date,
   collected_date,
-  lineage,
-  unaliased
+  lineage

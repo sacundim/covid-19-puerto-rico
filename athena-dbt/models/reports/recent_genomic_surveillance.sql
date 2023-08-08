@@ -1,4 +1,4 @@
-WITH dim AS (
+WITH interest AS (
 	SELECT *
 	FROM {{ ref('lineages_of_interest') }}
 	INNER JOIN {{ ref('pango_lineages') }}
@@ -13,32 +13,37 @@ WITH dim AS (
 	GROUP BY bulletin_date
 )
 SELECT
-	c.bulletin_date,
+	kube.bulletin_date,
 	week_starting,
 	date_add('day', 6, week_starting)
 	  AS week_ending,
-	dim.category,
+	parent.category,
 	sum(count) AS count
-FROM {{ ref('vigilancia_cube') }} c
-LEFT OUTER JOIN dim
-	ON starts_with(c.unaliased, dim.unaliased)
+FROM {{ ref('vigilancia_cube') }} kube
+INNER JOIN {{ ref('pango_lineages') }} children
+  ON kube.lineage = children.lineage
+LEFT OUTER JOIN interest parent
+  ON children.root = parent.root
+  AND slice(children.numbers, 1, cardinality(parent.numbers)) = parent.numbers
 INNER JOIN max_dates md
-	ON md.bulletin_date = c.bulletin_date
+	ON md.bulletin_date = kube.bulletin_date
 	AND min_week_starting < week_starting
 	AND week_starting <= max_week_starting
 WHERE NOT EXISTS (
   SELECT *
-  FROM dim d2
-  WHERE d2.lineage != dim.lineage
-  AND starts_with(d2.unaliased, dim.unaliased)
-  AND cardinality(d2.numbers) > cardinality(dim.numbers)
+  FROM interest exclusions
+  WHERE children.root = exclusions.root
+  AND slice(children.numbers, 1, cardinality(exclusions.numbers)) = exclusions.numbers
+  AND exclusions.root = parent.root
+  AND slice(exclusions.numbers, 1, cardinality(parent.numbers)) = parent.numbers
+  AND cardinality(exclusions.numbers) > cardinality(parent.numbers)
 )
 GROUP BY
-	c.bulletin_date,
+	kube.bulletin_date,
 	week_starting,
-	dim.category
+	parent.category
 ORDER BY
-	c.bulletin_date,
+	kube.bulletin_date,
 	week_starting,
 	count DESC,
-	dim.category
+	parent.category
