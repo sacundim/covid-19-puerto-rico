@@ -70,3 +70,6 @@ sources:
         identifier: vacunacion_parquet_v4
       - name: vigilancia_v4
         identifier: vigilancia_parquet_v4
+
+      - name: pango_lineages
+        freshness: null

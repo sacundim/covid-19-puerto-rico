@@ -1,0 +1,46 @@
+COPY (
+  WITH alias_key AS (
+    UNPIVOT (
+      SELECT COLUMNS('^(A.+|B.+|[C-WY-Z].*)')
+      FROM '{{ endpoint }}/pango_designation/alias_key.json'
+    )
+    ON COLUMNS (*)
+    INTO NAME prefix VALUE expansion
+  ), lineage_notes AS (
+    SELECT
+      regexp_matches(line, '^\*') AS withdrawn,
+      regexp_extract(line, '^\*?([A-Z]+)', 1) AS prefix,
+      regexp_extract(line, '^\*?([A-Z]+)((\.[0-9]+)*)', 2) AS numbers,
+      regexp_extract(line, '^\*?([A-Z]+)((\.[0-9]+)*)\t(.*)$', 4) AS description
+    FROM read_csv(
+      '{{ endpoint }}/lineage_notes.txt',
+      delim=NULL, header=TRUE, columns={'line': 'VARCHAR'}
+    )
+  ), unaliased AS (
+    SELECT
+      withdrawn,
+      prefix || numbers AS lineage,
+      COALESCE(expansion, prefix) || numbers
+        AS unaliased,
+      regexp_split_to_array(COALESCE(expansion, prefix) || numbers, '\.')
+        AS split,
+      description
+    FROM lineage_notes
+    LEFT OUTER JOIN alias_key
+      USING (prefix)
+  )
+  SELECT
+    TIMESTAMP '{{ downloaded_at }}' AS downloaded_at,
+    withdrawn,
+    lineage,
+    unaliased,
+    split[1] AS root,
+    [CAST(str AS UINT16) FOR str IN split[2:]]
+      AS numbers,
+    description
+  FROM unaliased
+  ORDER BY root, numbers
+)
+TO '{{ output_parquet }}' (
+    FORMAT 'parquet', COMPRESSION 'GZIP'
+);

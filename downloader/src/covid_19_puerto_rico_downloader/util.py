@@ -4,8 +4,12 @@ import logging
 import platform
 import requests
 
-def make_duckdb_connection(filename):
-    return duckdb.connect(filename, config={})
+def make_duckdb_connection(filename, init=[]):
+    connection = duckdb.connect(filename, config={})
+    for statement in init:
+        logging.info("Executing initialization statement: %s;", statement)
+        connection.execute(statement)
+    return connection
 
 def make_requests_session(accept):
     session = requests.Session()
