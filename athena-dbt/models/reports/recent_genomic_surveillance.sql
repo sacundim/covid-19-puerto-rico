@@ -26,6 +26,13 @@ INNER JOIN max_dates md
 	ON md.bulletin_date = c.bulletin_date
 	AND min_week_starting < week_starting
 	AND week_starting < max_week_starting
+WHERE NOT EXISTS (
+  SELECT *
+  FROM dim d2
+  WHERE d2.lineage != dim.lineage
+  AND starts_with(d2.unaliased, dim.unaliased)
+  AND cardinality(d2.numbers) > cardinality(dim.numbers)
+)
 GROUP BY
 	c.bulletin_date,
 	week_starting,
