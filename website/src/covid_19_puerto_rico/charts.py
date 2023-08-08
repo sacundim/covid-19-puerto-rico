@@ -567,7 +567,7 @@ class RecentGenomicSurveillance(AbstractChart):
             x=alt.X('week_starting:T', timeUnit='week', title='Semana', axis=None),
             y=alt.Y('count:Q', title='Porcentaje', stack='normalize'),
             color=alt.Color('variant:N', title='Variante',
-                            legend=alt.Legend(orient='top', columns=6)),
+                            legend=alt.Legend(orient='top', columns=6, symbolOpacity=0.9)),
             order=alt.Order('count:Q', sort='descending'),
             tooltip=[
                 alt.Tooltip('week_starting:T', title='Semana desde'),
