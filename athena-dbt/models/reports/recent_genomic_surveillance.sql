@@ -1,5 +1,9 @@
 WITH interest AS (
-	SELECT *
+	SELECT
+	  *,
+	  row_number() OVER (
+	    ORDER BY root, numbers
+	  ) AS category_order
 	FROM {{ ref('lineages_of_interest') }}
 	INNER JOIN {{ ref('pango_lineages') }}
 		USING (lineage)
@@ -18,6 +22,7 @@ SELECT
 	date_add('day', 6, week_starting)
 	  AS week_ending,
 	parent.category,
+	arbitrary(category_order) AS category_order,
 	sum(count) AS count
 FROM {{ ref('vigilancia_cube') }} kube
 INNER JOIN {{ ref('pango_lineages') }} children
@@ -45,5 +50,5 @@ GROUP BY
 ORDER BY
 	kube.bulletin_date,
 	week_starting,
-	count DESC,
-	parent.category
+	category_order,
+	count DESC

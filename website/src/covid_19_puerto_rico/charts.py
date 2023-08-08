@@ -549,6 +549,7 @@ class RecentGenomicSurveillance(AbstractChart):
         week_starting,
         week_ending,
         category AS variant,
+        category_order,
         count
     FROM recent_genomic_surveillance
     WHERE bulletin_date <= %(max_bulletin_date)s"""
@@ -572,12 +573,13 @@ class RecentGenomicSurveillance(AbstractChart):
 
         percentages = base.transform_calculate(
             variant="if(datum.variant == null, 'Otra', datum.variant)",
+            category_order="if(datum.category_order == null, -1, datum.category_order)"
         ).mark_bar().encode(
             x=alt.X('week_starting:T', timeUnit='week', title='Semana', axis=None),
             y=alt.Y('count:Q', title='Porcentaje', stack='normalize'),
             color=alt.Color('variant:N', title='Variante',
                             legend=alt.Legend(orient='top', columns=6, symbolOpacity=0.9)),
-            order=alt.Order('count:Q', sort='descending'),
+            order=alt.Order('category_order:O'),
             tooltip=[
                 alt.Tooltip('week_starting:T', title='Semana desde'),
                 alt.Tooltip('week_ending:T', title='Semana hasta'),
