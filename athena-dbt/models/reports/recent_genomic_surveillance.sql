@@ -7,7 +7,7 @@ WITH dim AS (
 	SELECT
 		bulletin_date,
 		max(week_starting) max_week_starting,
-		date(max(week_starting) - INTERVAL '91' DAY)
+		date(max(week_starting) - INTERVAL '175' DAY)
 			AS min_week_starting
 	FROM {{ ref('vigilancia_cube') }}
 	GROUP BY bulletin_date

@@ -548,7 +548,7 @@ class RecentGenomicSurveillance(AbstractChart):
         bulletin_date,
         week_starting,
         week_ending,
-        category,
+        category AS variant,
         count
     FROM recent_genomic_surveillance
     WHERE bulletin_date <= %(max_bulletin_date)s"""
@@ -562,19 +562,19 @@ class RecentGenomicSurveillance(AbstractChart):
 
     def make_chart(self, df, bulletin_date):
         return alt.Chart(df).transform_calculate(
-            category="if(datum.category == null, 'Otra', datum.category)"
+            variant="if(datum.variant == null, 'Otra', datum.variant)"
         ).mark_bar(opacity=0.9).encode(
             x=alt.X('week_starting:T', timeUnit='week', title='Semana',
                     axis=alt.Axis(format='%d/%m', labelAngle=90)),
             y=alt.Y('count:Q', title='Porcentaje', stack='normalize'),
-            color=alt.Color('category:N', title='Variante',
+            color=alt.Color('variant:N', title='Variante',
                             legend=alt.Legend(orient='top', columns=4)),
             order=alt.Order('count:Q', sort='descending'),
             tooltip=[
                 alt.Tooltip('bulletin_date:T', title='Fecha de boletín'),
                 alt.Tooltip('week_starting:T', title='Semana desde'),
                 alt.Tooltip('week_ending:T', title='Semana hasta'),
-                alt.Tooltip('category:N', title='Categoría de variante'),
+                alt.Tooltip('variant:N', title='Variante'),
                 alt.Tooltip('count:Q', format=",d", title='Secuencias'),
             ]
         ).properties(
