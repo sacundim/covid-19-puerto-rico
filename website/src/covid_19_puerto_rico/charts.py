@@ -546,8 +546,8 @@ class RecentGenomicSurveillance(AbstractChart):
         query = """
     SELECT
         bulletin_date,
-        week_starting,
-        week_ending,
+        since,
+        until,
         category AS variant,
         category_order,
         count
@@ -562,10 +562,13 @@ class RecentGenomicSurveillance(AbstractChart):
         return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
 
     def make_chart(self, df, bulletin_date):
+        sinces = df['since'].unique()[1:]\
+            .strftime('%Y-%m-%dT00:00:00').tolist()
+
         base = alt.Chart(df).transform_joinaggregate(
-            max_week_starting='max(week_starting)'
+            max_since='max(since)'
         ).transform_calculate(
-            opacity="if(datum.week_starting == datum.max_week_starting, 0.4, 0.8)"
+            opacity="if(datum.since == datum.max_since, 0.4, 0.8)"
         ).encode(
             # `scale=None` means that the data encodes the opacity values directly
             opacity=alt.Opacity('opacity:Q', scale=None, legend=None)
@@ -574,15 +577,24 @@ class RecentGenomicSurveillance(AbstractChart):
         percentages = base.transform_calculate(
             variant="if(datum.variant == null, 'Otra', datum.variant)",
             category_order="if(datum.category_order == null, -1, datum.category_order)"
-        ).mark_bar().encode(
-            x=alt.X('week_starting:T', timeUnit='week', title='Semana', axis=None),
-            y=alt.Y('count:Q', title='Porcentaje', stack='normalize'),
+        ).transform_stack(
+            stack='count',
+            offset='normalize',
+            as_=['y', 'y2'],
+            groupby=['since'],
+            sort=[alt.SortField('category_order')]
+        ).mark_rect(stroke='white', strokeWidth=0.5, strokeDash=[2]).encode(
+            # Weekly bar charts in Vega-Lite turn out to be a bit hellish, because it only supports
+            # Sunday-based weeks whereas Trino only does Monday-based.  So we do ranged rectangles.
+            x=alt.X('since:T', title='Fecha de muestra', axis=None),
+            x2=alt.X2('until:T'),
+            y=alt.Y('y:Q', title='Porcentaje', axis=alt.Axis(format='%')),
+            y2=alt.Y2('y2:Q'),
             color=alt.Color('variant:N', title='Variante',
                             legend=alt.Legend(orient='top', columns=6, symbolOpacity=0.9)),
-            order=alt.Order('category_order:O'),
             tooltip=[
-                alt.Tooltip('week_starting:T', title='Semana desde'),
-                alt.Tooltip('week_ending:T', title='Semana hasta'),
+                alt.Tooltip('since:T', title='Muestras desde'),
+                alt.Tooltip('until:T', title='Muestras hasta'),
                 alt.Tooltip('variant:N', title='Variante'),
                 alt.Tooltip('count:Q', format=",d", title='Secuencias'),
             ]
@@ -591,16 +603,17 @@ class RecentGenomicSurveillance(AbstractChart):
         )
 
         volumes = base.transform_aggregate(
-            groupby=['bulletin_date', 'week_starting', 'week_ending'],
+            groupby=['bulletin_date', 'since', 'until'],
             sum_count='sum(count)',
             opacity='min(opacity)'
-        ).mark_bar(color='gray').encode(
-            x=alt.X('week_starting:T', timeUnit='week', title='Semana',
-                    axis=alt.Axis(format='%d/%m', labelAngle=90)),
+        ).mark_rect(color='gray', stroke='white', strokeWidth=0.5, strokeDash=[2]).encode(
+            x=alt.X('since:T', title='Fecha de muestra',
+                    axis=alt.Axis(format='%d/%m', labelAngle=90, values=sinces)),
+            x2=alt.X2('until:T'),
             y=alt.Y('sum_count:Q', title='Volumen'),
             tooltip = [
-                alt.Tooltip('week_starting:T', title='Semana desde'),
-                alt.Tooltip('week_ending:T', title='Semana hasta'),
+                alt.Tooltip('since:T', title='Desde'),
+                alt.Tooltip('until:T', title='Hasta'),
                 alt.Tooltip('sum_count:Q', format=",d", title='Volumen'),
             ]
         ).properties(

@@ -18,9 +18,9 @@ WITH interest AS (
 )
 SELECT
 	kube.bulletin_date,
-	week_starting,
-	date_add('day', 6, week_starting)
-	  AS week_ending,
+	week_starting AS since,
+	date_add('day', 7, week_starting)
+	  AS until,
 	parent.category,
 	arbitrary(category_order) AS category_order,
 	sum(count) AS count
@@ -45,10 +45,10 @@ WHERE NOT EXISTS (
 )
 GROUP BY
 	kube.bulletin_date,
-	week_starting,
+  week_starting,
 	parent.category
 ORDER BY
 	kube.bulletin_date,
-	week_starting,
+	since,
 	category_order,
 	count DESC
