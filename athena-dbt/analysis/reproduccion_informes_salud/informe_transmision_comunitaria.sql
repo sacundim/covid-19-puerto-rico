@@ -24,7 +24,7 @@ WITH bulletins AS (
 		sum(specimens) AS specimens,
 		sum(positives) AS positives,
 		100.0 * sum(positives) / sum(specimens) AS itc2
-	FROM {{ ref('municipal_tests_collected_agg') }} tests
+	FROM {{ ref('biostatistics_specimens_municipal_agg') }} tests
 	INNER JOIN bulletins USING (bulletin_date)
 	INNER JOIN {{ ref('municipal_population') }} pop
 		ON pop.name = tests.municipality

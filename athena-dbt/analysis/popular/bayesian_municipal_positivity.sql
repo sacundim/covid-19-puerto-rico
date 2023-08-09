@@ -9,7 +9,7 @@
 --
 WITH bulletins AS (
 	SELECT max(bulletin_date) AS bulletin_date
-	FROM {{ ref('municipal_tests_collected_agg') }}
+	FROM {{ ref('biostatistics_specimens_municipal_agg') }}
 ), archipelago AS (
 	SELECT
 		bulletin_date,
@@ -26,7 +26,7 @@ WITH bulletins AS (
 			ORDER BY collected_date
 			ROWS 6 PRECEDING
 		) positives_7d
-	FROM {{ ref('municipal_tests_collected_agg') }}
+	FROM {{ ref('biostatistics_specimens_municipal_agg') }}
 	INNER JOIN bulletins USING (bulletin_date)
 	WHERE test_type = 'Antígeno'
 	GROUP BY bulletin_date, collected_date, test_type
@@ -46,7 +46,7 @@ WITH bulletins AS (
 			ORDER BY collected_date
 			ROWS 6 PRECEDING
 		) positives_7d
-	FROM {{ ref('municipal_tests_collected_agg') }}
+	FROM {{ ref('biostatistics_specimens_municipal_agg') }}
 	INNER JOIN bulletins USING (bulletin_date)
 	INNER JOIN {{ ref('municipal_abbreviations') }}
 		USING (municipality)
