@@ -1,12 +1,20 @@
-lineage,nickname
-B.1.1.7,Alpha
+lineage,category
+B.1.1.7,Alfa
+B.1.526,Iota
 P.1,Gamma
 B.1.621,Mu
 B.1.617.2,Delta
-BA.1,Omicron BA.1
-BA.2,Omicron BA.2
-BA.4,Omicron BA.4
-BA.5,Omicron BA.5
-XBB.1.5,
-XBB.1.9,
-XBB.1.16,
+BA.1,BA.1
+BA.2,BA.2
+BA.2.12.1,BA.2.12.1
+BA.2.75,BA.2.75
+BA.4,BA.4/5
+BA.5,BA.4/5
+BQ.1,BQ.1
+XBB,XBB
+XBB.1.5,XBB.1.5
+XBB.1.5.10,XBB.1.5.10
+XBB.1.9,XBB.1.9
+FL.1.5,FL.1.5
+XBB.1.16,XBB.1.16
+FE.1,FE.1

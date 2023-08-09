@@ -67,6 +67,7 @@ def run(args, athena):
         # We always generate png for this because they're our Twitter cards
         molecular.RecentCases(athena, args.output_dir, frozenset(['json', 'svg', 'png'])),
 
+        charts.RecentGenomicSurveillance(athena, args.output_dir, output_formats),
         molecular.MunicipalTestingScatter(athena, args.output_dir, output_formats),
         molecular.NewCases(athena, args.output_dir, output_formats),
         charts.MunicipalMap(athena, args.output_dir, output_formats),

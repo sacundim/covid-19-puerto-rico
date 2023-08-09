@@ -459,7 +459,7 @@ CREATE EXTERNAL TABLE covid19datos_v2_sources.pango_lineages (
   lineage STRING,
   unaliased STRING,
   root STRING,
-  numbers ARRAY<SMALLINT>,
+  numbers ARRAY<INT>,
   description STRING
 ) PARTITIONED BY (downloaded_date STRING)
 STORED AS PARQUET

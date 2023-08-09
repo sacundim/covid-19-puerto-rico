@@ -17,6 +17,8 @@ SELECT
     AS bulletin_date,
   lineage,
   unaliased,
+  root,
+  numbers,
   description
 FROM {{ source('covid19datos_v2', 'pango_lineages') }}
 INNER JOIN downloads

@@ -539,3 +539,85 @@ WHERE bulletin_date <= %(max_bulletin_date)s"""
         )
 
         return alt.vconcat(absolute, normalized, spacing=5)
+
+
+class RecentGenomicSurveillance(AbstractChart):
+    def fetch_data(self, athena, bulletin_dates):
+        query = """
+    SELECT
+        bulletin_date,
+        since,
+        until,
+        category AS variant,
+        category_order,
+        count
+    FROM recent_genomic_surveillance
+    WHERE bulletin_date <= %(max_bulletin_date)s"""
+        return util.execute_pandas(athena, query, {
+            'min_bulletin_date': min(bulletin_dates),
+            'max_bulletin_date': max(bulletin_dates)
+        })
+
+    def filter_data(self, df, bulletin_date):
+        return df.loc[df['bulletin_date'] == pd.to_datetime(bulletin_date)]
+
+    def make_chart(self, df, bulletin_date):
+        sinces = df['since'].unique()[1:]\
+            .strftime('%Y-%m-%dT00:00:00').tolist()
+
+        base = alt.Chart(df).transform_joinaggregate(
+            max_since='max(since)'
+        ).transform_calculate(
+            opacity="if(datum.since == datum.max_since, 0.4, 0.8)"
+        ).encode(
+            # `scale=None` means that the data encodes the opacity values directly
+            opacity=alt.Opacity('opacity:Q', scale=None, legend=None)
+        )
+
+        percentages = base.transform_calculate(
+            variant="if(datum.variant == null, 'Otra', datum.variant)",
+            category_order="if(datum.category_order == null, -1, datum.category_order)"
+        ).transform_stack(
+            stack='count',
+            offset='normalize',
+            as_=['y', 'y2'],
+            groupby=['since'],
+            sort=[alt.SortField('category_order')]
+        ).mark_rect(stroke='white', strokeWidth=0.5, strokeDash=[2]).encode(
+            # Weekly bar charts in Vega-Lite turn out to be a bit hellish, because it only supports
+            # Sunday-based weeks whereas Trino only does Monday-based.  So we do ranged rectangles.
+            x=alt.X('since:T', title='Fecha de muestra', axis=None),
+            x2=alt.X2('until:T'),
+            y=alt.Y('y:Q', title='Porcentaje', axis=alt.Axis(format='%')),
+            y2=alt.Y2('y2:Q'),
+            color=alt.Color('variant:N', title='Variante',
+                            legend=alt.Legend(orient='top', columns=6, symbolOpacity=0.9)),
+            tooltip=[
+                alt.Tooltip('since:T', title='Muestras desde'),
+                alt.Tooltip('until:T', title='Muestras hasta'),
+                alt.Tooltip('variant:N', title='Variante'),
+                alt.Tooltip('count:Q', format=",d", title='Secuencias'),
+            ]
+        ).properties(
+            width=575, height=250
+        )
+
+        volumes = base.transform_aggregate(
+            groupby=['bulletin_date', 'since', 'until'],
+            sum_count='sum(count)',
+            opacity='min(opacity)'
+        ).mark_rect(color='gray', stroke='white', strokeWidth=0.5, strokeDash=[2]).encode(
+            x=alt.X('since:T', title='Fecha de muestra',
+                    axis=alt.Axis(format='%d/%m', labelAngle=90, values=sinces)),
+            x2=alt.X2('until:T'),
+            y=alt.Y('sum_count:Q', title='Volumen'),
+            tooltip = [
+                alt.Tooltip('since:T', title='Desde'),
+                alt.Tooltip('until:T', title='Hasta'),
+                alt.Tooltip('sum_count:Q', format=",d", title='Volumen'),
+            ]
+        ).properties(
+            width=575, height=100
+        )
+
+        return alt.vconcat(percentages, volumes)

@@ -34,6 +34,7 @@
         <li><a href="#RecentHospitalizations_section">Disponibilidad hospitalaria</a></li>
         <li><a href="#EncounterLag_section">Rezagos de datos recientes</a></li>
         <li><a href="#NewCases_section">Historial de casos, hospitales y muertes</a></li>
+        <li><a href="#RecentGenomicSurveillance">Vigilancia genómica reciente</a></li>
         <li><a href="#RecentAgeGroups_section">Pruebas y casos por edad</a></li>
         <li><a href="#AgeGroups_section">Historial de casos por edad</a></li>
         <li><a href="#NewTestSpecimens_section">Especímenes de prueba diarios</a></li>
@@ -337,6 +338,42 @@
         el estimado poblacional del 2019 (3,193,694), o incluso con otras gráficas en esta misma
         página que usan estimados de población por edad del 2019 que todavía no se han actualizado
         para el censo del 2020.</p>
+</div>
+
+
+<div class="section" id="RecentGenomicSurveillance_section">
+    <h1>Vigilancia genómica reciente</h1>
+
+    <div id="RecentGenomicSurveillance"></div>
+    <script type="text/javascript">
+      embedChart('RecentGenomicSurveillance', bulletin_date);
+    </script>
+
+    <h3>¿Qué es esto?</h3>
+
+    <p>Resumen de secuenciación genómica viral reciente. El panel superior muestra las proporciones
+        de las variantes; el panel inferior muestra el volumen de secuencias genómicas para esa semana.
+        Los datos de la semana más reciente suelen ser bien incompletos y menos fiables, así que para
+        resaltar esto, los mostramos en tonos más transparentes.</p>
+
+    <p>Los datos son del <a href="https://www.salud.pr.gov/estadisticas_v2#vigilancia">tablero de
+            estadísticas de COVID-19 del Departamento de Salud de Puerto Rico</a>, pero los simplificamos
+        aplicándoles un esquema sencillo de clasificación de variantes, tal que por ejemplo en vez de
+        desglosar aparte una maraña de linajes jerárquicos tales como FE.1, FE.1.1 y FE.1.1.1, agrupamos
+        todos estos bajo FE.1 que es el linaje "padre" de todos.  No existe una única forma correcta de
+        realizar tal agrupación, hay un elemento de juicio, así que los conteos y porcentajes presentados
+        aquí pueden diferir de otras fuentes como
+        <a href="https://covid.cdc.gov/covid-data-tracker/#variant-proportions">el rastreador de
+            variantes del CDC estadounidense</a>) que simplifican también los datos mediante
+        procedimientos semejantes pero distintos en el detalle.</p>
+
+    <p>Otro motivo de posibles discrepancias respecto a otras fuentes radica en que la adjudicación
+        del linaje de una secuencia genómica del virus se hace con aplicaciones de software, pero
+        existe más de una tal aplicación, estas a veces clasifican diferente la misma secuencia
+        genómica, e inclusive versiones sucesivas de la una aplicación pueden producir resultados
+        distintos para las mismas secuencias.  En este análisis usamos la adjudicación de linajes que
+        publica el Departamento de Salud de Puerto Rico, quienes históricamente han usado una sucesión
+        de versiones de la aplicación <a href="https://cov-lineages.org/resources/pangolin.html">Pangolin</a>.</p>
 </div>
 
 
