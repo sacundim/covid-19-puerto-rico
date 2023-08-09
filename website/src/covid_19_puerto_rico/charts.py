@@ -577,6 +577,11 @@ class RecentGenomicSurveillance(AbstractChart):
         percentages = base.transform_calculate(
             variant="if(datum.variant == null, 'Otra', datum.variant)",
             category_order="if(datum.category_order == null, -1, datum.category_order)"
+        ).transform_joinaggregate(
+            weekly_count='sum(count)',
+            groupby=['since']
+        ).transform_calculate(
+            fraction='datum.count / datum.weekly_count'
         ).transform_stack(
             stack='count',
             offset='normalize',
@@ -597,6 +602,7 @@ class RecentGenomicSurveillance(AbstractChart):
                 alt.Tooltip('until:T', title='Muestras hasta'),
                 alt.Tooltip('variant:N', title='Variante'),
                 alt.Tooltip('count:Q', format=",d", title='Secuencias'),
+                alt.Tooltip('fraction:Q', format='.2p', title="Porcentaje")
             ]
         ).properties(
             width=575, height=250
