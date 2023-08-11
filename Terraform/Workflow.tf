@@ -1,6 +1,6 @@
 locals {
   # AWS Lambda Python runtime to use
-  aws_lambda_python_runtime = "python3.9"
+  aws_lambda_python_runtime = "python3.11"
 
   ingestion_schedule = {
       "localTimezone": "America/Puerto_Rico",
