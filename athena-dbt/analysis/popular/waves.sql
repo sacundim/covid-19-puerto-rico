@@ -6,7 +6,6 @@
 SELECT
 	c.bulletin_date "Datos hasta",
 	variant "Variante",
-	date_diff('day', since, max(b.collected_date)) "Días",
 	sum(c.confirmed_cases) + sum(c.probable_cases)
 		AS "Casos (oficial)",
 	sum(b.cases) AS "Casos (mío)",
@@ -23,10 +22,12 @@ LEFT OUTER JOIN {{ ref('bulletin_cases') }} d
 INNER JOIN {{ ref('biostatistics_encounters_agg') }} b
 	ON b.bulletin_date = c.bulletin_date
 INNER JOIN (VALUES
-    -- Esto es puro a ojo, especialmente en el 2020 que no
-    -- es fácil discernir los fondos de las curvas:
-	(DATE '2022-03-14', DATE '2023-01-01', 'Omicron BA.2/4/5'),
-	(DATE '2021-12-12', DATE '2022-03-14', 'Omicron BA.1'),
+  -- Esto es puro a ojo, especialmente en el 2020 que no
+  -- es fácil discernir los fondos de las curvas:
+	(DATE '2023-03-10', DATE '9999-12-31', 'XBB S:456L'),
+	(DATE '2022-10-11', DATE '2023-03-10', 'BQ.1'),
+	(DATE '2022-03-14', DATE '2022-10-11', 'BA.2/4/5'),
+	(DATE '2021-12-12', DATE '2022-03-14', 'BA.1'),
 	(DATE '2021-06-26', DATE '2021-12-12', 'Delta'),
 	(DATE '2021-03-11', DATE '2021-06-26', 'Alfa'),
 	(DATE '2020-10-08', DATE '2021-03-11', 'Ancestral'),
