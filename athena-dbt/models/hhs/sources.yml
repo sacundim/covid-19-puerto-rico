@@ -72,9 +72,7 @@ sources:
 
       - name: excess_deaths_associated_with_covid_19_v3
       - name: excess_deaths_associated_with_covid_19_v4
-        freshness:
-          warn_after: { count: 7, period: day }
-          error_after: { count: 31, period: day }
+
       - name: provisional_covid_19_deaths_by_sex_and_age_parquet_v3
       - name: provisional_covid_19_deaths_by_sex_and_age_parquet_v4
         freshness:

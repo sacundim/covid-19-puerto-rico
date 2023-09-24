@@ -95,7 +95,6 @@ def cdc_tasks(client, config):
     '''Datasets hosted at data.cdc.gov endpoints'''
     datasets = {
         'provisional_covid_19_deaths_by_sex_and_age': '9bhg-hcku',
-        'excess_deaths_associated_with_covid_19': 'xkkf-xrst',
     }
     return [
         HHSTask(dataset, id, client, config)
