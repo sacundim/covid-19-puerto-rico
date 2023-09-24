@@ -76,7 +76,7 @@ def hhs_download():
 
 
 def healthdata_tasks(client, config):
-    '''Datasets hosted at healthdata.gov API endpoints'''
+    """Datasets hosted at healthdata.gov API endpoints"""
     datasets = {
         # Put larger ones earlier
         'reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries_raw': 'uqq2-txqb',
@@ -92,7 +92,7 @@ def healthdata_tasks(client, config):
     ]
 
 def cdc_tasks(client, config):
-    '''Datasets hosted at data.cdc.gov endpoints'''
+    """Datasets hosted at data.cdc.gov endpoints"""
     datasets = {
         'provisional_covid_19_deaths_by_sex_and_age': '9bhg-hcku',
     }
