@@ -63,9 +63,8 @@ def hhs_download():
     )
 
     socrata_token = get_socrata_app_token(args)
-    with (Socrata('healthdata.gov', socrata_token, timeout=60) as hhs,
-          Socrata('data.cdc.gov', socrata_token, timeout=60) as cdc):
-        task.run_tasks(healthdata_tasks(hhs, config) + cdc_tasks(cdc, config))
+    with Socrata('healthdata.gov', socrata_token, timeout=60) as hhs:
+        task.run_tasks(healthdata_tasks(hhs, config))
 
     if args.s3_sync_dir and args.rclone_destination:
         task.rclone(
@@ -85,16 +84,6 @@ def healthdata_tasks(client, config):
         'reported_hospital_utilization': '6xf2-c3ie',
         'reported_hospital_utilization_timeseries': 'g62h-syeh',
         'reported_patient_impact_hospital_capacity_timeseries': 'sgxm-t72h',
-    }
-    return [
-        HHSTask(dataset, id, client, config)
-        for (dataset, id) in datasets.items()
-    ]
-
-def cdc_tasks(client, config):
-    """Datasets hosted at data.cdc.gov endpoints"""
-    datasets = {
-        'provisional_covid_19_deaths_by_sex_and_age': '9bhg-hcku',
     }
     return [
         HHSTask(dataset, id, client, config)
