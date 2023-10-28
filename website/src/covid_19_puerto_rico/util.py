@@ -34,7 +34,9 @@ def create_pyathena_connection(args):
 def execute_pandas(athena, query, params={}):
     """Execute a query with PyAthena, return the result set as Pandas"""
     with athena.cursor(PandasCursor) as cursor:
-        return cursor.execute(query, params).as_pandas()
+        return cursor.execute(
+            query, params, keep_default_na=True
+        ).as_pandas()
 
 
 def save_chart(chart, basename, formats):
