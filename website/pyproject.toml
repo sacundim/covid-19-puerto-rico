@@ -10,12 +10,12 @@ covid19pr = 'covid_19_puerto_rico:main'
 
 [tool.poetry.dependencies]
 python = "^3.11"
-pandas = "^2.0"
-altair = "^5.1"
+pandas = "^2.1"
+altair = "^5.1.2"
 jinja2 = "^3.1.1"
 geojson = "^2.5.0"
-PyAthena = "^3.0"
-vl-convert-python = "^0.13"
+PyAthena = "^3.0.9"
+vl-convert-python = "^0.14"
 pillow = "^10.0.1"
 envyaml = "^1.10.211231"
 
