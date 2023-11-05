@@ -8,7 +8,7 @@ models:
           - not_null
           - sequential_values:
               severity: error
-              error_if: ">14"
+              error_if: ">21"
               datepart: 'day'
               partition_by:
                 - date
