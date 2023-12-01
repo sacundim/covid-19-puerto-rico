@@ -111,8 +111,7 @@ AND bulletin_date <= %(max_bulletin_date)s"""
             'min_bulletin_date': min(bulletin_dates),
             'max_bulletin_date': max(bulletin_dates)
         })
-        return pd.melt(df, ["bulletin_date", "datum_date"]) \
-            .replace(0, np.nan)
+        return pd.melt(df, ["bulletin_date", "datum_date"])
 
 
 class DailyDeltas(AbstractChart):
