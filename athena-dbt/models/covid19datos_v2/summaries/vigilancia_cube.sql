@@ -3,7 +3,7 @@ WITH bulletins AS (
     date(downloaded_at AT TIME ZONE 'America/Puerto_Rico') - INTERVAL '1' DAY
       AS bulletin_date,
     max(downloaded_at) AS downloaded_at
-  FROM covid19datos_v2_sources.vigilancia_parquet_v4
+  FROM {{ source('covid19datos_v2', 'vigilancia_v4') }}
   GROUP BY date(downloaded_at AT TIME ZONE 'America/Puerto_Rico')
 )
 SELECT
