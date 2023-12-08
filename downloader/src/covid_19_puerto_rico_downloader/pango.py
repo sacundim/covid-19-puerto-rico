@@ -16,9 +16,9 @@ def process_arguments():
                         help='If given, the `--s3-sync-dir` will be copied over to that destination with `rclone`.')
 
     parser.add_argument('--endpoint-url', type=str, default=ENDPOINT,
-                        help='Override for the URL of the Covid19Datos V2 API endpoint root.')
-    parser.add_argument('--duckdb-file', type=str, default='Covid19Datos-V2.duckdb',
-                        help='Override name of the DuckDB database file. Default: `Covid19Datos-V2.duckdb`.')
+                        help='Override for the URL of the Pango GitHub branch root.')
+    parser.add_argument('--duckdb-file', type=str, default='pango-lineages.duckdb',
+                        help='Override name of the DuckDB database file. Default: `pango-lineages.duckdb`.')
     parser.add_argument('--rclone-command', type=str, default='rclone',
                         help='Override the path to the rclone command. Default: `rclone`.')
 
