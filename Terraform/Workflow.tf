@@ -7,7 +7,7 @@ locals {
       "localSchedule": {
         "biostatistics": {
           "timezone": "America/Puerto_Rico",
-          "localTime": "02:55:00"
+          "localTime": "03:55:00"
         },
 
         "covid19datos_v2": {
