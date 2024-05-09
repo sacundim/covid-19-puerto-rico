@@ -173,7 +173,7 @@ AND bulletin_date <= %(max_bulletin_date)s"""
             sum_14day_100k=alt.datum.sum_14day / PUERTO_RICO_POPULATION_100K
         ).transform_filter(
             alt.datum.mean_7day > 0.0
-        ).mark_line().encode(
+        ).mark_line(clip=True).encode(
             x=alt.X('datum_date:T', timeUnit='yearmonthdate',
                     title='Fecha de suceso (muestra, hospitalización o deceso)',
                     axis=alt.Axis(
