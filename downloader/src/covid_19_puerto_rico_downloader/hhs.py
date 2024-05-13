@@ -78,12 +78,7 @@ def healthdata_tasks(client, config):
     """Datasets hosted at healthdata.gov API endpoints"""
     datasets = {
         # Put larger ones earlier
-        'reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries_raw': 'uqq2-txqb',
-        'reported_hospital_capacity_admissions_facility_level_weekly_average_timeseries': 'anag-cw7u',
         'covid-19_diagnostic_lab_testing': 'j8mb-icvb',
-        'reported_hospital_utilization': '6xf2-c3ie',
-        'reported_hospital_utilization_timeseries': 'g62h-syeh',
-        'reported_patient_impact_hospital_capacity_timeseries': 'sgxm-t72h',
     }
     return [
         HHSTask(dataset, id, client, config)
