@@ -62,26 +62,3 @@ resource "aws_batch_job_definition" "walgreens_download_and_sync" {
     attempt_duration_seconds = 600
   }
 }
-
-
-resource "aws_scheduler_schedule" "walgreens_daily_download" {
-  name        = "walgreens-daily-download"
-  description = "Run the daily Walgreens download."
-
-  schedule_expression_timezone = "America/Puerto_Rico"
-  schedule_expression = "cron(25 12 * * ? *)"
-  flexible_time_window {
-    mode = "OFF"
-  }
-
-  target {
-    arn = "arn:aws:scheduler:::aws-sdk:batch:submitJob"
-    role_arn = aws_iam_role.eventbridge_scheduler_role.arn
-
-    input = jsonencode({
-      "JobDefinition": aws_batch_job_definition.walgreens_download_and_sync.arn,
-      "JobName": "walgreens-download-and-sync",
-      "JobQueue": aws_batch_job_queue.fargate_amd64.arn
-    })
-  }
-}
