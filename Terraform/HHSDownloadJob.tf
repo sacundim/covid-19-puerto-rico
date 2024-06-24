@@ -3,6 +3,8 @@
 ##
 ## HHS daily download task
 ##
+## NOTE: As of 2024-05-03, HHS no longer updates any datasets that we care about
+##
 
 resource "aws_batch_job_definition" "hhs_download_and_sync" {
   name = "hhs-download-and-sync"

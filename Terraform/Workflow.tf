@@ -13,11 +13,6 @@ locals {
         "covid19datos_v2": {
           "timezone": "America/Puerto_Rico",
           "localTime": "12:25:00"
-        },
-
-        "hhs": {
-          "timezone": "America/New_York",
-          "localTime": "13:25:00"
         }
       }
     }
@@ -230,35 +225,6 @@ resource "aws_sfn_state_machine" "covid_19_puerto_rico_ingest" {
               }
             }
           },
-
-          {
-            "StartAt": "Schedule HHS",
-            "States": {
-              "Schedule HHS": {
-                "Type": "Wait",
-                "TimestampPath": "$.utcSchedule.hhs",
-                "Next": "Run HHS"
-              },
-              "Run HHS": {
-                "Type" : "Task",
-                "Resource" : "arn:aws:states:::batch:submitJob.sync",
-                "Parameters": {
-                  "JobDefinition" : aws_batch_job_definition.hhs_download_and_sync.arn,
-                  "JobName" : "hhs-download-and-sync",
-                  "JobQueue" : aws_batch_job_queue.fargate_amd64.arn
-                },
-                "Catch": [{
-                  "ErrorEquals": [ "States.ALL" ],
-                  "Next": "Handle HHS errors"
-                }],
-                "End": true
-              },
-              "Handle HHS errors": {
-                "Type": "Pass",
-                "End": true
-              }
-            }
-          }
         ],
         "Next": "Verify Ingestions"
       },
@@ -456,7 +422,6 @@ resource "aws_iam_policy" "sfn_run_batch_job_sync" {
           aws_batch_job_definition.biostatistics_download_and_sync.arn,
           aws_batch_job_definition.covid19datos_v2_download_and_sync.arn,
           aws_batch_job_definition.dbt_run_models.arn,
-          aws_batch_job_definition.hhs_download_and_sync.arn,
           aws_batch_job_definition.walgreens_download_and_sync.arn,
           aws_batch_job_definition.website_generator.arn
         ]

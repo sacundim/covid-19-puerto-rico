@@ -36,9 +36,7 @@ sources:
       - name: diagnostic_lab_testing_v2
       - name: diagnostic_lab_testing_v3
       - name: diagnostic_lab_testing_v4
-        freshness:
-          warn_after: { count: 1, period: day }
-          error_after: { count: 36, period: hour }
+
       - name: vaccination_county_condensed_data_json
         loaded_at_field: >
           CAST(from_iso8601_timestamp(
@@ -46,19 +44,10 @@ sources:
                 AS TIMESTAMP)
       - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_v2
       - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_v3
-        freshness:
-          warn_after: { count: 31, period: day }
-#          error_after: { count: 33, period: day }
       - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_booster_dose_v2
       - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_booster_dose_v3
-        freshness:
-          warn_after: { count: 31, period: day }
-#          error_after: { count: 33, period: day }
       - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_second_booster_dose_v2
       - name: rates_of_covid_19_cases_or_deaths_by_age_group_and_vaccination_status_and_second_booster_dose_v3
-        freshness:
-          warn_after: { count: 31, period: day }
-#          error_after: { count: 33, period: day }
       - name: community_levels_by_county_v2
       - name: community_levels_by_county_v3
       - name: united_states_covid_19_cases_and_deaths_by_state_v3
