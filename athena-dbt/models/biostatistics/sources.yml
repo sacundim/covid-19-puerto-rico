@@ -36,5 +36,7 @@ sources:
         identifier: tests_parquet_v2
       - name: tests_grouped_v2
         identifier: tests_grouped_parquet_v2
+        # No longer updated as of 2024-06-30
+        freshness:
       - name: persons_with_vax_status_v2
         identifier: persons_with_vax_status_parquet_v2

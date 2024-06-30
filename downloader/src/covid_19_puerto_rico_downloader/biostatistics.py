@@ -31,8 +31,8 @@ DATASETS = {
     # Put larger ones first
     "tests": "orders/tests/covid-19/minimal",
     "cases": "cases/covid-19/minimal",
+    "flu-cases": "cases/flu/minimal",
     "persons-with-vaccination-status": "vaccines/covid-19/persons-with-vaccination-status",
-    "tests-grouped": "orders/tests/covid-19/grouped-by-sample-collected-date-and-entity",
     "deaths": "deaths/covid-19/minimal",
     "data-sources": "data-sources",
 }
