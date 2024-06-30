@@ -219,3 +219,22 @@ CREATE EXTERNAL TABLE biostatistics_sources.persons_with_vax_status_parquet_v2 (
 ) PARTITIONED BY (downloaded_date STRING)
 STORED AS PARQUET
 LOCATION 's3://covid-19-puerto-rico-data/biostatistics.salud.pr.gov/persons-with-vaccination-status/parquet_v2/';
+
+
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+--
+-- Flu cases
+--
+
+CREATE EXTERNAL TABLE biostatistics_sources.flu_cases_parquet_v2 (
+    caseId STRING,
+    caseCategory STRING,
+    patientAgeRange STRING,
+    patientSex STRING,
+    patientPhysicalCity STRING,
+    identifyingTestSampleCollectedDate DATE,
+    downloadedAt TIMESTAMP
+) PARTITIONED BY (downloaded_date STRING)
+STORED AS PARQUET
+LOCATION 's3://covid-19-puerto-rico-data/biostatistics.salud.pr.gov/flu-cases/parquet_v2/';

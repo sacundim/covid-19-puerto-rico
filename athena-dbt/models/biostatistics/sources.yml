@@ -32,6 +32,8 @@ sources:
         identifier: data_sources_parquet_v2
       - name: deaths_v2
         identifier: deaths_parquet_v2
+      - name: flu_cases_v2
+        identifier: flu_cases_parquet_v2
       - name: tests_v2
         identifier: tests_parquet_v2
       - name: tests_grouped_v2
