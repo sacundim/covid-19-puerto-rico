@@ -52,7 +52,9 @@ models:
           has often been reason to suspect many cases might be recorded as the
           region of the test center they went to.
         tests:
-          - not_null
+          - not_null:
+              where: >
+                municipality != 'St. Thomas'
           - relationships:
               to: ref('covid19datos_v2_casos_region_names')
               field: region
