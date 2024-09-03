@@ -54,7 +54,7 @@ models:
         tests:
           - not_null:
               where: >
-                city != 'St. Thomas'
+                city NOT IN ('ST_THOMAS')
           - relationships:
               to: ref('covid19datos_v2_casos_region_names')
               field: region
